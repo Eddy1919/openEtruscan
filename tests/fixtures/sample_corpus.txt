@@ -1,0 +1,18 @@
+# Sample Etruscan inscriptions for testing
+# One inscription per line, various transcription systems
+#
+# Lines starting with # are comments and will be skipped
+
+# CIE-style (all uppercase)
+LARTHAL LECNES
+ARNTH VELCHAS
+AULE SPURINAS
+
+# Philological style
+Larθal Velχas
+Ramθa Matunai
+Velθur Larisal Ceicnas
+
+# Mixed/web-safe
+Larthal Spurinas
+Arnth Cuclnies
