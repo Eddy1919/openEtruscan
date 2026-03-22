@@ -115,7 +115,7 @@ def get_coords(city: str) -> tuple[float | None, float | None]:
 
 def download_larth(url: str = LARTH_URL) -> str:
     """Download the Larth CSV from GitHub."""
-    print(f"📥 Downloading Larth dataset from GitHub...")
+    print("📥 Downloading Larth dataset from GitHub...")
     req = urllib.request.Request(url, headers={"User-Agent": "OpenEtruscan/0.1"})
     with urllib.request.urlopen(req) as response:
         data = response.read().decode("utf-8")
@@ -173,7 +173,11 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
             medium="",
             object_type="",
             source="Larth (Vico & Spanakis, 2023)",
-            bibliography="Vico, G., & Spanakis, G. (2023). Larth: Dataset and Machine Translation for Etruscan. ALP2023.",
+            bibliography=(
+                "Vico, G., & Spanakis, G. (2023). "
+                "Larth: Dataset and Machine Translation "
+                "for Etruscan. ALP2023."
+            ),
             notes=translation,
         )
         corpus.add(inscription)
@@ -199,7 +203,7 @@ def main():
     else:
         csv_data = download_larth()
 
-    count = seed_corpus(csv_data, db_path=args.db_path)
+    seed_corpus(csv_data, db_path=args.db_path)
 
     # Show a sample query
     print("\n🔍 Sample query:")

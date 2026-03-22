@@ -11,9 +11,7 @@ class TestCorpus:
 
     def setup_method(self):
         # Use temp database for each test
-        self.tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-        self.db_path = self.tmp.name
-        self.tmp.close()
+        self.db_path = tempfile.mktemp(suffix=".db")
         self.corpus = Corpus.load(self.db_path)
 
     def teardown_method(self):

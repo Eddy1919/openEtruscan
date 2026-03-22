@@ -52,11 +52,9 @@ class TestLoadAdapter:
         assert not adapter.is_in_unicode_range("A")
 
     def test_unknown_adapter_raises(self):
-        try:
+        import pytest
+        with pytest.raises(FileNotFoundError):
             load_adapter("klingon")
-            assert False, "Should have raised FileNotFoundError"
-        except FileNotFoundError:
-            pass
 
     def test_list_available(self):
         adapters = list_available_adapters()

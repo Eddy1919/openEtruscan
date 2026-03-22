@@ -56,7 +56,10 @@ main.add_command(normalize_cmd, name="normalize")
 
 @main.command()
 @click.argument("text")
-@click.option("--to", "target", default="old_italic", help="Target format: canonical, old_italic, phonetic.")
+@click.option(
+    "--to", "target", default="old_italic",
+    help="Target format: canonical, old_italic, phonetic.",
+)
 @click.option("--language", "-l", default="etruscan", help="Language adapter.")
 def convert_cmd(text: str, target: str, language: str) -> None:
     """Convert text to a specific format."""
@@ -135,5 +138,143 @@ def list_adapters() -> None:
         click.echo(f"  • {adapter_id}")
 
 
+# =========================================================================
+# Corpus CLI commands
+# =========================================================================
+
+@main.command()
+@click.argument("query")
+@click.option(
+    "--findspot", "-f", default=None,
+    help="Filter by findspot (partial match).",
+)
+@click.option(
+    "--date-from", default=None, type=int,
+    help="Start of date range (negative=BCE).",
+)
+@click.option(
+    "--date-to", default=None, type=int,
+    help="End of date range (negative=BCE).",
+)
+@click.option("--limit", "-n", default=20, help="Max results.")
+@click.option(
+    "--db", default="data/corpus.db",
+    help="Path to corpus database.",
+)
+@click.option("--json-output", "-j", is_flag=True, help="JSON output.")
+def search(
+    query: str,
+    findspot: str | None,
+    date_from: int | None,
+    date_to: int | None,
+    limit: int,
+    db: str,
+    json_output: bool,
+) -> None:
+    """Search the corpus for inscriptions."""
+    from openetruscan.corpus import Corpus
+
+    corpus = Corpus.load(db)
+    date_range = None
+    if date_from is not None and date_to is not None:
+        date_range = (date_from, date_to)
+
+    results = corpus.search(
+        text=query, findspot=findspot,
+        date_range=date_range, limit=limit,
+    )
+
+    if json_output:
+        import json as json_mod
+        data = [i.to_dict() for i in results]
+        click.echo(json_mod.dumps(data, ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"Found {results.total} inscriptions")
+        click.echo("")
+        for insc in results:
+            loc = f" ({insc.findspot})" if insc.findspot else ""
+            date = f" [{insc.date_display()}]" if insc.date_approx else ""
+            click.echo(f"  {insc.id}: {insc.canonical}{loc}{date}")
+    corpus.close()
+
+
+@main.command(name="import")
+@click.argument("csv_file", type=click.Path(exists=True))
+@click.option(
+    "--db", default="data/corpus.db",
+    help="Path to corpus database.",
+)
+@click.option("--language", "-l", default="etruscan", help="Language.")
+def import_csv(csv_file: str, db: str, language: str) -> None:
+    """Import inscriptions from a CSV file into the corpus."""
+    from openetruscan.corpus import Corpus
+
+    corpus = Corpus.load(db)
+    count = corpus.import_csv(csv_file, language=language)
+    click.echo(f"✅ Imported {count} inscriptions into {db}")
+    click.echo(f"   Total corpus size: {corpus.count()}")
+    corpus.close()
+
+
+@main.command(name="export")
+@click.option(
+    "--format", "fmt", default="csv",
+    help="Output format: csv, json, jsonl, geojson, epidoc.",
+)
+@click.option("--output", "-o", default=None, help="Output file.")
+@click.option(
+    "--db", default="data/corpus.db",
+    help="Path to corpus database.",
+)
+@click.option("--limit", "-n", default=0, help="Max inscriptions (0=all).")
+def export_corpus(
+    fmt: str, output: str | None, db: str, limit: int,
+) -> None:
+    """Export the corpus in various formats."""
+    from openetruscan.corpus import Corpus
+
+    corpus = Corpus.load(db)
+
+    if fmt == "epidoc":
+        from openetruscan.epidoc import corpus_to_epidoc
+        text = corpus_to_epidoc(corpus, limit=limit)
+    else:
+        search_limit = limit if limit > 0 else 999999
+        results = corpus.search(limit=search_limit)
+        text = results.export(fmt)
+
+    if output:
+        Path(output).write_text(text, encoding="utf-8")
+        click.echo(f"✅ Exported to {output}")
+    else:
+        click.echo(text)
+    corpus.close()
+
+
+@main.command()
+@click.argument("text")
+@click.option("--language", "-l", default="etruscan", help="Language.")
+@click.option(
+    "--id", "inscription_id", default="CLI_001",
+    help="Inscription ID.",
+)
+def epidoc(text: str, language: str, inscription_id: str) -> None:
+    """Convert text to EpiDoc XML."""
+    from openetruscan.corpus import Inscription
+    from openetruscan.epidoc import inscription_to_epidoc
+
+    result = normalize(text, language=language)
+    insc = Inscription(
+        id=inscription_id,
+        raw_text=text,
+        canonical=result.canonical,
+        phonetic=result.phonetic,
+        old_italic=result.old_italic,
+    )
+    xml_out = inscription_to_epidoc(insc)
+    click.echo(xml_out)
+
+
 if __name__ == "__main__":
     main()
+

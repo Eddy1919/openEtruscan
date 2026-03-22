@@ -4,7 +4,6 @@ Converter — convenience functions for direct format conversion.
 
 from __future__ import annotations
 
-from openetruscan.adapter import load_adapter
 from openetruscan.normalizer import normalize
 
 

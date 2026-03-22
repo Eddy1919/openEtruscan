@@ -10,12 +10,11 @@ from __future__ import annotations
 import csv
 import json
 import sqlite3
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator
 
 from openetruscan.normalizer import normalize
-
 
 DB_PATH = Path(__file__).parent / "data" / "corpus.db"
 
@@ -88,9 +87,14 @@ class SearchResults:
         if fmt == "csv":
             return self._to_csv()
         elif fmt == "json":
-            return json.dumps([i.to_dict() for i in self.inscriptions], ensure_ascii=False, indent=2)
+            data = [i.to_dict() for i in self.inscriptions]
+            return json.dumps(data, ensure_ascii=False, indent=2)
         elif fmt == "jsonl":
-            return "\n".join(json.dumps(i.to_dict(), ensure_ascii=False) for i in self.inscriptions)
+            lines = [
+                json.dumps(i.to_dict(), ensure_ascii=False)
+                for i in self.inscriptions
+            ]
+            return "\n".join(lines)
         elif fmt == "geojson":
             return self._to_geojson()
         else:
@@ -117,7 +121,11 @@ class SearchResults:
                         "findspot": i.findspot, "date": i.date_display(),
                     }
                 })
-        return json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, indent=2)
+        collection = {
+            "type": "FeatureCollection",
+            "features": features,
+        }
+        return json.dumps(collection, ensure_ascii=False, indent=2)
 
 
 class Corpus:

@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 from openetruscan.corpus import Corpus, Inscription
-from openetruscan.prosopography import FamilyGraph, NameFormula, parse_name
+from openetruscan.prosopography import FamilyGraph, parse_name
 
 
 class TestParseName:
@@ -28,7 +28,6 @@ class TestParseName:
     def test_patronymic_detection(self):
         result = parse_name("Larθal Lecnes")
         # "Larθal" = Larθ + -al (genitive) → patronymic
-        found_pat = any(c.type == "patronymic" for c in result.components)
         # At minimum it should classify components
         assert len(result.components) == 2
 
@@ -55,9 +54,7 @@ class TestFamilyGraph:
     """Test family graph construction and queries."""
 
     def _build_test_corpus(self):
-        tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-        db_path = tmp.name
-        tmp.close()
+        db_path = tempfile.mktemp(suffix=".db")
         corpus = Corpus.load(db_path)
         corpus.add(Inscription(id="T1", raw_text="larθ spurinas", findspot="Cerveteri"))
         corpus.add(Inscription(id="T2", raw_text="arnθ spurinas", findspot="Cerveteri"))

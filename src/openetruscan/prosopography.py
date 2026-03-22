@@ -9,7 +9,6 @@ from __future__ import annotations
 import csv
 import json
 from dataclasses import dataclass, field
-from typing import Iterator
 
 from openetruscan.adapter import LanguageAdapter, load_adapter
 from openetruscan.normalizer import normalize
@@ -145,7 +144,10 @@ def _classify_token(
                 return NameComponent(form=token, type="metronymic", gender="female", base_form=base)
             # If at typical patronymic position (2nd), assume patronymic
             if position == 1:
-                return NameComponent(form=token, type="patronymic", gender="unknown", base_form=base)
+                return NameComponent(
+                    form=token, type="patronymic",
+                    gender="unknown", base_form=base,
+                )
 
     # Position-based heuristic
     if position == 0:
@@ -341,7 +343,7 @@ class FamilyGraph:
                     "inscription_ids": p.inscription_ids,
                     "findspots": p.findspots,
                     "components": [
-                        {"form": c.form, "type": c.type, "gender": c.gender} 
+                        {"form": c.form, "type": c.type, "gender": c.gender}
                         for c in p.name_formula.components
                     ],
                 }
@@ -367,22 +369,22 @@ class FamilyGraph:
         for clan in self._clans.values():
             lines.append(f'    <node id="clan_{clan.name}">')
             lines.append(f'      <data key="label">{clan.name}</data>')
-            lines.append(f'      <data key="type">clan</data>')
-            lines.append(f'    </node>')
+            lines.append('      <data key="type">clan</data>')
+            lines.append('    </node>')
 
         # Add person nodes
         for person in self._persons.values():
             lines.append(f'    <node id="{person.id}">')
             lines.append(f'      <data key="label">{person.name_formula.canonical}</data>')
             lines.append(f'      <data key="gender">{person.gender}</data>')
-            lines.append(f'      <data key="type">person</data>')
-            lines.append(f'    </node>')
+            lines.append('      <data key="type">person</data>')
+            lines.append('    </node>')
 
             # Edge: person → clan
             if person.gentilicium:
                 lines.append(f'    <edge source="{person.id}" target="clan_{person.gentilicium}">')
-                lines.append(f'      <data key="weight">1</data>')
-                lines.append(f'    </edge>')
+                lines.append('      <data key="weight">1</data>')
+                lines.append('    </edge>')
 
         lines.extend(['  </graph>', '</graphml>'])
         return "\n".join(lines)
