@@ -1,0 +1,204 @@
+# =============================================================================
+# OpenEtruscan — Faliscan Alphabet Adapter
+# =============================================================================
+# Faliscan: an Italic language closely related to Latin, spoken in south Etruria.
+# ~400 inscriptions known, mostly from Civita Castellana (ancient Falerii).
+# Uses Old Italic script (same Unicode block as Etruscan).
+# =============================================================================
+
+language_id: faliscan
+display_name: Faliscan
+iso_639_3: xfa
+script: old_italic
+unicode_range: [0x10300, 0x1032F]
+direction: rtl  # Predominantly right-to-left (like Etruscan)
+
+# =============================================================================
+# ALPHABET
+# Faliscan shares the Old Italic script but retains letters Etruscan dropped,
+# notably /o/, /b/, /d/, /g/ — because Faliscan has voiced stops.
+# =============================================================================
+alphabet:
+  a:
+    unicode: "\U00010300"
+    ipa: "a"
+    variants: ["A", "a"]
+
+  b:
+    unicode: "\U00010301"
+    ipa: "b"
+    variants: ["B", "b"]
+    notes: "Voiced bilabial stop — absent in Etruscan"
+
+  c:
+    unicode: "\U00010302"
+    ipa: "k"
+    variants: ["C", "c", "K", "k"]
+    notes: "/k/ — Faliscan uses C consistently (not K/Q split)"
+
+  d:
+    unicode: "\U00010303"
+    ipa: "d"
+    variants: ["D", "d"]
+    notes: "Voiced dental stop — absent in Etruscan"
+
+  e:
+    unicode: "\U00010304"
+    ipa: "e"
+    variants: ["E", "e"]
+
+  v:
+    unicode: "\U00010305"
+    ipa: "w"
+    variants: ["V", "v", "W", "w"]
+    notes: "Labial approximant /w/ (not fricative as in Etruscan)"
+
+  z:
+    unicode: "\U00010306"
+    ipa: "dz"
+    variants: ["Z", "z"]
+    notes: "Voiced affricate"
+
+  h:
+    unicode: "\U00010307"
+    ipa: "h"
+    variants: ["H", "h"]
+
+  θ:
+    unicode: "\U00010308"
+    ipa: "tʰ"
+    variants: ["TH", "Th", "th", "θ", "Θ"]
+    notes: "Rare in Faliscan, mostly in borrowed names"
+
+  i:
+    unicode: "\U00010309"
+    ipa: "i"
+    variants: ["I", "i"]
+
+  l:
+    unicode: "\U0001030B"
+    ipa: "l"
+    variants: ["L", "l"]
+
+  m:
+    unicode: "\U0001030C"
+    ipa: "m"
+    variants: ["M", "m"]
+
+  n:
+    unicode: "\U0001030D"
+    ipa: "n"
+    variants: ["N", "n"]
+
+  o:
+    unicode: "\U0001030F"
+    ipa: "o"
+    variants: ["O", "o"]
+    notes: "/o/ vowel — key difference from Etruscan which lacks it"
+
+  p:
+    unicode: "\U00010310"
+    ipa: "p"
+    variants: ["P", "p"]
+
+  q:
+    unicode: "\U00010312"
+    ipa: "kw"
+    variants: ["Q", "q"]
+    notes: "Labiovelar /kw/ — archaic, later replaced by C"
+
+  r:
+    unicode: "\U00010313"
+    ipa: "r"
+    variants: ["R", "r"]
+
+  s:
+    unicode: "\U00010314"
+    ipa: "s"
+    variants: ["S", "s"]
+
+  t:
+    unicode: "\U00010315"
+    ipa: "t"
+    variants: ["T", "t"]
+
+  u:
+    unicode: "\U00010316"
+    ipa: "u"
+    variants: ["U", "u"]
+
+  f:
+    unicode: "\U0001031A"
+    ipa: "f"
+    variants: ["F", "f"]
+
+  g:
+    unicode: "\U0001031B"
+    ipa: "g"
+    variants: ["G", "g"]
+    notes: "Voiced velar stop — absent in Etruscan"
+
+# =============================================================================
+# EQUIVALENCE CLASSES
+# =============================================================================
+equivalence_classes:
+  aspirated_dental:
+    canonical: "θ"
+    members: ["th", "TH", "Th", "θ", "Θ"]
+
+# =============================================================================
+# PHONOTACTICS
+# Faliscan is close to Latin phonotactics.
+# =============================================================================
+phonotactics:
+  forbidden_word_final: []
+  forbidden_clusters: []
+  max_consonant_cluster: 3
+  vowels: ["a", "e", "i", "o", "u"]
+  notes: "Faliscan has 5 vowels (including /o/) and voiced stops /b/, /d/, /g/"
+
+# =============================================================================
+# ONOMASTICS
+# Faliscan naming follows Italic patterns (praenomen + gentilicium).
+# =============================================================================
+onomastics:
+  formula_order:
+    - praenomen
+    - gentilicium
+    - patronymic
+
+  genitive_markers:
+    male: ["-osio", "-i"]
+    female: ["-as", "-ai"]
+
+  gender_markers:
+    male_endings: ["-os", "-us"]
+    female_endings: ["-a", "-ia"]
+    female_gentilicium_suffix: ["-ia", "-a"]
+
+  known_praenomina:
+    male:
+      - caio
+      - marco
+      - tito
+      - aulo
+      - cneo
+      - lucio
+      - manio
+      - voltio
+      - sesto
+    female:
+      - caia
+      - titia
+      - voltia
+
+  known_gentilicia:
+    - cavio
+    - celio
+    - cotena
+    - folio
+    - loferta
+    - uoltio
+    - tito
+    - palio
+    - cupero

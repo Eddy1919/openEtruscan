@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenEtruscan — Text Normalizer</title>
-    <meta name="description" content="Convert Etruscan inscriptions between CIE, philological, Unicode Old Italic, and other transcription systems. Free, open-source, runs entirely in your browser.">
+    <title>OpenEtruscan — Ancient Text Normalizer</title>
+    <meta name="description"
+        content="Convert ancient inscriptions between transcription systems. Supports Etruscan, Faliscan, Oscan. Free, open-source, runs in your browser.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app">
         <!-- Header -->
@@ -31,8 +36,19 @@
         <!-- Main converter -->
         <main class="converter">
             <div class="input-section">
-                <label for="input-text" class="section-label">Input <span class="detected-system" id="detected-system"></span></label>
-                <textarea id="input-text" placeholder="Paste any Etruscan text here...&#10;&#10;Try: LARTHAL LECNES&#10;Or:  Larθal Lecnes&#10;Or:  𐌓𐌀𐌓𐌈𐌀𐌋 𐌋𐌄𐌂𐌍𐌄𐌔" spellcheck="false" autofocus></textarea>
+                <div class="input-header">
+                    <label for="input-text" class="section-label">Input <span class="detected-system"
+                            id="detected-system"></span></label>
+                    <div class="language-selector">
+                        <label for="language-select" class="lang-label">Language:</label>
+                        <select id="language-select">
+                            <!-- Populated by languages.js -->
+                        </select>
+                    </div>
+                </div>
+                <textarea id="input-text"
+                    placeholder="Paste any ancient text here...&#10;&#10;Try the example buttons below"
+                    spellcheck="false" autofocus></textarea>
                 <div class="input-actions">
                     <button class="btn btn-secondary" id="btn-clear">Clear</button>
                     <div class="examples">
@@ -96,11 +112,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Open-source · <a href="https://github.com/open-etruscan/openetruscan" target="_blank">GitHub</a> · No data leaves your browser</p>
+            <p>Open-source · <a href="https://github.com/open-etruscan/openetruscan" target="_blank">GitHub</a> · No
+                data leaves your browser</p>
             <p class="footer-etruscan">𐌀 𐌁 𐌂 𐌃 𐌄 𐌅 𐌆 𐌇 𐌈 𐌉 𐌊 𐌋 𐌌 𐌍 𐌎 𐌏 𐌐 𐌑 𐌓 𐌔 𐌕 𐌖 𐌗 𐌘 𐌙 𐌚</p>
         </footer>
     </div>
 
+    <script src="languages.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

@@ -1,68 +1,53 @@
 /**
  * OpenEtruscan Web Converter — app.js
  *
- * Self-contained normalizer running entirely in the browser.
+ * Multi-language normalizer running entirely in the browser.
  * No backend, no API calls, no data leaves the user's machine.
+ *
+ * Language data is loaded from languages.js (auto-generated from YAML adapters).
  */
 
 // =============================================================================
-// ETRUSCAN ALPHABET MAPPING (mirroring etruscan.yaml)
+// LANGUAGE ENGINE — dynamically built from LANGUAGES (loaded from languages.js)
 // =============================================================================
 
-const ALPHABET = {
-    a: { unicode: '\u{10300}', ipa: 'a', variants: ['A', 'a'] },
-    c: { unicode: '\u{10302}', ipa: 'k', variants: ['C', 'c'] },
-    e: { unicode: '\u{10304}', ipa: 'e', variants: ['E', 'e'] },
-    v: { unicode: '\u{10305}', ipa: 'v', variants: ['V', 'v', 'w', 'W'] },
-    z: { unicode: '\u{10306}', ipa: 'ts', variants: ['Z'] },
-    h: { unicode: '\u{10307}', ipa: 'h', variants: ['H'] },
-    'θ': { unicode: '\u{10308}', ipa: 'tʰ', variants: ['θ', 'Θ'] },
-    i: { unicode: '\u{10309}', ipa: 'i', variants: ['I', 'i'] },
-    k: { unicode: '\u{1030A}', ipa: 'k', variants: ['K'] },
-    l: { unicode: '\u{1030B}', ipa: 'l', variants: ['L', 'l'] },
-    m: { unicode: '\u{1030C}', ipa: 'm', variants: ['M', 'm'] },
-    n: { unicode: '\u{1030D}', ipa: 'n', variants: ['N', 'n'] },
-    p: { unicode: '\u{10310}', ipa: 'p', variants: ['P', 'p'] },
-    'ś': { unicode: '\u{10311}', ipa: 'ʃ', variants: ['Ś', 'ś'] },
-    q: { unicode: '\u{10312}', ipa: 'k', variants: ['Q', 'q'] },
-    r: { unicode: '\u{10313}', ipa: 'r', variants: ['R', 'r'] },
-    s: { unicode: '\u{10314}', ipa: 's', variants: ['S', 's'] },
-    t: { unicode: '\u{10315}', ipa: 't', variants: ['T', 't'] },
-    u: { unicode: '\u{10316}', ipa: 'u', variants: ['U', 'u'] },
-    'φ': { unicode: '\u{10318}', ipa: 'pʰ', variants: ['φ', 'Φ'] },
-    'χ': { unicode: '\u{10317}', ipa: 'kʰ', variants: ['χ', 'Χ'] },
-    f: { unicode: '\u{1031A}', ipa: 'f', variants: ['F', 'f'] },
-};
+let currentLangId = 'etruscan';
+let variantToCanonical = {};
+let canonicalToUnicode = {};
+let canonicalToIPA = {};
+let unicodeToCanonical = {};
 
-// Multi-character equivalence classes (tried first, longest match)
-const DIGRAPHS = {
-    'th': 'θ', 'TH': 'θ', 'Th': 'θ',
-    'ph': 'φ', 'PH': 'φ', 'Ph': 'φ',
-    'ch': 'χ', 'CH': 'χ', 'Ch': 'χ',
-    'kh': 'χ', 'KH': 'χ', 'Kh': 'χ',
-    'sh': 'ś', 'SH': 'ś', 'Sh': 'ś',
-};
+function buildLookupTables(langId) {
+    const lang = LANGUAGES[langId];
+    if (!lang) return;
 
-// Build reverse lookup tables
-const variantToCanonical = {};
-const canonicalToUnicode = {};
-const canonicalToIPA = {};
-const unicodeToCanonical = {};
+    currentLangId = langId;
+    variantToCanonical = {};
+    canonicalToUnicode = {};
+    canonicalToIPA = {};
+    unicodeToCanonical = {};
 
-for (const [canonical, data] of Object.entries(ALPHABET)) {
-    canonicalToUnicode[canonical] = data.unicode;
-    canonicalToIPA[canonical] = data.ipa;
-    unicodeToCanonical[data.unicode] = canonical;
-    variantToCanonical[canonical] = canonical;
-    for (const v of data.variants) {
-        variantToCanonical[v] = canonical;
+    for (const [canonical, data] of Object.entries(lang.alphabet)) {
+        canonicalToUnicode[canonical] = data.unicode;
+        canonicalToIPA[canonical] = data.ipa;
+        unicodeToCanonical[data.unicode] = canonical;
+        variantToCanonical[canonical] = canonical;
+        for (const v of data.variants) {
+            variantToCanonical[v] = canonical;
+        }
+    }
+
+    // Add digraph mappings
+    for (const [digraph, canonical] of Object.entries(lang.digraphs || {})) {
+        variantToCanonical[digraph] = canonical;
+        // Also add uppercase and title-case variants
+        variantToCanonical[digraph.toUpperCase()] = canonical;
+        variantToCanonical[digraph.charAt(0).toUpperCase() + digraph.slice(1)] = canonical;
     }
 }
 
-// Add digraph mappings
-for (const [digraph, canonical] of Object.entries(DIGRAPHS)) {
-    variantToCanonical[digraph] = canonical;
-}
+// Initialize with default language
+buildLookupTables(currentLangId);
 
 // =============================================================================
 // NORMALIZER ENGINE
@@ -77,7 +62,7 @@ function detectSourceSystem(text) {
     for (const char of text) {
         if (isOldItalic(char)) return 'unicode';
     }
-    const philoChars = new Set(['θ', 'φ', 'χ', 'ś', 'Θ', 'Φ', 'Χ', 'Ś']);
+    const philoChars = new Set(['θ', 'φ', 'χ', 'ś', 'Θ', 'Φ', 'Χ', 'Ś', 'í', 'ú', 'Í', 'Ú']);
     for (const c of text) {
         if (philoChars.has(c)) return 'philological';
     }
@@ -102,9 +87,6 @@ function foldToCanonical(text) {
     const result = [];
     const warnings = [];
     let i = 0;
-    const chars = [...text]; // Handle surrogate pairs properly
-
-    // Convert back to string indices for substring operations
     const str = text;
 
     while (i < str.length) {
@@ -130,13 +112,13 @@ function foldToCanonical(text) {
                 if (resolved !== undefined) {
                     result.push(resolved);
                 } else {
-                    warnings.push(`Unknown character '${char}'`);
+                    warnings.push(`Unknown '${char}'`);
                     result.push(lower);
                 }
-            } else if (' .,-;:\'[]()'.includes(char) || char === '\n' || char === '\t') {
+            } else if (' .,-;:\'[]()•|'.includes(char) || char === '\n' || char === '\t') {
                 result.push(char);
             } else {
-                warnings.push(`Unknown character '${char}'`);
+                warnings.push(`Unknown '${char}'`);
                 result.push(char);
             }
             i++;
@@ -180,15 +162,11 @@ function normalize(text) {
 
     const sourceSystem = detectSourceSystem(text);
 
-    // Pre-process Unicode input
     if (sourceSystem === 'unicode') {
         text = unicodeToCanonicalText(text);
     }
 
-    // Fold variants
     const { canonical, warnings } = foldToCanonical(text);
-
-    // Generate outputs
     const phonetic = toPhonetic(canonical);
     const oldItalic = toOldItalic(canonical);
     const tokens = canonical.split(/\s+/).filter(Boolean);
@@ -207,6 +185,7 @@ function normalize(text) {
 const input = document.getElementById('input-text');
 const grid = document.getElementById('output-grid');
 const detectedEl = document.getElementById('detected-system');
+const langSelect = document.getElementById('language-select');
 
 const outputs = {
     canonical: document.getElementById('out-canonical'),
@@ -217,6 +196,25 @@ const outputs = {
     warnings: document.getElementById('out-warnings'),
     confidenceBar: document.getElementById('confidence-bar'),
 };
+
+// Populate language selector
+if (langSelect && typeof LANGUAGES !== 'undefined') {
+    for (const [id, lang] of Object.entries(LANGUAGES)) {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = lang.displayName;
+        if (id === currentLangId) option.selected = true;
+        langSelect.appendChild(option);
+    }
+
+    langSelect.addEventListener('change', () => {
+        buildLookupTables(langSelect.value);
+        // Re-trigger normalization if there's text
+        if (input.value.trim()) {
+            input.dispatchEvent(new Event('input'));
+        }
+    });
+}
 
 // Live normalization on input
 input.addEventListener('input', () => {
@@ -302,7 +300,6 @@ document.querySelectorAll('.btn-copy').forEach(btn => {
                 btn.classList.remove('copied');
             }, 1500);
         } catch {
-            // Fallback
             const textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
