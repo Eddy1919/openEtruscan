@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenEtruscan — Text Normalizer</title>
+    <meta name="description" content="Convert Etruscan inscriptions between CIE, philological, Unicode Old Italic, and other transcription systems. Free, open-source, runs entirely in your browser.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-etruscan">𐌏𐌐𐌄𐌍</span>
+                    <span class="logo-text">OpenEtruscan</span>
+                </h1>
+                <p class="tagline">Ancient text normalizer — paste any transcription, get every format</p>
+                <div class="badges">
+                    <span class="badge badge-mit">MIT License</span>
+                    <span class="badge badge-free">100% Free</span>
+                    <span class="badge badge-offline">Runs Offline</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main converter -->
+        <main class="converter">
+            <div class="input-section">
+                <label for="input-text" class="section-label">Input <span class="detected-system" id="detected-system"></span></label>
+                <textarea id="input-text" placeholder="Paste any Etruscan text here...&#10;&#10;Try: LARTHAL LECNES&#10;Or:  Larθal Lecnes&#10;Or:  𐌓𐌀𐌓𐌈𐌀𐌋 𐌋𐌄𐌂𐌍𐌄𐌔" spellcheck="false" autofocus></textarea>
+                <div class="input-actions">
+                    <button class="btn btn-secondary" id="btn-clear">Clear</button>
+                    <div class="examples">
+                        <span class="examples-label">Try:</span>
+                        <button class="btn-example" data-text="LARTHAL LECNES">CIE</button>
+                        <button class="btn-example" data-text="Larθal Velχas">Philological</button>
+                        <button class="btn-example" data-text="𐌓𐌀𐌌𐌈𐌀 𐌌𐌀𐌕𐌖𐌍𐌀𐌉">Old Italic</button>
+                        <button class="btn-example" data-text="Velthur Larisal Ceicnas">Web-safe</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-grid" id="output-grid">
+                <div class="output-card" id="card-canonical">
+                    <div class="card-header">
+                        <span class="card-label">Canonical</span>
+                        <button class="btn-copy" data-target="canonical" title="Copy">📋</button>
+                    </div>
+                    <div class="card-value" id="out-canonical">—</div>
+                    <div class="card-desc">Standardized philological form</div>
+                </div>
+
+                <div class="output-card" id="card-old-italic">
+                    <div class="card-header">
+                        <span class="card-label">Old Italic Unicode</span>
+                        <button class="btn-copy" data-target="old_italic" title="Copy">📋</button>
+                    </div>
+                    <div class="card-value card-value-large" id="out-old-italic">—</div>
+                    <div class="card-desc">Unicode U+10300 block</div>
+                </div>
+
+                <div class="output-card" id="card-phonetic">
+                    <div class="card-header">
+                        <span class="card-label">Phonetic (IPA)</span>
+                        <button class="btn-copy" data-target="phonetic" title="Copy">📋</button>
+                    </div>
+                    <div class="card-value" id="out-phonetic">—</div>
+                    <div class="card-desc">International Phonetic Alphabet</div>
+                </div>
+
+                <div class="output-card" id="card-tokens">
+                    <div class="card-header">
+                        <span class="card-label">Tokens</span>
+                    </div>
+                    <div class="card-value" id="out-tokens">—</div>
+                    <div class="card-desc">Word segmentation</div>
+                </div>
+
+                <div class="output-card output-card-wide" id="card-confidence">
+                    <div class="card-header">
+                        <span class="card-label">Confidence</span>
+                    </div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar" id="confidence-bar"></div>
+                    </div>
+                    <div class="card-value" id="out-confidence">—</div>
+                    <div class="warnings" id="out-warnings"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Open-source · <a href="https://github.com/open-etruscan/openetruscan" target="_blank">GitHub</a> · No data leaves your browser</p>
+            <p class="footer-etruscan">𐌀 𐌁 𐌂 𐌃 𐌄 𐌅 𐌆 𐌇 𐌈 𐌉 𐌊 𐌋 𐌌 𐌍 𐌎 𐌏 𐌐 𐌑 𐌓 𐌔 𐌕 𐌖 𐌗 𐌘 𐌙 𐌚</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
