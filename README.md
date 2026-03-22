@@ -133,10 +133,47 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 | Package | Description | Status |
 |---|---|---|
-| `openetruscan` (core) | Normalizer + CLI + adapters | 🚧 Phase 1 |
-| `openetruscan[corpus]` | Structured dataset + query API | 📋 Phase 2 |
-| `openetruscan[prosopography]` | Name parser + kinship graph | 📋 Phase 3 |
-| `openetruscan[all]` | Everything | — |
+| `openetruscan` (core) | Normalizer + CLI + adapters | ✅ Released |
+| `openetruscan[corpus]` | Structured dataset + query API | ✅ Released |
+| `openetruscan[prosopography]` | Name parser + kinship graph | ✅ Released |
+| `openetruscan[all]` | Everything | ✅ Released |
+
+## Roadmap
+
+### ✅ Done
+
+- [x] **Normalizer engine** — auto-detect 5 transcription systems, fold to canonical, phonotactic validation
+- [x] **CLI** — `normalize`, `batch`, `convert`, `validate`, `adapters` commands
+- [x] **Etruscan adapter** — 23 letters, 35+ known names, equivalence classes
+- [x] **Corpus database** — SQLite-backed, 4,700+ inscriptions from Larth dataset
+- [x] **Prosopography** — name parser, 633 clans, kinship graph, GraphML/JSON export
+- [x] **Web converter** — static HTML/CSS/JS, runs in any browser, zero backend
+- [x] **GitHub Actions** — CI (Python 3.10-3.13 + Ruff), Pages deploy, PyPI publish
+- [x] **64 tests** passing across all modules
+
+### 🔜 Next (v0.2)
+
+- [ ] **Faliscan + Oscan adapters** — prove the multi-language architecture (one YAML each)
+- [ ] **Web language selector** — switch between languages in the web converter
+- [ ] **GeoJSON map viewer** — static HTML page showing inscription findspots on an interactive map
+- [ ] **EpiDoc XML exporter** — interoperability with the digital classics ecosystem
+- [ ] **PyPI release** — first public `pip install openetruscan`
+- [ ] **Corpus CLI** — `openetruscan search`, `openetruscan import`, `openetruscan export` commands
+
+### 🗓️ Planned (v0.3)
+
+- [ ] **CLTK Etruscan module** — contribute to the [Classical Language Toolkit](https://cltk.org)
+- [ ] **Linked Open Data** — publish to [Pelagios](https://pelagios.org)/[Pleiades](https://pleiades.stoa.org) gazetteers
+- [ ] **Statistical tools** — letter frequency analysis, dialect clustering, dating heuristics
+- [ ] **Web search interface** — search the corpus from the browser (static, no backend)
+- [ ] **Rhaetic + Lemnian adapters** — expand to the Tyrsenian language family
+
+### 🌍 Vision
+
+- [ ] **Community data contributions** — scholars submit inscriptions via PR, CI validates
+- [ ] **Cross-language scholar search** — query across Etruscan, Oscan, Faliscan from one interface
+- [ ] **Academic citation** — dataset cited in peer-reviewed publications
+- [ ] **Template repo** — one-click fork to set up tools for any underdocumented ancient script
 
 ## License
 
