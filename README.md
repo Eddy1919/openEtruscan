@@ -155,7 +155,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 - [ ] **Faliscan + Oscan adapters** — prove the multi-language architecture (one YAML each)
 - [ ] **Web language selector** — switch between languages in the web converter
-- [x] **GeoJSON map viewer** — interactive Leaflet map of inscription findspots ([`web/map.html`](web/map.html)) on an interactive map
+- [x] **GeoJSON map viewer** — interactive Leaflet map of inscription findspots ([`web/map.html`](web/map.html))
 - [ ] **EpiDoc XML exporter** — interoperability with the digital classics ecosystem
 - [ ] **PyPI release** — first public `pip install openetruscan`
 - [ ] **Corpus CLI** — `openetruscan search`, `openetruscan import`, `openetruscan export` commands
