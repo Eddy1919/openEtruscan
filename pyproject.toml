@@ -58,10 +58,10 @@ dev = [
 openetruscan = "openetruscan.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/open-etruscan/openetruscan"
-Documentation = "https://open-etruscan.github.io/openetruscan"
-Repository = "https://github.com/open-etruscan/openetruscan"
-Issues = "https://github.com/open-etruscan/openetruscan/issues"
+Homepage = "https://openetruscan.com"
+Documentation = "https://github.com/Eddy1919/openEtruscan#readme"
+Repository = "https://github.com/Eddy1919/openEtruscan"
+Issues = "https://github.com/Eddy1919/openEtruscan/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openetruscan"]
