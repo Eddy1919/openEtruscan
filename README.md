@@ -168,13 +168,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 - [ ] **Web search interface** — search the corpus from the browser (static, no backend)
 - [ ] **Rhaetic + Lemnian adapters** — expand to the Tyrsenian language family
 
-### 🌍 Vision
-
-- [ ] **Community data contributions** — scholars submit inscriptions via PR, CI validates
-- [ ] **Cross-language scholar search** — query across Etruscan, Oscan, Faliscan from one interface
-- [ ] **Academic citation** — dataset cited in peer-reviewed publications
-- [ ] **Template repo** — one-click fork to set up tools for any underdocumented ancient script
-
 ## License
 
 - **Code:** [MIT](LICENSE) — do whatever you want
