@@ -43,8 +43,9 @@ dependencies = [
 [project.optional-dependencies]
 epidoc = ["lxml>=4.9"]
 corpus = ["openetruscan[epidoc]"]
+postgres = ["psycopg2-binary>=2.9"]
 prosopography = ["networkx>=3.0"]
-all = ["openetruscan[epidoc,prosopography]"]
+all = ["openetruscan[epidoc,prosopography,postgres]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
