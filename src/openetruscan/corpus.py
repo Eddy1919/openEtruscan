@@ -282,6 +282,16 @@ class BaseCorpus(ABC):
         ...
 
     @abstractmethod
+    def search_radius(
+        self,
+        lat: float,
+        lon: float,
+        radius_km: float = 50.0,
+        limit: int = 100,
+    ) -> SearchResults:
+        ...
+
+    @abstractmethod
     def count(self) -> int:
         ...
 
@@ -425,8 +435,17 @@ class Corpus(BaseCorpus):
         backend automatically (PostgreSQL or SQLite URL). Otherwise
         uses the default local SQLite database.
         """
-        # Auto-detect from environment
+        # Auto-detect from environment or .env file
         env_url = os.environ.get("DATABASE_URL", "")
+        if not env_url:
+            env_path = Path(".env")
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    line = line.strip()
+                    if line.startswith("DATABASE_URL="):
+                        env_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+
         if env_url and db_path is None:
             return cls.connect(env_url)
         corpus = cls(db_path)
@@ -449,7 +468,9 @@ class Corpus(BaseCorpus):
     @property
     def conn(self) -> sqlite3.Connection:
         if self._conn is None:
-            self._conn = sqlite3.connect(str(self.db_path))
+            self._conn = sqlite3.connect(
+                str(self.db_path), check_same_thread=False
+            )
             self._conn.row_factory = sqlite3.Row
         return self._conn
 
@@ -515,6 +536,33 @@ class Corpus(BaseCorpus):
             count_query, params[:-1],
         ).fetchone()[0]
         return SearchResults(inscriptions=inscriptions, total=total)
+
+    def search_radius(
+        self,
+        lat: float,
+        lon: float,
+        radius_km: float = 50.0,
+        limit: int = 100,
+    ) -> SearchResults:
+        """Haversine fallback for SQLite."""
+        from openetruscan.geo import haversine
+
+        rows = self.conn.execute(
+            "SELECT * FROM inscriptions WHERE findspot_lat IS NOT NULL "
+            "AND findspot_lon IS NOT NULL"
+        ).fetchall()
+
+        inscriptions = []
+        for row in rows:
+            dist = haversine(
+                lat, lon, row["findspot_lat"], row["findspot_lon"],
+            )
+            if dist <= radius_km:
+                inscriptions.append((dist, _row_to_inscription(row)))
+
+        inscriptions.sort(key=lambda x: x[0])
+        results = [insc for _, insc in inscriptions[:limit]]
+        return SearchResults(inscriptions=results, total=len(inscriptions))
 
     def count(self) -> int:
         """Total number of inscriptions."""
@@ -635,18 +683,22 @@ class PostgresCorpus(BaseCorpus):
         return corpus
 
     def _ensure_db(self) -> None:
-        """Create tables if they don't exist."""
+        """Create tables if they don't exist (ignored for read-only users)."""
+        import psycopg2
         from openetruscan.artifacts import IMAGES_PG_SCHEMA
 
-        with self._conn.cursor() as cur:
-            cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-            cur.execute(_PG_SCHEMA)
-            cur.execute(IMAGES_PG_SCHEMA)
-            cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom "
-                "ON inscriptions USING GIST (geom);"
-            )
-        self._conn.commit()
+        try:
+            with self._conn.cursor() as cur:
+                cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+                cur.execute(_PG_SCHEMA)
+                cur.execute(IMAGES_PG_SCHEMA)
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom "
+                    "ON inscriptions USING GIST (geom);"
+                )
+            self._conn.commit()
+        except psycopg2.Error:
+            self._conn.rollback()
 
     def add(
         self, inscription: Inscription, language: str = "etruscan",
@@ -710,6 +762,54 @@ class PostgresCorpus(BaseCorpus):
             inscriptions = [_dict_to_inscription(row) for row in rows]
             cur.execute(count_query, params[:-1])
             total = cur.fetchone()["count"]
+        return SearchResults(inscriptions=inscriptions, total=total)
+
+    def search_radius(
+        self,
+        lat: float,
+        lon: float,
+        radius_km: float = 50.0,
+        limit: int = 100,
+    ) -> SearchResults:
+        """Native PostGIS ST_DWithin search."""
+        import psycopg2.extras
+
+        radius_m = radius_km * 1000.0
+        query = """
+            SELECT *,
+                   ST_Distance(
+                       geom::geography,
+                       ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                   ) as dist
+            FROM inscriptions
+            WHERE geom IS NOT NULL
+            AND ST_DWithin(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                %s
+            )
+            ORDER BY dist ASC
+            LIMIT %s
+        """
+        count_query = """
+            SELECT COUNT(*)
+            FROM inscriptions
+            WHERE geom IS NOT NULL
+            AND ST_DWithin(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                %s
+            )
+        """
+        with self._conn.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor,
+        ) as cur:
+            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))
+            rows = cur.fetchall()
+            inscriptions = [_dict_to_inscription(row) for row in rows]
+            cur.execute(count_query, (lon, lat, radius_m))
+            total = cur.fetchone()["count"]
+
         return SearchResults(inscriptions=inscriptions, total=total)
 
     def count(self) -> int:

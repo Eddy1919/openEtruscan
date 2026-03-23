@@ -45,7 +45,8 @@ epidoc = ["lxml>=4.9"]
 corpus = ["openetruscan[epidoc]"]
 postgres = ["psycopg2-binary>=2.9"]
 prosopography = ["networkx>=3.0"]
-all = ["openetruscan[epidoc,prosopography,postgres]"]
+server = ["fastapi", "uvicorn", "pydantic"]
+all = ["openetruscan[epidoc,prosopography,postgres,server]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
