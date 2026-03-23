@@ -81,20 +81,24 @@ openetruscan/
 │   ├── oscan.yaml       # Same engine, different YAML
 │   ├── rhaetic.yaml     # ... add any ancient script
 │   └── YOUR_LANG.yaml   # Fork this pattern
-├── corpus/          # Structured dataset (SQLite, Git-native)
+├── corpus/          # Structured dataset (Local SQLite / Cloud PostgreSQL)
 ├── prosopography/   # Name parser + kinship graph
 └── exporters/       # EpiDoc XML, CSV, JSON-LD, GeoJSON
 ```
 
 **Want to support another language?** Write 50 lines of YAML. The engine does the rest.
 
-## Zero Infrastructure
+## Infrastructure & Configuration
 
-- No servers. No databases. No grants.
-- Data ships inside the `pip` package (SQLite).
-- Web tools run as static HTML (GitHub Pages).
-- Updates via `pip install --upgrade`.
-- **Total hosting cost: $0/month. Forever.**
+OpenEtruscan supports two deployment modes via the `.env` file (see `.env.example`):
+
+1. **Zero-Config Local (SQLite)**: By default, OpenEtruscan bundles its entire corpus as a local SQLite database (`data/corpus.db`). It works offline, has zero infrastructure costs, and requires no setup.
+2. **Cloud Public (PostgreSQL)**: To connect to our live public Cloud SQL instance, set `DATABASE_URL` in your `.env`. The cloud instance features abuse protection (a read-only `corpus_reader` role) so anyone can query the most up-to-date data directly.
+
+```bash
+# Example .env connection
+DATABASE_URL=postgresql://corpus_reader:openetruscan_readonly_2024@34.76.146.115/corpus
+```
 
 ## Contributing
 
@@ -157,7 +161,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 - [ ] **Web language selector** — switch between languages in the web converter
 - [x] **GeoJSON map viewer** — interactive Leaflet map of inscription findspots ([`web/map.html`](web/map.html))
 - [ ] **EpiDoc XML exporter** — interoperability with the digital classics ecosystem
-- [ ] **PyPI release** — first public `pip install openetruscan`
+- [x] **PyPI release** — first public `pip install openetruscan`
 - [ ] **Corpus CLI** — `openetruscan search`, `openetruscan import`, `openetruscan export` commands
 
 ### 🗓️ Planned (v0.3)

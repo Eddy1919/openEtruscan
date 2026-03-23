@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import sqlite3
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
@@ -415,8 +416,18 @@ class Corpus(BaseCorpus):
         self._conn: sqlite3.Connection | None = None
 
     @classmethod
-    def load(cls, db_path: str | Path | None = None) -> Corpus:
-        """Load or create the corpus database."""
+    def load(cls, db_path: str | Path | None = None) -> BaseCorpus:
+        """
+        Load or create the corpus database.
+
+        If DATABASE_URL is set in the environment, connects to that
+        backend automatically (PostgreSQL or SQLite URL). Otherwise
+        uses the default local SQLite database.
+        """
+        # Auto-detect from environment
+        env_url = os.environ.get("DATABASE_URL", "")
+        if env_url and db_path is None:
+            return cls.connect(env_url)
         corpus = cls(db_path)
         corpus._ensure_db()
         return corpus
@@ -443,8 +454,11 @@ class Corpus(BaseCorpus):
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist and migrate schema."""
+        from openetruscan.artifacts import IMAGES_SQLITE_SCHEMA
+
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn.executescript(_SQLITE_SCHEMA)
+        self.conn.executescript(IMAGES_SQLITE_SCHEMA)
         self._migrate_columns()
 
     def _migrate_columns(self) -> None:
@@ -551,6 +565,36 @@ class Corpus(BaseCorpus):
                 imported += 1
         return imported
 
+    def add_image(
+        self,
+        image_id: str,
+        inscription_id: str,
+        filename: str,
+        mime_type: str = "image/jpeg",
+        description: str = "",
+        file_hash: str = "",
+    ) -> None:
+        """Store image metadata."""
+        self.conn.execute(
+            "INSERT OR REPLACE INTO images "
+            "(id, inscription_id, filename, mime_type, "
+            "description, file_hash) VALUES (?, ?, ?, ?, ?, ?)",
+            (image_id, inscription_id, filename,
+             mime_type, description, file_hash),
+        )
+        self.conn.commit()
+
+    def get_images(self, inscription_id: str) -> list[dict]:
+        """Get all images for an inscription."""
+        rows = self.conn.execute(
+            "SELECT * FROM images WHERE inscription_id = ?",
+            (inscription_id,),
+        ).fetchall()
+        return [
+            {k: row[k] for k in row}
+            for row in rows
+        ]
+
     def close(self) -> None:
         if self._conn:
             self._conn.close()
@@ -591,8 +635,11 @@ class PostgresCorpus(BaseCorpus):
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist."""
+        from openetruscan.artifacts import IMAGES_PG_SCHEMA
+
         with self._conn.cursor() as cur:
             cur.execute(_PG_SCHEMA)
+            cur.execute(IMAGES_PG_SCHEMA)
         self._conn.commit()
 
     def add(

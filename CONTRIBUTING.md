@@ -6,17 +6,34 @@ Thank you for your interest in contributing! Whether you're an epigrapher adding
 
 ### 📝 Add Inscription Data
 
-The most valuable contribution. If you have transcription data:
+We accept contributions through CSV bulk imports or CLI registration.
 
-1. Fork this repository
-2. Create a CSV file in `data/contributions/` with your data:
+#### Option 1: CLI Registration (Single Inscriptions)
+
+If you have a single new inscription finding, use the CLI locally:
+
+1. Fork and clone this repository.
+2. Setup your local Environment (optional): see `.env.example`.
+3. Register the inscription:
+   ```bash
+   openetruscan register "ET_Vc_1.1" --text "larθal" --classification funerary --findspot "Volterra"
    ```
+4. Attach an image if available:
+   ```bash
+   openetruscan upload-image --id "ET_Vc_1.1" --file photo.jpg --description "Front view"
+   ```
+5. Open a Pull Request with your `.db` updates or CSV export if working disconnected.
+
+#### Option 2: Bulk CSV Import
+
+1. Fork this repository.
+2. Create a CSV file in `data/contributions/` with your data:
+   ```csv
    id,text,findspot,date_approx,medium,object_type,source,notes
    YOUR_001,"arnθal velchas","Cerveteri",-350,tufa,urn,"Your Name 2026",""
    ```
 3. Run validation: `openetruscan validate data/contributions/your_file.csv`
-4. Fix any errors flagged by the validator
-5. Open a Pull Request with a brief description of your source
+4. Open a Pull Request with a brief description of your source.
 
 ### 🔤 Improve Mappings
 
