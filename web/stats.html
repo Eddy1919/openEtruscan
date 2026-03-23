@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenEtruscan — Statistical Analysis</title>
+    <meta name="description"
+        content="SOTA statistical analysis of the Etruscan corpus: letter frequency, dialect clustering, and dating heuristics.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f0f12;
+            --bg-secondary: #1a1a22;
+            --bg-card: #1e1e28;
+            --bg-hover: #24242e;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9a9890;
+            --text-muted: #6b6962;
+            --accent: #c4704b;
+            --accent-light: #d4855f;
+            --accent-dim: #8b4f35;
+            --accent-glow: rgba(196, 112, 75, 0.15);
+            --border: #2a2a36;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --cluster-1: #c4704b;
+            --cluster-2: #6395f2;
+            --cluster-3: #4ade80;
+            --cluster-4: #c084fc;
+            --cluster-5: #fbbf24;
+            --cluster-6: #f472b6;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── Header ───────────────────────────────────────────────── */
+        .page-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .page-header h1 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin-bottom: 0.3rem;
+        }
+
+        .page-header h1 .etruscan {
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 300;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+
+        .nav-links a.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ── Tab System ───────────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            padding: 0 2rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-panel {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ── Cards ────────────────────────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* ── Controls ─────────────────────────────────────────────── */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .control-group label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group input,
+        .control-group select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.7rem;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            min-width: 150px;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.55rem 1.2rem;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--accent-light);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* ── Stats Badge ──────────────────────────────────────────── */
+        .stat-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-badge .value {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-badge .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* ── Date Estimator ───────────────────────────────────────── */
+        .date-result {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .period-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .period-archaic {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .period-classical {
+            background: rgba(196, 112, 75, 0.15);
+            color: var(--accent-light);
+            border: 1px solid var(--accent);
+        }
+
+        .period-late {
+            background: rgba(99, 149, 242, 0.15);
+            color: var(--cluster-2);
+            border: 1px solid var(--cluster-2);
+        }
+
+        .period-indeterminate {
+            background: rgba(107, 105, 98, 0.15);
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0;
+        }
+
+        .feature-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .feature-dot.present {
+            background: var(--success);
+        }
+
+        .feature-dot.absent {
+            background: var(--border);
+        }
+
+        /* ── Cluster Map ──────────────────────────────────────────── */
+        #clusterMap {
+            height: 450px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .cluster-legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* ── Chart containers ─────────────────────────────────────── */
+        .chart-container {
+            position: relative;
+            max-height: 400px;
+        }
+
+        /* ── Comparison Panel ─────────────────────────────────────── */
+        .comparison-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+
+        .comparison-badge.sig {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .comparison-badge.not-sig {
+            background: rgba(107, 105, 98, 0.12);
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+
+        .api-status {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 16px;
+            z-index: 9999;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .api-status.connected {
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .api-status.error {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-card) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <h1><span class="etruscan">𐌏𐌐𐌄𐌍</span> OpenEtruscan</h1>
+        <p>Statistical Analysis Laboratory</p>
+        <nav class="nav-links">
+            <a href="index.html">Normalizer</a>
+            <a href="search.html">Live Search</a>
+            <a href="map.html">Static Map</a>
+            <a href="stats.html" class="active">Statistics</a>
+        </nav>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="frequency">Letter Frequency</button>
+        <button class="tab-btn" data-tab="clusters">Dialect Clusters</button>
+        <button class="tab-btn" data-tab="dating">Date Estimator</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 1: Letter Frequency                                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-frequency">
+        <div class="controls">
+            <div class="control-group">
+                <label for="freqSiteA">Primary Site</label>
+                <input type="text" id="freqSiteA" placeholder="All sites (leave blank)">
+            </div>
+            <div class="control-group">
+                <label for="freqSiteB">Compare with</label>
+                <input type="text" id="freqSiteB" placeholder="Optional second site">
+            </div>
+            <button class="btn" id="freqBtn" onclick="loadFrequency()">Analyze</button>
+        </div>
+
+        <div id="freqStats" class="stat-row" style="display:none;"></div>
+
+        <div class="card">
+            <div class="card-title">Letter Frequency Distribution</div>
+            <div class="card-subtitle" id="freqSubtitle">Click "Analyze" to load corpus-wide frequencies</div>
+            <div class="chart-container">
+                <canvas id="freqChart"></canvas>
+            </div>
+            <div id="comparisonResult" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 2: Dialect Clusters                                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-clusters">
+        <div class="controls">
+            <div class="control-group">
+                <label for="minInsc">Min. Inscriptions</label>
+                <input type="number" id="minInsc" value="5" min="2" max="100">
+            </div>
+            <button class="btn" id="clusterBtn" onclick="loadClusters()">Run Clustering</button>
+        </div>
+
+        <div id="clusterStats" class="stat-row" style="display:none;"></div>
+
+        <div class="card">
+            <div class="card-title">Dialect Region Map</div>
+            <div class="card-subtitle">Sites colored by cluster — Ward's hierarchical clustering on cosine-distance
+                frequency vectors</div>
+            <div id="clusterMap"></div>
+            <div class="cluster-legend" id="clusterLegend"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">PCA Projection</div>
+            <div class="card-subtitle">2D SVD projection of per-site letter frequency vectors</div>
+            <div class="chart-container">
+                <canvas id="pcaChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB 3: Date Estimator                                       -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-dating">
+        <div class="card">
+            <div class="card-title">Chronological Period Estimator</div>
+            <div class="card-subtitle">Rule-based dating from orthographic features (Rix 1963, Bonfante & Bonfante 2002)
+            </div>
+
+            <div class="controls" style="margin-top: 1rem;">
+                <div class="control-group" style="flex: 1;">
+                    <label for="dateText">Inscription Text</label>
+                    <input type="text" id="dateText" placeholder="e.g. larθ velchas"
+                        style="width: 100%; font-family: var(--font-mono);">
+                </div>
+                <button class="btn" id="dateBtn" onclick="estimateDate()">Estimate Period</button>
+            </div>
+
+            <div id="dateResult" style="display: none;"></div>
+        </div>
+
+        <div class="card" style="margin-top: 0;">
+            <div class="card-title">Diagnostic Feature Reference</div>
+            <div class="card-subtitle">Orthographic markers used for chronological classification</div>
+            <table style="width:100%; font-size: 0.82rem; color: var(--text-secondary); border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                        <th style="padding: 0.5rem 0; font-weight: 600; color: var(--text-primary);">Period</th>
+                        <th style="padding: 0.5rem 0; font-weight: 600; color: var(--text-primary);">Feature</th>
+                        <th style="padding: 0.5rem 0; font-weight: 600; color: var(--text-primary);">Explanation</th>
+                    </tr>
+                </thead>
+                <tbody id="featureRefTable">
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding:0.5rem 0;"><span class="period-badge period-archaic"
+                                style="font-size:0.65rem;">Archaic</span></td>
+                        <td style="padding:0.5rem 0;">K before /a/</td>
+                        <td style="padding:0.5rem 0;">The K/C/Q tripartition (K before a, C before e/i, Q before u) is
+                            diagnostic of 7th–5th century scripts</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding:0.5rem 0;"><span class="period-badge period-archaic"
+                                style="font-size:0.65rem;">Archaic</span></td>
+                        <td style="padding:0.5rem 0;">No F</td>
+                        <td style="padding:0.5rem 0;">The letter F (digamma) was reintroduced after c. 400 BCE; its
+                            absence suggests an earlier date</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding:0.5rem 0;"><span class="period-badge period-classical"
+                                style="font-size:0.65rem;">Classical</span></td>
+                        <td style="padding:0.5rem 0;">C dominant</td>
+                        <td style="padding:0.5rem 0;">After c. 500 BCE, C replaces K and Q as the general velar stop
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding:0.5rem 0;"><span class="period-badge period-classical"
+                                style="font-size:0.65rem;">Classical</span></td>
+                        <td style="padding:0.5rem 0;">Aspirates (θ, φ, χ)</td>
+                        <td style="padding:0.5rem 0;">Aspirated consonants become more consistent in Classical period
+                            orthography</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:0.5rem 0;"><span class="period-badge period-late"
+                                style="font-size:0.65rem;">Late</span></td>
+                        <td style="padding:0.5rem 0;">F present</td>
+                        <td style="padding:0.5rem 0;">F (from Latin /f/) appears in late Etruscan as a marker of
+                            labiodental fricative</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- API Status -->
+    <div class="api-status" id="apiStatus">Connecting...</div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const API_BASE = '/api';
+        const CLUSTER_COLORS = ['#c4704b', '#6395f2', '#4ade80', '#c084fc', '#fbbf24', '#f472b6'];
+
+        // ── Tab System ─────────────────────────────────────────────
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                if (btn.dataset.tab === 'clusters' && !clusterMap) initClusterMap();
+            });
+        });
+
+        // ── API Check ──────────────────────────────────────────────
+        async function checkApi() {
+            const el = document.getElementById('apiStatus');
+            try {
+                const res = await fetch(API_BASE + '/stats');
+                if (res.ok) {
+                    const d = await res.json();
+                    el.textContent = `✓ ${d.total_inscriptions} inscriptions`;
+                    el.className = 'api-status connected';
+                    // Auto-load frequency on connect
+                    loadFrequency();
+                }
+            } catch { el.textContent = '✗ API offline'; el.className = 'api-status error'; }
+        }
+        checkApi();
+
+        // ── 1. Letter Frequency ────────────────────────────────────
+        let freqChartInstance = null;
+
+        async function loadFrequency() {
+            const siteA = document.getElementById('freqSiteA').value.trim();
+            const siteB = document.getElementById('freqSiteB').value.trim();
+
+            const url = new URL(API_BASE + '/stats/frequency', location.origin);
+            if (siteA) url.searchParams.set('findspot', siteA);
+            if (siteB) url.searchParams.set('findspot_b', siteB);
+
+            document.getElementById('freqBtn').disabled = true;
+
+            try {
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                renderFrequencyChart(data);
+            } catch (e) {
+                console.error(e);
+            }
+            document.getElementById('freqBtn').disabled = false;
+        }
+
+        function renderFrequencyChart(data) {
+            const primary = data.primary;
+            const labels = primary.letters.map(l => l.letter);
+            const freqs = primary.letters.map(l => l.frequency);
+
+            // Stats badges
+            document.getElementById('freqStats').style.display = 'flex';
+            document.getElementById('freqStats').innerHTML = `
+                <div class="stat-badge"><div class="value">${primary.inscription_count.toLocaleString()}</div><div class="label">Inscriptions</div></div>
+                <div class="stat-badge"><div class="value">${primary.total_chars.toLocaleString()}</div><div class="label">Characters</div></div>
+                <div class="stat-badge"><div class="value">${primary.letters.length}</div><div class="label">Letters</div></div>
+            `;
+
+            const datasets = [{
+                label: data.label_a,
+                data: freqs,
+                backgroundColor: 'rgba(196, 112, 75, 0.7)',
+                borderColor: '#c4704b',
+                borderWidth: 1,
+                borderRadius: 3,
+            }];
+
+            if (data.secondary) {
+                datasets.push({
+                    label: data.label_b,
+                    data: data.secondary.letters.map(l => l.frequency),
+                    backgroundColor: 'rgba(99, 149, 242, 0.7)',
+                    borderColor: '#6395f2',
+                    borderWidth: 1,
+                    borderRadius: 3,
+                });
+            }
+
+            if (freqChartInstance) freqChartInstance.destroy();
+
+            freqChartInstance = new Chart(document.getElementById('freqChart'), {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9a9890', font: { family: 'Inter' } } },
+                        tooltip: { backgroundColor: '#1e1e28', borderColor: '#2a2a36', borderWidth: 1 },
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9a9890', font: { family: 'JetBrains Mono', size: 13 } }, grid: { color: '#2a2a36' } },
+                        y: {
+                            ticks: { color: '#9a9890', callback: v => (v * 100).toFixed(0) + '%' },
+                            grid: { color: '#2a2a36' },
+                            title: { display: true, text: 'Relative Frequency', color: '#6b6962' },
+                        },
+                    },
+                },
+            });
+
+            document.getElementById('freqSubtitle').textContent = `${data.label_a}` + (data.label_b ? ` vs. ${data.label_b}` : '');
+
+            // Comparison result
+            const cmpEl = document.getElementById('comparisonResult');
+            if (data.comparison) {
+                const c = data.comparison;
+                const cls = c.significant ? 'sig' : 'not-sig';
+                const icon = c.significant ? '✦' : '≈';
+                const text = c.significant
+                    ? `Statistically significant difference (χ²=${c.chi2.toFixed(1)}, p=${c.p_value < 0.001 ? '<0.001' : c.p_value.toFixed(4)}, Cramér's V=${c.effect_size.toFixed(3)})`
+                    : `No significant difference (χ²=${c.chi2.toFixed(1)}, p=${c.p_value.toFixed(4)})`;
+                cmpEl.innerHTML = `<div class="comparison-badge ${cls}">${icon} ${text}</div>`;
+                cmpEl.style.display = 'block';
+            } else {
+                cmpEl.style.display = 'none';
+            }
+        }
+
+        // ── 2. Dialect Clusters ────────────────────────────────────
+        let clusterMap = null;
+        let clusterMarkers = [];
+        let pcaChartInstance = null;
+
+        function initClusterMap() {
+            clusterMap = L.map('clusterMap', { zoomControl: false }).setView([42.8, 12.0], 7);
+            L.control.zoom({ position: 'topleft' }).addTo(clusterMap);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: 'CARTO', subdomains: 'abcd', maxZoom: 19,
+            }).addTo(clusterMap);
+
+            // Auto-load
+            loadClusters();
+        }
+
+        // Site name → coords (same as seed_larth.py)
+        const SITE_COORDS = {
+            "Vulci": [42.4208, 11.6306], "Tarquinia": [42.2488, 11.7553],
+            "Cerveteri": [42.0009, 12.1067], "Chiusi": [43.0174, 11.9492],
+            "Perugia": [43.1107, 12.3908], "Volterra": [43.4015, 10.8619],
+            "Orvieto": [42.7182, 12.1122], "Arezzo": [43.4613, 11.8802],
+            "Bolsena": [42.6455, 11.9864], "Cortona": [43.2745, 11.9854],
+            "Sovana": [42.6594, 11.6478], "Populonia": [42.9862, 10.4918],
+            "Vetulonia": [42.8328, 10.9567], "Roselle": [42.7744, 11.1178],
+            "Clusium": [43.0174, 11.9492], "Faesulae": [43.8059, 11.2944],
+            "Veii": [42.0273, 12.3979], "Campania": [40.85, 14.25],
+            "Tuscania": [42.4181, 11.8709], "Norchia": [42.3406, 11.9403],
+            "Musarna": [42.4431, 11.8686], "Pyrgi": [42.0098, 11.9676],
+            "San Giovenale": [42.2333, 11.9167], "Blera": [42.2744, 12.0285],
+        };
+
+        async function loadClusters() {
+            const min = document.getElementById('minInsc').value;
+            document.getElementById('clusterBtn').disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/stats/clusters?min_inscriptions=${min}`);
+                const data = await res.json();
+                renderClusters(data);
+            } catch (e) { console.error(e); }
+            document.getElementById('clusterBtn').disabled = false;
+        }
+
+        function renderClusters(data) {
+            // Stats
+            const totalSites = data.clusters.reduce((s, c) => s + c.sites.length, 0);
+            document.getElementById('clusterStats').style.display = 'flex';
+            document.getElementById('clusterStats').innerHTML = `
+                <div class="stat-badge"><div class="value">${data.n_clusters}</div><div class="label">Clusters</div></div>
+                <div class="stat-badge"><div class="value">${totalSites}</div><div class="label">Sites</div></div>
+            `;
+
+            // Map markers
+            clusterMarkers.forEach(m => clusterMap.removeLayer(m));
+            clusterMarkers = [];
+            const bounds = [];
+
+            data.clusters.forEach(cluster => {
+                const color = CLUSTER_COLORS[(cluster.cluster_id - 1) % CLUSTER_COLORS.length];
+                cluster.sites.forEach(site => {
+                    const coords = SITE_COORDS[site.site];
+                    if (!coords) return;
+                    const marker = L.circleMarker(coords, {
+                        radius: Math.min(6 + Math.sqrt(site.inscription_count), 18),
+                        fillColor: color, color: '#1e1e28', weight: 2,
+                        opacity: 1, fillOpacity: 0.85,
+                    });
+                    marker.bindPopup(`
+                        <div style="font-family:'JetBrains Mono',monospace; color:${color}; font-size:11px; font-weight:bold;">Cluster ${cluster.cluster_id}</div>
+                        <div style="font-family:'Inter',sans-serif; font-size:13px; margin:4px 0; font-weight:600;">${site.site}</div>
+                        <div style="font-size:11px; color:#9a9890;">${site.inscription_count} inscriptions</div>
+                    `);
+                    marker.addTo(clusterMap);
+                    clusterMarkers.push(marker);
+                    bounds.push(coords);
+                });
+            });
+
+            if (bounds.length > 0) clusterMap.fitBounds(bounds, { padding: [30, 30] });
+
+            // Legend
+            const legendEl = document.getElementById('clusterLegend');
+            legendEl.innerHTML = data.clusters.map(c => {
+                const color = CLUSTER_COLORS[(c.cluster_id - 1) % CLUSTER_COLORS.length];
+                const names = c.sites.map(s => s.site).join(', ');
+                return `<div class="legend-item"><div class="legend-dot" style="background:${color};"></div>Cluster ${c.cluster_id}: ${names}</div>`;
+            }).join('');
+
+            // PCA scatter
+            renderPCA(data);
+        }
+
+        function renderPCA(data) {
+            if (pcaChartInstance) pcaChartInstance.destroy();
+
+            const datasets = data.clusters.map(c => ({
+                label: `Cluster ${c.cluster_id}`,
+                data: c.sites.map(s => ({ x: s.pca_x, y: s.pca_y, site: s.site })),
+                backgroundColor: CLUSTER_COLORS[(c.cluster_id - 1) % CLUSTER_COLORS.length] + 'cc',
+                borderColor: CLUSTER_COLORS[(c.cluster_id - 1) % CLUSTER_COLORS.length],
+                borderWidth: 2,
+                pointRadius: 7,
+                pointHoverRadius: 10,
+            }));
+
+            pcaChartInstance = new Chart(document.getElementById('pcaChart'), {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9a9890', font: { family: 'Inter' } } },
+                        tooltip: {
+                            backgroundColor: '#1e1e28', borderColor: '#2a2a36', borderWidth: 1,
+                            callbacks: { label: ctx => ctx.raw.site },
+                        },
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'PC 1', color: '#6b6962' }, ticks: { color: '#9a9890' }, grid: { color: '#2a2a36' } },
+                        y: { title: { display: true, text: 'PC 2', color: '#6b6962' }, ticks: { color: '#9a9890' }, grid: { color: '#2a2a36' } },
+                    },
+                },
+            });
+        }
+
+        // ── 3. Date Estimator ──────────────────────────────────────
+        async function estimateDate() {
+            const text = document.getElementById('dateText').value.trim();
+            if (!text) return;
+
+            document.getElementById('dateBtn').disabled = true;
+            try {
+                const url = new URL(API_BASE + '/stats/date-estimate', location.origin);
+                url.searchParams.set('text', text);
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                renderDateResult(data);
+            } catch (e) { console.error(e); }
+            document.getElementById('dateBtn').disabled = false;
+        }
+
+        function renderDateResult(data) {
+            const el = document.getElementById('dateResult');
+            el.style.display = 'block';
+
+            const conf = Math.round(data.confidence * 100);
+            const barColor = conf >= 50 ? 'var(--success)' : conf >= 25 ? 'var(--warning)' : 'var(--danger)';
+
+            el.innerHTML = `
+                <div class="date-result">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <span class="period-badge period-${data.period}">${data.period}</span>
+                        <span style="font-family:var(--font-mono); font-size:1.1rem; color:var(--accent-light);">${data.date_display}</span>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Confidence: ${conf}%</div>
+                        <div style="background:var(--bg-primary); border-radius:4px; height:6px; overflow:hidden;">
+                            <div style="width:${conf}%; height:100%; background:${barColor}; border-radius:4px; transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                    <div class="features-grid">
+                        ${data.features.map(f => `
+                            <div class="feature-item">
+                                <div class="feature-dot ${f.present ? 'present' : 'absent'}"></div>
+                                ${f.description}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Enter key to submit
+        document.getElementById('dateText').addEventListener('keydown', e => { if (e.key === 'Enter') estimateDate(); });
+        document.getElementById('freqSiteA').addEventListener('keydown', e => { if (e.key === 'Enter') loadFrequency(); });
+    </script>
+</body>
+
+</html>

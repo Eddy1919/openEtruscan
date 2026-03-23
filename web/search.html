@@ -351,6 +351,9 @@
                 <a href="map.html" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;"
                     onmouseover="this.style.color='var(--accent)'"
                     onmouseout="this.style.color='var(--text-muted)'">Static Map</a>
+                <a href="stats.html" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;"
+                    onmouseover="this.style.color='var(--accent)'"
+                    onmouseout="this.style.color='var(--text-muted)'">Statistics</a>
             </nav>
         </header>
 
@@ -577,11 +580,11 @@
         });
 
         // Action: Clan Network Search
-        window.searchClan = async function(gens) {
+        window.searchClan = async function (gens) {
             // Clear prior states
             if (currentCircle) { map.removeLayer(currentCircle); currentCircle = null; }
             if (currentLines) { map.removeLayer(currentLines); currentLines = null; }
-            
+
             document.getElementById('q').value = '';
             document.getElementById('findspot').value = '';
             resultsList.innerHTML = `<div style="text-align:center; padding:2rem;">Mapping ${gens} Family Network...</div>`;
@@ -592,18 +595,18 @@
                 const res = await fetch(url.toString());
                 const data = await res.json();
                 document.getElementById('resultsTime').textContent = Math.round(performance.now() - start) + 'ms';
-                
+
                 renderResults(data);
-                
+
                 // Extract unique valid coordinates for the network lines
                 const validCoords = data.results
                     .filter(i => i.findspot_lat && i.findspot_lon)
                     .map(i => [i.findspot_lat, i.findspot_lon]);
-                    
+
                 if (validCoords.length > 1) {
                     currentLines = L.polyline(validCoords, {
-                        color: '#d4855f', 
-                        weight: 2, 
+                        color: '#d4855f',
+                        weight: 2,
                         dashArray: "4 8",
                         opacity: 0.8
                     }).addTo(map);
@@ -611,7 +614,7 @@
                 } else if (validCoords.length === 1) {
                     map.flyTo(validCoords[0], 10);
                 }
-                
+
             } catch (err) {
                 resultsList.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: Cannot fetch clan data.</div>`;
             }

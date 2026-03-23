@@ -162,6 +162,77 @@ def corpus_stats():
     return {"total_inscriptions": corpus.count()}
 
 
+# ── Statistical Analysis Endpoints ──────────────────────────────────────────
+
+
+@app.get("/stats/frequency")
+def frequency_analysis(
+    findspot: str | None = Query(None, description="Filter by findspot"),
+    findspot_b: str | None = Query(None, description="Second findspot for comparison"),
+    date_from: int | None = Query(None, description="Date range start (BCE, positive int)"),
+    date_to: int | None = Query(None, description="Date range end (BCE, positive int)"),
+    language: str = Query("etruscan", description="Language adapter to use"),
+):
+    """Letter frequency analysis, optionally comparing two sites (chi² test)."""
+    from openetruscan.statistics import (
+        compare_frequencies,
+        letter_frequencies,
+    )
+
+    results_a = corpus.search(
+        findspot=findspot,
+        language=language,
+        date_from=-date_from if date_from else None,
+        date_to=-date_to if date_to else None,
+        limit=999999,
+    )
+    texts_a = [i.canonical for i in results_a.inscriptions if i.canonical]
+    freq_a = letter_frequencies(texts_a, language=language)
+
+    response: dict = {"primary": freq_a.to_dict(), "label_a": findspot or "All sites"}
+
+    if findspot_b:
+        results_b = corpus.search(
+            findspot=findspot_b,
+            language=language,
+            date_from=-date_from if date_from else None,
+            date_to=-date_to if date_to else None,
+            limit=999999,
+        )
+        texts_b = [i.canonical for i in results_b.inscriptions if i.canonical]
+        freq_b = letter_frequencies(texts_b, language=language)
+        comparison = compare_frequencies(freq_a, freq_b)
+        response["secondary"] = freq_b.to_dict()
+        response["label_b"] = findspot_b
+        response["comparison"] = comparison.to_dict()
+
+    return response
+
+
+@app.get("/stats/clusters")
+def dialect_clusters(
+    min_inscriptions: int = Query(5, description="Minimum inscriptions per site"),
+    language: str = Query("etruscan", description="Language adapter"),
+):
+    """Dialect clustering via Ward's hierarchical method with cosine distance."""
+    from openetruscan.statistics import cluster_sites
+
+    result = cluster_sites(corpus, language=language, min_inscriptions=min_inscriptions)
+    return result.to_dict()
+
+
+@app.get("/stats/date-estimate")
+def date_estimate(
+    text: str = Query(..., description="Inscription text to analyze"),
+    language: str = Query("etruscan", description="Language adapter"),
+):
+    """Estimate chronological period from orthographic features."""
+    from openetruscan.statistics import estimate_date
+
+    result = estimate_date(text, language=language)
+    return result.to_dict()
+
+
 @app.get("/pelagios.jsonld")
 def pelagios_feed():
     """Pelagios-compatible JSON-LD feed for Linked Open Data."""
