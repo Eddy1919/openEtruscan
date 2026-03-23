@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenEtruscan — Inscription Map</title>
+    <meta name="description"
+        content="Interactive map of Etruscan inscription findspots. Explore 4,700+ inscriptions across ancient Etruria.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --bg-primary: #0f0f12;
+            --bg-secondary: #1a1a22;
+            --bg-card: #1e1e28;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9a9890;
+            --text-muted: #6b6962;
+            --accent: #c4704b;
+            --accent-light: #d4855f;
+            --accent-dim: #8b4f35;
+            --accent-glow: rgba(196, 112, 75, 0.15);
+            --border: #2a2a36;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'DM Serif Display', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 1.5rem 1rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .header h1 .etruscan {
+            color: var(--accent);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 300;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .stats-bar .stat-value {
+            color: var(--accent-light);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        #map {
+            flex: 1;
+            min-height: 500px;
+        }
+
+        /* Leaflet popup styling */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+        }
+
+        .leaflet-popup-content {
+            font-family: var(--font-body) !important;
+            font-size: 0.85rem !important;
+            line-height: 1.5 !important;
+            margin: 12px 16px !important;
+        }
+
+        .popup-id {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .popup-text {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin: 6px 0;
+            word-break: break-all;
+        }
+
+        .popup-findspot {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .popup-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Custom cluster markers */
+        .marker-cluster {
+            background: var(--accent-glow) !important;
+            border: 2px solid var(--accent) !important;
+        }
+
+        .marker-cluster div {
+            background: var(--accent-dim) !important;
+            color: var(--text-primary) !important;
+            font-family: var(--font-mono) !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+        }
+
+        /* Back link */
+        .back-link {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 1000;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: var(--accent-light);
+            text-decoration: none;
+            font-family: var(--font-body);
+            transition: all 0.15s;
+        }
+
+        .back-link:hover {
+            background: var(--accent-glow);
+            border-color: var(--accent-dim);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1><span class="etruscan">𐌏𐌐𐌄𐌍</span> OpenEtruscan — Inscription Map</h1>
+        <p>Explore ancient inscription findspots across Etruria and beyond</p>
+    </header>
+
+    <div class="stats-bar">
+        <span>Findspots: <span class="stat-value" id="stat-features">—</span></span>
+        <span>Cities: <span class="stat-value" id="stat-cities">—</span></span>
+        <span>Inscriptions: <span class="stat-value" id="stat-total">—</span></span>
+    </div>
+
+    <div id="map" style="position: relative;">
+        <a href="index.html" class="back-link">← Text Normalizer</a>
+    </div>
+
+    <footer class="footer">
+        <p>Data: Larth Dataset (CC0) · <a href="https://github.com/Eddy1919/openEtruscan" target="_blank">GitHub</a> ·
+            No tracking</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="corpus_data.js"></script>
+    <script>
+        // Initialize map centered on Etruria
+        const map = L.map('map', {
+            zoomControl: true,
+            attributionControl: true,
+        }).setView([42.5, 12.0], 7);
+
+        // Dark tile layer (CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Custom terracotta marker
+        function createMarkerIcon(count) {
+            const size = Math.min(40, 14 + Math.sqrt(count) * 4);
+            return L.divIcon({
+                html: `<div style="
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: radial-gradient(circle, #d4855f 0%, #8b4f35 100%);
+                    border: 2px solid #c4704b;
+                    border-radius: 50%;
+                    box-shadow: 0 0 12px rgba(196,112,75,0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: ${Math.max(9, size * 0.35)}px;
+                    font-weight: 600;
+                    color: #e8e6e3;
+                ">${count > 1 ? count : ''}</div>`,
+                className: '',
+                iconSize: [size, size],
+                iconAnchor: [size / 2, size / 2],
+            });
+        }
+
+        // Load from inline JS data (no CORS issues with file://)
+        const data = CORPUS_GEOJSON;
+        const features = data.features;
+
+        // Group by findspot for clustering
+        const groups = {};
+        for (const f of features) {
+            const key = f.properties.findspot || 'Unknown';
+            if (!groups[key]) {
+                groups[key] = {
+                    coords: f.geometry.coordinates,
+                    inscriptions: [],
+                };
+            }
+            groups[key].inscriptions.push(f.properties);
+        }
+
+        // Count stats
+        const totalInscriptions = features.length;
+        const totalCities = Object.keys(groups).length;
+
+        document.getElementById('stat-features').textContent = totalInscriptions.toLocaleString();
+        document.getElementById('stat-cities').textContent = totalCities.toLocaleString();
+        document.getElementById('stat-total').textContent = totalInscriptions.toLocaleString();
+
+        // Add markers
+        for (const [findspot, group] of Object.entries(groups)) {
+            const [lon, lat] = group.coords;
+            const count = group.inscriptions.length;
+
+            const marker = L.marker([lat, lon], {
+                icon: createMarkerIcon(count),
+            });
+
+            // Build popup
+            const samples = group.inscriptions.slice(0, 5);
+            let popupHtml = `
+                        <div class="popup-findspot"><strong>${findspot}</strong></div>
+                        <div style="color: #9a9890; font-size: 0.75rem; margin-bottom: 6px;">
+                            ${count} inscription${count > 1 ? 's' : ''}
+                        </div>
+                    `;
+
+            for (const insc of samples) {
+                const text = insc.canonical || insc.id;
+                const displayText = text.length > 40 ? text.substring(0, 40) + '…' : text;
+                popupHtml += `
+                            <div style="margin: 4px 0; padding: 4px 0; border-top: 1px solid #2a2a36;">
+                                <div class="popup-id">${insc.id}</div>
+                                <div class="popup-text">${displayText}</div>
+                                ${insc.date ? `<div class="popup-date">${insc.date}</div>` : ''}
+                            </div>
+                        `;
+            }
+
+            if (count > 5) {
+                popupHtml += `<div style="color: #6b6962; font-size: 0.7rem; text-align: center; margin-top: 6px;">+ ${count - 5} more</div>`;
+            }
+
+            marker.bindPopup(popupHtml, { maxWidth: 320, maxHeight: 300 });
+            marker.addTo(map);
+        }
+
+    </script>
+</body>
+
+</html>
