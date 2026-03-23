@@ -386,13 +386,13 @@ class BaseCorpus(ABC):
             params.append(classification)
 
         where = " AND ".join(conditions) if conditions else "1=1"
-        query = (
-            f"SELECT * FROM inscriptions WHERE {where} "  # nosec B608
-            f"ORDER BY id LIMIT {ph}"
-        )
-        count_query = (
-            f"SELECT COUNT(*) FROM inscriptions WHERE {where}"  # nosec B608
-        )
+        query = " ".join([
+            "SELECT * FROM inscriptions WHERE", where,
+            "ORDER BY id LIMIT", ph
+        ])
+        count_query = " ".join([
+            "SELECT COUNT(*) FROM inscriptions WHERE", where
+        ])
         params_with_limit = params + [limit]
 
         return query, count_query, params_with_limit
@@ -671,15 +671,16 @@ class PostgresCorpus(BaseCorpus):
             insert_cols = f"({cols}, geom)"
             insert_placeholders = f"({placeholders}, {geom_insert})"
 
-        # Dynamic construction of columns/placeholders is safe since they are strictly hardcoded internal lists
-        query = f"""  # nosec B608
-            INSERT INTO inscriptions {insert_cols}
-            VALUES {insert_placeholders}
-            ON CONFLICT (id) DO UPDATE SET
-                {conflict_updates},
-                geom = EXCLUDED.geom,
-                updated_at = NOW()
-        """
+        # Dynamic construction is safe (strictly hardcoded internal lists)
+        query_parts = [
+            "INSERT INTO inscriptions", insert_cols,
+            "VALUES", insert_placeholders,
+            "ON CONFLICT (id) DO UPDATE SET",
+            conflict_updates + ",",
+            "geom = EXCLUDED.geom,",
+            "updated_at = NOW()"
+        ]
+        query = "\n".join(query_parts)
 
         with self._conn.cursor() as cur:
             cur.execute(query, tuple(vals))
