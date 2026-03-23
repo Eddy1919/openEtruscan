@@ -123,6 +123,9 @@ def _fold_to_canonical(text: str, adapter: LanguageAdapter) -> tuple[str, list[s
         matched = False
 
         # Try longest match first (up to 3 characters for digraphs like "th")
+        # NOTE: The "s2" web-safe variant for ś depends on this longest-match
+        # approach.  If "s2" is ever removed from an adapter's variant list,
+        # the digit "2" alone will emit an "Unknown character" warning.
         for length in range(min(3, len(text) - i), 0, -1):
             chunk = text[i : i + length]
             resolved = adapter.resolve_variant(chunk)
@@ -189,9 +192,7 @@ def _tokenize(canonical: str) -> list[str]:
     return [t for t in re.split(r"\s+", canonical.strip()) if t]
 
 
-def _validate_phonotactics(
-    canonical: str, adapter: LanguageAdapter
-) -> list[str]:
+def _validate_phonotactics(canonical: str, adapter: LanguageAdapter) -> list[str]:
     """Check canonical text against phonotactic constraints."""
     warnings: list[str] = []
     words = _tokenize(canonical)
@@ -202,8 +203,7 @@ def _validate_phonotactics(
         for forbidden in rules.forbidden_word_final:
             if word.endswith(forbidden):
                 warnings.append(
-                    f"Word '{word}' ends with '{forbidden}' "
-                    f"(forbidden in {adapter.display_name})"
+                    f"Word '{word}' ends with '{forbidden}' (forbidden in {adapter.display_name})"
                 )
 
         # Check forbidden clusters

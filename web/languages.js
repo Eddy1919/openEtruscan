@@ -147,6 +147,13 @@ const LANGUAGES = {
           "r"
         ]
       },
+      "ξ": {
+        "unicode": "𐌎",
+        "ipa": "s",
+        "variants": [
+          "ξ"
+        ]
+      },
       "s": {
         "unicode": "𐌔",
         "ipa": "s",
@@ -230,6 +237,7 @@ const LANGUAGES = {
       "𐌑": "ś",
       "𐌒": "q",
       "𐌓": "r",
+      "𐌎": "ξ",
       "𐌔": "s",
       "𐌕": "t",
       "𐌖": "u",
@@ -247,7 +255,7 @@ const LANGUAGES = {
   "faliscan": {
     "id": "faliscan",
     "displayName": "Faliscan",
-    "direction": "rtl",
+    "direction": "mixed",
     "alphabet": {
       "a": {
         "unicode": "𐌀",

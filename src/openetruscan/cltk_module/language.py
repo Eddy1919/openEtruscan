@@ -12,13 +12,13 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-
 # ── Lightweight replicas of CLTK data types ──────────────────────────
 #
 # We define these locally so the module works WITHOUT cltk installed.
 # When contributed upstream, these classes are imported from
 # ``cltk.core.data_types``.
 # ─────────────────────────────────────────────────────────────────────
+
 
 @dataclass
 class Identifier:

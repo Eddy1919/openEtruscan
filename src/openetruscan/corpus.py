@@ -33,8 +33,14 @@ DB_PATH = Path(__file__).parent / "data" / "corpus.db"
 # ---------------------------------------------------------------------------
 
 CLASSIFICATIONS = (
-    "funerary", "votive", "legal", "commercial",
-    "boundary", "ownership", "dedicatory", "unknown",
+    "funerary",
+    "votive",
+    "legal",
+    "commercial",
+    "boundary",
+    "ownership",
+    "dedicatory",
+    "unknown",
 )
 
 SCRIPT_SYSTEMS = ("old_italic", "latin", "greek", "other")
@@ -44,6 +50,7 @@ COMPLETENESS_VALUES = ("complete", "fragmentary", "illegible")
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class Inscription:
@@ -57,8 +64,8 @@ class Inscription:
     findspot: str = ""
     findspot_lat: float | None = None
     findspot_lon: float | None = None
-    date_approx: int | None = None       # negative = BCE
-    date_uncertainty: int | None = None   # +/- years
+    date_approx: int | None = None  # negative = BCE
+    date_uncertainty: int | None = None  # +/- years
     medium: str = ""
     object_type: str = ""
     source: str = ""
@@ -125,52 +132,66 @@ class SearchResults:
             data = [i.to_dict() for i in self.inscriptions]
             return json.dumps(data, ensure_ascii=False, indent=2)
         elif fmt == "jsonl":
-            lines = [
-                json.dumps(i.to_dict(), ensure_ascii=False)
-                for i in self.inscriptions
-            ]
+            lines = [json.dumps(i.to_dict(), ensure_ascii=False) for i in self.inscriptions]
             return "\n".join(lines)
         elif fmt == "geojson":
             return self._to_geojson()
         else:
-            raise ValueError(
-                f"Unknown format: {fmt}. Use: csv, json, jsonl, geojson"
-            )
+            raise ValueError(f"Unknown format: {fmt}. Use: csv, json, jsonl, geojson")
 
     def _to_csv(self) -> str:
         import io
+
         buf = io.StringIO()
         writer = csv.writer(buf)
-        writer.writerow([
-            "id", "canonical", "findspot", "date", "medium",
-            "source", "language", "classification",
-        ])
+        writer.writerow(
+            [
+                "id",
+                "canonical",
+                "findspot",
+                "date",
+                "medium",
+                "source",
+                "language",
+                "classification",
+            ]
+        )
         for i in self.inscriptions:
-            writer.writerow([
-                i.id, i.canonical, i.findspot, i.date_display(),
-                i.medium, i.source, i.language, i.classification,
-            ])
+            writer.writerow(
+                [
+                    i.id,
+                    i.canonical,
+                    i.findspot,
+                    i.date_display(),
+                    i.medium,
+                    i.source,
+                    i.language,
+                    i.classification,
+                ]
+            )
         return buf.getvalue()
 
     def _to_geojson(self) -> str:
         features = []
         for i in self.inscriptions:
             if i.findspot_lat is not None and i.findspot_lon is not None:
-                features.append({
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [i.findspot_lon, i.findspot_lat],
-                    },
-                    "properties": {
-                        "id": i.id,
-                        "text": i.canonical,
-                        "findspot": i.findspot,
-                        "date": i.date_display(),
-                        "language": i.language,
-                        "classification": i.classification,
-                    },
-                })
+                features.append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [i.findspot_lon, i.findspot_lat],
+                        },
+                        "properties": {
+                            "id": i.id,
+                            "text": i.canonical,
+                            "findspot": i.findspot,
+                            "date": i.date_display(),
+                            "language": i.language,
+                            "classification": i.classification,
+                        },
+                    }
+                )
         collection = {
             "type": "FeatureCollection",
             "features": features,
@@ -247,11 +268,25 @@ CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
 
 # Columns used for INSERT/SELECT (shared between backends)
 _COLUMNS = [
-    "id", "raw_text", "canonical", "phonetic", "old_italic",
-    "findspot", "findspot_lat", "findspot_lon",
-    "date_approx", "date_uncertainty",
-    "medium", "object_type", "source", "bibliography", "notes",
-    "language", "classification", "script_system", "completeness",
+    "id",
+    "raw_text",
+    "canonical",
+    "phonetic",
+    "old_italic",
+    "findspot",
+    "findspot_lat",
+    "findspot_lon",
+    "date_approx",
+    "date_uncertainty",
+    "medium",
+    "object_type",
+    "source",
+    "bibliography",
+    "notes",
+    "language",
+    "classification",
+    "script_system",
+    "completeness",
 ]
 
 
@@ -259,14 +294,16 @@ _COLUMNS = [
 # Abstract base
 # ---------------------------------------------------------------------------
 
+
 class BaseCorpus(ABC):
     """Abstract corpus backend."""
 
     @abstractmethod
     def add(
-        self, inscription: Inscription, language: str = "etruscan",
-    ) -> None:
-        ...
+        self,
+        inscription: Inscription,
+        language: str = "etruscan",
+    ) -> None: ...
 
     @abstractmethod
     def search(
@@ -278,8 +315,7 @@ class BaseCorpus(ABC):
         language: str | None = None,
         classification: str | None = None,
         limit: int = 100,
-    ) -> SearchResults:
-        ...
+    ) -> SearchResults: ...
 
     @abstractmethod
     def search_radius(
@@ -288,18 +324,17 @@ class BaseCorpus(ABC):
         lon: float,
         radius_km: float = 50.0,
         limit: int = 100,
-    ) -> SearchResults:
-        ...
+    ) -> SearchResults: ...
 
     @abstractmethod
-    def count(self) -> int:
-        ...
+    def count(self) -> int: ...
 
     @abstractmethod
     def import_csv(
-        self, csv_path: str | Path, language: str = "etruscan",
-    ) -> int:
-        ...
+        self,
+        csv_path: str | Path,
+        language: str = "etruscan",
+    ) -> int: ...
 
     def export_all(self, fmt: str = "csv") -> str:
         """Export the entire corpus."""
@@ -307,11 +342,12 @@ class BaseCorpus(ABC):
         return results.export(fmt)
 
     @abstractmethod
-    def close(self) -> None:
-        ...
+    def close(self) -> None: ...
 
     def _prepare_inscription(
-        self, inscription: Inscription, language: str,
+        self,
+        inscription: Inscription,
+        language: str,
     ) -> Inscription:
         """Auto-normalize text if canonical is empty."""
         if not inscription.canonical:
@@ -342,14 +378,25 @@ class BaseCorpus(ABC):
     def _inscription_values(self, insc: Inscription) -> tuple:
         """Extract ordered values for INSERT."""
         return (
-            insc.id, insc.raw_text, insc.canonical, insc.phonetic,
-            insc.old_italic, insc.findspot,
-            insc.findspot_lat, insc.findspot_lon,
-            insc.date_approx, insc.date_uncertainty,
-            insc.medium, insc.object_type,
-            insc.source, insc.bibliography,
-            insc.notes, insc.language, insc.classification,
-            insc.script_system, insc.completeness,
+            insc.id,
+            insc.raw_text,
+            insc.canonical,
+            insc.phonetic,
+            insc.old_italic,
+            insc.findspot,
+            insc.findspot_lat,
+            insc.findspot_lon,
+            insc.date_approx,
+            insc.date_uncertainty,
+            insc.medium,
+            insc.object_type,
+            insc.source,
+            insc.bibliography,
+            insc.notes,
+            insc.language,
+            insc.classification,
+            insc.script_system,
+            insc.completeness,
         )
 
     def _build_search_query(
@@ -378,9 +425,7 @@ class BaseCorpus(ABC):
             params.append(f"%{findspot}%")
 
         if date_range:
-            conditions.append(
-                f"date_approx >= {ph} AND date_approx <= {ph}"
-            )
+            conditions.append(f"date_approx >= {ph} AND date_approx <= {ph}")
             params.extend(date_range)
 
         if medium:
@@ -396,13 +441,8 @@ class BaseCorpus(ABC):
             params.append(classification)
 
         where = " AND ".join(conditions) if conditions else "1=1"
-        query = " ".join([
-            "SELECT * FROM inscriptions WHERE", where,
-            "ORDER BY id LIMIT", ph
-        ])
-        count_query = " ".join([
-            "SELECT COUNT(*) FROM inscriptions WHERE", where
-        ])
+        query = " ".join(["SELECT * FROM inscriptions WHERE", where, "ORDER BY id LIMIT", ph])
+        count_query = " ".join(["SELECT COUNT(*) FROM inscriptions WHERE", where])
         params_with_limit = params + [limit]
 
         return query, count_query, params_with_limit
@@ -411,6 +451,7 @@ class BaseCorpus(ABC):
 # ---------------------------------------------------------------------------
 # SQLite backend
 # ---------------------------------------------------------------------------
+
 
 class Corpus(BaseCorpus):
     """
@@ -468,9 +509,7 @@ class Corpus(BaseCorpus):
     @property
     def conn(self) -> sqlite3.Connection:
         if self._conn is None:
-            self._conn = sqlite3.connect(
-                str(self.db_path), check_same_thread=False
-            )
+            self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
             self._conn.row_factory = sqlite3.Row
         return self._conn
 
@@ -495,22 +534,20 @@ class Corpus(BaseCorpus):
         ]
         for col_name, col_def in migrations:
             if col_name not in existing:
-                self.conn.execute(
-                    f"ALTER TABLE inscriptions "
-                    f"ADD COLUMN {col_name} {col_def}"
-                )
+                self.conn.execute(f"ALTER TABLE inscriptions ADD COLUMN {col_name} {col_def}")
         self.conn.commit()
 
     def add(
-        self, inscription: Inscription, language: str = "etruscan",
+        self,
+        inscription: Inscription,
+        language: str = "etruscan",
     ) -> None:
         """Add an inscription, auto-normalizing the text."""
         inscription = self._prepare_inscription(inscription, language)
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["?"] * len(_COLUMNS))
         self.conn.execute(
-            f"INSERT OR REPLACE INTO inscriptions "
-            f"({cols}) VALUES ({placeholders})",
+            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",
             self._inscription_values(inscription),
         )
         self.conn.commit()
@@ -527,13 +564,20 @@ class Corpus(BaseCorpus):
     ) -> SearchResults:
         """Search the corpus with optional filters."""
         query, count_query, params = self._build_search_query(
-            text, findspot, date_range, medium,
-            language, classification, limit, param_style="qmark",
+            text,
+            findspot,
+            date_range,
+            medium,
+            language,
+            classification,
+            limit,
+            param_style="qmark",
         )
         rows = self.conn.execute(query, params).fetchall()
         inscriptions = [_row_to_inscription(row) for row in rows]
         total = self.conn.execute(
-            count_query, params[:-1],
+            count_query,
+            params[:-1],
         ).fetchone()[0]
         return SearchResults(inscriptions=inscriptions, total=total)
 
@@ -548,14 +592,16 @@ class Corpus(BaseCorpus):
         from openetruscan.geo import haversine
 
         rows = self.conn.execute(
-            "SELECT * FROM inscriptions WHERE findspot_lat IS NOT NULL "
-            "AND findspot_lon IS NOT NULL"
+            "SELECT * FROM inscriptions WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL"
         ).fetchall()
 
         inscriptions = []
         for row in rows:
             dist = haversine(
-                lat, lon, row["findspot_lat"], row["findspot_lon"],
+                lat,
+                lon,
+                row["findspot_lat"],
+                row["findspot_lon"],
             )
             if dist <= radius_km:
                 inscriptions.append((dist, _row_to_inscription(row)))
@@ -571,7 +617,9 @@ class Corpus(BaseCorpus):
         ).fetchone()[0]
 
     def import_csv(
-        self, csv_path: str | Path, language: str = "etruscan",
+        self,
+        csv_path: str | Path,
+        language: str = "etruscan",
     ) -> int:
         """
         Import inscriptions from a CSV file.
@@ -584,7 +632,8 @@ class Corpus(BaseCorpus):
             reader = csv.DictReader(f)
             for row in reader:
                 text = row.get(
-                    "text", row.get("raw_text", ""),
+                    "text",
+                    row.get("raw_text", ""),
                 ).strip()
                 if not text:
                     continue
@@ -606,7 +655,8 @@ class Corpus(BaseCorpus):
                     language=row.get("language", language),
                     classification=row.get("classification", "unknown"),
                     script_system=row.get(
-                        "script_system", "old_italic",
+                        "script_system",
+                        "old_italic",
                     ),
                     completeness=row.get("completeness", "complete"),
                 )
@@ -628,8 +678,7 @@ class Corpus(BaseCorpus):
             "INSERT OR REPLACE INTO images "
             "(id, inscription_id, filename, mime_type, "
             "description, file_hash) VALUES (?, ?, ?, ?, ?, ?)",
-            (image_id, inscription_id, filename,
-             mime_type, description, file_hash),
+            (image_id, inscription_id, filename, mime_type, description, file_hash),
         )
         self.conn.commit()
 
@@ -639,10 +688,7 @@ class Corpus(BaseCorpus):
             "SELECT * FROM images WHERE inscription_id = ?",
             (inscription_id,),
         ).fetchall()
-        return [
-            {k: row[k] for k in row}
-            for row in rows
-        ]
+        return [{k: row[k] for k in row} for row in rows]
 
     def close(self) -> None:
         if self._conn:
@@ -653,6 +699,7 @@ class Corpus(BaseCorpus):
 # ---------------------------------------------------------------------------
 # PostgreSQL backend
 # ---------------------------------------------------------------------------
+
 
 class PostgresCorpus(BaseCorpus):
     """
@@ -702,15 +749,15 @@ class PostgresCorpus(BaseCorpus):
             self._conn.rollback()
 
     def add(
-        self, inscription: Inscription, language: str = "etruscan",
+        self,
+        inscription: Inscription,
+        language: str = "etruscan",
     ) -> None:
         """Add an inscription."""
         inscription = self._prepare_inscription(inscription, language)
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["%s"] * len(_COLUMNS))
-        conflict_updates = ", ".join(
-            f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id"
-        )
+        conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
 
         vals = list(self._inscription_values(inscription))
 
@@ -726,12 +773,14 @@ class PostgresCorpus(BaseCorpus):
 
         # Dynamic construction is safe (strictly hardcoded internal lists)
         query_parts = [
-            "INSERT INTO inscriptions", insert_cols,
-            "VALUES", insert_placeholders,
+            "INSERT INTO inscriptions",
+            insert_cols,
+            "VALUES",
+            insert_placeholders,
             "ON CONFLICT (id) DO UPDATE SET",
             conflict_updates + ",",
             "geom = EXCLUDED.geom,",
-            "updated_at = NOW()"
+            "updated_at = NOW()",
         ]
         query = "\n".join(query_parts)
 
@@ -751,9 +800,16 @@ class PostgresCorpus(BaseCorpus):
     ) -> SearchResults:
         """Search the corpus."""
         import psycopg2.extras
+
         query, count_query, params = self._build_search_query(
-            text, findspot, date_range, medium,
-            language, classification, limit, param_style="format",
+            text,
+            findspot,
+            date_range,
+            medium,
+            language,
+            classification,
+            limit,
+            param_style="format",
         )
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
@@ -819,7 +875,9 @@ class PostgresCorpus(BaseCorpus):
             return cur.fetchone()[0]
 
     def import_csv(
-        self, csv_path: str | Path, language: str = "etruscan",
+        self,
+        csv_path: str | Path,
+        language: str = "etruscan",
     ) -> int:
         """Bulk import from CSV."""
         path = Path(csv_path)
@@ -828,7 +886,8 @@ class PostgresCorpus(BaseCorpus):
             reader = csv.DictReader(f)
             for row in reader:
                 text = row.get(
-                    "text", row.get("raw_text", ""),
+                    "text",
+                    row.get("raw_text", ""),
                 ).strip()
                 if not text:
                     continue
@@ -860,28 +919,17 @@ class PostgresCorpus(BaseCorpus):
         Prevents abuse: public users can only SELECT.
         """
         with self._conn.cursor() as cur:
-            cur.execute(
-                "SELECT 1 FROM pg_roles WHERE rolname = 'corpus_reader'"
-            )
+            cur.execute("SELECT 1 FROM pg_roles WHERE rolname = 'corpus_reader'")
             if not cur.fetchone():
                 cur.execute(
-                    "CREATE ROLE corpus_reader "
-                    "WITH LOGIN PASSWORD %s",
+                    "CREATE ROLE corpus_reader WITH LOGIN PASSWORD %s",
                     (password,),
                 )
+            cur.execute("GRANT CONNECT ON DATABASE corpus TO corpus_reader")
+            cur.execute("GRANT USAGE ON SCHEMA public TO corpus_reader")
+            cur.execute("GRANT SELECT ON ALL TABLES IN SCHEMA public TO corpus_reader")
             cur.execute(
-                "GRANT CONNECT ON DATABASE corpus TO corpus_reader"
-            )
-            cur.execute(
-                "GRANT USAGE ON SCHEMA public TO corpus_reader"
-            )
-            cur.execute(
-                "GRANT SELECT ON ALL TABLES IN SCHEMA public "
-                "TO corpus_reader"
-            )
-            cur.execute(
-                "ALTER DEFAULT PRIVILEGES IN SCHEMA public "
-                "GRANT SELECT ON TABLES TO corpus_reader"
+                "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO corpus_reader"
             )
         self._conn.commit()
 
@@ -894,6 +942,7 @@ class PostgresCorpus(BaseCorpus):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _row_to_inscription(row: sqlite3.Row) -> Inscription:
     """Convert a SQLite Row to Inscription."""
@@ -915,15 +964,9 @@ def _row_to_inscription(row: sqlite3.Row) -> Inscription:
         bibliography=row["bibliography"],
         notes=row["notes"],
         language=row["language"] if "language" in keys else "etruscan",
-        classification=(
-            row["classification"] if "classification" in keys else "unknown"
-        ),
-        script_system=(
-            row["script_system"] if "script_system" in keys else "old_italic"
-        ),
-        completeness=(
-            row["completeness"] if "completeness" in keys else "complete"
-        ),
+        classification=(row["classification"] if "classification" in keys else "unknown"),
+        script_system=(row["script_system"] if "script_system" in keys else "old_italic"),
+        completeness=(row["completeness"] if "completeness" in keys else "complete"),
     )
 
 

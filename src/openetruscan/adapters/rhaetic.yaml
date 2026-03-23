@@ -147,10 +147,10 @@ equivalence_classes:
 # =============================================================================
 phonotactics:
   forbidden_word_final: []
-  forbidden_clusters: ["kt", "gp", "bd", "gd"]
+  forbidden_clusters: ["kt", "tθ", "pφ", "kχ"]
   max_consonant_cluster: 3
   vowels: ["a", "e", "i", "u"]
-  notes: "Like Etruscan, Rhaetic lacks /o/ and voiced stops /b/, /d/, /g/"
+  notes: "Like Etruscan, Rhaetic lacks /o/ and voiced stops /b/, /d/, /g/. Clusters of plain + aspirated same-PoA stops are not attested."
 
 # =============================================================================
 # ONOMASTICS
@@ -194,7 +194,7 @@ onomastics:
     - φeluriesi
     - eθinule
     - klanive
-    - ψiakhe
+    - psiakhe       # Formerly ψiakhe — ψ is not in the Rhaetic alphabet
     - lavise
     - venetale
     - tresikvale

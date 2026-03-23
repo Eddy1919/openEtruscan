@@ -53,6 +53,7 @@ class TestLoadAdapter:
 
     def test_unknown_adapter_raises(self):
         import pytest
+
         with pytest.raises(FileNotFoundError):
             load_adapter("klingon")
 

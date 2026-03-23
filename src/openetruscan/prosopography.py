@@ -18,10 +18,10 @@ from openetruscan.normalizer import normalize
 class NameComponent:
     """A parsed component of a naming formula."""
 
-    form: str           # The surface form as it appears
-    type: str           # praenomen, patronymic, gentilicium, metronymic, unknown
-    gender: str = ""    # male, female, unknown
-    base_form: str = "" # Stripped of case endings
+    form: str  # The surface form as it appears
+    type: str  # praenomen, patronymic, gentilicium, metronymic, unknown
+    gender: str = ""  # male, female, unknown
+    base_form: str = ""  # Stripped of case endings
 
 
 @dataclass
@@ -145,8 +145,10 @@ def _classify_token(
             # If at typical patronymic position (2nd), assume patronymic
             if position == 1:
                 return NameComponent(
-                    form=token, type="patronymic",
-                    gender="unknown", base_form=base,
+                    form=token,
+                    type="patronymic",
+                    gender="unknown",
+                    base_form=base,
                 )
 
     # Position-based heuristic
@@ -173,6 +175,7 @@ def _infer_gender_from_ending(token: str, onomastics) -> str:
 # =============================================================================
 # FAMILY GRAPH
 # =============================================================================
+
 
 @dataclass
 class Person:
@@ -342,20 +345,18 @@ class FamilyGraph:
 
         # 1. Create constraints (Neo4j 4.x/5.x compatible)
         queries.append(
-            "CREATE CONSTRAINT clan_unique IF NOT EXISTS "
-            "FOR (c:Clan) REQUIRE c.name IS UNIQUE;"
+            "CREATE CONSTRAINT clan_unique IF NOT EXISTS FOR (c:Clan) REQUIRE c.name IS UNIQUE;"
         )
         queries.append(
-            "CREATE CONSTRAINT person_unique IF NOT EXISTS "
-            "FOR (p:Person) REQUIRE p.id IS UNIQUE;\n"
+            "CREATE CONSTRAINT person_unique IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE;\n"
         )
 
         # 2. Create Clan nodes
         for clan in self._clans.values():
-            sanitized_clan = clan.name.replace("'", "").replace('"', '')
+            sanitized_clan = clan.name.replace("'", "").replace('"', "")
             queries.append(f"MERGE (c:Clan {{name: '{sanitized_clan}'}})")
 
-        queries.append("") # newline
+        queries.append("")  # newline
 
         # 3. Create Person nodes
         for person in self._persons.values():
@@ -363,12 +364,8 @@ class FamilyGraph:
             gentilicium = person.gentilicium or "Unknown"
             spot = person.findspots[0] if person.findspots else "Unknown"
 
-            safe_name = person.name_formula.canonical.replace(
-                chr(39), chr(39) + chr(39)
-            )
-            safe_spot = spot.replace(
-                chr(39), chr(39) + chr(39)
-            )
+            safe_name = person.name_formula.canonical.replace(chr(39), chr(39) + chr(39))
+            safe_spot = spot.replace(chr(39), chr(39) + chr(39))
             queries.append(
                 f"MERGE (p:Person {{id: '{person.id}'}}) "
                 f"SET p.name = '{safe_name}', "
@@ -378,38 +375,32 @@ class FamilyGraph:
                 f"p.findspot = '{safe_spot}'"
             )
 
-        queries.append("") # newline
+        queries.append("")  # newline
 
         # 4. Create BELONGS_TO edges
         for person in self._persons.values():
             if person.gentilicium:
-                sanitized_clan = person.gentilicium.replace(
-                    "'", ""
-                ).replace('"', '')
+                sanitized_clan = person.gentilicium.replace("'", "").replace('"', "")
                 queries.append(
                     f"MATCH (p:Person {{id: '{person.id}'}}), "
                     f"(c:Clan {{name: '{sanitized_clan}'}}) "
                     f"MERGE (p)-[:BELONGS_TO]->(c)"
                 )
 
-        queries.append("") # newline
+        queries.append("")  # newline
 
         # 5. Connect parents (Filiations: Patronymic & Matronymic)
         for person in self._persons.values():
             for comp in person.name_formula.components:
                 if comp.type == "patronymic":
                     # Reconstruct the father as a virtual node
-                    parent_id = (
-                        f"father_{person.id}_{comp.base_form}"
-                    )
+                    parent_id = f"father_{person.id}_{comp.base_form}"
                     parent_name = (
                         f"{comp.base_form} {person.gentilicium}"
                         if person.gentilicium
                         else comp.base_form
                     )
-                    safe_name = parent_name.replace(
-                        chr(39), chr(39) + chr(39)
-                    )
+                    safe_name = parent_name.replace(chr(39), chr(39) + chr(39))
                     queries.append(
                         f"MERGE (father:Person {{id: '{parent_id}'}}) "
                         f"SET father.name = '{safe_name}', "
@@ -418,9 +409,7 @@ class FamilyGraph:
                         f"father.gender = 'male'"
                     )
                     if person.gentilicium:
-                        clan = person.gentilicium.replace(
-                            "'", ""
-                        ).replace('"', '')
+                        clan = person.gentilicium.replace("'", "").replace('"', "")
                         queries.append(
                             f"MATCH (father:Person "
                             f"{{id: '{parent_id}'}}), "
@@ -479,7 +468,7 @@ class FamilyGraph:
         """Export as GraphML for Gephi/yEd."""
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
-            '<graphml xmlns="http://graphml.graphstruct.org/graphml">',
+            '<graphml xmlns="http://graphml.graphdrawing.org/xmlns">',
             '  <key id="label" for="node" attr.name="label" attr.type="string"/>',
             '  <key id="gender" for="node" attr.name="gender" attr.type="string"/>',
             '  <key id="type" for="node" attr.name="type" attr.type="string"/>',
@@ -492,7 +481,7 @@ class FamilyGraph:
             lines.append(f'    <node id="clan_{clan.name}">')
             lines.append(f'      <data key="label">{clan.name}</data>')
             lines.append('      <data key="type">clan</data>')
-            lines.append('    </node>')
+            lines.append("    </node>")
 
         # Add person nodes
         for person in self._persons.values():
@@ -500,27 +489,33 @@ class FamilyGraph:
             lines.append(f'      <data key="label">{person.name_formula.canonical}</data>')
             lines.append(f'      <data key="gender">{person.gender}</data>')
             lines.append('      <data key="type">person</data>')
-            lines.append('    </node>')
+            lines.append("    </node>")
 
             # Edge: person → clan
             if person.gentilicium:
                 lines.append(f'    <edge source="{person.id}" target="clan_{person.gentilicium}">')
                 lines.append('      <data key="weight">1</data>')
-                lines.append('    </edge>')
+                lines.append("    </edge>")
 
-        lines.extend(['  </graph>', '</graphml>'])
+        lines.extend(["  </graph>", "</graphml>"])
         return "\n".join(lines)
 
     def _to_csv(self) -> str:
         """Export persons as CSV."""
         import io
+
         buf = io.StringIO()
         writer = csv.writer(buf)
         writer.writerow(["id", "name", "gender", "praenomen", "gentilicium", "findspots"])
         for p in self._persons.values():
-            writer.writerow([
-                p.id, p.name_formula.canonical, p.gender,
-                p.praenomen or "", p.gentilicium or "",
-                "; ".join(p.findspots),
-            ])
+            writer.writerow(
+                [
+                    p.id,
+                    p.name_formula.canonical,
+                    p.gender,
+                    p.praenomen or "",
+                    p.gentilicium or "",
+                    "; ".join(p.findspots),
+                ]
+            )
         return buf.getvalue()

@@ -65,10 +65,14 @@ class TestCorpus:
         assert '"id": "T1"' in json_out
 
     def test_export_geojson(self):
-        self.corpus.add(Inscription(
-            id="T1", raw_text="Larθal",
-            findspot_lat=42.0, findspot_lon=12.0,
-        ))
+        self.corpus.add(
+            Inscription(
+                id="T1",
+                raw_text="Larθal",
+                findspot_lat=42.0,
+                findspot_lon=12.0,
+            )
+        )
         geojson = self.corpus.export_all("geojson")
         assert '"FeatureCollection"' in geojson
 

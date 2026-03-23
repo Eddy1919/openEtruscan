@@ -17,7 +17,8 @@ direction: rtl  # The Lemnos Stele is boustrophedon
 # =============================================================================
 # ALPHABET
 # Lemnian uses a Western Greek-derived alphabet adapted locally on Lemnos.
-# Like Etruscan, it lacks voiced stops /b/, /d/, /g/ and /o/.
+# Like Etruscan, it lacks voiced stops /b/, /d/, /g/.
+# Unlike Etruscan, Lemnian may retain /o/ (debated — see alphabet entry).
 # The script is mapped to Old Italic Unicode for consistency, since no
 # dedicated Lemnian block exists.
 # =============================================================================
@@ -180,15 +181,18 @@ onomastics:
   known_praenomina:
     male:
       - hulaie
-      - φokiasiale
       - holaiez
       - naphoth
       - ziazi
-      - morail
       - sivai
       - aker
-      - tavarzio
     female: []
+    # NOTE: With only ~2 inscriptions, all attributions are speculative.
+    # The following forms were removed from praenomina as they are likely
+    # not personal names:
+    #   φokiasiale — probably a toponymic adjective (cf. Greek Φωκαιεύς)
+    #   tavarzio   — possibly a locative or ethnonym
+    #   morail     — debated; could be a verbal form
 
   known_gentilicia:
     - vanalaśial

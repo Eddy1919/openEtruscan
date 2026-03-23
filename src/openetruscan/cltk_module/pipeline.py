@@ -26,8 +26,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from openetruscan.adapter import load_adapter
 from openetruscan.normalizer import normalize as _normalize
-from openetruscan.adapter import load_adapter, LanguageAdapter
 
 
 @dataclass
@@ -116,7 +116,7 @@ class EtruscanPipeline:
                 }
 
         # Index gentilicia: a list of known clan names
-        for name in (ono.known_gentilicia or []):
+        for name in ono.known_gentilicia or []:
             self._onomastics[name.lower()] = {
                 "tag": "GENTILICIUM",
                 "gender": "unknown",
@@ -190,14 +190,16 @@ class EtruscanPipeline:
             # NER detection on the canonical form
             ner_tag, ner_detail = self._detect_ner(result.canonical)
 
-            words.append(EtruscanWord(
-                string=token,
-                normalized=result.canonical,
-                phonetic=result.phonetic,
-                old_italic=result.old_italic,
-                ner_tag=ner_tag,
-                ner_detail=ner_detail,
-            ))
+            words.append(
+                EtruscanWord(
+                    string=token,
+                    normalized=result.canonical,
+                    phonetic=result.phonetic,
+                    old_italic=result.old_italic,
+                    ner_tag=ner_tag,
+                    ner_detail=ner_detail,
+                )
+            )
 
         return EtruscanDoc(raw=text, words=words)
 

@@ -62,9 +62,7 @@ def build_languages_js() -> str:
         "// Auto-generated from YAML adapters — do not edit manually.\n"
         "// Run: python scripts/build_web_languages.py\n"
         "\n"
-        "const LANGUAGES = "
-        + json.dumps(languages, ensure_ascii=False, indent=2)
-        + ";\n"
+        "const LANGUAGES = " + json.dumps(languages, ensure_ascii=False, indent=2) + ";\n"
     )
     return js
 
@@ -76,10 +74,7 @@ def main():
     print(f"✅ Generated {out_path} ({len(js):,} bytes)")
     for lang_id in sorted(list_available_adapters()):
         adapter = load_adapter(lang_id)
-        print(
-            f"   {lang_id}: {adapter.display_name} "
-            f"({len(adapter.alphabet)} letters)"
-        )
+        print(f"   {lang_id}: {adapter.display_name} ({len(adapter.alphabet)} letters)")
 
 
 if __name__ == "__main__":

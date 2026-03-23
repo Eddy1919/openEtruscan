@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize the Prosopographical Network Engine
     from openetruscan.prosopography import FamilyGraph
+
     family_graph = FamilyGraph.from_corpus(corpus)
 
     # Build reverse lookup for instant UI badge population
@@ -188,9 +189,5 @@ def pleiades_coverage():
         "total_inscriptions": total,
         "linked_to_pleiades": linked,
         "coverage_pct": round(linked / total * 100, 1) if total else 0,
-        "places": [
-            {"pleiades_uri": uri, "count": count}
-            for uri, count in stats.items()
-        ],
+        "places": [{"pleiades_uri": uri, "count": count} for uri, count in stats.items()],
     }
-

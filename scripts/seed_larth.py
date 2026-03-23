@@ -28,7 +28,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.normalizer import normalize
 
-LARTH_URL = "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/main/Data/Etruscan.csv"
+LARTH_URL = (
+    "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/main/Data/Etruscan.csv"
+)
 
 # Known Etruscan cities → approximate coordinates (WGS84)
 CITY_COORDS: dict[str, tuple[float, float]] = {
@@ -66,9 +68,16 @@ CITY_COORDS: dict[str, tuple[float, float]] = {
 }
 
 
-def clean_etruscan_text(raw: str) -> str:
-    """Clean raw Etruscan text from the Larth dataset."""
+def clean_etruscan_text(raw: str) -> tuple[str, bool]:
+    """Clean raw Etruscan text from the Larth dataset.
+
+    Returns (cleaned_text, has_interpuncts).
+    The boolean indicates whether the source used ':' interpuncts
+    (epigraphic word dividers carved on the original stone).
+    """
     text = raw.strip()
+    # Detect epigraphic interpuncts before removing them
+    has_interpuncts = ":" in text
     # Remove word boundary markers
     text = text.replace(" : ", " ")
     text = text.replace(":", " ")
@@ -77,7 +86,7 @@ def clean_etruscan_text(raw: str) -> str:
     text = text.replace("|", " ")
     # Collapse whitespace
     text = " ".join(text.split())
-    return text.strip()
+    return text.strip(), has_interpuncts
 
 
 def parse_date(year_from: str, year_to: str) -> tuple[int | None, int | None]:
@@ -137,7 +146,7 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
             skipped += 1
             continue
 
-        clean_text = clean_etruscan_text(raw_text)
+        clean_text, has_interpuncts = clean_etruscan_text(raw_text)
         if not clean_text:
             skipped += 1
             continue
@@ -159,6 +168,14 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
             skipped += 1
             continue
 
+        # Build notes: translation + interpunct metadata
+        notes_parts = []
+        if translation:
+            notes_parts.append(translation)
+        if has_interpuncts:
+            notes_parts.append("[interpuncts in source]")
+        notes = "; ".join(notes_parts)
+
         inscription = Inscription(
             id=inscription_id,
             raw_text=raw_text,
@@ -178,7 +195,7 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
                 "Larth: Dataset and Machine Translation "
                 "for Etruscan. ALP2023."
             ),
-            notes=translation,
+            notes=notes,
         )
         corpus.add(inscription)
         count += 1

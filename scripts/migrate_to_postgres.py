@@ -158,26 +158,16 @@ def migrate(source_path: str, target_url: str) -> None:
             row["source"],
             row["bibliography"],
             row["notes"],
-            (
-                row["language"]
-                if "language" in src_columns
-                else "etruscan"
-            ),
+            (row["language"] if "language" in src_columns else "etruscan"),
             classification,
-            (
-                row["script_system"]
-                if "script_system" in src_columns
-                else "old_italic"
-            ),
+            (row["script_system"] if "script_system" in src_columns else "old_italic"),
             completeness,
         )
 
         # Insert into PostgreSQL
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["%s"] * len(_COLUMNS))
-        conflict_updates = ", ".join(
-            f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id"
-        )
+        conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
         sql = (
             f"INSERT INTO inscriptions ({cols}) "
             f"VALUES ({placeholders}) "
@@ -187,9 +177,7 @@ def migrate(source_path: str, target_url: str) -> None:
         with pg._conn.cursor() as cur:
             cur.execute(sql, values)
 
-        classifications[classification] = (
-            classifications.get(classification, 0) + 1
-        )
+        classifications[classification] = classifications.get(classification, 0) + 1
         migrated += 1
 
         if migrated % 500 == 0:
@@ -202,7 +190,8 @@ def migrate(source_path: str, target_url: str) -> None:
     # Show classification distribution
     print("\nClassification distribution:")
     for cls_name, cls_count in sorted(
-        classifications.items(), key=lambda x: -x[1],
+        classifications.items(),
+        key=lambda x: -x[1],
     ):
         pct = cls_count / migrated * 100
         bar = "#" * int(pct / 2)
@@ -217,9 +206,7 @@ def migrate(source_path: str, target_url: str) -> None:
     # Final count check
     pg_count = pg.count()
     print(f"\nPostgreSQL count: {pg_count}")
-    assert pg_count == count, (
-        f"Count mismatch: SQLite={count}, PostgreSQL={pg_count}"
-    )
+    assert pg_count == count, f"Count mismatch: SQLite={count}, PostgreSQL={pg_count}"
     print("Migration verified.")
 
     src.close()

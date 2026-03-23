@@ -119,11 +119,13 @@ class TestFamilyGraph:
 
         # We need a complex formula to test Paternity reconstruction
         # Let's add Larθ Spurinas son of Arnθ
-        corpus.add(Inscription(
-            id="T_PATRO",
-            raw_text="larθ spurinas arnθal clan",
-            findspot="Vulci",
-        ))
+        corpus.add(
+            Inscription(
+                id="T_PATRO",
+                raw_text="larθ spurinas arnθal clan",
+                findspot="Vulci",
+            )
+        )
 
         graph = FamilyGraph.from_corpus(corpus)
         cypher = graph.export("neo4j")

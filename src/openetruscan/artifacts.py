@@ -111,9 +111,7 @@ def store_image(
     if not src.exists():
         raise FileNotFoundError(f"Image not found: {src}")
 
-    dest_dir = Path(
-        images_dir or os.environ.get("IMAGES_DIR", DEFAULT_IMAGES_DIR)
-    )
+    dest_dir = Path(images_dir or os.environ.get("IMAGES_DIR", DEFAULT_IMAGES_DIR))
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Create subdirectory per inscription
@@ -145,9 +143,7 @@ def list_images(
     """List all image files for an inscription."""
     import os
 
-    dest_dir = Path(
-        images_dir or os.environ.get("IMAGES_DIR", DEFAULT_IMAGES_DIR)
-    )
+    dest_dir = Path(images_dir or os.environ.get("IMAGES_DIR", DEFAULT_IMAGES_DIR))
     insc_dir = dest_dir / inscription_id
     if not insc_dir.exists():
         return []

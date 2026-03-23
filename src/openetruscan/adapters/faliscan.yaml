@@ -11,7 +11,7 @@ display_name: Faliscan
 iso_639_3: xfa
 script: old_italic
 unicode_range: [0x10300, 0x1032F]
-direction: rtl  # Predominantly right-to-left (like Etruscan)
+direction: mixed  # Early inscriptions RTL/boustrophedon; Neo-Faliscan (3rd–2nd c. BCE) is LTR
 
 # =============================================================================
 # ALPHABET

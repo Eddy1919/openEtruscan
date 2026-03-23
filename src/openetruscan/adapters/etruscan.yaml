@@ -106,6 +106,12 @@ alphabet:
     ipa: "r"
     variants: ["R", "r"]
 
+  ξ:
+    unicode: "\U0001030E"
+    ipa: "s"
+    variants: ["ξ"]
+    notes: "ES / four-stroke sigma (U+1030E). Some scholars distinguish this from ś (SHE, U+10311). Mapped as alias for normalisation."
+
   s:
     unicode: "\U00010314"
     ipa: "s"
@@ -165,10 +171,10 @@ equivalence_classes:
 # =============================================================================
 phonotactics:
   forbidden_word_final: ["m"]
-  forbidden_clusters: ["kt", "gp", "bd", "gd"]
+  forbidden_clusters: ["kt", "tθ", "pφ", "kχ"]
   max_consonant_cluster: 3
   vowels: ["a", "e", "i", "u"]
-  notes: "Etruscan has no /o/ vowel and no voiced stops /b/, /d/, /g/"
+  notes: "Etruscan has no /o/ vowel and no voiced stops /b/, /d/, /g/. Clusters of plain + aspirated same-PoA stops are not attested."
 
 # =============================================================================
 # ONOMASTICS
@@ -199,7 +205,6 @@ onomastics:
       - aule
       - setre
       - laris
-      - θana
       - marce
       - avle
       - caile
@@ -209,6 +214,7 @@ onomastics:
     female:
       - ramθa
       - θanχvil
+      - θana          # One of the most common female praenomina (CIE)
       - larthi
       - velia
       - fasti

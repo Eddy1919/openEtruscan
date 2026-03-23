@@ -100,15 +100,9 @@ def inscription_to_epidoc(inscription, language: str = "xet") -> str:
     if inscription.findspot:
         orig_place = ET.SubElement(origin, "origPlace")
         orig_place.text = inscription.findspot
-        if (
-            inscription.findspot_lat is not None
-            and inscription.findspot_lon is not None
-        ):
+        if inscription.findspot_lat is not None and inscription.findspot_lon is not None:
             geo = ET.SubElement(orig_place, "geo")
-            geo.text = (
-                f"{inscription.findspot_lat} "
-                f"{inscription.findspot_lon}"
-            )
+            geo.text = f"{inscription.findspot_lat} {inscription.findspot_lon}"
 
     # text body
     text = ET.SubElement(root, "text")
@@ -165,7 +159,7 @@ def corpus_to_epidoc(
         "    </titleStmt>",
         "    <publicationStmt>",
         "      <authority>OpenEtruscan</authority>",
-        '      <licence target='
+        "      <licence target="
         '"https://creativecommons.org/publicdomain/zero/1.0/">'
         "CC0 1.0</licence>",
         "    </publicationStmt>",
@@ -183,9 +177,7 @@ def corpus_to_epidoc(
         parts.append("  </ab>")
         if inscription.notes:
             parts.append('  <div type="translation">')
-            parts.append(
-                f"    <p>{_escape_xml(inscription.notes)}</p>"
-            )
+            parts.append(f"    <p>{_escape_xml(inscription.notes)}</p>")
             parts.append("  </div>")
         parts.append("</div>")
 
@@ -220,8 +212,5 @@ def _indent_xml(xml_str: str) -> str:
 def _escape_xml(text: str) -> str:
     """Escape XML special characters."""
     return (
-        text.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     )

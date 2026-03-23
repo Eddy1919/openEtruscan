@@ -169,7 +169,7 @@ def load_adapter(language_id: str) -> LanguageAdapter:
         adapter_dir = importlib.resources.files("openetruscan.adapters")
         yaml_path = adapter_dir / f"{language_id}.yaml"
         yaml_text = yaml_path.read_text(encoding="utf-8")
-    except (FileNotFoundError, TypeError) as err: # Catch the initial error
+    except (FileNotFoundError, TypeError) as err:  # Catch the initial error
         # Fallback to filesystem (development mode)
         adapter_dir = Path(__file__).parent / "adapters"
         yaml_file = adapter_dir / f"{language_id}.yaml"
@@ -179,7 +179,7 @@ def load_adapter(language_id: str) -> LanguageAdapter:
                 f"Looked in: {adapter_dir}\n"
                 f"Available adapters: {list_available_adapters()}"
             )
-            raise FileNotFoundError(msg) from err # Re-raise with 'from err'
+            raise FileNotFoundError(msg) from err  # Re-raise with 'from err'
         yaml_text = yaml_file.read_text(encoding="utf-8")
 
     raw = yaml.safe_load(yaml_text)
@@ -194,9 +194,7 @@ def load_adapter(language_id: str) -> LanguageAdapter:
         unicode_range=(unicode_range[0], unicode_range[1]),
         direction=raw.get("direction", "ltr"),
         alphabet=_parse_alphabet(raw.get("alphabet", {})),
-        equivalence_classes=_parse_equivalence_classes(
-            raw.get("equivalence_classes", {})
-        ),
+        equivalence_classes=_parse_equivalence_classes(raw.get("equivalence_classes", {})),
         phonotactics=_parse_phonotactics(raw.get("phonotactics", {})),
         onomastics=_parse_onomastics(raw.get("onomastics", {})),
     )

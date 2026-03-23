@@ -26,9 +26,7 @@ def _load_pleiades_mapping() -> dict[str, str]:
     if _mapping_cache is not None:
         return _mapping_cache
 
-    mapping_path = (
-        Path(__file__).parent.parent.parent / "data" / "pleiades_mapping.yaml"
-    )
+    mapping_path = Path(__file__).parent.parent.parent / "data" / "pleiades_mapping.yaml"
     if not mapping_path.exists():
         _mapping_cache = {}
         return _mapping_cache
@@ -37,9 +35,7 @@ def _load_pleiades_mapping() -> dict[str, str]:
         raw = yaml.safe_load(f) or {}
 
     # Filter out empty values
-    _mapping_cache = {
-        k: v for k, v in raw.items() if v
-    }
+    _mapping_cache = {k: v for k, v in raw.items() if v}
     return _mapping_cache
 
 
@@ -94,10 +90,7 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
             }
         )
 
-    if (
-        inscription.findspot_lat is not None
-        and inscription.findspot_lon is not None
-    ):
+    if inscription.findspot_lat is not None and inscription.findspot_lon is not None:
         annotation["target"]["selector"] = {
             "type": "SvgSelector",
             "value": (
@@ -110,7 +103,9 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
 
 
 def corpus_to_pelagios_jsonld(
-    corpus, language: str = "ett", limit: int = 0,
+    corpus,
+    language: str = "ett",
+    limit: int = 0,
 ) -> str:
     """
     Export the entire corpus as a Pelagios-compatible JSON-LD collection.
@@ -131,9 +126,7 @@ def corpus_to_pelagios_jsonld(
         ann = inscription_to_jsonld(inscription, language=language)
         # Only include if we have a Pleiades link
         has_pleiades = any(
-            b.get("purpose") == "identifying"
-            for b in ann.get("body", [])
-            if isinstance(b, dict)
+            b.get("purpose") == "identifying" for b in ann.get("body", []) if isinstance(b, dict)
         )
         if has_pleiades:
             annotations.append(ann)

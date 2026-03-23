@@ -57,7 +57,9 @@ main.add_command(normalize_cmd, name="normalize")
 @main.command()
 @click.argument("text")
 @click.option(
-    "--to", "target", default="old_italic",
+    "--to",
+    "target",
+    default="old_italic",
     help="Target format: canonical, old_italic, phonetic.",
 )
 @click.option("--language", "-l", default="etruscan", help="Language adapter.")
@@ -102,9 +104,7 @@ def batch(input_file: str, fmt: str, output: str | None, language: str) -> None:
         data = [r.to_dict() for r in results]
         text = json.dumps(data, ensure_ascii=False, indent=2)
     elif fmt == "jsonl":
-        text = "\n".join(
-            json.dumps(r.to_dict(), ensure_ascii=False) for r in results
-        )
+        text = "\n".join(json.dumps(r.to_dict(), ensure_ascii=False) for r in results)
     elif fmt == "csv":
         import csv
         import io
@@ -146,27 +146,36 @@ def list_adapters() -> None:
 def _get_corpus(db: str | None = None):
     """Get a corpus connection using DATABASE_URL or --db flag."""
     from openetruscan.corpus import Corpus
+
     if db:
         return Corpus.connect(db) if "://" in db else Corpus.load(db)
     return Corpus.load()
 
+
 @main.command()
 @click.argument("query")
 @click.option(
-    "--findspot", "-f", default=None,
+    "--findspot",
+    "-f",
+    default=None,
     help="Filter by findspot (partial match).",
 )
 @click.option(
-    "--date-from", default=None, type=int,
+    "--date-from",
+    default=None,
+    type=int,
     help="Start of date range (negative=BCE).",
 )
 @click.option(
-    "--date-to", default=None, type=int,
+    "--date-to",
+    default=None,
+    type=int,
     help="End of date range (negative=BCE).",
 )
 @click.option("--limit", "-n", default=20, help="Max results.")
 @click.option(
-    "--db", default=None,
+    "--db",
+    default=None,
     help="Database URL or path (default: DATABASE_URL env or local SQLite).",
 )
 @click.option("--json-output", "-j", is_flag=True, help="JSON output.")
@@ -186,12 +195,15 @@ def search(
         date_range = (date_from, date_to)
 
     results = corpus.search(
-        text=query, findspot=findspot,
-        date_range=date_range, limit=limit,
+        text=query,
+        findspot=findspot,
+        date_range=date_range,
+        limit=limit,
     )
 
     if json_output:
         import json as json_mod
+
         data = [i.to_dict() for i in results]
         click.echo(json_mod.dumps(data, ensure_ascii=False, indent=2))
     else:
@@ -208,7 +220,8 @@ def search(
 @main.command(name="import")
 @click.argument("csv_file", type=click.Path(exists=True))
 @click.option(
-    "--db", default=None,
+    "--db",
+    default=None,
     help="Database URL or path (default: DATABASE_URL env or local SQLite).",
 )
 @click.option("--language", "-l", default="etruscan", help="Language.")
@@ -223,23 +236,30 @@ def import_csv(csv_file: str, db: str | None, language: str) -> None:
 
 @main.command(name="export")
 @click.option(
-    "--format", "fmt", default="csv",
+    "--format",
+    "fmt",
+    default="csv",
     help="Output format: csv, json, jsonl, geojson, epidoc.",
 )
 @click.option("--output", "-o", default=None, help="Output file.")
 @click.option(
-    "--db", default=None,
+    "--db",
+    default=None,
     help="Database URL or path (default: DATABASE_URL env or local SQLite).",
 )
 @click.option("--limit", "-n", default=0, help="Max inscriptions (0=all).")
 def export_corpus(
-    fmt: str, output: str | None, db: str | None, limit: int,
+    fmt: str,
+    output: str | None,
+    db: str | None,
+    limit: int,
 ) -> None:
     """Export the corpus in various formats."""
     corpus = _get_corpus(db)
 
     if fmt == "epidoc":
         from openetruscan.epidoc import corpus_to_epidoc
+
         text = corpus_to_epidoc(corpus, limit=limit)
     else:
         search_limit = limit if limit > 0 else 999999
@@ -258,7 +278,9 @@ def export_corpus(
 @click.argument("text")
 @click.option("--language", "-l", default="etruscan", help="Language.")
 @click.option(
-    "--id", "inscription_id", default="CLI_001",
+    "--id",
+    "inscription_id",
+    default="CLI_001",
     help="Inscription ID.",
 )
 def epidoc(text: str, language: str, inscription_id: str) -> None:
@@ -282,6 +304,7 @@ def epidoc(text: str, language: str, inscription_id: str) -> None:
 # Registration & community commands
 # =========================================================================
 
+
 @main.command()
 @click.argument("text")
 @click.option("--id", "inscription_id", required=True, help="Inscription ID (e.g. ET_Vc_1.1).")
@@ -289,7 +312,9 @@ def epidoc(text: str, language: str, inscription_id: str) -> None:
 @click.option("--lat", default=None, type=float, help="Findspot latitude.")
 @click.option("--lon", default=None, type=float, help="Findspot longitude.")
 @click.option(
-    "--classification", "-c", default="unknown",
+    "--classification",
+    "-c",
+    default="unknown",
     help="Classification: funerary/votive/boundary/ownership/commercial/unknown.",
 )
 @click.option("--language", "-l", default="etruscan", help="Language.")
@@ -337,11 +362,16 @@ def register(
 
     if image:
         from openetruscan.artifacts import store_image
+
         img = store_image(image, inscription_id)
-        if hasattr(corpus, 'add_image'):
+        if hasattr(corpus, "add_image"):
             corpus.add_image(
-                img.id, img.inscription_id, img.filename,
-                img.mime_type, img.description, img.file_hash,
+                img.id,
+                img.inscription_id,
+                img.filename,
+                img.mime_type,
+                img.description,
+                img.file_hash,
             )
         click.echo(f"   image:          {img.filename}")
 
@@ -365,10 +395,14 @@ def upload_image(
 
     corpus = _get_corpus(db)
     img = store_image(file, inscription_id, description=description)
-    if hasattr(corpus, 'add_image'):
+    if hasattr(corpus, "add_image"):
         corpus.add_image(
-            img.id, img.inscription_id, img.filename,
-            img.mime_type, img.description, img.file_hash,
+            img.id,
+            img.inscription_id,
+            img.filename,
+            img.mime_type,
+            img.description,
+            img.file_hash,
         )
     click.echo(f"✅ Uploaded image for {inscription_id}")
     click.echo(f"   file:  {img.filename}")
@@ -391,8 +425,7 @@ def classify(
 
     if classification not in CLASSIFICATIONS:
         click.echo(
-            f"❌ Invalid classification: {classification}. "
-            f"Valid: {', '.join(CLASSIFICATIONS)}",
+            f"❌ Invalid classification: {classification}. Valid: {', '.join(CLASSIFICATIONS)}",
             err=True,
         )
         sys.exit(1)

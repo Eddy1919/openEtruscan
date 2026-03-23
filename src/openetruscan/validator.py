@@ -106,7 +106,9 @@ def validate_file(
         report = ValidationReport(file_path=str(path), total_lines=0)
         report.issues.append(
             ValidationIssue(
-                line=0, column=None, severity="error",
+                line=0,
+                column=None,
+                severity="error",
                 message=f"File not found: {path}",
             )
         )
@@ -121,9 +123,7 @@ def validate_file(
     return _validate_plain_text(content, str(path), language)
 
 
-def _validate_plain_text(
-    content: str, file_path: str, language: str
-) -> ValidationReport:
+def _validate_plain_text(content: str, file_path: str, language: str) -> ValidationReport:
     """Validate a plain text file (one inscription per line)."""
     lines = content.splitlines()
     report = ValidationReport(file_path=file_path, total_lines=len(lines))
