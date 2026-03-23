@@ -113,6 +113,44 @@ class TestFamilyGraph:
         corpus.close()
         Path(db_path).unlink()
 
+    def test_export_neo4j(self):
+        """Test FamilyGraph Neo4j Cypher script generation."""
+        corpus, db_path = self._build_test_corpus()
+
+        # We need a complex formula to test Paternity reconstruction
+        # Let's add Larθ Spurinas son of Arnθ
+        corpus.add(Inscription(
+            id="T_PATRO",
+            raw_text="larθ spurinas arnθal clan",
+            findspot="Vulci",
+        ))
+
+        graph = FamilyGraph.from_corpus(corpus)
+        cypher = graph.export("neo4j")
+
+        # Asserting constraints
+        assert "CREATE CONSTRAINT clan_unique" in cypher
+        assert "CREATE CONSTRAINT person_unique" in cypher
+
+        # Asserting Clan node
+        assert "MERGE (c:Clan {name: 'spurinas'})" in cypher
+
+        # Asserting Person node
+        assert "MERGE (p:Person {id: 'P00004'})" in cypher
+        assert "p.praenomen = 'larθ'" in cypher
+        assert "p.gentilicium = 'spurinas'" in cypher
+
+        # Asserting BELONGS_TO relationship is in the query (multiple times probably)
+        assert "-[:BELONGS_TO]->(c)" in cypher
+
+        # Asserting Reconstructed Father node and CHILD_OF edge
+        assert "MERGE (father:Person {id: 'father_P00004_arnθ'})" in cypher
+        assert "father.type = 'Reconstructed_Patronymic'" in cypher
+        assert "-[:CHILD_OF]->(father)" in cypher
+
+        corpus.close()
+        Path(db_path).unlink()
+
     def test_clans_sorted_by_size(self):
         corpus, db_path = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)

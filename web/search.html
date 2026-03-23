@@ -230,6 +230,28 @@
             gap: 0.25rem;
         }
 
+        .clan-badge {
+            display: inline-block;
+            background: rgba(196, 112, 75, 0.2);
+            color: var(--accent-light);
+            border: 1px solid var(--accent);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-family: var(--font-body);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+            cursor: pointer;
+            vertical-align: middle;
+            transition: all 0.2s;
+        }
+
+        .clan-badge:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
         /* Map Container */
         .map-container {
             flex: 1;
@@ -320,16 +342,22 @@
         <header class="header">
             <h1><span class="etruscan">𐌏𐌐𐌄𐌍</span> OpenEtruscan</h1>
             <p>Live Database Search</p>
-            <div class="nav-links">
-                <a href="index.html">Normalizer</a>
-                <a href="map.html">Static Map</a>
-            </div>
+            <nav class="nav-links" style="margin-top: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
+                <a href="index.html" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;"
+                    onmouseover="this.style.color='var(--accent)'"
+                    onmouseout="this.style.color='var(--text-muted)'">Normalizer</a>
+                <a href="search.html" style="color: var(--accent); font-weight: 600; text-decoration: none;">Live
+                    Search</a>
+                <a href="map.html" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;"
+                    onmouseover="this.style.color='var(--accent)'"
+                    onmouseout="this.style.color='var(--text-muted)'">Static Map</a>
+            </nav>
         </header>
 
         <form class="search-form" id="searchForm">
             <div class="form-group">
                 <label for="apiUrl">API Endpoint</label>
-                <input type="text" id="apiUrl" value="http://127.0.0.1:8000" placeholder="https://api.openetruscan.org">
+                <input type="text" id="apiUrl" value="/api" placeholder="e.g. /api or http://127.0.0.1:8000">
             </div>
 
             <div class="form-group">
@@ -386,6 +414,7 @@
 
         let currentMarkers = [];
         let currentCircle = null;
+        let currentLines = null;
 
         const apiUrlInput = document.getElementById('apiUrl');
         const searchForm = document.getElementById('searchForm');
@@ -428,13 +457,14 @@
 
             data.results.forEach(insc => {
                 // Sidebar HTML
+                const badgeHtml = insc.gens ? `<span class="clan-badge" onclick="event.stopPropagation(); window.searchClan('${insc.gens}')">${insc.gens} Family</span>` : '';
                 html += `
                     <div class="result-card" onclick="panTo(${insc.findspot_lat || 42.5}, ${insc.findspot_lon || 12.0})">
                         <div class="result-id">
                             <span>${insc.id}</span>
                             <span style="color:#6b6962">${insc.classification}</span>
                         </div>
-                        <div class="result-text">${insc.canonical || '—'}</div>
+                        <div class="result-text">${insc.canonical || '—'} ${badgeHtml}</div>
                         <div class="result-italic">${insc.old_italic || '—'}</div>
                         <div class="result-meta">
                             <div>📍 ${insc.findspot || 'Unknown Location'}</div>
@@ -469,7 +499,7 @@
             resultsList.innerHTML = html;
 
             // Fit map to results if there is no hardcoded circle
-            if (bounds.length > 0 && !currentCircle) {
+            if (bounds.length > 0 && !currentCircle && !currentLines) {
                 map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 10 });
             }
         }
@@ -480,6 +510,10 @@
             if (currentCircle) {
                 map.removeLayer(currentCircle);
                 currentCircle = null;
+            }
+            if (currentLines) {
+                map.removeLayer(currentLines);
+                currentLines = null;
             }
 
             resultsList.innerHTML = `<div style="text-align:center; padding:2rem;">Searching...</div>`;
@@ -541,6 +575,47 @@
                 resultsList.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: Cannot connect to server.</div>`;
             }
         });
+
+        // Action: Clan Network Search
+        window.searchClan = async function(gens) {
+            // Clear prior states
+            if (currentCircle) { map.removeLayer(currentCircle); currentCircle = null; }
+            if (currentLines) { map.removeLayer(currentLines); currentLines = null; }
+            
+            document.getElementById('q').value = '';
+            document.getElementById('findspot').value = '';
+            resultsList.innerHTML = `<div style="text-align:center; padding:2rem;">Mapping ${gens} Family Network...</div>`;
+
+            const start = performance.now();
+            try {
+                const url = new URL(apiUrlInput.value + '/clan/' + encodeURIComponent(gens));
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                document.getElementById('resultsTime').textContent = Math.round(performance.now() - start) + 'ms';
+                
+                renderResults(data);
+                
+                // Extract unique valid coordinates for the network lines
+                const validCoords = data.results
+                    .filter(i => i.findspot_lat && i.findspot_lon)
+                    .map(i => [i.findspot_lat, i.findspot_lon]);
+                    
+                if (validCoords.length > 1) {
+                    currentLines = L.polyline(validCoords, {
+                        color: '#d4855f', 
+                        weight: 2, 
+                        dashArray: "4 8",
+                        opacity: 0.8
+                    }).addTo(map);
+                    map.fitBounds(currentLines.getBounds(), { padding: [50, 50] });
+                } else if (validCoords.length === 1) {
+                    map.flyTo(validCoords[0], 10);
+                }
+                
+            } catch (err) {
+                resultsList.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: Cannot fetch clan data.</div>`;
+            }
+        };
 
         // Global panTo
         window.panTo = function (lat, lon) {

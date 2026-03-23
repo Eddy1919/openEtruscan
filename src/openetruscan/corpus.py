@@ -685,6 +685,7 @@ class PostgresCorpus(BaseCorpus):
     def _ensure_db(self) -> None:
         """Create tables if they don't exist (ignored for read-only users)."""
         import psycopg2
+
         from openetruscan.artifacts import IMAGES_PG_SCHEMA
 
         try:

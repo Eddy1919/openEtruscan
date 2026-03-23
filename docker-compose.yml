@@ -1,0 +1,23 @@
+# OpenEtruscan Production Deployment Stack
+# To deploy: docker compose up -d --build
+version: '3.8'
+
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env # In production, specify DATABASE_URL here
+    expose:
+      - "8000"
+
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api

@@ -6,7 +6,6 @@ Run locally:
     uvicorn openetruscan.server:app --reload
 """
 
-import math
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Query
@@ -15,16 +14,31 @@ from pydantic import BaseModel
 
 from openetruscan.corpus import Corpus
 
-# Global corpus instance (loaded on startup)
+# Global corpus and graph instances (loaded on startup)
 corpus = None
+family_graph = None
+insc_to_gens = {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global corpus
+    global corpus, family_graph, insc_to_gens
     # If DATABASE_URL is set, Corpus.load() connects to PostgreSQL automatically.
     # Otherwise, it falls back to the local SQLite offline copy.
     corpus = Corpus.load()
+
+    # Initialize the Prosopographical Network Engine
+    from openetruscan.prosopography import FamilyGraph
+    family_graph = FamilyGraph.from_corpus(corpus)
+
+    # Build reverse lookup for instant UI badge population
+    insc_to_gens = {
+        idx: p.gentilicium
+        for p in family_graph.persons()
+        for idx in p.inscription_ids
+        if p.gentilicium
+    }
+
     yield
     if corpus:
         corpus.close()
@@ -61,12 +75,32 @@ class InscriptionModel(BaseModel):
     object_type: str
     language: str
     classification: str
+    gens: str | None = None
 
 
 class SearchResponse(BaseModel):
     total: int
     count: int
     results: list[InscriptionModel]
+
+
+def _build_model(i) -> InscriptionModel:
+    return InscriptionModel(
+        id=i.id,
+        canonical=i.canonical,
+        phonetic=i.phonetic,
+        old_italic=i.old_italic,
+        raw_text=i.raw_text,
+        findspot=i.findspot,
+        findspot_lat=i.findspot_lat,
+        findspot_lon=i.findspot_lon,
+        date_display=i.date_display(),
+        medium=i.medium,
+        object_type=i.object_type,
+        language=i.language,
+        classification=i.classification,
+        gens=insc_to_gens.get(i.id),
+    )
 
 
 @app.get("/search", response_model=SearchResponse)
@@ -85,24 +119,7 @@ def search_corpus(
         classification=classification,
         limit=limit,
     )
-    data = [
-        InscriptionModel(
-            id=i.id,
-            canonical=i.canonical,
-            phonetic=i.phonetic,
-            old_italic=i.old_italic,
-            raw_text=i.raw_text,
-            findspot=i.findspot,
-            findspot_lat=i.findspot_lat,
-            findspot_lon=i.findspot_lon,
-            date_display=i.date_display(),
-            medium=i.medium,
-            object_type=i.object_type,
-            language=i.language,
-            classification=i.classification,
-        )
-        for i in results.inscriptions
-    ]
+    data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
 
@@ -113,31 +130,29 @@ def search_by_radius(
     radius_km: float = Query(50.0, description="Radius in kilometers"),
     limit: int = 100,
 ):
-    """
-    Search by spatial radius.
-    If backed by Cloud SQL, uses blazing-fast native PostGIS ST_DWithin over GiST index.
-    If backed by SQLite, falls back to Python haversine formula in-memory.
-    """
+    """Search by spatial radius."""
     results = corpus.search_radius(lat=lat, lon=lon, radius_km=radius_km, limit=limit)
-    data = [
-         InscriptionModel(
-            id=i.id,
-            canonical=i.canonical,
-            phonetic=i.phonetic,
-            old_italic=i.old_italic,
-            raw_text=i.raw_text,
-            findspot=i.findspot,
-            findspot_lat=i.findspot_lat,
-            findspot_lon=i.findspot_lon,
-            date_display=i.date_display(),
-            medium=i.medium,
-            object_type=i.object_type,
-            language=i.language,
-            classification=i.classification,
-        )
-        for i in results.inscriptions
-    ]
+    data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
+
+
+@app.get("/clan/{gens}", response_model=SearchResponse)
+def search_by_clan(gens: str):
+    """Prosopographical network search."""
+    clan_info = family_graph.clan(gens)
+    if not clan_info:
+        return {"total": 0, "count": 0, "results": []}
+
+    member_insc_ids = []
+    for member in clan_info.members:
+        member_insc_ids.extend(member.inscription_ids)
+
+    results = corpus.search(limit=99999)
+    id_set = set(member_insc_ids)
+    matching = [i for i in results.inscriptions if i.id in id_set]
+
+    data = [_build_model(i) for i in matching]
+    return {"total": len(data), "count": len(data), "results": data}
 
 
 @app.get("/stats")

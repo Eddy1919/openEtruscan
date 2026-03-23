@@ -1,0 +1,27 @@
+name: Deploy OpenEtruscan to Podnotes
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            if [ ! -d "~/openEtruscan" ]; then
+              git clone https://github.com/${{ github.repository }}.git ~/openEtruscan
+            fi
+            cd ~/openEtruscan
+            git pull origin main
+            
+            # Start the Docker Compose stack (build flag required per reliability rules)
+            docker compose up -d --build

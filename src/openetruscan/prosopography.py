@@ -328,8 +328,130 @@ class FamilyGraph:
             return self._to_graphml()
         elif fmt == "csv":
             return self._to_csv()
+        elif fmt == "neo4j":
+            return self._to_neo4j_cypher()
         else:
-            raise ValueError(f"Unknown format: {fmt}. Use: json, graphml, csv")
+            raise ValueError(f"Unknown format: {fmt}. Use: json, graphml, csv, neo4j")
+
+    def _to_neo4j_cypher(self) -> str:
+        """
+        Export the graph as a Neo4j Cypher script (.cypher).
+        Uses MERGE statements heavily so the script is idempotent and safe.
+        """
+        queries = []
+
+        # 1. Create constraints (Neo4j 4.x/5.x compatible)
+        queries.append(
+            "CREATE CONSTRAINT clan_unique IF NOT EXISTS "
+            "FOR (c:Clan) REQUIRE c.name IS UNIQUE;"
+        )
+        queries.append(
+            "CREATE CONSTRAINT person_unique IF NOT EXISTS "
+            "FOR (p:Person) REQUIRE p.id IS UNIQUE;\n"
+        )
+
+        # 2. Create Clan nodes
+        for clan in self._clans.values():
+            sanitized_clan = clan.name.replace("'", "").replace('"', '')
+            queries.append(f"MERGE (c:Clan {{name: '{sanitized_clan}'}})")
+
+        queries.append("") # newline
+
+        # 3. Create Person nodes
+        for person in self._persons.values():
+            praenomen = person.praenomen or "Unknown"
+            gentilicium = person.gentilicium or "Unknown"
+            spot = person.findspots[0] if person.findspots else "Unknown"
+
+            safe_name = person.name_formula.canonical.replace(
+                chr(39), chr(39) + chr(39)
+            )
+            safe_spot = spot.replace(
+                chr(39), chr(39) + chr(39)
+            )
+            queries.append(
+                f"MERGE (p:Person {{id: '{person.id}'}}) "
+                f"SET p.name = '{safe_name}', "
+                f"p.praenomen = '{praenomen}', "
+                f"p.gentilicium = '{gentilicium}', "
+                f"p.gender = '{person.gender}', "
+                f"p.findspot = '{safe_spot}'"
+            )
+
+        queries.append("") # newline
+
+        # 4. Create BELONGS_TO edges
+        for person in self._persons.values():
+            if person.gentilicium:
+                sanitized_clan = person.gentilicium.replace(
+                    "'", ""
+                ).replace('"', '')
+                queries.append(
+                    f"MATCH (p:Person {{id: '{person.id}'}}), "
+                    f"(c:Clan {{name: '{sanitized_clan}'}}) "
+                    f"MERGE (p)-[:BELONGS_TO]->(c)"
+                )
+
+        queries.append("") # newline
+
+        # 5. Connect parents (Filiations: Patronymic & Matronymic)
+        for person in self._persons.values():
+            for comp in person.name_formula.components:
+                if comp.type == "patronymic":
+                    # Reconstruct the father as a virtual node
+                    parent_id = (
+                        f"father_{person.id}_{comp.base_form}"
+                    )
+                    parent_name = (
+                        f"{comp.base_form} {person.gentilicium}"
+                        if person.gentilicium
+                        else comp.base_form
+                    )
+                    safe_name = parent_name.replace(
+                        chr(39), chr(39) + chr(39)
+                    )
+                    queries.append(
+                        f"MERGE (father:Person {{id: '{parent_id}'}}) "
+                        f"SET father.name = '{safe_name}', "
+                        f"father.praenomen = '{comp.base_form}', "
+                        f"father.type = 'Reconstructed_Patronymic', "
+                        f"father.gender = 'male'"
+                    )
+                    if person.gentilicium:
+                        clan = person.gentilicium.replace(
+                            "'", ""
+                        ).replace('"', '')
+                        queries.append(
+                            f"MATCH (father:Person "
+                            f"{{id: '{parent_id}'}}), "
+                            f"(c:Clan {{name: '{clan}'}}) "
+                            f"MERGE (father)-[:BELONGS_TO]->(c)"
+                        )
+                    queries.append(
+                        f"MATCH (child:Person "
+                        f"{{id: '{person.id}'}}), "
+                        f"(father:Person {{id: '{parent_id}'}}) "
+                        f"MERGE (child)-[:CHILD_OF]->(father)"
+                    )
+                elif comp.type == "metronymic":
+                    # Reconstruct the mother as a virtual node
+                    mother_id = f"mother_{person.id}_{comp.base_form}"
+                    queries.append(
+                        f"MERGE (mother:Person "
+                        f"{{id: '{mother_id}'}}) "
+                        f"SET mother.name = '{comp.base_form}', "
+                        f"mother.praenomen = '{comp.base_form}', "
+                        f"mother.type = 'Reconstructed_Metronymic', "
+                        f"mother.gender = 'female'"
+                    )
+                    queries.append(
+                        f"MATCH (child:Person "
+                        f"{{id: '{person.id}'}}), "
+                        f"(mother:Person {{id: '{mother_id}'}}) "
+                        f"MERGE (child)-[:CHILD_OF]->(mother)"
+                    )
+
+        return ";\n".join(filter(None, queries)) + ";\n"
 
     def _to_json(self) -> str:
         data = {

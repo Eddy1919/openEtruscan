@@ -39,6 +39,10 @@ htmlcov/
 # SQLite databases (generated, not tracked)
 *.db
 
+# Linter caches
+.ruff_cache/
+
 # Environment
 .env
 .env.local
+.env.production

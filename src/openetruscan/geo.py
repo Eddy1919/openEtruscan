@@ -1,5 +1,6 @@
 import math
 
+
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance in kilometers between two points."""
     r_earth = 6371.0
