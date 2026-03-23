@@ -215,24 +215,25 @@ CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
 _PG_SCHEMA = """
 CREATE TABLE IF NOT EXISTS inscriptions (
     id TEXT PRIMARY KEY,
+    canonical TEXT NOT NULL,
+    phonetic TEXT NOT NULL,
+    old_italic TEXT NOT NULL,
     raw_text TEXT NOT NULL,
-    canonical TEXT NOT NULL DEFAULT '',
-    phonetic TEXT NOT NULL DEFAULT '',
-    old_italic TEXT NOT NULL DEFAULT '',
-    findspot TEXT NOT NULL DEFAULT '',
+    findspot TEXT DEFAULT '',
     findspot_lat DOUBLE PRECISION,
     findspot_lon DOUBLE PRECISION,
     date_approx INTEGER,
     date_uncertainty INTEGER,
-    medium TEXT NOT NULL DEFAULT '',
-    object_type TEXT NOT NULL DEFAULT '',
-    source TEXT NOT NULL DEFAULT '',
-    bibliography TEXT NOT NULL DEFAULT '',
-    notes TEXT NOT NULL DEFAULT '',
+    medium TEXT DEFAULT '',
+    object_type TEXT DEFAULT '',
+    source TEXT DEFAULT '',
+    bibliography TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
     language TEXT NOT NULL DEFAULT 'etruscan',
     classification TEXT NOT NULL DEFAULT 'unknown',
     script_system TEXT NOT NULL DEFAULT 'old_italic',
     completeness TEXT NOT NULL DEFAULT 'complete',
+    geom geometry(Point, 4326),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -638,8 +639,13 @@ class PostgresCorpus(BaseCorpus):
         from openetruscan.artifacts import IMAGES_PG_SCHEMA
 
         with self._conn.cursor() as cur:
+            cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
             cur.execute(_PG_SCHEMA)
             cur.execute(IMAGES_PG_SCHEMA)
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom "
+                "ON inscriptions USING GIST (geom);"
+            )
         self._conn.commit()
 
     def add(
@@ -652,13 +658,30 @@ class PostgresCorpus(BaseCorpus):
         conflict_updates = ", ".join(
             f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id"
         )
-        sql = (
-            f"INSERT INTO inscriptions ({cols}) "
-            f"VALUES ({placeholders}) "
-            f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}"
-        )
+
+        vals = list(self._inscription_values(inscription))
+
+        if inscription.findspot_lon is not None and inscription.findspot_lat is not None:
+            geom_insert = "ST_SetSRID(ST_MakePoint(%s, %s), 4326)"
+            vals.extend([inscription.findspot_lon, inscription.findspot_lat])
+            insert_cols = f"({cols}, geom)"
+            insert_placeholders = f"({placeholders}, {geom_insert})"
+        else:
+            geom_insert = "NULL"
+            insert_cols = f"({cols}, geom)"
+            insert_placeholders = f"({placeholders}, {geom_insert})"
+
+        query = f"""
+            INSERT INTO inscriptions {insert_cols}
+            VALUES {insert_placeholders}
+            ON CONFLICT (id) DO UPDATE SET
+                {conflict_updates},
+                geom = EXCLUDED.geom,
+                updated_at = NOW()
+        """
+
         with self._conn.cursor() as cur:
-            cur.execute(sql, self._inscription_values(inscription))
+            cur.execute(query, tuple(vals))
         self._conn.commit()
 
     def search(
