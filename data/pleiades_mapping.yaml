@@ -1,0 +1,58 @@
+# =============================================================================
+# OpenEtruscan — Pleiades Linked Open Data Mapping
+# =============================================================================
+# Maps corpus findspot names to Pleiades place URIs for LOD integration.
+# Auto-resolved from https://atlantides.org/downloads/pleiades/dumps/
+#
+# Format: findspot_name → Pleiades place ID
+# Full URI: https://pleiades.stoa.org/places/{id}
+# =============================================================================
+
+# Major Etruscan cities
+Caere: "422859"
+Tarquinia: "413332"
+Clusium: "413096"
+Pyrgi: "433061"
+Volsinii: "413389"
+Veii: "423116"
+Vulci: "413393"
+Volaterrae: "403292"
+Perusia: "413248"
+Cortona: "413106"
+Populonia: "403212"
+Pisae: "403253"
+Arretium: "413032"
+Rusellae: "413288"
+Faesulae: "413124"
+Vetulonia: "403291"
+Spina: "393498"
+Falerii: "413125"
+Narce: "413133"
+Saturnia: "413044"
+Roma: "423025"
+
+# Ager territories (mapped to parent city)
+Ager Tarquiniensis: "413332"
+Ager Caeretanus: "422859"
+Ager Clusinus: "413096"
+Ager Volsiniensis: "413389"
+Ager Volaterranus: "403292"
+Ager Volcentanus: "413393"
+Ager Veientanus: "423116"
+Ager Saenensis: "413044"
+Ager Faesulanus: "413124"
+Ager Pisanus: "403253"
+Ager Capenas: "413125"
+Falerii et Ager Faliscus: "413125"
+
+# Regions
+Campania: "432742"
+Latium: "432900"
+Umbria: "413360"
+Liguria: "383698"
+Lucania: "442639"
+Aemilia: "393372"
+Padana: "393372"
+Africa: ""
+Algeria: ""
+Isola d'Elba: ""

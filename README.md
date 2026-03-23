@@ -165,6 +165,7 @@ pytest
 - [x] **Production deployment** — Docker + Nginx + HTTPS on [openetruscan.com](https://openetruscan.com)
 - [x] **CI/CD** — GitHub Actions (test on Python 3.10–3.13, auto-deploy, PyPI publish)
 - [x] **65 tests** passing across all modules
+- [x] **Linked Open Data** — Pleiades integration with JSON-LD Pelagios feed (`/pelagios.jsonld`)
 
 ### 🔜 Next
 
@@ -175,7 +176,6 @@ pytest
 ### 🗓️ Planned
 
 - [ ] **CLTK Etruscan module** — contribute to the [Classical Language Toolkit](https://cltk.org)
-- [ ] **Linked Open Data** — publish to [Pelagios](https://pelagios.org)/[Pleiades](https://pleiades.stoa.org) gazetteers
 - [ ] **Statistical tools** — letter frequency analysis, dialect clustering, dating heuristics
 
 ## License

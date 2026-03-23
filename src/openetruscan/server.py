@@ -159,3 +159,38 @@ def search_by_clan(gens: str):
 def corpus_stats():
     """Get corpus counts."""
     return {"total_inscriptions": corpus.count()}
+
+
+@app.get("/pelagios.jsonld")
+def pelagios_feed():
+    """Pelagios-compatible JSON-LD feed for Linked Open Data."""
+
+    from fastapi.responses import Response
+
+    from openetruscan.lod import corpus_to_pelagios_jsonld
+
+    jsonld = corpus_to_pelagios_jsonld(corpus)
+    return Response(
+        content=jsonld,
+        media_type="application/ld+json",
+    )
+
+
+@app.get("/pleiades-stats")
+def pleiades_coverage():
+    """Pleiades coverage statistics."""
+    from openetruscan.lod import pleiades_stats
+
+    stats = pleiades_stats(corpus)
+    total = corpus.count()
+    linked = sum(stats.values())
+    return {
+        "total_inscriptions": total,
+        "linked_to_pleiades": linked,
+        "coverage_pct": round(linked / total * 100, 1) if total else 0,
+        "places": [
+            {"pleiades_uri": uri, "count": count}
+            for uri, count in stats.items()
+        ],
+    }
+
