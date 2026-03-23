@@ -387,11 +387,11 @@ class BaseCorpus(ABC):
 
         where = " AND ".join(conditions) if conditions else "1=1"
         query = (
-            f"SELECT * FROM inscriptions WHERE {where} "
+            f"SELECT * FROM inscriptions WHERE {where} "  # nosec B608
             f"ORDER BY id LIMIT {ph}"
         )
         count_query = (
-            f"SELECT COUNT(*) FROM inscriptions WHERE {where}"
+            f"SELECT COUNT(*) FROM inscriptions WHERE {where}"  # nosec B608
         )
         params_with_limit = params + [limit]
 
@@ -671,7 +671,8 @@ class PostgresCorpus(BaseCorpus):
             insert_cols = f"({cols}, geom)"
             insert_placeholders = f"({placeholders}, {geom_insert})"
 
-        query = f"""
+        # Dynamic construction of columns/placeholders is safe since they are strictly hardcoded internal lists
+        query = f"""  # nosec B608
             INSERT INTO inscriptions {insert_cols}
             VALUES {insert_placeholders}
             ON CONFLICT (id) DO UPDATE SET
@@ -751,9 +752,7 @@ class PostgresCorpus(BaseCorpus):
                 imported += 1
         return imported
 
-    def create_readonly_user(
-        self, password: str = "readonly_public",
-    ) -> None:
+    def create_readonly_user(self, password: str) -> None:
         """
         Create a read-only PostgreSQL user for public access.
         Prevents abuse: public users can only SELECT.

@@ -12,7 +12,7 @@ Requires: lxml (optional dependency, install with `pip install openetruscan[epid
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405
 from collections.abc import Iterator
 
 # Register the TEI namespace to avoid ns0: prefix in output
@@ -210,7 +210,7 @@ def epidoc_iterator(
 def _indent_xml(xml_str: str) -> str:
     """Simple XML indentation."""
     try:
-        root = ET.fromstring(xml_str)
+        root = ET.fromstring(xml_str)  # nosec B314
         ET.indent(root)
         return ET.tostring(root, encoding="unicode")
     except Exception:
