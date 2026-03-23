@@ -96,8 +96,8 @@ OpenEtruscan supports two deployment modes via the `.env` file (see `.env.exampl
 2. **Cloud Public (PostgreSQL)**: To connect to our live public Cloud SQL instance, set `DATABASE_URL` in your `.env`. The cloud instance features abuse protection (a read-only `corpus_reader` role) so anyone can query the most up-to-date data directly.
 
 ```bash
-# Example .env connection
-DATABASE_URL=postgresql://corpus_reader:openetruscan_readonly_2024@34.76.146.115/corpus
+# Example .env connection (replace <PASSWORD> with actual password)
+DATABASE_URL=postgresql://corpus_reader:<PASSWORD>@34.76.146.115/corpus
 ```
 
 ## Contributing

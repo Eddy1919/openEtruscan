@@ -210,7 +210,8 @@ def migrate(source_path: str, target_url: str) -> None:
 
     # Create read-only user
     print("\nCreating read-only user 'corpus_reader'...")
-    pg.create_readonly_user("openetruscan_readonly_2024")
+    # Note: Use a strong password in production or read from env
+    pg.create_readonly_user("openetruscan_readonly_user_pass")
     print("Done. Public read-only access configured.")
 
     # Final count check
