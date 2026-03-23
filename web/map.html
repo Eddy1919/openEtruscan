@@ -114,6 +114,40 @@
             font-size: 0.85rem !important;
             line-height: 1.5 !important;
             margin: 12px 16px !important;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-dim) var(--bg-card);
+        }
+
+        /* Webkit scrollbar styling */
+        .leaflet-popup-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .leaflet-popup-content::-webkit-scrollbar-track {
+            background: var(--bg-card);
+            border-radius: 3px;
+        }
+
+        .leaflet-popup-content::-webkit-scrollbar-thumb {
+            background: var(--accent-dim);
+            border-radius: 3px;
+        }
+
+        .leaflet-popup-content::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* Popup inscription card */
+        .popup-insc {
+            margin: 6px 0;
+            padding: 8px;
+            border-top: 1px solid var(--border);
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .popup-insc:hover {
+            background: rgba(196, 112, 75, 0.08);
         }
 
         .popup-id {
@@ -309,12 +343,12 @@
                 const text = insc.canonical || insc.id;
                 const displayText = text.length > 40 ? text.substring(0, 40) + '…' : text;
                 popupHtml += `
-                            <div style="margin: 4px 0; padding: 4px 0; border-top: 1px solid #2a2a36;">
-                                <div class="popup-id">${insc.id}</div>
-                                <div class="popup-text">${displayText}</div>
-                                ${insc.date ? `<div class="popup-date">${insc.date}</div>` : ''}
-                            </div>
-                        `;
+                    <div class="popup-insc">
+                        <div class="popup-id">${insc.id}</div>
+                        <div class="popup-text">${displayText}</div>
+                        ${insc.date ? `<div class="popup-date">${insc.date}</div>` : ''}
+                    </div>
+                `;
             }
 
             if (count > 5) {

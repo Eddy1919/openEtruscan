@@ -141,6 +141,21 @@ body {
     color: #8888cc;
 }
 
+.badge-map {
+    border-color: var(--accent-dim);
+    color: var(--accent-light);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.badge-map:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
 /* Converter */
 .converter {
     flex: 1;
