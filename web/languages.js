@@ -468,6 +468,231 @@ const LANGUAGES = {
       "u"
     ]
   },
+  "lemnian": {
+    "id": "lemnian",
+    "displayName": "Lemnian",
+    "direction": "rtl",
+    "alphabet": {
+      "a": {
+        "unicode": "𐌀",
+        "ipa": "a",
+        "variants": [
+          "A",
+          "a"
+        ]
+      },
+      "e": {
+        "unicode": "𐌄",
+        "ipa": "e",
+        "variants": [
+          "E",
+          "e"
+        ]
+      },
+      "v": {
+        "unicode": "𐌅",
+        "ipa": "v",
+        "variants": [
+          "V",
+          "v",
+          "W",
+          "w"
+        ]
+      },
+      "z": {
+        "unicode": "𐌆",
+        "ipa": "ts",
+        "variants": [
+          "Z",
+          "z"
+        ]
+      },
+      "h": {
+        "unicode": "𐌇",
+        "ipa": "h",
+        "variants": [
+          "H",
+          "h"
+        ]
+      },
+      "θ": {
+        "unicode": "𐌈",
+        "ipa": "tʰ",
+        "variants": [
+          "TH",
+          "Th",
+          "th",
+          "θ",
+          "Θ"
+        ]
+      },
+      "i": {
+        "unicode": "𐌉",
+        "ipa": "i",
+        "variants": [
+          "I",
+          "i"
+        ]
+      },
+      "k": {
+        "unicode": "𐌊",
+        "ipa": "k",
+        "variants": [
+          "K",
+          "k",
+          "C",
+          "c"
+        ]
+      },
+      "l": {
+        "unicode": "𐌋",
+        "ipa": "l",
+        "variants": [
+          "L",
+          "l"
+        ]
+      },
+      "m": {
+        "unicode": "𐌌",
+        "ipa": "m",
+        "variants": [
+          "M",
+          "m"
+        ]
+      },
+      "n": {
+        "unicode": "𐌍",
+        "ipa": "n",
+        "variants": [
+          "N",
+          "n"
+        ]
+      },
+      "o": {
+        "unicode": "𐌏",
+        "ipa": "o",
+        "variants": [
+          "O",
+          "o"
+        ]
+      },
+      "p": {
+        "unicode": "𐌐",
+        "ipa": "p",
+        "variants": [
+          "P",
+          "p"
+        ]
+      },
+      "ś": {
+        "unicode": "𐌑",
+        "ipa": "ʃ",
+        "variants": [
+          "Ś",
+          "ś",
+          "SH",
+          "Sh",
+          "sh",
+          "S2",
+          "s2"
+        ]
+      },
+      "r": {
+        "unicode": "𐌓",
+        "ipa": "r",
+        "variants": [
+          "R",
+          "r"
+        ]
+      },
+      "s": {
+        "unicode": "𐌔",
+        "ipa": "s",
+        "variants": [
+          "S",
+          "s"
+        ]
+      },
+      "t": {
+        "unicode": "𐌕",
+        "ipa": "t",
+        "variants": [
+          "T",
+          "t"
+        ]
+      },
+      "u": {
+        "unicode": "𐌖",
+        "ipa": "u",
+        "variants": [
+          "U",
+          "u"
+        ]
+      },
+      "φ": {
+        "unicode": "𐌘",
+        "ipa": "pʰ",
+        "variants": [
+          "PH",
+          "Ph",
+          "ph",
+          "φ",
+          "Φ"
+        ]
+      },
+      "χ": {
+        "unicode": "𐌗",
+        "ipa": "kʰ",
+        "variants": [
+          "CH",
+          "Ch",
+          "ch",
+          "KH",
+          "Kh",
+          "kh",
+          "χ",
+          "Χ"
+        ]
+      }
+    },
+    "digraphs": {
+      "th": "θ",
+      "ph": "φ",
+      "ch": "χ",
+      "kh": "χ",
+      "sh": "ś",
+      "s2": "ś"
+    },
+    "unicodeMap": {
+      "𐌀": "a",
+      "𐌄": "e",
+      "𐌅": "v",
+      "𐌆": "z",
+      "𐌇": "h",
+      "𐌈": "θ",
+      "𐌉": "i",
+      "𐌊": "k",
+      "𐌋": "l",
+      "𐌌": "m",
+      "𐌍": "n",
+      "𐌏": "o",
+      "𐌐": "p",
+      "𐌑": "ś",
+      "𐌓": "r",
+      "𐌔": "s",
+      "𐌕": "t",
+      "𐌖": "u",
+      "𐌘": "φ",
+      "𐌗": "χ"
+    },
+    "vowels": [
+      "a",
+      "e",
+      "i",
+      "o",
+      "u"
+    ]
+  },
   "oscan": {
     "id": "oscan",
     "displayName": "Oscan",
@@ -690,6 +915,221 @@ const LANGUAGES = {
       "u",
       "í",
       "ú"
+    ]
+  },
+  "rhaetic": {
+    "id": "rhaetic",
+    "displayName": "Rhaetic",
+    "direction": "rtl",
+    "alphabet": {
+      "a": {
+        "unicode": "𐌀",
+        "ipa": "a",
+        "variants": [
+          "A",
+          "a"
+        ]
+      },
+      "e": {
+        "unicode": "𐌄",
+        "ipa": "e",
+        "variants": [
+          "E",
+          "e"
+        ]
+      },
+      "v": {
+        "unicode": "𐌅",
+        "ipa": "v",
+        "variants": [
+          "V",
+          "v",
+          "W",
+          "w"
+        ]
+      },
+      "z": {
+        "unicode": "𐌆",
+        "ipa": "ts",
+        "variants": [
+          "Z",
+          "z"
+        ]
+      },
+      "h": {
+        "unicode": "𐌇",
+        "ipa": "h",
+        "variants": [
+          "H",
+          "h"
+        ]
+      },
+      "θ": {
+        "unicode": "𐌈",
+        "ipa": "tʰ",
+        "variants": [
+          "TH",
+          "Th",
+          "th",
+          "θ",
+          "Θ"
+        ]
+      },
+      "i": {
+        "unicode": "𐌉",
+        "ipa": "i",
+        "variants": [
+          "I",
+          "i"
+        ]
+      },
+      "k": {
+        "unicode": "𐌊",
+        "ipa": "k",
+        "variants": [
+          "K",
+          "k",
+          "C",
+          "c"
+        ]
+      },
+      "l": {
+        "unicode": "𐌋",
+        "ipa": "l",
+        "variants": [
+          "L",
+          "l"
+        ]
+      },
+      "m": {
+        "unicode": "𐌌",
+        "ipa": "m",
+        "variants": [
+          "M",
+          "m"
+        ]
+      },
+      "n": {
+        "unicode": "𐌍",
+        "ipa": "n",
+        "variants": [
+          "N",
+          "n"
+        ]
+      },
+      "p": {
+        "unicode": "𐌐",
+        "ipa": "p",
+        "variants": [
+          "P",
+          "p"
+        ]
+      },
+      "ś": {
+        "unicode": "𐌑",
+        "ipa": "ʃ",
+        "variants": [
+          "Ś",
+          "ś",
+          "SH",
+          "Sh",
+          "sh",
+          "S2",
+          "s2"
+        ]
+      },
+      "r": {
+        "unicode": "𐌓",
+        "ipa": "r",
+        "variants": [
+          "R",
+          "r"
+        ]
+      },
+      "s": {
+        "unicode": "𐌔",
+        "ipa": "s",
+        "variants": [
+          "S",
+          "s"
+        ]
+      },
+      "t": {
+        "unicode": "𐌕",
+        "ipa": "t",
+        "variants": [
+          "T",
+          "t"
+        ]
+      },
+      "u": {
+        "unicode": "𐌖",
+        "ipa": "u",
+        "variants": [
+          "U",
+          "u"
+        ]
+      },
+      "φ": {
+        "unicode": "𐌘",
+        "ipa": "pʰ",
+        "variants": [
+          "PH",
+          "Ph",
+          "ph",
+          "φ",
+          "Φ"
+        ]
+      },
+      "χ": {
+        "unicode": "𐌗",
+        "ipa": "kʰ",
+        "variants": [
+          "CH",
+          "Ch",
+          "ch",
+          "KH",
+          "Kh",
+          "kh",
+          "χ",
+          "Χ"
+        ]
+      }
+    },
+    "digraphs": {
+      "th": "θ",
+      "ph": "φ",
+      "ch": "χ",
+      "kh": "χ",
+      "sh": "ś",
+      "s2": "ś"
+    },
+    "unicodeMap": {
+      "𐌀": "a",
+      "𐌄": "e",
+      "𐌅": "v",
+      "𐌆": "z",
+      "𐌇": "h",
+      "𐌈": "θ",
+      "𐌉": "i",
+      "𐌊": "k",
+      "𐌋": "l",
+      "𐌌": "m",
+      "𐌍": "n",
+      "𐌐": "p",
+      "𐌑": "ś",
+      "𐌓": "r",
+      "𐌔": "s",
+      "𐌕": "t",
+      "𐌖": "u",
+      "𐌘": "φ",
+      "𐌗": "χ"
+    },
+    "vowels": [
+      "a",
+      "e",
+      "i",
+      "u"
     ]
   }
 };

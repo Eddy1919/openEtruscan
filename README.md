@@ -170,7 +170,7 @@ pytest
 
 - [x] **EpiDoc XML exporter** — full TEI-compliant output for interoperability with EAGLE, EDH, Papyri.info
 - [x] **Corpus CLI** — `openetruscan search`, `openetruscan import`, `openetruscan export` commands
-- [ ] **Rhaetic + Lemnian adapters** — expand to the Tyrsenian language family
+- [x] **Rhaetic + Lemnian adapters** — complete Tyrsenian language family coverage
 
 ### 🗓️ Planned
 
