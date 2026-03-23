@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openetruscan"
-version = "0.1.0"
+version = "0.2.0"
 description = "Open-source tools for ancient epigraphy — built for Etruscan, designed to be copied."
 readme = "README.md"
 license = {text = "MIT"}
