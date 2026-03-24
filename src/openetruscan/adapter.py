@@ -194,8 +194,16 @@ def load_adapter(language_id: str) -> LanguageAdapter:
         yaml_text = yaml_path.read_text(encoding="utf-8")
     except (FileNotFoundError, TypeError):
         # Fallback to filesystem (development mode)
+        # Iterate actual files to avoid constructing paths from user input
         adapters_dir = Path(__file__).parent / "adapters"
-        yaml_file = adapters_dir / f"{language_id}.yaml"
+        yaml_file = None
+        for candidate in adapters_dir.glob("*.yaml"):
+            if candidate.stem == language_id:
+                yaml_file = candidate
+                break
+        if yaml_file is None:
+            msg = f"No adapter file found for '{language_id}'."
+            raise FileNotFoundError(msg) from None
         yaml_text = yaml_file.read_text(encoding="utf-8")
 
     raw = yaml.safe_load(yaml_text)
