@@ -130,6 +130,8 @@ See [`.env.example`](.env.example) for all configuration options. By default, Op
 | `openetruscan` (core) | Normalizer + CLI + adapters | ✅ Released |
 | `openetruscan[corpus]` | Structured dataset + query API | ✅ Released |
 | `openetruscan[prosopography]` | NLP name parser + kinship graph | ✅ Released |
+| `openetruscan[stats]` | Bayesian dating, clustering, ML classifier | ✅ Released |
+| `openetruscan[lod]` | Live LOD reconciliation (TM, Wikidata SPARQL) | ✅ Released |
 | `openetruscan[server]` | FastAPI backend + Web UI | ✅ Released |
 | `openetruscan[all]` | Everything | ✅ Released |
 
@@ -154,29 +156,28 @@ pytest
 
 ## Roadmap
 
-### ✅ Done
+### ✅ Done (v0.3.0)
 
 - [x] **Normalizer engine** — auto-detect 5 transcription systems, fold to canonical, phonotactic validation
-- [x] **CLI** — `normalize`, `batch`, `convert`, `validate`, `adapters` commands
-- [x] **Multi-language adapters** — Etruscan, Oscan, Faliscan (23+ letters, 35+ names, equivalence classes)
-- [x] **Corpus database** — SQLite + PostgreSQL, 4,700+ inscriptions from Larth dataset
-- [x] **Prosopography engine** — NLP name parser, 633 clans, kinship graph, Neo4j Cypher + GraphML export
+- [x] **CLI** — `normalize`, `batch`, `convert`, `validate`, `adapters`, `search`, `import`, `export`, `frequency`, `cluster`, `date`
+- [x] **Multi-language adapters** — Etruscan, Oscan, Faliscan, Rhaetic, Lemnian (Tyrsenian family)
+- [x] **Corpus database** — SQLite + PostgreSQL, 4,700+ inscriptions + 6 major codex texts
+- [x] **Prosopography engine** — NLP name parser, 633 clans, kinship graph, fuzzy phonological matching
 - [x] **Web UI** — Normalizer, full-text Search, interactive Map with clan network visualization
 - [x] **Production deployment** — Docker + Nginx + HTTPS on [openetruscan.com](https://openetruscan.com)
-- [x] **CI/CD** — GitHub Actions (test on Python 3.10–3.13, auto-deploy, PyPI publish)
-- [x] **65 tests** passing across all modules
-- [x] **Linked Open Data** — Pleiades integration with JSON-LD Pelagios feed (`/pelagios.jsonld`)
-
-### 🔜 Next
-
-- [x] **EpiDoc XML exporter** — full TEI-compliant output for interoperability with EAGLE, EDH, Papyri.info
-- [x] **Corpus CLI** — `openetruscan search`, `openetruscan import`, `openetruscan export` commands
-- [x] **Rhaetic + Lemnian adapters** — complete Tyrsenian language family coverage
+- [x] **CI/CD** — GitHub Actions (lint + SAST + test on Python 3.10–3.13, auto-deploy, PyPI publish)
+- [x] **175 tests** passing across all modules
+- [x] **Linked Open Data** — Pleiades, Trismegistos, EAGLE, Wikidata SPARQL reconciliation
+- [x] **ML Classifier** — Naive Bayes inscription classification with keyword fallback
+- [x] **Bayesian dating** — aoristic model with 13 time bins and 95% credible intervals
+- [x] **TF-IDF deduplication** — cosine-similarity near-duplicate detection across the corpus
+- [x] **Phonological NER** — IPA-aware edit distance for fuzzy name matching
+- [x] **Codex texts** — Liber Linteus, Tabula Capuana, Pyrgi Tablets, Cippus Perusinus, and more
 
 ### 🗓️ Planned
 
+- [ ] **Transformer classifier** — DistilBERT fine-tuned on the inscription corpus
 - [ ] **CLTK Etruscan module** — contribute to the [Classical Language Toolkit](https://cltk.org)
-- [ ] **Statistical tools** — letter frequency analysis, dialect clustering, dating heuristics
 
 ## License
 

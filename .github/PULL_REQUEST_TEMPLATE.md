@@ -16,6 +16,7 @@ Brief description of what this PR does.
 
 - [ ] I have run `pytest` and all tests pass
 - [ ] I have run `ruff check src/ tests/` with zero errors
+- [ ] I have run `bandit -r src/openetruscan/` with no issues
 - [ ] I have added tests for new functionality (if applicable)
 - [ ] I have updated documentation (if applicable)
 - [ ] My data contributions are CC0 (public domain)

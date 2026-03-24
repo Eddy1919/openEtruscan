@@ -116,15 +116,17 @@ Before submitting a PR, confirm:
 
 - [ ] All tests pass: `pytest`
 - [ ] Linter is clean: `ruff check src/ tests/`
+- [ ] Security scan passes: `bandit -r src/openetruscan/`
 - [ ] New features include test cases
 - [ ] Documentation is updated if applicable
 
 ### CI Pipeline
 
 Every PR triggers:
-1. **Lint** — Ruff checks across all Python files
-2. **Test** — pytest on Python 3.10, 3.11, 3.12, and 3.13
-3. **Security** — Bandit static analysis
+1. **SAST** — Bandit security scan (`bandit -r src/openetruscan/`)
+2. **Lint** — Ruff checks across all Python files
+3. **Test** — pytest on Python 3.10, 3.11, 3.12, and 3.13
+4. **Coverage** — pytest-cov on Python 3.12
 
 ## Data Licensing
 

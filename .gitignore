@@ -50,3 +50,12 @@ htmlcov/
 # Generated web assets (rebuild with scripts/)
 web/corpus_data.js
 web/languages.js
+
+# Nginx configs (environment-specific)
+nginx.conf
+nginx.dev.conf
+
+# ML model artifacts
+data/models/
+*.pkl
+*.joblib

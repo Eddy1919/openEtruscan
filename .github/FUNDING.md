@@ -23,6 +23,7 @@ If you use OpenEtruscan in your research, please cite:
   title = {OpenEtruscan: Open-Source Tools for Ancient Epigraphy},
   author = {OpenEtruscan Contributors},
   year = {2026},
+  version = {0.3.0},
   url = {https://github.com/Eddy1919/openEtruscan},
   license = {MIT}
 }
