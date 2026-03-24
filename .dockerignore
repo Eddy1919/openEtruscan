@@ -1,9 +1,9 @@
-# Git
+# ── Git metadata ────────────────────────────────────────────────────
 .git/
 .github/
 .gitignore
 
-# Python caches
+# ── Python caches ───────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -11,17 +11,18 @@ dist/
 build/
 .eggs/
 
-# Virtual environments
+# ── Virtual environments ────────────────────────────────────────────
 .venv/
 venv/
 
-# IDE
+# ── IDE ─────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 .DS_Store
 
-# Testing / Lint caches
+# ── Testing / Lint (not needed at runtime) ──────────────────────────
+tests/
 .pytest_cache/
 .coverage
 htmlcov/
@@ -29,16 +30,25 @@ htmlcov/
 .nox/
 .ruff_cache/
 
-# Docker (avoid recursive context)
+# ── Scripts (build-time only, not runtime) ──────────────────────────
+scripts/
+
+# ── Data (corpus.db is not needed — corpus_data.js is the export) ──
+data/
+
+# ── Docker (avoid recursive context) ───────────────────────────────
 docker-compose.yml
 Dockerfile
+.dockerignore
 
-# Docs / non-runtime (keep README.md for pyproject.toml)
+# ── Docs (not needed in the image; keep README.md for pyproject.toml)
 CHANGELOG.md
 CONTRIBUTING.md
 SECURITY.md
+LICENSE
 goal.md
 
-# Env files (secrets)
+# ── Secrets ─────────────────────────────────────────────────────────
 .env
 .env.*
+.env.example

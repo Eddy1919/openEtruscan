@@ -42,10 +42,11 @@ htmlcov/
 # Linter caches
 .ruff_cache/
 
-# Environment
+# Environment / Secrets
 .env
 .env.local
 .env.production
-.git/
-.github/
-.gitignore
+
+# Generated web assets (rebuild with scripts/)
+web/corpus_data.js
+web/languages.js
