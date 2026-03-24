@@ -1129,8 +1129,8 @@ def auto_flag_inscription(
                 flags.append(
                     f"non_alphabet_chars: {', '.join(sorted(unknown_chars))}"
                 )
-        except Exception:
-            pass  # Adapter not found — skip check
+        except Exception:  # noqa: BLE001
+            pass  # Adapter not found — skip check  # nosec B110
 
     # Check coordinate range
     if inscription.findspot_lat is not None and inscription.findspot_lon is not None:

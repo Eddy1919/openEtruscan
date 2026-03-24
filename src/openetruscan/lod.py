@@ -359,8 +359,8 @@ def reconcile_trismegistos(
                 if tm_id:
                     return tm_id
 
-    except Exception:
-        pass  # Network error — fall through to None
+    except Exception:  # noqa: BLE001
+        pass  # Network error — fall through to None  # nosec B110
 
     return None
 
@@ -425,8 +425,8 @@ def reconcile_wikidata(
             if "/entity/" in uri:
                 return uri.split("/entity/")[-1]
 
-    except Exception:
-        pass  # Network error — fall through
+    except Exception:  # noqa: BLE001
+        pass  # Network error — fall through  # nosec B110
 
     return None
 
