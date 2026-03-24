@@ -46,3 +46,6 @@ htmlcov/
 .env
 .env.local
 .env.production
+.git/
+.github/
+.gitignore

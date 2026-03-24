@@ -1,0 +1,44 @@
+# Git
+.git/
+.github/
+.gitignore
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Testing / Lint caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.ruff_cache/
+
+# Docker (avoid recursive context)
+docker-compose.yml
+Dockerfile
+
+# Docs / non-runtime (keep README.md for pyproject.toml)
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+goal.md
+
+# Env files (secrets)
+.env
+.env.*
