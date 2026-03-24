@@ -4,6 +4,7 @@ import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.lod import (
@@ -25,7 +26,7 @@ class TestPleiadesURI:
         uri = get_pleiades_uri("Cerveteri")
         # Returns None if not in mapping, or the URI if it is
         if uri:
-            assert uri.startswith("https://pleiades.stoa.org")
+            assert urlparse(uri).hostname == "pleiades.stoa.org"
 
     def test_unknown_findspot(self):
         uri = get_pleiades_uri("Atlantis")
@@ -76,7 +77,9 @@ class TestEnrichedJsonLD:
             for b in jsonld.get("body", [])
             if isinstance(b, dict) and b.get("purpose") == "identifying"
         ]
-        assert any(s.startswith("https://www.trismegistos.org") for s in sources)
+        assert any(
+            urlparse(s).hostname == "www.trismegistos.org" for s in sources
+        )
 
     def test_jsonld_includes_eagle_uri(self):
         insc = Inscription(
