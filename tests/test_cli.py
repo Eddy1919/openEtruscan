@@ -2,7 +2,7 @@
 
 from click.testing import CliRunner
 
-from openetruscan.cli import main
+from openetruscan.cli import __version__, main
 
 
 class TestCLI:
@@ -43,4 +43,4 @@ class TestCLI:
     def test_version(self):
         result = self.runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "0.2.0" in result.output
+        assert __version__ in result.output

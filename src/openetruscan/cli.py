@@ -22,9 +22,16 @@ from openetruscan.converter import convert
 from openetruscan.normalizer import normalize
 from openetruscan.validator import validate_file
 
+try:
+    from importlib.metadata import version as _pkg_version
+
+    __version__ = _pkg_version("openetruscan")
+except Exception:
+    __version__ = "unknown"
+
 
 @click.group()
-@click.version_option(package_name="openetruscan")
+@click.version_option(version=__version__, prog_name="openetruscan")
 def main() -> None:
     """OpenEtruscan — Open-source tools for ancient epigraphy."""
 
