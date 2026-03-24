@@ -1,5 +1,6 @@
 """Tests for the prosopography module."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -165,7 +166,8 @@ class TestFamilyGraph:
     """Test family graph construction and queries."""
 
     def _build_test_corpus(self):
-        db_path = tempfile.mktemp(suffix=".db")
+        fd, db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
         corpus = Corpus.load(db_path)
         corpus.add(Inscription(id="T1", raw_text="larθ spurinas", findspot="Cerveteri"))
         corpus.add(Inscription(id="T2", raw_text="arnθ spurinas", findspot="Cerveteri"))

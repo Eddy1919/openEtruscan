@@ -1,5 +1,6 @@
 """Tests for Etruscan codex texts data and seeding."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -64,7 +65,8 @@ class TestCodexSeeding:
     """Test codex import into corpus."""
 
     def setup_method(self):
-        self.db_path = tempfile.mktemp(suffix=".db")
+        fd, self.db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
 
     def teardown_method(self):
         Path(self.db_path).unlink(missing_ok=True)

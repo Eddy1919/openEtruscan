@@ -1,5 +1,6 @@
 """Tests for the Linked Open Data module."""
 
+import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -24,7 +25,7 @@ class TestPleiadesURI:
         uri = get_pleiades_uri("Cerveteri")
         # Returns None if not in mapping, or the URI if it is
         if uri:
-            assert "pleiades.stoa.org" in uri
+            assert uri.startswith("https://pleiades.stoa.org")
 
     def test_unknown_findspot(self):
         uri = get_pleiades_uri("Atlantis")
@@ -75,7 +76,7 @@ class TestEnrichedJsonLD:
             for b in jsonld.get("body", [])
             if isinstance(b, dict) and b.get("purpose") == "identifying"
         ]
-        assert any("trismegistos.org" in s for s in sources)
+        assert any(s.startswith("https://www.trismegistos.org") for s in sources)
 
     def test_jsonld_includes_eagle_uri(self):
         insc = Inscription(
@@ -109,7 +110,8 @@ class TestLodStats:
     """Test LOD coverage statistics."""
 
     def test_lod_stats_structure(self):
-        db_path = tempfile.mktemp(suffix=".db")
+        fd, db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
         corpus = Corpus.load(db_path)
         corpus.add(Inscription(id="ET_Cr_1.1", raw_text="test", findspot="Cerveteri"))
         corpus.add(Inscription(id="UNKNOWN", raw_text="test2"))
