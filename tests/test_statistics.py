@@ -1,5 +1,6 @@
 """Tests for the statistical analysis engine."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -103,7 +104,8 @@ class TestClusterSites:
     """Test dialect clustering."""
 
     def _build_corpus(self):
-        db_path = tempfile.mktemp(suffix=".db")
+        fd, db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
         corpus = Corpus.load(db_path)
         # Two distinct "dialect" groups
         for i in range(10):

@@ -163,7 +163,21 @@ def load_adapter(language_id: str) -> LanguageAdapter:
     Load a language adapter by ID.
 
     Looks for `{language_id}.yaml` in the adapters directory.
+
+    Raises:
+        ValueError: If language_id contains path traversal characters.
+        FileNotFoundError: If no adapter exists for the given ID.
     """
+    # Validate language_id to prevent path traversal
+    import re
+
+    if not re.match(r"^[a-zA-Z0-9_-]+$", language_id):
+        msg = (
+            f"Invalid language ID '{language_id}': "
+            "must contain only letters, digits, underscores, and hyphens."
+        )
+        raise ValueError(msg)
+
     # Try package resources first (installed via pip)
     try:
         adapter_dir = importlib.resources.files("openetruscan.adapters")
@@ -172,7 +186,11 @@ def load_adapter(language_id: str) -> LanguageAdapter:
     except (FileNotFoundError, TypeError) as err:  # Catch the initial error
         # Fallback to filesystem (development mode)
         adapter_dir = Path(__file__).parent / "adapters"
-        yaml_file = adapter_dir / f"{language_id}.yaml"
+        yaml_file = (adapter_dir / f"{language_id}.yaml").resolve()
+        # Ensure the resolved path is inside the adapters directory
+        if not str(yaml_file).startswith(str(adapter_dir.resolve())):
+            msg = f"Invalid language ID '{language_id}': path traversal detected."
+            raise ValueError(msg) from err
         if not yaml_file.exists():
             msg = (
                 f"No adapter found for language '{language_id}'. "

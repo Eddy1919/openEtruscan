@@ -1,5 +1,6 @@
 """Tests for the corpus module."""
 
+import os
 import tempfile
 from pathlib import Path
 
@@ -11,7 +12,8 @@ class TestCorpus:
 
     def setup_method(self):
         # Use temp database for each test
-        self.db_path = tempfile.mktemp(suffix=".db")
+        fd, self.db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
         self.corpus = Corpus.load(self.db_path)
 
     def teardown_method(self):
@@ -78,7 +80,9 @@ class TestCorpus:
 
     def test_import_csv(self):
         csv_content = "id,text,findspot\nCSV_001,LARTHAL,Cerveteri\nCSV_002,ARNTH,Tarquinia\n"
-        tmp_csv = Path(tempfile.mktemp(suffix=".csv"))
+        fd, tmp_csv_path = tempfile.mkstemp(suffix=".csv")
+        os.close(fd)
+        tmp_csv = Path(tmp_csv_path)
         tmp_csv.write_text(csv_content)
         count = self.corpus.import_csv(tmp_csv)
         assert count == 2
@@ -98,7 +102,8 @@ class TestProvenance:
     """Test provenance pipeline (quarantine, auto-flag, review)."""
 
     def setup_method(self):
-        self.db_path = tempfile.mktemp(suffix=".db")
+        fd, self.db_path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
         self.corpus = Corpus.load(self.db_path)
 
     def teardown_method(self):
