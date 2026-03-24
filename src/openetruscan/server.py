@@ -6,13 +6,21 @@ Run locally:
     uvicorn openetruscan.server:app --reload
 """
 
+import logging
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from openetruscan.corpus import Corpus
+
+logger = logging.getLogger("openetruscan")
 
 # Global corpus and graph instances (loaded on startup)
 corpus = None
@@ -45,21 +53,61 @@ async def lifespan(app: FastAPI):
         corpus.close()
 
 
+# ── Rate Limiter ────────────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+
 app = FastAPI(
     title="OpenEtruscan Corpus API",
     description="REST API for querying the OpenEtruscan dataset.",
-    version="0.3",
+    version="0.4",
     lifespan=lifespan,
+    docs_url="/docs" if os.getenv("ENABLE_DOCS", "0") == "1" else None,
+    redoc_url=None,
 )
 
-# Allow CORS for static GitHub Pages frontend
+# Attach rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ── CORS ────────────────────────────────────────────────────────────────────
+_ALLOWED_ORIGINS = [
+    "https://openetruscan.com",
+    "https://www.openetruscan.com",
+    "http://localhost",
+    "http://localhost:80",
+    "http://127.0.0.1",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+
+# ── Global Exception Handler ───────────────────────────────────────────────
+@app.exception_handler(Exception)
+async def _global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
+
+# ── Input Bounds ───────────────────────────────────────────────────────────
+MAX_LIMIT = 500
+MAX_RADIUS_KM = 500
+MAX_TEXT_LEN = 200
+
+
+def _clamp_limit(limit: int) -> int:
+    return max(1, min(limit, MAX_LIMIT))
+
+
+def _clamp_text(text: str | None) -> str | None:
+    return text[:MAX_TEXT_LEN] if text else text
 
 
 class InscriptionModel(BaseModel):
@@ -105,41 +153,51 @@ def _build_model(i) -> InscriptionModel:
 
 
 @app.get("/search", response_model=SearchResponse)
+@limiter.limit("60/minute")
 def search_corpus(
-    text: str | None = Query(None, description="Wildcard text search (e.g. *larth*)"),
-    findspot: str | None = Query(None, description="Findspot name"),
-    language: str | None = Query(None, description="Language filter"),
-    classification: str | None = Query(None, description="Classification filter"),
-    limit: int = 100,
+    request: Request,
+    text: str | None = Query(
+        None, description="Wildcard text search (e.g. *larth*)", max_length=MAX_TEXT_LEN
+    ),
+    findspot: str | None = Query(None, description="Findspot name", max_length=MAX_TEXT_LEN),
+    language: str | None = Query(None, description="Language filter", max_length=50),
+    classification: str | None = Query(None, description="Classification filter", max_length=50),
+    limit: int = Query(100, ge=1, le=MAX_LIMIT),
 ):
     """Search by text, location, or metadata."""
     results = corpus.search(
-        text=text,
+        text=_clamp_text(text),
         findspot=findspot,
         language=language,
         classification=classification,
-        limit=limit,
+        limit=_clamp_limit(limit),
     )
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
 
 @app.get("/radius", response_model=SearchResponse)
+@limiter.limit("60/minute")
 def search_by_radius(
-    lat: float = Query(..., description="Latitude of center point"),
-    lon: float = Query(..., description="Longitude of center point"),
-    radius_km: float = Query(50.0, description="Radius in kilometers"),
-    limit: int = 100,
+    request: Request,
+    lat: float = Query(..., description="Latitude of center point", ge=-90, le=90),
+    lon: float = Query(..., description="Longitude of center point", ge=-180, le=180),
+    radius_km: float = Query(50.0, description="Radius in kilometers", ge=0.1, le=MAX_RADIUS_KM),
+    limit: int = Query(100, ge=1, le=MAX_LIMIT),
 ):
     """Search by spatial radius."""
-    results = corpus.search_radius(lat=lat, lon=lon, radius_km=radius_km, limit=limit)
+    results = corpus.search_radius(lat=lat, lon=lon, radius_km=radius_km, limit=_clamp_limit(limit))
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
 
 @app.get("/clan/{gens}", response_model=SearchResponse)
-def search_by_clan(gens: str):
+@limiter.limit("30/minute")
+def search_by_clan(request: Request, gens: str):
     """Prosopographical network search."""
+    if len(gens) > MAX_TEXT_LEN:
+        return {"total": 0, "count": 0, "results": []}
+
     clan_info = family_graph.clan(gens)
     if not clan_info:
         return {"total": 0, "count": 0, "results": []}
@@ -166,12 +224,16 @@ def corpus_stats():
 
 
 @app.get("/stats/frequency")
+@limiter.limit("30/minute")
 def frequency_analysis(
-    findspot: str | None = Query(None, description="Filter by findspot"),
-    findspot_b: str | None = Query(None, description="Second findspot for comparison"),
+    request: Request,
+    findspot: str | None = Query(None, description="Filter by findspot", max_length=MAX_TEXT_LEN),
+    findspot_b: str | None = Query(
+        None, description="Second findspot for comparison", max_length=MAX_TEXT_LEN
+    ),
     date_from: int | None = Query(None, description="Date range start (BCE, positive int)"),
     date_to: int | None = Query(None, description="Date range end (BCE, positive int)"),
-    language: str = Query("etruscan", description="Language adapter to use"),
+    language: str = Query("etruscan", description="Language adapter to use", max_length=50),
 ):
     """Letter frequency analysis, optionally comparing two sites (chi² test)."""
     from openetruscan.statistics import (
@@ -203,9 +265,11 @@ def frequency_analysis(
 
 
 @app.get("/stats/clusters")
+@limiter.limit("15/minute")
 def dialect_clusters(
-    min_inscriptions: int = Query(5, description="Minimum inscriptions per site"),
-    language: str = Query("etruscan", description="Language adapter"),
+    request: Request,
+    min_inscriptions: int = Query(5, description="Minimum inscriptions per site", ge=2, le=100),
+    language: str = Query("etruscan", description="Language adapter", max_length=50),
 ):
     """Dialect clustering via Ward's hierarchical method with cosine distance."""
     from openetruscan.statistics import cluster_sites
@@ -215,9 +279,11 @@ def dialect_clusters(
 
 
 @app.get("/stats/date-estimate")
+@limiter.limit("60/minute")
 def date_estimate(
-    text: str = Query(..., description="Inscription text to analyze"),
-    language: str = Query("etruscan", description="Language adapter"),
+    request: Request,
+    text: str = Query(..., description="Inscription text to analyze", max_length=MAX_TEXT_LEN),
+    language: str = Query("etruscan", description="Language adapter", max_length=50),
 ):
     """Estimate chronological period from orthographic features."""
     from openetruscan.statistics import estimate_date

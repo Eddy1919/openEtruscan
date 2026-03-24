@@ -28,6 +28,10 @@
     });
 })();
 
+// ── XSS Escape Utility ──────────────────────────────────────────────
+const _ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function esc(s) { return s ? String(s).replace(/[&<>"']/g, c => _ESC_MAP[c]) : '—'; }
+
 // ── Explorer State ──────────────────────────────────────────────────
 let explorerMap = null;
 let staticMarkers = [];
@@ -103,12 +107,12 @@ function loadStaticCorpus() {
 
         // Build popup
         const samples = group.inscriptions.slice(0, 5);
-        let popup = `<div class="popup-findspot"><strong>${findspot}</strong></div>
+        let popup = `<div class="popup-findspot"><strong>${esc(findspot)}</strong></div>
             <div style="color:#9a9890; font-size:0.75rem; margin-bottom:6px;">${count} inscription${count > 1 ? 's' : ''}</div>`;
         for (const insc of samples) {
-            const txt = (insc.canonical || insc.id);
+            const txt = esc(insc.canonical || insc.id);
             const display = txt.length > 40 ? txt.substring(0, 40) + '…' : txt;
-            popup += `<div class="popup-insc"><div class="popup-id">${insc.id}</div><div class="popup-text">${display}</div>${insc.date ? `<div class="popup-date">${insc.date}</div>` : ''}</div>`;
+            popup += `<div class="popup-insc"><div class="popup-id">${esc(insc.id)}</div><div class="popup-text">${display}</div>${insc.date ? `<div class="popup-date">${esc(insc.date)}</div>` : ''}</div>`;
         }
         if (count > 5) popup += `<div style="color:#6b6962; font-size:0.7rem; text-align:center; margin-top:6px;">+ ${count - 5} more</div>`;
 
@@ -161,21 +165,22 @@ function renderExplorerResults(data) {
     let html = '';
     const bounds = [];
     data.results.forEach(insc => {
-        const badge = insc.gens ? `<span class="clan-badge" onclick="event.stopPropagation(); searchClan('${insc.gens}')">${insc.gens} Family</span>` : '';
-        html += `<div class="result-card" onclick="panToExplorer(${insc.findspot_lat || 42.5}, ${insc.findspot_lon || 12.0})">
-            <div class="result-id"><span>${insc.id}</span><span style="color:#6b6962">${insc.classification}</span></div>
-            <div class="result-text">${insc.canonical || '—'} ${badge}</div>
-            <div class="result-italic">${insc.old_italic || '—'}</div>
-            <div class="result-meta"><div>📍 ${insc.findspot || 'Unknown'}</div><div>⏳ ${insc.date_display || 'Unknown'}</div></div>
+        const safeGens = esc(insc.gens);
+        const badge = insc.gens ? `<span class="clan-badge" onclick="event.stopPropagation(); searchClan('${esc(insc.gens)}')">${safeGens} Family</span>` : '';
+        html += `<div class="result-card" onclick="panToExplorer(${Number(insc.findspot_lat) || 42.5}, ${Number(insc.findspot_lon) || 12.0})">
+            <div class="result-id"><span>${esc(insc.id)}</span><span style="color:#6b6962">${esc(insc.classification)}</span></div>
+            <div class="result-text">${esc(insc.canonical)} ${badge}</div>
+            <div class="result-italic">${esc(insc.old_italic)}</div>
+            <div class="result-meta"><div>📍 ${esc(insc.findspot) || 'Unknown'}</div><div>⏳ ${esc(insc.date_display) || 'Unknown'}</div></div>
         </div>`;
 
         if (insc.findspot_lat && insc.findspot_lon) {
             const m = L.circleMarker([insc.findspot_lat, insc.findspot_lon], {
                 radius: 6, fillColor: '#c4704b', color: '#1e1e28', weight: 1, opacity: 1, fillOpacity: 0.8,
             });
-            m.bindPopup(`<div style="font-family:'JetBrains Mono',monospace; color:#c4704b; font-size:10px; font-weight:bold;">${insc.id}</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:14px; margin:5px 0;">${insc.canonical}</div>
-                <div style="font-size:11px; color:#9a9890;">${insc.findspot}</div>`);
+            m.bindPopup(`<div style="font-family:'JetBrains Mono',monospace; color:#c4704b; font-size:10px; font-weight:bold;">${esc(insc.id)}</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:14px; margin:5px 0;">${esc(insc.canonical)}</div>
+                <div style="font-size:11px; color:#9a9890;">${esc(insc.findspot)}</div>`);
             m.addTo(explorerMap);
             searchMarkers.push(m);
             bounds.push([insc.findspot_lat, insc.findspot_lon]);
@@ -246,7 +251,7 @@ window.searchClan = async function (gens) {
     document.getElementById('explorerQ').value = '';
     document.getElementById('explorerFindspot').value = '';
     const list = document.getElementById('explorerList');
-    list.innerHTML = `<div style="text-align:center; padding:2rem;">Mapping ${gens} Family Network…</div>`;
+    list.innerHTML = `<div style="text-align:center; padding:2rem;">Mapping ${esc(gens)} Family Network…</div>`;
 
     const start = performance.now();
     try {
