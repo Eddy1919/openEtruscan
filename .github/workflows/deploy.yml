@@ -27,34 +27,11 @@ jobs:
             git reset --hard origin/main
             git pull origin main
 
-            # Build the new API image
-            docker build -t openetruscan-api .
+            # Rebuild web data assets (languages.js from YAML adapters)
+            python3 scripts/build_web_languages.py 2>/dev/null || true
 
-            # Stop and remove old containers gracefully
-            docker rm -f web api 2>/dev/null || true
-
-            # Create network if not exists
-            docker network create openetruscan-net 2>/dev/null || true
-
-            # Start API container
-            docker run -d --name api --network openetruscan-net \
-              --env-file .env \
-              --restart unless-stopped \
-              openetruscan-api
-
-            # Refresh SSL certs (resolve symlinks for COS)
-            sudo cp -L /etc/letsencrypt/live/openetruscan.com/fullchain.pem ~/certs/ 2>/dev/null || true
-            sudo cp -L /etc/letsencrypt/live/openetruscan.com/privkey.pem ~/certs/ 2>/dev/null || true
-            sudo chown $(whoami) ~/certs/*.pem 2>/dev/null || true
-
-            # Start Nginx container with SSL certs
-            docker run -d --name web --network openetruscan-net \
-              -p 80:80 -p 443:443 \
-              -v $(pwd)/web:/usr/share/nginx/html:ro \
-              -v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
-              -v ~/certs:/certs:ro \
-              --restart unless-stopped \
-              nginx:alpine
+            # Build the new API image (includes web/ for StaticFiles)
+            docker compose up -d --build
 
             # Prune old images to save disk
             docker image prune -f
