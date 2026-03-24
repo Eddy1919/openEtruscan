@@ -47,9 +47,9 @@ htmlcov/
 .env.local
 .env.production
 
-# Generated web assets (rebuild with scripts/)
-web/corpus_data.js
-web/languages.js
+# Generated web assets (rebuild with: python scripts/build_web_languages.py)
+# NOTE: corpus_data.js and languages.js are tracked because
+# production deploys via git pull and needs them to serve the web UI.
 
 # Nginx configs (environment-specific)
 nginx.conf

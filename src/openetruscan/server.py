@@ -342,3 +342,16 @@ def pleiades_coverage():
         "coverage_pct": round(linked / total * 100, 1) if total else 0,
         "places": [{"pleiades_uri": uri, "count": count} for uri, count in stats.items()],
     }
+
+
+# ── Static File Serving ────────────────────────────────────────────────────
+# Serve the web UI directly from FastAPI (correct MIME types, no nginx needed)
+_web_dir = os.path.join(os.path.dirname(__file__), "..", "..", "web")
+if not os.path.isdir(_web_dir):
+    # Fallback for production: web/ is at project root
+    _web_dir = os.path.join(os.getcwd(), "web")
+
+if os.path.isdir(_web_dir):
+    from starlette.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=_web_dir, html=True), name="static")
