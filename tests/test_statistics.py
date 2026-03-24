@@ -6,9 +6,11 @@ from pathlib import Path
 from openetruscan.adapter import load_adapter
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.statistics import (
+    BayesianDatingResult,
     ClusterResult,
     ComparisonResult,
     FrequencyResult,
+    bayesian_date,
     cluster_sites,
     compare_frequencies,
     estimate_date,
@@ -161,29 +163,36 @@ class TestClusterSites:
 
 
 class TestDateEstimate:
-    """Test dating heuristics."""
+    """Test descriptive dating tagging system."""
 
     def test_archaic_features(self):
         # Text with K before a, no F → archaic indicators
         result = estimate_date("kanas")
         assert result.period in ("archaic", "indeterminate")
         assert any(f["id"] == "k_before_a" and f["present"] for f in result.features)
+        # New fields
+        assert result.method == "descriptive"
+        assert result.tag_scores is not None
+        assert "archaic" in result.tag_scores
 
     def test_late_features(self):
         # Text with F → late indicator
         result = estimate_date("felnas")
         assert any(f["id"] == "f_present" and f["present"] for f in result.features)
+        assert result.tag_scores["late"] > 0
 
     def test_classical_features(self):
         # Text with θ, c (no k/q) → classical indicators
         result = estimate_date("larθal lecnes")
         assert any(f["id"] == "aspirates_frequent" and f["present"] for f in result.features)
         assert any(f["id"] == "c_dominant" and f["present"] for f in result.features)
+        assert result.tag_scores["classical"] > 0
 
     def test_empty_text(self):
         result = estimate_date("")
         assert result.period == "indeterminate"
         assert result.confidence == 0.0
+        assert result.tag_scores == {"archaic": 0.0, "classical": 0.0, "late": 0.0}
 
     def test_to_dict(self):
         result = estimate_date("larθal velinas")
@@ -193,3 +202,89 @@ class TestDateEstimate:
         assert "date_display" in d
         assert "confidence" in d
         assert "features" in d
+        # New descriptive fields
+        assert "tag_scores" in d
+        assert "method" in d
+        assert d["method"] == "descriptive"
+        assert "caveats" in d
+        assert isinstance(d["caveats"], list)
+
+    def test_features_have_weights(self):
+        result = estimate_date("larθal")
+        for f in result.features:
+            assert "weight" in f, f"Feature {f['id']} missing 'weight'"
+            assert "period" in f, f"Feature {f['id']} missing 'period'"
+            assert f["weight"] > 0
+
+    def test_weighted_scoring_k_plus_q(self):
+        # K+Q combo should score higher than K alone
+        result_kq = estimate_date("kaqas")
+        result_k = estimate_date("kanas")
+        assert result_kq.tag_scores["archaic"] > result_k.tag_scores["archaic"]
+
+    def test_caveats_present(self):
+        result = estimate_date("larθal")
+        assert result.caveats is not None
+        assert len(result.caveats) > 0
+        assert any("Rule-based" in c for c in result.caveats)
+
+
+class TestBayesianDating:
+    """Test Bayesian aoristic dating model."""
+
+    def test_archaic_text_peaks_early(self):
+        # "kanas" has K before /a/, Q absent, no F → archaic
+        result = bayesian_date("kanas")
+        assert isinstance(result, BayesianDatingResult)
+        # MAP should be in the archaic range (700-500 BCE → negative)
+        assert result.map_estimate <= -475
+
+    def test_late_text_peaks_late(self):
+        # "f" present + Latin influence → late period
+        result = bayesian_date("fasd")
+        assert result.map_estimate >= -400  # Later than 400 BCE
+
+    def test_posterior_sums_to_one(self):
+        result = bayesian_date("larθal spurinas")
+        total = sum(result.posterior.values())
+        assert abs(total - 1.0) < 0.01, f"Posterior sums to {total}"
+
+    def test_posterior_has_13_bins(self):
+        result = bayesian_date("larθal")
+        assert len(result.posterior) == 13
+
+    def test_credible_interval_contains_map(self):
+        result = bayesian_date("larθal")
+        ci = result.credible_interval_95
+        map_bce = abs(result.map_estimate)
+        assert ci[0] >= 50  # BCE values are positive
+        assert ci[1] <= 700
+        assert ci[0] <= map_bce <= ci[1] or ci[0] >= map_bce
+
+    def test_features_observed_populated(self):
+        result = bayesian_date("kanas")
+        assert "k_before_a" in result.features_observed
+        assert result.features_observed["k_before_a"] is True
+        assert "f_present" in result.features_observed
+        assert result.features_observed["f_present"] is False
+
+    def test_to_dict(self):
+        result = bayesian_date("larθal")
+        d = result.to_dict()
+        assert "posterior" in d
+        assert "map_estimate" in d
+        assert "map_display" in d
+        assert "credible_interval_95" in d
+        assert "credible_interval_display" in d
+        assert d["method"] == "bayesian_aoristic"
+
+    def test_kq_text_strongly_archaic(self):
+        # K+Q both present → very strong archaic signal
+        result = bayesian_date("kaqas")
+        # First 4 bins (700-500 BCE) should dominate
+        archaic_mass = sum(
+            v for k, v in result.posterior.items()
+            if any(k.startswith(f"{yr}-") for yr in ["700", "650", "600", "550"])
+        )
+        assert archaic_mass > 0.8, f"Archaic bins only have {archaic_mass:.2f} mass"
+

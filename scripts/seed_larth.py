@@ -22,6 +22,8 @@ import sys
 import urllib.request
 from pathlib import Path
 
+import yaml
+
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -65,6 +67,7 @@ CITY_COORDS: dict[str, tuple[float, float]] = {
     "Blera": (42.2744, 12.0285),
     "San Giovenale": (42.2333, 11.9167),
     "Pyrgi": (42.0098, 11.9676),
+    "Piacenza": (45.0522, 9.6930),
 }
 
 
@@ -209,23 +212,113 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
     return count
 
 
+def seed_codex(db_path: str = "data/corpus.db") -> int:
+    """
+    Import the 6 major Etruscan codex texts from codex_texts.yaml.
+
+    Each text's sections are imported as individual inscriptions with
+    full scholarly metadata and provenance_status='verified'.
+    """
+    codex_path = Path(__file__).parent.parent / "data" / "codex_texts.yaml"
+    if not codex_path.exists():
+        print("⚠️  codex_texts.yaml not found")
+        return 0
+
+    with open(codex_path, encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    if not data or "texts" not in data:
+        print("⚠️  No texts found in codex_texts.yaml")
+        return 0
+
+    corpus = Corpus.load(db_path)
+    count = 0
+
+    for text_entry in data["texts"]:
+        title = text_entry.get("title", "")
+        sections = text_entry.get("sections", [])
+
+        if not sections:
+            continue
+
+        for section in sections:
+            section_id = section["id"]
+            raw_text = section.get("raw_text", "").strip()
+            if not raw_text:
+                continue
+
+            # Normalize
+            try:
+                result = normalize(raw_text)
+            except Exception as e:
+                print(f"   ⚠️  Failed to normalize '{section_id}': {e}")
+                continue
+
+            lat = text_entry.get("findspot_lat")
+            lon = text_entry.get("findspot_lon")
+
+            inscription = Inscription(
+                id=section_id,
+                raw_text=raw_text,
+                canonical=result.canonical,
+                phonetic=result.phonetic,
+                old_italic=result.old_italic,
+                findspot=text_entry.get("findspot", ""),
+                findspot_lat=lat,
+                findspot_lon=lon,
+                date_approx=text_entry.get("date_approx"),
+                date_uncertainty=text_entry.get("date_uncertainty"),
+                medium=text_entry.get("medium", ""),
+                object_type=text_entry.get("object_type", ""),
+                source=text_entry.get("source", ""),
+                bibliography=text_entry.get("bibliography", ""),
+                notes=f"{title}: {section.get('label', '')}. {text_entry.get('notes', '')}",
+                language="etruscan",
+                classification=text_entry.get("classification", "unknown"),
+                script_system=text_entry.get("script_system", "old_italic"),
+                completeness=text_entry.get("completeness", "complete"),
+                provenance_status="verified",
+            )
+            corpus.add(inscription)
+            count += 1
+            print(f"   📜 {section_id}: {title} — {section.get('label', '')}")
+
+    corpus.close()
+    print(f"\n✅ Seeded {count} codex sections")
+    print(f"   Database: {db_path}")
+    return count
+
+
 def main():
     parser = argparse.ArgumentParser(description="Seed OpenEtruscan corpus from Larth dataset")
     parser.add_argument("--db-path", default="data/corpus.db", help="Path to corpus database")
     parser.add_argument("--csv-path", default=None, help="Path to local CSV (skips download)")
+    parser.add_argument("--codex", action="store_true", help="Also import codex texts")
+    parser.add_argument(
+        "--codex-only", action="store_true",
+        help="Import ONLY codex texts (skip Larth download)",
+    )
     args = parser.parse_args()
 
-    if args.csv_path:
-        csv_data = Path(args.csv_path).read_text(encoding="utf-8")
+    if args.codex_only:
+        print("📚 Importing Etruscan codex texts...")
+        seed_codex(db_path=args.db_path)
     else:
-        csv_data = download_larth()
+        if args.csv_path:
+            csv_data = Path(args.csv_path).read_text(encoding="utf-8")
+        else:
+            csv_data = download_larth()
 
-    seed_corpus(csv_data, db_path=args.db_path)
+        seed_corpus(csv_data, db_path=args.db_path)
+
+        if args.codex:
+            print("\n📚 Importing Etruscan codex texts...")
+            seed_codex(db_path=args.db_path)
 
     # Show a sample query
     print("\n🔍 Sample query:")
     corpus = Corpus.load(args.db_path)
-    results = corpus.search(findspot="Caere", limit=3)
+    results = corpus.search(limit=3)
     for insc in results:
         print(f"   {insc.id}: {insc.canonical} ({insc.findspot}, {insc.date_display()})")
     corpus.close()
@@ -233,3 +326,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

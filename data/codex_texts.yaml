@@ -1,0 +1,318 @@
+# =============================================================================
+# Etruscan Codex — Major Extended Texts
+# =============================================================================
+# The 6 longest and most important surviving Etruscan texts, with scholarly
+# metadata and representative text extracts. These form the core reference
+# corpus for any computational epigraphy project.
+#
+# Sources: TLE (Pallottino), CIE, Rix ET, van der Meer (2007), Bonfante (2002)
+# =============================================================================
+
+texts:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1. LIBER LINTEUS ZAGRABIENSIS — the longest Etruscan text
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_LL"
+    title: "Liber Linteus Zagrabiensis"
+    alt_names:
+      - "Linen Book of Zagreb"
+      - "Zagreb Mummy Wrappings"
+    classification: "religious"
+    medium: "linen"
+    object_type: "book (linen wrappings)"
+    findspot: "Unknown (Etruria)"
+    findspot_lat: 42.5
+    findspot_lon: 12.0
+    date_approx: -250
+    date_uncertainty: 50
+    word_count: 1330
+    line_count: 230
+    columns: 12
+    completeness: "fragmentary"
+    script_system: "old_italic"
+    source: "TLE 1; CIE 8340"
+    bibliography: >-
+      van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book
+      of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters;
+      Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed.
+    notes: >-
+      Ritual calendar with directions for priests. Preserved as Egyptian
+      mummy wrappings. Discovered 1848, recognized as Etruscan by Krall 1891.
+      Written in black ink with red diacritics. Direction: right-to-left.
+      ~30-40% of text lost; beginning columns missing, end nearly complete.
+    sections:
+      - id: "CODEX_LL_VI"
+        label: "Column VI (best preserved)"
+        raw_text: >-
+          ciz vacl θesan flerχva neθśrac hupniś zaθrumiś flerχva
+          neθśrac śuci eiser śic śeuc tuθiu zilci vacl lauχumneti
+          śacnicla θesan hupniś zaθrumiś flerχva neθśrac cilθcvi
+          hupniś zaθrumiś
+      - id: "CODEX_LL_VII"
+        label: "Column VII"
+        raw_text: >-
+          θezi iχ ciz vacl θesan flerχva neθśrac hupniś zaθrumiś
+          in crapśti ceś θeśan ei śeuc nunθenθ celi huθiś zaθrumiś
+          veiveś trau ciś vacl θeśan tinśi tiurim ais cemnac
+      - id: "CODEX_LL_VIII"
+        label: "Column VIII"
+        raw_text: >-
+          celi huθiś zaθrumiś iχ nac aχrum flerχva neθśrac hamφeś
+          celi huθiś zaθrumiś vacl trin sians cletram śrenχve
+          nunθeri śpureśtreści enaś
+      - id: "CODEX_LL_IX"
+        label: "Column IX"
+        raw_text: >-
+          ara ślafc zec flaχ vacl in crapśti hanipalθi θui
+          ceś zeri nunθeri eθ vacl θeśan tinśi ais cemnac celi
+          huθiś zaθrumiś
+      - id: "CODEX_LL_X"
+        label: "Column X"
+        raw_text: >-
+          vacl aisvale ciś clenar ci avil χiś vinum trau θiś
+          ceś heχz ciś methlumθ ceś ten θeśan tinśi tiurim
+          ais cemnac
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2. TABULA CAPUANA — religious calendar on terracotta
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_TC"
+    title: "Tabula Capuana"
+    alt_names:
+      - "Capua Tile"
+      - "Tavola Capuana"
+    classification: "religious"
+    medium: "terracotta"
+    object_type: "tile"
+    findspot: "Campania"
+    findspot_lat: 41.0853
+    findspot_lon: 14.2502
+    date_approx: -470
+    date_uncertainty: 30
+    word_count: 390
+    line_count: 62
+    columns: 10
+    completeness: "fragmentary"
+    script_system: "old_italic"
+    source: "TLE 2; CIE 8335"
+    bibliography: >-
+      Roncalli, F. (1985). La Tabula Capuana; Cristofani, M. (1995).
+      Tabula Capuana: un calendario festivo di età arcaica. Florence.
+    notes: >-
+      Religious calendar from Campanian Etruscan colony. 10 sections correspond
+      to 10-month year starting March (velχitna). Boustrophedon writing.
+      Found 1898 in Santa Maria Capua Vetere necropolis. Now in Altes Museum, Berlin.
+      Deities: Saucne, Śuri, Letham, Tinia, Uni, Canuli.
+    sections:
+      - id: "CODEX_TC_I"
+        label: "Section I (March — velχitna)"
+        raw_text: >-
+          velχitna śacni cilθ cva leθamsul śuris cluce lethamei
+          θevruminase nunθeri lauχumneti
+      - id: "CODEX_TC_II"
+        label: "Section II (April — apirase)"
+        raw_text: >-
+          apirase saucne hanipalθi θui ceś ipei zea vacl
+          tinśi tiurim celi huθiś flereś tei avil
+      - id: "CODEX_TC_III"
+        label: "Section III (May — ampile)"
+        raw_text: >-
+          ampile śurieθ zusle cizi vacl flereś neθśrac tei
+          leθamei cilθcval hanφeś faśei unial
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 3. PYRGI GOLD TABLETS — bilingual Etruscan-Phoenician
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_PY_A"
+    title: "Pyrgi Gold Tablet A (Etruscan)"
+    alt_names:
+      - "Lamina A"
+      - "Pyrgi Tablet, Etruscan long text"
+    classification: "dedicatory"
+    medium: "gold"
+    object_type: "tablet (lamina)"
+    findspot: "Pyrgi"
+    findspot_lat: 42.0098
+    findspot_lon: 11.9676
+    date_approx: -500
+    date_uncertainty: 10
+    word_count: 52
+    line_count: 16
+    completeness: "complete"
+    script_system: "old_italic"
+    source: "CIE 6314; ET Cr 4.4"
+    bibliography: >-
+      Pallottino, M. (1964). Scavi nel santuario etrusco di Pyrgi;
+      Colonna, G. (1970). Pyrgi: Scavi del santuario etrusco.
+    notes: >-
+      Gold tablet from Temple B at Pyrgi, port of Caere. Dedication by
+      Thefarie Velianas to Uni/Astarte. Discovered 1964. Key bilingual text
+      for Etruscan-Phoenician comparison. 16 lines, right-to-left.
+    sections:
+      - id: "CODEX_PY_A_1"
+        label: "Lamina A (complete)"
+        raw_text: >-
+          ita tmia icac heramaśva vatieχe unialastres θemiasa meχ
+          θuta θefariei velianas sal cluvenias tururś munistas θuvas
+          tameresca ilacve tulerase nac ci avil χurvar teśiameitale
+          ilacve alśase nac atranes zilacal seleitala acnaśvers itanim
+          heramve avil eniaca pulumχva snuiaφ
+
+  - id: "CODEX_PY_B"
+    title: "Pyrgi Gold Tablet B (Etruscan)"
+    alt_names:
+      - "Lamina B"
+      - "Pyrgi Tablet, Etruscan short text"
+    classification: "dedicatory"
+    medium: "gold"
+    object_type: "tablet (lamina)"
+    findspot: "Pyrgi"
+    findspot_lat: 42.0098
+    findspot_lon: 11.9676
+    date_approx: -500
+    date_uncertainty: 10
+    word_count: 15
+    line_count: 9
+    completeness: "complete"
+    script_system: "old_italic"
+    source: "CIE 6315; ET Cr 4.5"
+    bibliography: >-
+      Pallottino, M. (1964). Scavi nel santuario etrusco di Pyrgi.
+    notes: >-
+      Short Etruscan tablet found alongside Lamina A and the Phoenician text
+      (Lamina C). 9 lines. Supplementary dedication to Uni by Thefarie Velianas.
+    sections:
+      - id: "CODEX_PY_B_1"
+        label: "Lamina B (complete)"
+        raw_text: >-
+          nac θefariei veliiunas θamuce cleva etanal masan tiurunias
+          śelace vacal tmial avilχval amuce pulumχva
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 4. CIPPUS PERUSINUS — legal boundary text
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_CP"
+    title: "Cippus Perusinus"
+    alt_names:
+      - "Perugia Stone"
+      - "Cippo di Perugia"
+    classification: "legal"
+    medium: "travertine"
+    object_type: "cippus (boundary stone)"
+    findspot: "Perugia"
+    findspot_lat: 43.1107
+    findspot_lon: 12.3908
+    date_approx: -250
+    date_uncertainty: 50
+    word_count: 130
+    line_count: 46
+    completeness: "complete"
+    script_system: "old_italic"
+    source: "CIE 4538; ET Pe 8.4"
+    bibliography: >-
+      Agostiniani, L. (2003). Il cippus Perusinus; Rix, H. (1991).
+      Etruskische Texte. Tübingen.
+    notes: >-
+      Bilingual face A/B inscriptions. Legal text recording agreement between
+      Velthina and Afuna families over property boundaries. Found near Perugia.
+      46 lines on two faces. Key source for Etruscan legal vocabulary.
+    sections:
+      - id: "CODEX_CP_A"
+        label: "Face A"
+        raw_text: >-
+          eunat tanna larezul ame vaχr lautn velθinas estla afunas sleleθ
+          caru tezan fuśleri tesns teiś raśneś ipa ama hen naper
+          χi XII velθinaθuraś araś peraśc viś racuśn ame
+          vaχr lautn velθinas
+      - id: "CODEX_CP_B"
+        label: "Face B"
+        raw_text: >-
+          tenθas velθinas arznal clenaraśi θil
+          śvalce velθina afuna θuruni ei mlesiθi
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 5. TABULA CORTONENSIS — bronze legal document
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_TCo"
+    title: "Tabula Cortonensis"
+    alt_names:
+      - "Cortona Tablet"
+      - "Bronze Tablet of Cortona"
+    classification: "legal"
+    medium: "bronze"
+    object_type: "tablet"
+    findspot: "Cortona"
+    findspot_lat: 43.2754
+    findspot_lon: 11.9858
+    date_approx: -200
+    date_uncertainty: 50
+    word_count: 206
+    line_count: 40
+    completeness: "fragmentary"
+    script_system: "old_italic"
+    source: "ET Co 4.4"
+    bibliography: >-
+      Agostiniani, L., & Nicosia, F. (2000). Tabula Cortonensis. Roma:
+      L'Erma di Bretschneider.
+    notes: >-
+      Bronze tablet found 1992 in Cortona, broken into 8 fragments (1 missing).
+      Land transfer document involving Cusu family and Petru Scevas near Lake
+      Trasimeno. 32 lines recto, 8 verso. 7 text sections with paragraph marks.
+    sections:
+      - id: "CODEX_TCo_A"
+        label: "Recto (front, Sections I-VI)"
+        raw_text: >-
+          et petruiś ścevaś eliuntś vinac restmc cenuśa tenθur
+          śar cusuθuraś larisalisula peśc spante tenθur sa
+          śranś arcl clθii tersna θui spanθi mleśieθic raśnas
+          inni peś petruś pavac traulac tiur tenθurś tenθaś
+          zacinat priniserac zal cuśuθurśum
+      - id: "CODEX_TCo_B"
+        label: "Verso (back, Section VII)"
+        raw_text: >-
+          aule salini cusual zilci larθal cusuś titinal
+          larisalc saliniś aulesla celti neitiś tarśminaśś
+          sparza inθuχt ceśa ratm suθiu suθiusa velχeś cusuśa
+          uleśla velθuruś tlniś velθurusla larθalc celatinas
+          vetnal larisalc celatinaś pitlnal
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 6. PIACENZA LIVER — bronze haruspicy model
+  # ─────────────────────────────────────────────────────────────────────────
+  - id: "CODEX_PL"
+    title: "Piacenza Liver"
+    alt_names:
+      - "Fegato di Piacenza"
+      - "Bronze Liver of Piacenza"
+    classification: "religious"
+    medium: "bronze"
+    object_type: "model (organ)"
+    findspot: "Piacenza"
+    findspot_lat: 45.0522
+    findspot_lon: 9.6930
+    date_approx: -100
+    date_uncertainty: 50
+    word_count: 40
+    line_count: 16
+    completeness: "complete"
+    script_system: "old_italic"
+    source: "CIE 408; ET Pa 4.2"
+    bibliography: >-
+      van der Meer, L.B. (1987). The Bronze Liver of Piacenza. Amsterdam;
+      Pallottino, M. (1956). Deorum sedes.
+    notes: >-
+      Bronze model of sheep liver used for haruspicy (divination by entrails).
+      Found 1877 near Gossolengo. Divided into 40+ sections inscribed with
+      deity names. Flat side = sky map; convex = entrails. Key source for
+      Etruscan theology and celestial topography.
+    sections:
+      - id: "CODEX_PL_OUTER"
+        label: "Outer rim (celestial regions)"
+        raw_text: >-
+          tiń cilθ θufθ neθ fuflunś caθa leθn hercle selva
+          turan vetsl lasl uśil cilen uni mac tluscv
+      - id: "CODEX_PL_INNER"
+        label: "Inner sections (organ regions)"
+        raw_text: >-
+          ani lasl θufθ tiń θuf neθ hercle fuflunś
+          mar leθn caθa selva vetsl

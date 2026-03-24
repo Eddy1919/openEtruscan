@@ -6,10 +6,10 @@ Run locally:
     uvicorn openetruscan.server:app --reload
 """
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-import asyncio
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +34,7 @@ async def _build_graph_background():
     global family_graph, insc_to_gens, GRAPH_READY
     try:
         logger.info("Building FamilyGraph in background...")
-        
+
         def _build():
             from openetruscan.prosopography import FamilyGraph
             fg = FamilyGraph.from_corpus(corpus)
@@ -45,7 +45,7 @@ async def _build_graph_background():
                 if p.gentilicium
             }
             return fg, itg
-            
+
         fg, itg = await asyncio.to_thread(_build)
         family_graph = fg
         insc_to_gens = itg

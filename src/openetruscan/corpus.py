@@ -45,6 +45,11 @@ CLASSIFICATIONS = (
 
 SCRIPT_SYSTEMS = ("old_italic", "latin", "greek", "other")
 COMPLETENESS_VALUES = ("complete", "fragmentary", "illegible")
+PROVENANCE_STATUSES = ("verified", "quarantined", "rejected")
+
+# Geographic bounds for Etruscan cultural area (used by provenance checks)
+_ETRUSCAN_LAT_RANGE = (35.0, 48.0)
+_ETRUSCAN_LON_RANGE = (5.0, 18.0)
 
 
 # ---------------------------------------------------------------------------
@@ -71,11 +76,14 @@ class Inscription:
     source: str = ""
     bibliography: str = ""
     notes: str = ""
-    # New classification fields
+    # Classification fields
     language: str = "etruscan"
     classification: str = "unknown"
     script_system: str = "old_italic"
     completeness: str = "complete"
+    # Provenance fields
+    provenance_status: str = "verified"
+    provenance_flags: str = ""  # JSON-encoded list of detected issues
 
     def date_display(self) -> str:
         """Human-readable date string."""
@@ -108,6 +116,8 @@ class Inscription:
             "classification": self.classification,
             "script_system": self.script_system,
             "completeness": self.completeness,
+            "provenance_status": self.provenance_status,
+            "provenance_flags": self.provenance_flags,
         }
 
 
@@ -203,7 +213,7 @@ class SearchResults:
 # Schema SQL
 # ---------------------------------------------------------------------------
 
-_SQLITE_SCHEMA = """
+_SQLITE_SCHEMA_TABLE = """
 CREATE TABLE IF NOT EXISTS inscriptions (
     id TEXT PRIMARY KEY,
     raw_text TEXT NOT NULL,
@@ -223,14 +233,19 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     language TEXT NOT NULL DEFAULT 'etruscan',
     classification TEXT NOT NULL DEFAULT 'unknown',
     script_system TEXT NOT NULL DEFAULT 'old_italic',
-    completeness TEXT NOT NULL DEFAULT 'complete'
+    completeness TEXT NOT NULL DEFAULT 'complete',
+    provenance_status TEXT NOT NULL DEFAULT 'verified',
+    provenance_flags TEXT NOT NULL DEFAULT ''
 );
+"""
 
+_SQLITE_SCHEMA_INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_canonical ON inscriptions(canonical);
 CREATE INDEX IF NOT EXISTS idx_findspot ON inscriptions(findspot);
 CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
+CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
 """
 
 _PG_SCHEMA = """
@@ -254,6 +269,8 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     classification TEXT NOT NULL DEFAULT 'unknown',
     script_system TEXT NOT NULL DEFAULT 'old_italic',
     completeness TEXT NOT NULL DEFAULT 'complete',
+    provenance_status TEXT NOT NULL DEFAULT 'verified',
+    provenance_flags TEXT NOT NULL DEFAULT '',
     geom geometry(Point, 4326),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -264,6 +281,7 @@ CREATE INDEX IF NOT EXISTS idx_findspot ON inscriptions(findspot);
 CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
+CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
 """
 
 # Columns used for INSERT/SELECT (shared between backends)
@@ -287,6 +305,8 @@ _COLUMNS = [
     "classification",
     "script_system",
     "completeness",
+    "provenance_status",
+    "provenance_flags",
 ]
 
 
@@ -314,6 +334,7 @@ class BaseCorpus(ABC):
         medium: str | None = None,
         language: str | None = None,
         classification: str | None = None,
+        provenance_status: str | None = None,
         limit: int = 100,
     ) -> SearchResults: ...
 
@@ -372,6 +393,8 @@ class BaseCorpus(ABC):
                 classification=inscription.classification,
                 script_system=inscription.script_system,
                 completeness=inscription.completeness,
+                provenance_status=inscription.provenance_status,
+                provenance_flags=inscription.provenance_flags,
             )
         return inscription
 
@@ -397,6 +420,8 @@ class BaseCorpus(ABC):
             insc.classification,
             insc.script_system,
             insc.completeness,
+            insc.provenance_status,
+            insc.provenance_flags,
         )
 
     def _build_search_query(
@@ -408,6 +433,7 @@ class BaseCorpus(ABC):
         language: str | None,
         classification: str | None,
         limit: int,
+        provenance_status: str | None = None,
         param_style: str = "qmark",
     ) -> tuple[str, str, list]:
         """Build WHERE clause. Returns (query, count_query, params)."""
@@ -439,6 +465,10 @@ class BaseCorpus(ABC):
         if classification:
             conditions.append(f"classification = {ph}")
             params.append(classification)
+
+        if provenance_status:
+            conditions.append(f"provenance_status = {ph}")
+            params.append(provenance_status)
 
         where = " AND ".join(conditions) if conditions else "1=1"
         query = " ".join(["SELECT * FROM inscriptions WHERE", where, "ORDER BY id LIMIT", ph])
@@ -518,9 +548,13 @@ class Corpus(BaseCorpus):
         from openetruscan.artifacts import IMAGES_SQLITE_SCHEMA
 
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn.executescript(_SQLITE_SCHEMA)
-        self.conn.executescript(IMAGES_SQLITE_SCHEMA)
+        # 1. Create table (old DBs keep their columns, new DBs get all)
+        self.conn.executescript(_SQLITE_SCHEMA_TABLE)
+        # 2. Migrate: add any missing columns to old databases
         self._migrate_columns()
+        # 3. Create indexes (now safe — all columns exist)
+        self.conn.executescript(_SQLITE_SCHEMA_INDEXES)
+        self.conn.executescript(IMAGES_SQLITE_SCHEMA)
 
     def _migrate_columns(self) -> None:
         """Add new columns to existing databases."""
@@ -531,6 +565,8 @@ class Corpus(BaseCorpus):
             ("classification", "TEXT NOT NULL DEFAULT 'unknown'"),
             ("script_system", "TEXT NOT NULL DEFAULT 'old_italic'"),
             ("completeness", "TEXT NOT NULL DEFAULT 'complete'"),
+            ("provenance_status", "TEXT NOT NULL DEFAULT 'verified'"),
+            ("provenance_flags", "TEXT NOT NULL DEFAULT ''"),
         ]
         for col_name, col_def in migrations:
             if col_name not in existing:
@@ -560,6 +596,7 @@ class Corpus(BaseCorpus):
         medium: str | None = None,
         language: str | None = None,
         classification: str | None = None,
+        provenance_status: str | None = None,
         limit: int = 100,
     ) -> SearchResults:
         """Search the corpus with optional filters."""
@@ -571,6 +608,7 @@ class Corpus(BaseCorpus):
             language,
             classification,
             limit,
+            provenance_status=provenance_status,
             param_style="qmark",
         )
         rows = self.conn.execute(query, params).fetchall()
@@ -690,6 +728,38 @@ class Corpus(BaseCorpus):
         ).fetchall()
         return [{k: row[k] for k in row} for row in rows]
 
+    def review_quarantine(
+        self,
+        inscription_id: str,
+        action: str = "verify",
+    ) -> bool:
+        """
+        Review a quarantined inscription.
+
+        Args:
+            inscription_id: The inscription ID to review.
+            action: "verify" to mark as verified, "reject" to reject.
+
+        Returns:
+            True if the inscription was found and updated.
+        """
+        if action not in ("verify", "reject"):
+            raise ValueError(f"Invalid action: {action}. Use 'verify' or 'reject'.")
+
+        row = self.conn.execute(
+            "SELECT id FROM inscriptions WHERE id = ?", (inscription_id,)
+        ).fetchone()
+        if not row:
+            return False
+
+        new_status = "verified" if action == "verify" else "rejected"
+        self.conn.execute(
+            "UPDATE inscriptions SET provenance_status = ? WHERE id = ?",
+            (new_status, inscription_id),
+        )
+        self.conn.commit()
+        return True
+
     def close(self) -> None:
         if self._conn:
             self._conn.close()
@@ -796,6 +866,7 @@ class PostgresCorpus(BaseCorpus):
         medium: str | None = None,
         language: str | None = None,
         classification: str | None = None,
+        provenance_status: str | None = None,
         limit: int = 100,
     ) -> SearchResults:
         """Search the corpus."""
@@ -809,6 +880,7 @@ class PostgresCorpus(BaseCorpus):
             language,
             classification,
             limit,
+            provenance_status=provenance_status,
             param_style="format",
         )
         with self._conn.cursor(
@@ -967,6 +1039,8 @@ def _row_to_inscription(row: sqlite3.Row) -> Inscription:
         classification=(row["classification"] if "classification" in keys else "unknown"),
         script_system=(row["script_system"] if "script_system" in keys else "old_italic"),
         completeness=(row["completeness"] if "completeness" in keys else "complete"),
+        provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
+        provenance_flags=(row["provenance_flags"] if "provenance_flags" in keys else ""),
     )
 
 
@@ -992,6 +1066,8 @@ def _dict_to_inscription(row: dict) -> Inscription:
         classification=row.get("classification", "unknown"),
         script_system=row.get("script_system", "old_italic"),
         completeness=row.get("completeness", "complete"),
+        provenance_status=row.get("provenance_status", "verified"),
+        provenance_flags=row.get("provenance_flags", ""),
     )
 
 
@@ -1011,3 +1087,129 @@ def _safe_int(val: str | None) -> int | None:
         return int(float(val))
     except ValueError:
         return None
+
+
+def auto_flag_inscription(
+    inscription: Inscription,
+    language: str = "etruscan",
+    corpus: BaseCorpus | None = None,
+    similarity_threshold: float = 0.9,
+) -> list[str]:
+    """
+    Auto-detect potential issues in an inscription for the provenance pipeline.
+
+    Checks:
+      - Non-alphabet characters (potential OCR errors)
+      - Out-of-range coordinates (outside Etruscan cultural area)
+      - Near-duplicate texts (TF-IDF cosine similarity > threshold)
+
+    Args:
+        inscription: The inscription to check.
+        language: Language adapter to use.
+        corpus: If provided, checks for near-duplicates against existing texts.
+        similarity_threshold: Cosine similarity threshold for duplicate flagging (0-1).
+
+    Returns:
+        List of flag strings describing detected issues.
+    """
+    from openetruscan.adapter import load_adapter
+
+    flags: list[str] = []
+
+    # Check for non-alphabet characters
+    if inscription.canonical:
+        try:
+            adapter = load_adapter(language)
+            alphabet_set = set(adapter.alphabet.keys())
+            unknown_chars = set()
+            for ch in inscription.canonical:
+                if ch not in alphabet_set and ch != " ":
+                    unknown_chars.add(ch)
+            if unknown_chars:
+                flags.append(
+                    f"non_alphabet_chars: {', '.join(sorted(unknown_chars))}"
+                )
+        except Exception:
+            pass  # Adapter not found — skip check
+
+    # Check coordinate range
+    if inscription.findspot_lat is not None and inscription.findspot_lon is not None:
+        lat, lon = inscription.findspot_lat, inscription.findspot_lon
+        if not (_ETRUSCAN_LAT_RANGE[0] <= lat <= _ETRUSCAN_LAT_RANGE[1]):
+            flags.append(
+                f"lat_out_of_range: {lat} "
+                f"(expected {_ETRUSCAN_LAT_RANGE[0]}-"
+                f"{_ETRUSCAN_LAT_RANGE[1]})"
+            )
+        if not (_ETRUSCAN_LON_RANGE[0] <= lon <= _ETRUSCAN_LON_RANGE[1]):
+            flags.append(
+                f"lon_out_of_range: {lon} "
+                f"(expected {_ETRUSCAN_LON_RANGE[0]}-"
+                f"{_ETRUSCAN_LON_RANGE[1]})"
+            )
+
+    # TF-IDF near-duplicate detection
+    if corpus is not None and inscription.canonical:
+        flags.extend(
+            _check_near_duplicates(inscription, corpus, similarity_threshold)
+        )
+
+    return flags
+
+
+def _check_near_duplicates(
+    inscription: Inscription,
+    corpus: BaseCorpus,
+    threshold: float = 0.9,
+) -> list[str]:
+    """
+    Check for near-duplicate texts using TF-IDF cosine similarity.
+
+    Uses character n-gram TF-IDF (2-4 grams) to detect texts that are
+    suspiciously similar, which may indicate OCR duplicates or transcription
+    errors from the same source.
+    """
+    flags: list[str] = []
+
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+    except ImportError:
+        return flags  # sklearn not installed — skip check
+
+    # Fetch existing canonical texts
+    results = corpus.search(limit=999999)
+    existing = [
+        (insc.id, insc.canonical)
+        for insc in results
+        if insc.canonical and insc.id != inscription.id
+    ]
+
+    if not existing:
+        return flags
+
+    existing_ids, existing_texts = zip(*existing, strict=True)
+
+    # Build TF-IDF matrix with character n-grams
+    vectorizer = TfidfVectorizer(
+        analyzer="char_wb",
+        ngram_range=(2, 4),
+        max_features=5000,
+    )
+
+    try:
+        corpus_matrix = vectorizer.fit_transform(list(existing_texts))
+        new_vector = vectorizer.transform([inscription.canonical])
+        similarities = cosine_similarity(new_vector, corpus_matrix)[0]
+    except ValueError:
+        return flags  # Empty vocabulary or other vectorizer issue
+
+    # Flag high-similarity matches
+    for i, sim in enumerate(similarities):
+        if sim >= threshold:
+            flags.append(
+                f"near_duplicate: {existing_ids[i]} (similarity={sim:.3f})"
+            )
+
+    return flags
+

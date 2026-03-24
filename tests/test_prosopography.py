@@ -4,7 +4,13 @@ import tempfile
 from pathlib import Path
 
 from openetruscan.corpus import Corpus, Inscription
-from openetruscan.prosopography import FamilyGraph, parse_name
+from openetruscan.prosopography import (
+    FamilyGraph,
+    fuzzy_match,
+    levenshtein_distance,
+    parse_name,
+    phonological_distance,
+)
 
 
 class TestParseName:
@@ -14,6 +20,8 @@ class TestParseName:
         result = parse_name("larθ")
         assert result.components[0].type == "praenomen"
         assert result.components[0].gender == "male"
+        assert result.components[0].match_method == "exact"
+        assert result.components[0].match_confidence == 1.0
 
     def test_known_female_praenomen(self):
         result = parse_name("ramθa")
@@ -48,6 +56,109 @@ class TestParseName:
         d = result.to_dict()
         assert "components" in d
         assert "gender" in d
+        # New fields in serialized output
+        assert "match_confidence" in d["components"][0]
+        assert "match_method" in d["components"][0]
+
+
+class TestFuzzyMatching:
+    """Test Levenshtein distance and fuzzy name matching."""
+
+    def test_levenshtein_identical(self):
+        assert levenshtein_distance("larθ", "larθ") == 0
+
+    def test_levenshtein_one_deletion(self):
+        # "lrθ" vs "larθ" — missing 'a'
+        assert levenshtein_distance("lrθ", "larθ") == 1
+
+    def test_levenshtein_one_substitution(self):
+        assert levenshtein_distance("larθ", "lirθ") == 1
+
+    def test_levenshtein_two_edits(self):
+        assert levenshtein_distance("lθ", "larθ") == 2
+
+    def test_fuzzy_match_finds_close_names(self):
+        candidates = ["larθ", "arnθ", "vel", "ramθa"]
+        matches = fuzzy_match("lrθ", candidates, max_distance=2)
+        # Should find "larθ" at distance 1
+        assert len(matches) > 0
+        assert matches[0][0] == "larθ"
+        assert matches[0][1] == 1
+
+    def test_fuzzy_match_rejects_distant(self):
+        candidates = ["larθ", "arnθ"]
+        matches = fuzzy_match("xyz", candidates, max_distance=2)
+        assert len(matches) == 0
+
+    def test_fuzzy_praenomen_recognition(self):
+        # "lrθ" should fuzzy-match to "larθ" (distance 1)
+        result = parse_name("lrθ lecne")
+        comp = result.components[0]
+        assert comp.type == "praenomen"
+        assert comp.base_form == "larθ"
+        assert comp.match_method == "fuzzy"
+        assert comp.match_confidence < 1.0
+        assert comp.match_confidence > 0.5
+
+    def test_fuzzy_gentilicium_recognition(self):
+        # "spurna" should fuzzy-match to "spurina" (distance 1)
+        result = parse_name("larθ spurna")
+        # Second component should be fuzzy-matched gentilicium
+        comp = result.components[1]
+        assert comp.type == "gentilicium"
+        assert comp.match_method == "fuzzy"
+
+    def test_positional_fallback_labels(self):
+        # Random token that doesn't match anything
+        result = parse_name("xyzqw abcdef")
+        assert result.components[0].match_method == "positional"
+        assert result.components[0].match_confidence == 0.5
+
+
+class TestPhonologicalDistance:
+    """Test IPA-aware phonological edit distance."""
+
+    def test_identical_strings(self):
+        assert phonological_distance("larθ", "larθ") == 0.0
+
+    def test_related_substitution_cheaper(self):
+        # θ↔t are in related categories (aspirates↔stops) → cost 0.5
+        # θ↔m are unrelated → cost 1.0
+        cost_theta_t = phonological_distance("θ", "t")
+        cost_theta_m = phonological_distance("θ", "m")
+        assert cost_theta_t < cost_theta_m
+        assert cost_theta_t == 0.5
+        assert cost_theta_m == 1.0
+
+    def test_same_category_cheapest(self):
+        # s↔ś are in same sibilant category → cost 0.3
+        cost_s_s_acute = phonological_distance("s", "ś")
+        assert cost_s_s_acute == 0.3
+
+    def test_vowel_swap_cheap(self):
+        # a↔e are both vowels → cost 0.3
+        cost_a_e = phonological_distance("a", "e")
+        assert cost_a_e == 0.3
+
+    def test_unrelated_swap_full_cost(self):
+        # l↔θ are unrelated → cost 1.0
+        cost_l_theta = phonological_distance("l", "θ")
+        assert cost_l_theta == 1.0
+
+    def test_phonological_vs_levenshtein(self):
+        # "larθ" vs "lart" — phonological should be cheaper than Levenshtein
+        phono = phonological_distance("larθ", "lart")
+        lev = levenshtein_distance("larθ", "lart")
+        assert phono < lev  # 0.5 < 1
+
+    def test_fuzzy_match_prefers_phonological(self):
+        # "lart" should match "larθ" better than "larm" because t↔θ is related
+        candidates = ["larθ", "larm"]
+        matches = fuzzy_match("lart", candidates)
+        # "larθ" should be closer (distance 0.5) than "larm" (distance 1.0)
+        assert len(matches) >= 1
+        assert matches[0][0] == "larθ"
+        assert matches[0][1] < 1.0
 
 
 class TestFamilyGraph:

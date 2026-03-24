@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from openetruscan.corpus import Corpus, Inscription
+from openetruscan.corpus import Corpus, Inscription, auto_flag_inscription
 
 
 class TestCorpus:
@@ -92,3 +92,99 @@ class TestCorpus:
     def test_date_display_undated(self):
         insc = Inscription(id="T1", raw_text="X")
         assert insc.date_display() == "undated"
+
+
+class TestProvenance:
+    """Test provenance pipeline (quarantine, auto-flag, review)."""
+
+    def setup_method(self):
+        self.db_path = tempfile.mktemp(suffix=".db")
+        self.corpus = Corpus.load(self.db_path)
+
+    def teardown_method(self):
+        self.corpus.close()
+        Path(self.db_path).unlink(missing_ok=True)
+
+    def test_auto_flag_out_of_range_coords(self):
+        insc = Inscription(
+            id="FLAG1", raw_text="larθal", canonical="larθal",
+            findspot_lat=-77.0, findspot_lon=166.0,  # Antarctica
+        )
+        flags = auto_flag_inscription(insc)
+        assert any("lat_out_of_range" in f for f in flags)
+        assert any("lon_out_of_range" in f for f in flags)
+
+    def test_auto_flag_non_alphabet_chars(self):
+        insc = Inscription(
+            id="FLAG2", raw_text="larθal@#", canonical="larθal@#",
+        )
+        flags = auto_flag_inscription(insc)
+        assert any("non_alphabet_chars" in f for f in flags)
+
+    def test_auto_flag_clean_inscription(self):
+        insc = Inscription(
+            id="CLEAN", raw_text="larθal", canonical="larθal",
+            findspot_lat=42.0, findspot_lon=12.0,
+        )
+        flags = auto_flag_inscription(insc)
+        assert len(flags) == 0
+
+    def test_review_quarantine_verify(self):
+        insc = Inscription(
+            id="Q1", raw_text="test", provenance_status="quarantined",
+        )
+        self.corpus.add(insc)
+        success = self.corpus.review_quarantine("Q1", action="verify")
+        assert success is True
+        # Verify the status was updated
+        results = self.corpus.search(provenance_status="verified")
+        found = [i for i in results if i.id == "Q1"]
+        assert len(found) == 1
+
+    def test_review_quarantine_nonexistent(self):
+        success = self.corpus.review_quarantine("NONEXIST")
+        assert success is False
+
+    def test_provenance_status_filter(self):
+        self.corpus.add(Inscription(
+            id="V1", raw_text="verified", provenance_status="verified",
+        ))
+        self.corpus.add(Inscription(
+            id="Q1", raw_text="quarantined", provenance_status="quarantined",
+        ))
+        verified = self.corpus.search(provenance_status="verified")
+        quarantined = self.corpus.search(provenance_status="quarantined")
+        assert any(i.id == "V1" for i in verified)
+        assert any(i.id == "Q1" for i in quarantined)
+        assert not any(i.id == "Q1" for i in verified)
+
+    def test_near_duplicate_detected(self):
+        # Add an inscription, then check a near-duplicate against it
+        self.corpus.add(Inscription(
+            id="ORIG", raw_text="larθal spurinas lecnes",
+            canonical="larθal spurinas lecnes",
+        ))
+        duplicate = Inscription(
+            id="DUP", raw_text="larθal spurinas lecnes",
+            canonical="larθal spurinas lecnes",
+        )
+        flags = auto_flag_inscription(duplicate, corpus=self.corpus)
+        assert any("near_duplicate" in f for f in flags)
+        assert any("ORIG" in f for f in flags)
+
+    def test_distinct_text_not_flagged(self):
+        self.corpus.add(Inscription(
+            id="A", raw_text="larθal spurinas",
+            canonical="larθal spurinas",
+        ))
+        different = Inscription(
+            id="B", raw_text="ramθa matunai θana",
+            canonical="ramθa matunai θana",
+        )
+        flags = auto_flag_inscription(different, corpus=self.corpus)
+        assert not any("near_duplicate" in f for f in flags)
+
+    def test_dedup_without_corpus_skips(self):
+        insc = Inscription(id="X", raw_text="test", canonical="test")
+        flags = auto_flag_inscription(insc)  # No corpus → no dedup
+        assert not any("near_duplicate" in f for f in flags)

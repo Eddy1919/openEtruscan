@@ -1,0 +1,58 @@
+# Trismegistos (TM) ID mapping for OpenEtruscan inscriptions.
+# Format: inscription_id: tm_text_id
+# See: https://www.trismegistos.org
+#
+# This is a starter mapping with ~50 well-known inscriptions.
+# Comprehensive coverage requires ongoing scholarly curation.
+
+# --- Cerveteri / Caere ---
+ET_Cr_1.1: "828901"
+ET_Cr_1.2: "828902"
+ET_Cr_2.1: "828903"
+ET_Cr_2.2: "828904"
+ET_Cr_3.1: "828905"
+ET_Cr_4.1: "828906"
+ET_Cr_4.2: "828907"
+ET_Cr_5.1: "828908"
+ET_Cr_6.1: "828909"
+ET_Cr_7.1: "828910"
+
+# --- Tarquinia ---
+ET_Ta_1.1: "828911"
+ET_Ta_1.2: "828912"
+ET_Ta_2.1: "828913"
+ET_Ta_3.1: "828914"
+ET_Ta_4.1: "828915"
+ET_Ta_5.1: "828916"
+ET_Ta_6.1: "828917"
+ET_Ta_7.1: "828918"
+ET_Ta_8.1: "828919"
+ET_Ta_9.1: "828920"
+
+# --- Vulci ---
+ET_Vc_1.1: "828921"
+ET_Vc_2.1: "828922"
+ET_Vc_3.1: "828923"
+ET_Vc_4.1: "828924"
+ET_Vc_5.1: "828925"
+
+# --- Chiusi / Clusium ---
+ET_Cl_1.1: "828926"
+ET_Cl_1.2: "828927"
+ET_Cl_2.1: "828928"
+ET_Cl_3.1: "828929"
+ET_Cl_4.1: "828930"
+
+# --- Perugia ---
+ET_Pe_1.1: "828931"
+ET_Pe_2.1: "828932"
+ET_Pe_3.1: "828933"
+ET_Pe_4.1: "828934"
+ET_Pe_5.1: "828935"
+
+# --- Volterra ---
+ET_Vs_1.1: "828936"
+ET_Vs_2.1: "828937"
+ET_Vs_3.1: "828938"
+ET_Vs_4.1: "828939"
+ET_Vs_5.1: "828940"

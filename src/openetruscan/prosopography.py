@@ -22,6 +22,8 @@ class NameComponent:
     type: str  # praenomen, patronymic, gentilicium, metronymic, unknown
     gender: str = ""  # male, female, unknown
     base_form: str = ""  # Stripped of case endings
+    match_confidence: float = 1.0  # 1.0 = exact, decays with edit distance
+    match_method: str = "exact"  # "exact", "fuzzy", "positional"
 
 
 @dataclass
@@ -57,7 +59,14 @@ class NameFormula:
             "canonical": self.canonical,
             "gender": self.gender,
             "components": [
-                {"form": c.form, "type": c.type, "gender": c.gender, "base_form": c.base_form}
+                {
+                    "form": c.form,
+                    "type": c.type,
+                    "gender": c.gender,
+                    "base_form": c.base_form,
+                    "match_confidence": round(c.match_confidence, 3),
+                    "match_method": c.match_method,
+                }
                 for c in self.components
             ],
         }
@@ -104,13 +113,158 @@ def parse_name(text: str, language: str = "etruscan") -> NameFormula:
     )
 
 
+# ---------------------------------------------------------------------------
+# Fuzzy matching — Phonological Edit Distance
+# ---------------------------------------------------------------------------
+
+# Phonological categories derived from IPA in etruscan.yaml.
+# Intra-group substitutions cost less than cross-group.
+_PHONO_CATEGORIES: dict[str, set[str]] = {
+    "stops":     {"c", "k", "q", "t", "p"},
+    "aspirates": {"θ", "φ", "χ"},
+    "sibilants": {"s", "ś", "ξ", "z"},
+    "nasals":    {"m", "n"},
+    "vowels":    {"a", "e", "i", "u"},
+    "liquids":   {"l", "r"},
+    "labials":   {"v", "f"},
+}
+
+# Related categories: substitution cost between groups
+_RELATED_GROUPS: dict[tuple[str, str], float] = {
+    ("stops", "aspirates"): 0.5,   # t ↔ θ: aspiration difference
+    ("aspirates", "stops"): 0.5,
+    ("sibilants", "sibilants"): 0.3,
+    ("labials", "labials"): 0.3,
+}
+
+# Precompute char → category mapping
+_CHAR_CATEGORY: dict[str, str] = {}
+for _cat, _chars in _PHONO_CATEGORIES.items():
+    for _ch in _chars:
+        _CHAR_CATEGORY[_ch] = _cat
+
+_INTRA_GROUP_COST = 0.3
+_CROSS_GROUP_DEFAULT = 1.0
+
+
+def _substitution_cost(c1: str, c2: str) -> float:
+    """
+    Phonologically-aware substitution cost.
+
+    Same character: 0.0
+    Same phonological category: 0.3
+    Related categories (e.g. stops↔aspirates): 0.5
+    Unrelated: 1.0
+    """
+    if c1 == c2:
+        return 0.0
+
+    cat1 = _CHAR_CATEGORY.get(c1)
+    cat2 = _CHAR_CATEGORY.get(c2)
+
+    if cat1 is None or cat2 is None:
+        return _CROSS_GROUP_DEFAULT
+
+    if cat1 == cat2:
+        return _INTRA_GROUP_COST
+
+    # Check for related groups
+    related_cost = _RELATED_GROUPS.get((cat1, cat2))
+    if related_cost is not None:
+        return related_cost
+
+    return _CROSS_GROUP_DEFAULT
+
+
+def phonological_distance(s1: str, s2: str) -> float:
+    """
+    Compute phonologically-weighted edit distance between two strings.
+
+    Uses Etruscan phonological categories to weight substitutions:
+      - Same category (e.g. s↔ś): 0.3
+      - Related categories (e.g. t↔θ): 0.5
+      - Unrelated (e.g. θ↔m): 1.0
+      - Insertion/deletion: 1.0
+
+    Returns a float distance (lower = more similar).
+    """
+    if len(s1) < len(s2):
+        return phonological_distance(s2, s1)
+    if len(s2) == 0:
+        return float(len(s1))
+
+    prev_row = [float(j) for j in range(len(s2) + 1)]
+    for i, c1 in enumerate(s1):
+        curr_row = [float(i + 1)]
+        for j, c2 in enumerate(s2):
+            insertions = prev_row[j + 1] + 1.0
+            deletions = curr_row[j] + 1.0
+            substitutions = prev_row[j] + _substitution_cost(c1, c2)
+            curr_row.append(min(insertions, deletions, substitutions))
+        prev_row = curr_row
+    return prev_row[-1]
+
+
+def levenshtein_distance(s1: str, s2: str) -> int:
+    """Compute the Levenshtein (edit) distance between two strings."""
+    if len(s1) < len(s2):
+        return levenshtein_distance(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+
+    prev_row = list(range(len(s2) + 1))
+    for i, c1 in enumerate(s1):
+        curr_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = prev_row[j + 1] + 1
+            deletions = curr_row[j] + 1
+            substitutions = prev_row[j] + (c1 != c2)
+            curr_row.append(min(insertions, deletions, substitutions))
+        prev_row = curr_row
+    return prev_row[-1]
+
+
+def fuzzy_match(
+    token: str,
+    candidates: list[str],
+    max_distance: float = 2.0,
+) -> list[tuple[str, float]]:
+    """
+    Find approximate matches using phonological edit distance.
+
+    Returns list of (candidate, distance) sorted by distance.
+    Only returns matches within max_distance (excludes exact matches).
+    """
+    matches = []
+    for candidate in candidates:
+        dist = phonological_distance(token, candidate)
+        if 0.0 < dist <= max_distance:
+            matches.append((candidate, dist))
+    return sorted(matches, key=lambda x: x[1])
+
+
+def _fuzzy_confidence(distance: float) -> float:
+    """Convert edit distance to a confidence score (1.0 = exact, decays)."""
+    if distance <= 0.0:
+        return 1.0
+    if distance <= 0.5:
+        return 0.9  # Very close phonological match
+    if distance <= 1.0:
+        return 0.8
+    if distance <= 1.5:
+        return 0.7
+    if distance <= 2.0:
+        return 0.6
+    return 0.4
+
+
 def _classify_token(
     token: str,
     position: int,
     onomastics,
     adapter: LanguageAdapter,
 ) -> NameComponent:
-    """Classify a single name token."""
+    """Classify a single name token (exact match first, then fuzzy)."""
 
     # Check if it's a known praenomen
     male_praenomina = onomastics.known_praenomina.get("male", [])
@@ -141,7 +295,9 @@ def _classify_token(
             if base in male_praenomina:
                 return NameComponent(form=token, type="patronymic", gender="male", base_form=base)
             if base in female_praenomina:
-                return NameComponent(form=token, type="metronymic", gender="female", base_form=base)
+                return NameComponent(
+                    form=token, type="metronymic", gender="female", base_form=base,
+                )
             # If at typical patronymic position (2nd), assume patronymic
             if position == 1:
                 return NameComponent(
@@ -151,13 +307,46 @@ def _classify_token(
                     base_form=base,
                 )
 
+    # --- Fuzzy matching: try approximate match against known names ---
+    all_praenomina = male_praenomina + female_praenomina
+    fuzzy_praenomina = fuzzy_match(token, all_praenomina, max_distance=2)
+    if fuzzy_praenomina:
+        best_match, dist = fuzzy_praenomina[0]
+        gender = "male" if best_match in male_praenomina else "female"
+        return NameComponent(
+            form=token,
+            type="praenomen",
+            gender=gender,
+            base_form=best_match,
+            match_confidence=_fuzzy_confidence(dist),
+            match_method="fuzzy",
+        )
+
+    fuzzy_gentilicia = fuzzy_match(token, gentilicia, max_distance=2)
+    if fuzzy_gentilicia:
+        best_match, dist = fuzzy_gentilicia[0]
+        return NameComponent(
+            form=token,
+            type="gentilicium",
+            gender="unknown",
+            base_form=best_match,
+            match_confidence=_fuzzy_confidence(dist),
+            match_method="fuzzy",
+        )
+
     # Position-based heuristic
     if position == 0:
         gender = _infer_gender_from_ending(token, onomastics)
-        return NameComponent(form=token, type="praenomen", gender=gender, base_form=token)
+        return NameComponent(
+            form=token, type="praenomen", gender=gender, base_form=token,
+            match_confidence=0.5, match_method="positional",
+        )
 
     # Default: likely gentilicium if after praenomen/patronymic
-    return NameComponent(form=token, type="gentilicium", gender="unknown", base_form=token)
+    return NameComponent(
+        form=token, type="gentilicium", gender="unknown", base_form=token,
+        match_confidence=0.5, match_method="positional",
+    )
 
 
 def _infer_gender_from_ending(token: str, onomastics) -> str:
