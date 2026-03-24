@@ -165,10 +165,10 @@ def load_adapter(language_id: str) -> LanguageAdapter:
     Looks for `{language_id}.yaml` in the adapters directory.
 
     Raises:
-        ValueError: If language_id contains path traversal characters.
+        ValueError: If language_id contains invalid characters.
         FileNotFoundError: If no adapter exists for the given ID.
     """
-    # Validate language_id to prevent path traversal
+    # Validate language_id format to prevent path traversal
     import re
 
     if not re.match(r"^[a-zA-Z0-9_-]+$", language_id):
@@ -178,26 +178,24 @@ def load_adapter(language_id: str) -> LanguageAdapter:
         )
         raise ValueError(msg)
 
-    # Try package resources first (installed via pip)
+    # Verify against allowlist of known adapters before constructing any path
+    available = list_available_adapters()
+    if language_id not in available:
+        msg = (
+            f"No adapter found for language '{language_id}'. "
+            f"Available adapters: {available}"
+        )
+        raise FileNotFoundError(msg)
+
+    # Safe to load: language_id is in the allowlist of enumerated YAML files
     try:
         adapter_dir = importlib.resources.files("openetruscan.adapters")
-        yaml_path = adapter_dir / f"{language_id}.yaml"
+        yaml_path = adapter_dir / f"{language_id}.yaml"  # noqa: S108
         yaml_text = yaml_path.read_text(encoding="utf-8")
-    except (FileNotFoundError, TypeError) as err:  # Catch the initial error
+    except (FileNotFoundError, TypeError):
         # Fallback to filesystem (development mode)
-        adapter_dir = Path(__file__).parent / "adapters"
-        yaml_file = (adapter_dir / f"{language_id}.yaml").resolve()
-        # Ensure the resolved path is inside the adapters directory
-        if not str(yaml_file).startswith(str(adapter_dir.resolve())):
-            msg = f"Invalid language ID '{language_id}': path traversal detected."
-            raise ValueError(msg) from err
-        if not yaml_file.exists():
-            msg = (
-                f"No adapter found for language '{language_id}'. "
-                f"Looked in: {adapter_dir}\n"
-                f"Available adapters: {list_available_adapters()}"
-            )
-            raise FileNotFoundError(msg) from err  # Re-raise with 'from err'
+        adapters_dir = Path(__file__).parent / "adapters"
+        yaml_file = adapters_dir / f"{language_id}.yaml"
         yaml_text = yaml_file.read_text(encoding="utf-8")
 
     raw = yaml.safe_load(yaml_text)
