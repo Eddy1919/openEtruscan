@@ -206,11 +206,12 @@ async function doTextSearch(e) {
     const start = performance.now();
     try {
         const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded. Please wait a moment.' : 'Server error: ' + res.status);
         const data = await res.json();
         document.getElementById('explorerTime').textContent = Math.round(performance.now() - start) + 'ms';
         renderExplorerResults(data);
-    } catch {
-        list.innerHTML = '<div style="color:#f87171; padding:1rem;">API Error: Cannot connect to server.</div>';
+    } catch (err) {
+        list.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: ${err.message || 'Cannot connect to server.'}</div>`;
     }
 }
 
@@ -237,11 +238,12 @@ async function doRadiusSearch(e) {
         url.searchParams.append('lon', lon);
         url.searchParams.append('radius_km', radiusKm);
         const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded. Please wait a moment.' : 'Server error: ' + res.status);
         const data = await res.json();
         document.getElementById('explorerTime').textContent = Math.round(performance.now() - start) + 'ms';
         renderExplorerResults(data);
-    } catch {
-        list.innerHTML = '<div style="color:#f87171; padding:1rem;">API Error: Cannot connect to server.</div>';
+    } catch (err) {
+        list.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: ${err.message || 'Cannot connect to server.'}</div>`;
     }
 }
 
@@ -256,6 +258,7 @@ window.searchClan = async function (gens) {
     const start = performance.now();
     try {
         const res = await fetch(API_BASE + '/clan/' + encodeURIComponent(gens));
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         document.getElementById('explorerTime').textContent = Math.round(performance.now() - start) + 'ms';
         renderExplorerResults(data);
@@ -267,8 +270,8 @@ window.searchClan = async function (gens) {
         } else if (coords.length === 1) {
             explorerMap.flyTo(coords[0], 10);
         }
-    } catch {
-        list.innerHTML = '<div style="color:#f87171; padding:1rem;">API Error: Cannot fetch clan data.</div>';
+    } catch (err) {
+        list.innerHTML = `<div style="color:#f87171; padding:1rem;">API Error: ${err.message || 'Cannot fetch clan data.'}</div>`;
     }
 };
 

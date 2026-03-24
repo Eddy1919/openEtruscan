@@ -39,9 +39,10 @@ window.loadFrequency = async function () {
     document.getElementById('freqBtn').disabled = true;
     try {
         const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         renderFrequencyChart(data);
-    } catch (e) { console.error(e); }
+    } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
     document.getElementById('freqBtn').disabled = false;
 };
 
@@ -133,9 +134,10 @@ window.loadClusters = async function () {
     document.getElementById('clusterBtn').disabled = true;
     try {
         const res = await fetch(`${API_BASE}/stats/clusters?min_inscriptions=${min}`);
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         renderClusters(data);
-    } catch (e) { console.error(e); }
+    } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
     document.getElementById('clusterBtn').disabled = false;
 };
 
@@ -214,9 +216,10 @@ window.estimateDate = async function () {
         const url = new URL(API_BASE + '/stats/date-estimate', location.origin);
         url.searchParams.set('text', text);
         const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         renderDateResult(data);
-    } catch (e) { console.error(e); }
+    } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
     document.getElementById('dateBtn').disabled = false;
 };
 
