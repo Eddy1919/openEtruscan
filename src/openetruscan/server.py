@@ -9,8 +9,9 @@ Run locally:
 import logging
 import os
 from contextlib import asynccontextmanager
+import asyncio
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -22,31 +23,45 @@ from openetruscan.corpus import Corpus
 
 logger = logging.getLogger("openetruscan")
 
-# Global corpus and graph instances (loaded on startup)
+# Global corpus and graph instances
 corpus = None
 family_graph = None
 insc_to_gens = {}
+GRAPH_READY = False
+
+async def _build_graph_background():
+    """Build the prosopographical graph in a background thread."""
+    global family_graph, insc_to_gens, GRAPH_READY
+    try:
+        logger.info("Building FamilyGraph in background...")
+        
+        def _build():
+            from openetruscan.prosopography import FamilyGraph
+            fg = FamilyGraph.from_corpus(corpus)
+            itg = {
+                idx: p.gentilicium
+                for p in fg.persons()
+                for idx in p.inscription_ids
+                if p.gentilicium
+            }
+            return fg, itg
+            
+        fg, itg = await asyncio.to_thread(_build)
+        family_graph = fg
+        insc_to_gens = itg
+        GRAPH_READY = True
+        logger.info("FamilyGraph generated successfully.")
+    except Exception:
+        logger.exception("Failed to build FamilyGraph")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global corpus, family_graph, insc_to_gens
-    # If DATABASE_URL is set, Corpus.load() connects to PostgreSQL automatically.
-    # Otherwise, it falls back to the local SQLite offline copy.
+    global corpus
     corpus = Corpus.load()
 
-    # Initialize the Prosopographical Network Engine
-    from openetruscan.prosopography import FamilyGraph
-
-    family_graph = FamilyGraph.from_corpus(corpus)
-
-    # Build reverse lookup for instant UI badge population
-    insc_to_gens = {
-        idx: p.gentilicium
-        for p in family_graph.persons()
-        for idx in p.inscription_ids
-        if p.gentilicium
-    }
+    # Start graph generation in the background so API can accept connections instantly
+    asyncio.create_task(_build_graph_background())
 
     yield
     if corpus:
@@ -195,6 +210,12 @@ def search_by_radius(
 @limiter.limit("30/minute")
 def search_by_clan(request: Request, gens: str):
     """Prosopographical network search."""
+    if not GRAPH_READY:
+        raise HTTPException(
+            status_code=503,
+            detail="Prosopographical engine is initializing. Please try again in a minute."
+        )
+
     if len(gens) > MAX_TEXT_LEN:
         return {"total": 0, "count": 0, "results": []}
 
