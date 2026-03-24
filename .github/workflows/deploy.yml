@@ -17,15 +17,17 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            set -e
             cd ~/openEtruscan
+            git fetch --all
+            git reset --hard origin/main
             git pull origin main
 
             # Build the new API image
             docker build -t openetruscan-api .
 
             # Stop and remove old containers gracefully
-            docker stop web api 2>/dev/null || true
-            docker rm web api 2>/dev/null || true
+            docker rm -f web api 2>/dev/null || true
 
             # Create network if not exists
             docker network create openetruscan-net 2>/dev/null || true
