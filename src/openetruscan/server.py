@@ -179,26 +179,19 @@ def frequency_analysis(
         letter_frequencies,
     )
 
-    results_a = corpus.search(
-        findspot=findspot,
-        language=language,
-        date_from=-date_from if date_from else None,
-        date_to=-date_to if date_to else None,
-        limit=999999,
-    )
+    search_kwargs: dict = {"language": language, "limit": 999999}
+    if findspot:
+        search_kwargs["findspot"] = findspot
+
+    results_a = corpus.search(**search_kwargs)
     texts_a = [i.canonical for i in results_a.inscriptions if i.canonical]
     freq_a = letter_frequencies(texts_a, language=language)
 
     response: dict = {"primary": freq_a.to_dict(), "label_a": findspot or "All sites"}
 
     if findspot_b:
-        results_b = corpus.search(
-            findspot=findspot_b,
-            language=language,
-            date_from=-date_from if date_from else None,
-            date_to=-date_to if date_to else None,
-            limit=999999,
-        )
+        search_kwargs_b: dict = {"language": language, "limit": 999999, "findspot": findspot_b}
+        results_b = corpus.search(**search_kwargs_b)
         texts_b = [i.canonical for i in results_b.inscriptions if i.canonical]
         freq_b = letter_frequencies(texts_b, language=language)
         comparison = compare_frequencies(freq_a, freq_b)
