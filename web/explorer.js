@@ -18,7 +18,7 @@
             // Lazy-init explorer map
             if (tab.dataset.panel === 'explorer' && !explorerMap) initExplorerMap();
             // Lazy-init classifier
-            if (tab.dataset.panel === 'classifier' && !classifierReady && typeof initClassifier === 'function') initClassifier();
+            if (tab.dataset.panel === 'classifier' && typeof classifierReady !== 'undefined' && !classifierReady && typeof initClassifier === 'function') initClassifier();
             // Lazy-init stats
             if (tab.dataset.panel === 'stats' && !statsInitialized) initStats();
 

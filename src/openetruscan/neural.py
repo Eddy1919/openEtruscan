@@ -432,7 +432,15 @@ class NeuralClassifier:
             print(f"  Model: {self.arch} — {param_count:,} parameters")
 
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
-        criterion = nn.CrossEntropyLoss()
+
+        # Compute inverse-frequency class weights to handle imbalance
+        class_counts = torch.bincount(y_train_t, minlength=num_classes).float()
+        # Inverse frequency: total / (num_classes * count_per_class)
+        class_weights = len(y_train_t) / (num_classes * class_counts.clamp(min=1))
+        if verbose:
+            weight_info = {self.labels[i]: f"{class_weights[i]:.2f}" for i in range(num_classes)}
+            print(f"  Class weights: {weight_info}")
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
 
         best_val_f1 = 0.0
         best_state = None

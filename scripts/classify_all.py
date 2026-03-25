@@ -1,12 +1,14 @@
+"""Classify all unclassified inscriptions in the corpus using the trained CNN."""
+
 import sqlite3
 
 from openetruscan.neural import NeuralClassifier
 
 
 def main():
-    # Load model
-    classifier = NeuralClassifier()
-    classifier.load("data/models", model_type="cnn")
+    # Load model — arch is set via __init__, load() takes only path
+    classifier = NeuralClassifier(arch="cnn")
+    classifier.load("data/models")
 
     conn = sqlite3.connect("data/corpus.db")
 
@@ -23,11 +25,11 @@ def main():
     print(f"Assigning classifications to {len(rows)} inscriptions...")
     updates = []
     for id_val, text in rows:
-        if not text.strip():
+        if not text or not text.strip():
             continue
-        # Predict using neural
-        pred = classifier.predict(text)
-        updates.append((pred, id_val))
+        # predict() returns ClassificationResult — extract .label for SQLite
+        result = classifier.predict(text)
+        updates.append((result.label, id_val))
 
     print(f"Generated {len(updates)} predictions. Updating database.")
     cursor.executemany("UPDATE inscriptions SET classification = ? WHERE id = ?", updates)
