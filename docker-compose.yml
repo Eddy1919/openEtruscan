@@ -1,10 +1,9 @@
-# OpenEtruscan Production Deployment Stack
-# FastAPI serves both API + web UI via StaticFiles
-# Nginx is a TLS reverse proxy only
-# PostgreSQL runs locally (no Cloud SQL needed)
+# OpenEtruscan Backend-Only Stack
+# Frontend is deployed on GitHub Pages (openetruscan.com)
+# API + PostGIS run here behind nginx TLS proxy (api.openetruscan.com)
 #
-# Deploy: docker compose up -d --build
-# Migrate from Cloud SQL: pg_dump from remote → pg_restore into local
+# Production (COS): use raw docker commands (no docker compose on COS)
+# Local dev: docker compose up -d --build
 
 services:
   db:
@@ -51,3 +50,4 @@ services:
 
 volumes:
   pgdata:
+

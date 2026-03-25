@@ -1,11 +1,9 @@
-name: Deploy Web Converter to GitHub Pages
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'web/**'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,15 +15,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -e ".[all]"
+
+      - name: Build web assets
+        run: python scripts/build_web_languages.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -35,6 +42,15 @@ jobs:
         with:
           path: 'web'
 
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
