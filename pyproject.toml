@@ -48,7 +48,9 @@ prosopography = ["networkx>=3.0"]
 server = ["fastapi", "uvicorn", "pydantic", "slowapi>=0.1.9"]
 stats = ["numpy>=1.24", "scipy>=1.11", "scikit-learn>=1.3", "joblib>=1.3"]
 lod = ["httpx>=0.25"]
-all = ["openetruscan[epidoc,prosopography,postgres,server,stats,lod]"]
+neural = ["torch>=2.0", "onnxscript>=0.2"]
+neural-inference = ["onnxruntime>=1.16"]
+all = ["openetruscan[epidoc,prosopography,postgres,server,stats,lod,neural]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

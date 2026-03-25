@@ -451,5 +451,110 @@ def classify(
     corpus.close()
 
 
+# =========================================================================
+# Neural classifier commands
+# =========================================================================
+
+
+@main.command(name="train-neural")
+@click.option(
+    "--db",
+    default="data/corpus.db",
+    help="Database path (default: data/corpus.db).",
+)
+@click.option("--output", "-o", default="data/models/", help="Output directory for models.")
+@click.option("--epochs", default=30, type=int, help="Training epochs.")
+@click.option("--batch-size", default=64, type=int, help="Batch size.")
+@click.option("--lr", default=1e-3, type=float, help="Learning rate.")
+@click.option("--patience", default=5, type=int, help="Early stopping patience.")
+@click.option(
+    "--arch",
+    default="both",
+    type=click.Choice(["cnn", "transformer", "both"]),
+    help="Architecture to train.",
+)
+def train_neural(
+    db: str,
+    output: str,
+    epochs: int,
+    batch_size: int,
+    lr: float,
+    patience: int,
+    arch: str,
+) -> None:
+    """Train neural inscription classifiers (CNN and/or Transformer)."""
+    try:
+        from openetruscan.neural import NeuralClassifier
+    except ImportError as exc:
+        click.echo(f"❌ {exc}", err=True)
+        sys.exit(1)
+
+    out = Path(output)
+    out.mkdir(parents=True, exist_ok=True)
+    archs = ["cnn", "transformer"] if arch == "both" else [arch]
+
+    for a in archs:
+        click.echo(f"\n{'=' * 50}")
+        click.echo(f"  Training {a.upper()}")
+        click.echo(f"{'=' * 50}\n")
+
+        clf = NeuralClassifier(arch=a)
+        metrics = clf.train_from_corpus(
+            db_path=db,
+            epochs=epochs,
+            batch_size=batch_size,
+            lr=lr,
+            patience=patience,
+        )
+        clf.save(out)
+        clf.export_onnx(out / f"{a}.onnx")
+        click.echo(f"\n  ✅ {a.upper()} — F1: {metrics['val_f1_macro']:.4f}")
+
+    click.echo(f"\n✅ Models saved to {out}")
+
+
+@main.command(name="predict-neural")
+@click.argument("text")
+@click.option(
+    "--model",
+    "-m",
+    default="data/models/",
+    help="Model directory.",
+)
+@click.option(
+    "--arch",
+    default="cnn",
+    type=click.Choice(["cnn", "transformer"]),
+    help="Architecture to use.",
+)
+@click.option("--json-output", "-j", is_flag=True, help="Output as JSON.")
+def predict_neural(text: str, model: str, arch: str, json_output: bool) -> None:
+    """Classify an inscription using a trained neural model."""
+    try:
+        from openetruscan.neural import NeuralClassifier
+    except ImportError as exc:
+        click.echo(f"❌ {exc}", err=True)
+        sys.exit(1)
+
+    clf = NeuralClassifier(arch=arch)
+    clf.load(model)
+    result = clf.predict(text)
+
+    if json_output:
+        click.echo(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        click.echo(f"  label:   {result.label}")
+        click.echo(f"  method:  {result.method}")
+        click.echo("  top probabilities:")
+        sorted_probs = sorted(
+            result.probabilities.items(),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        for lbl, prob in sorted_probs[:5]:
+            bar = "█" * int(prob * 30)
+            click.echo(f"    {lbl:<15} {prob:.4f}  {bar}")
+
+
 if __name__ == "__main__":
     main()

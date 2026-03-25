@@ -285,8 +285,8 @@ class TestBayesianDating:
         result = bayesian_date("kaqas")
         # First 4 bins (700-500 BCE) should dominate
         archaic_mass = sum(
-            v for k, v in result.posterior.items()
+            v
+            for k, v in result.posterior.items()
             if any(k.startswith(f"{yr}-") for yr in ["700", "650", "600", "550"])
         )
         assert archaic_mass > 0.8, f"Archaic bins only have {archaic_mass:.2f} mass"
-

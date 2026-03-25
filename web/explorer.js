@@ -17,6 +17,8 @@
 
             // Lazy-init explorer map
             if (tab.dataset.panel === 'explorer' && !explorerMap) initExplorerMap();
+            // Lazy-init classifier
+            if (tab.dataset.panel === 'classifier' && !classifierReady && typeof initClassifier === 'function') initClassifier();
             // Lazy-init stats
             if (tab.dataset.panel === 'stats' && !statsInitialized) initStats();
 
@@ -108,15 +110,15 @@ function loadStaticCorpus() {
         // Build popup
         const samples = group.inscriptions.slice(0, 5);
         let popup = `<div class="popup-findspot"><strong>${esc(findspot)}</strong></div>
-            <div style="color:#9a9890; font-size:0.75rem; margin-bottom:6px;">${count} inscription${count > 1 ? 's' : ''}</div>`;
+            <div style="color:#9a9890; font-size:0.85rem; margin-bottom:8px;">${count} inscription${count > 1 ? 's' : ''}</div>`;
         for (const insc of samples) {
             const txt = esc(insc.canonical || insc.id);
-            const display = txt.length > 40 ? txt.substring(0, 40) + '…' : txt;
+            const display = txt.length > 55 ? txt.substring(0, 55) + '…' : txt;
             popup += `<div class="popup-insc"><div class="popup-id">${esc(insc.id)}</div><div class="popup-text">${display}</div>${insc.date ? `<div class="popup-date">${esc(insc.date)}</div>` : ''}</div>`;
         }
-        if (count > 5) popup += `<div style="color:#6b6962; font-size:0.7rem; text-align:center; margin-top:6px;">+ ${count - 5} more</div>`;
+        if (count > 5) popup += `<div style="color:#6b6962; font-size:0.85rem; text-align:center; margin-top:8px;">+ ${count - 5} more</div>`;
 
-        marker.bindPopup(popup, { maxWidth: 320, maxHeight: 300 });
+        marker.bindPopup(popup, { maxWidth: 350, maxHeight: 400 });
         marker.addTo(explorerMap);
         staticMarkers.push(marker);
     }
@@ -178,9 +180,9 @@ function renderExplorerResults(data) {
             const m = L.circleMarker([insc.findspot_lat, insc.findspot_lon], {
                 radius: 6, fillColor: '#c4704b', color: '#1e1e28', weight: 1, opacity: 1, fillOpacity: 0.8,
             });
-            m.bindPopup(`<div style="font-family:'JetBrains Mono',monospace; color:#c4704b; font-size:10px; font-weight:bold;">${esc(insc.id)}</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:14px; margin:5px 0;">${esc(insc.canonical)}</div>
-                <div style="font-size:11px; color:#9a9890;">${esc(insc.findspot)}</div>`);
+            m.bindPopup(`<div style="font-family:'JetBrains Mono',monospace; color:#c4704b; font-size:12px; font-weight:bold;">${esc(insc.id)}</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:16px; margin:8px 0; line-height:1.4;">${esc(insc.canonical)}</div>
+                <div style="font-size:13px; color:#9a9890;">${esc(insc.findspot)}</div>`, { maxWidth: 400 });
             m.addTo(explorerMap);
             searchMarkers.push(m);
             bounds.push([insc.findspot_lat, insc.findspot_lon]);

@@ -120,18 +120,18 @@ def parse_name(text: str, language: str = "etruscan") -> NameFormula:
 # Phonological categories derived from IPA in etruscan.yaml.
 # Intra-group substitutions cost less than cross-group.
 _PHONO_CATEGORIES: dict[str, set[str]] = {
-    "stops":     {"c", "k", "q", "t", "p"},
+    "stops": {"c", "k", "q", "t", "p"},
     "aspirates": {"θ", "φ", "χ"},
     "sibilants": {"s", "ś", "ξ", "z"},
-    "nasals":    {"m", "n"},
-    "vowels":    {"a", "e", "i", "u"},
-    "liquids":   {"l", "r"},
-    "labials":   {"v", "f"},
+    "nasals": {"m", "n"},
+    "vowels": {"a", "e", "i", "u"},
+    "liquids": {"l", "r"},
+    "labials": {"v", "f"},
 }
 
 # Related categories: substitution cost between groups
 _RELATED_GROUPS: dict[tuple[str, str], float] = {
-    ("stops", "aspirates"): 0.5,   # t ↔ θ: aspiration difference
+    ("stops", "aspirates"): 0.5,  # t ↔ θ: aspiration difference
     ("aspirates", "stops"): 0.5,
     ("sibilants", "sibilants"): 0.3,
     ("labials", "labials"): 0.3,
@@ -296,7 +296,10 @@ def _classify_token(
                 return NameComponent(form=token, type="patronymic", gender="male", base_form=base)
             if base in female_praenomina:
                 return NameComponent(
-                    form=token, type="metronymic", gender="female", base_form=base,
+                    form=token,
+                    type="metronymic",
+                    gender="female",
+                    base_form=base,
                 )
             # If at typical patronymic position (2nd), assume patronymic
             if position == 1:
@@ -338,14 +341,22 @@ def _classify_token(
     if position == 0:
         gender = _infer_gender_from_ending(token, onomastics)
         return NameComponent(
-            form=token, type="praenomen", gender=gender, base_form=token,
-            match_confidence=0.5, match_method="positional",
+            form=token,
+            type="praenomen",
+            gender=gender,
+            base_form=token,
+            match_confidence=0.5,
+            match_method="positional",
         )
 
     # Default: likely gentilicium if after praenomen/patronymic
     return NameComponent(
-        form=token, type="gentilicium", gender="unknown", base_form=token,
-        match_confidence=0.5, match_method="positional",
+        form=token,
+        type="gentilicium",
+        gender="unknown",
+        base_form=token,
+        match_confidence=0.5,
+        match_method="positional",
     )
 
 

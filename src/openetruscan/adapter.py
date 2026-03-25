@@ -181,10 +181,7 @@ def load_adapter(language_id: str) -> LanguageAdapter:
     # Verify against allowlist of known adapters before constructing any path
     available = list_available_adapters()
     if language_id not in available:
-        msg = (
-            f"No adapter found for language '{language_id}'. "
-            f"Available adapters: {available}"
-        )
+        msg = f"No adapter found for language '{language_id}'. Available adapters: {available}"
         raise FileNotFoundError(msg)
 
     # Safe to load: language_id is in the allowlist of enumerated YAML files

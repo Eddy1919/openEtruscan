@@ -112,8 +112,11 @@ class TestProvenance:
 
     def test_auto_flag_out_of_range_coords(self):
         insc = Inscription(
-            id="FLAG1", raw_text="larθal", canonical="larθal",
-            findspot_lat=-77.0, findspot_lon=166.0,  # Antarctica
+            id="FLAG1",
+            raw_text="larθal",
+            canonical="larθal",
+            findspot_lat=-77.0,
+            findspot_lon=166.0,  # Antarctica
         )
         flags = auto_flag_inscription(insc)
         assert any("lat_out_of_range" in f for f in flags)
@@ -121,22 +124,29 @@ class TestProvenance:
 
     def test_auto_flag_non_alphabet_chars(self):
         insc = Inscription(
-            id="FLAG2", raw_text="larθal@#", canonical="larθal@#",
+            id="FLAG2",
+            raw_text="larθal@#",
+            canonical="larθal@#",
         )
         flags = auto_flag_inscription(insc)
         assert any("non_alphabet_chars" in f for f in flags)
 
     def test_auto_flag_clean_inscription(self):
         insc = Inscription(
-            id="CLEAN", raw_text="larθal", canonical="larθal",
-            findspot_lat=42.0, findspot_lon=12.0,
+            id="CLEAN",
+            raw_text="larθal",
+            canonical="larθal",
+            findspot_lat=42.0,
+            findspot_lon=12.0,
         )
         flags = auto_flag_inscription(insc)
         assert len(flags) == 0
 
     def test_review_quarantine_verify(self):
         insc = Inscription(
-            id="Q1", raw_text="test", provenance_status="quarantined",
+            id="Q1",
+            raw_text="test",
+            provenance_status="quarantined",
         )
         self.corpus.add(insc)
         success = self.corpus.review_quarantine("Q1", action="verify")
@@ -151,12 +161,20 @@ class TestProvenance:
         assert success is False
 
     def test_provenance_status_filter(self):
-        self.corpus.add(Inscription(
-            id="V1", raw_text="verified", provenance_status="verified",
-        ))
-        self.corpus.add(Inscription(
-            id="Q1", raw_text="quarantined", provenance_status="quarantined",
-        ))
+        self.corpus.add(
+            Inscription(
+                id="V1",
+                raw_text="verified",
+                provenance_status="verified",
+            )
+        )
+        self.corpus.add(
+            Inscription(
+                id="Q1",
+                raw_text="quarantined",
+                provenance_status="quarantined",
+            )
+        )
         verified = self.corpus.search(provenance_status="verified")
         quarantined = self.corpus.search(provenance_status="quarantined")
         assert any(i.id == "V1" for i in verified)
@@ -165,12 +183,16 @@ class TestProvenance:
 
     def test_near_duplicate_detected(self):
         # Add an inscription, then check a near-duplicate against it
-        self.corpus.add(Inscription(
-            id="ORIG", raw_text="larθal spurinas lecnes",
-            canonical="larθal spurinas lecnes",
-        ))
+        self.corpus.add(
+            Inscription(
+                id="ORIG",
+                raw_text="larθal spurinas lecnes",
+                canonical="larθal spurinas lecnes",
+            )
+        )
         duplicate = Inscription(
-            id="DUP", raw_text="larθal spurinas lecnes",
+            id="DUP",
+            raw_text="larθal spurinas lecnes",
             canonical="larθal spurinas lecnes",
         )
         flags = auto_flag_inscription(duplicate, corpus=self.corpus)
@@ -178,12 +200,16 @@ class TestProvenance:
         assert any("ORIG" in f for f in flags)
 
     def test_distinct_text_not_flagged(self):
-        self.corpus.add(Inscription(
-            id="A", raw_text="larθal spurinas",
-            canonical="larθal spurinas",
-        ))
+        self.corpus.add(
+            Inscription(
+                id="A",
+                raw_text="larθal spurinas",
+                canonical="larθal spurinas",
+            )
+        )
         different = Inscription(
-            id="B", raw_text="ramθa matunai θana",
+            id="B",
+            raw_text="ramθa matunai θana",
             canonical="ramθa matunai θana",
         )
         flags = auto_flag_inscription(different, corpus=self.corpus)

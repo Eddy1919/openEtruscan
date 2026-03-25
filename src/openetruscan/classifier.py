@@ -25,58 +25,169 @@ from openetruscan.normalizer import normalize
 
 _KEYWORD_VOCAB: dict[str, list[str]] = {
     "funerary": [
-        "suθi",       # tomb/burial
-        "svalce",     # lived (age formula)
-        "lupuce",     # died
-        "avils",      # years (age formula)
-        "ceχa",       # grave/pit
-        "zilc",       # magistrate (often on sarcophagi)
-        "latn",       # family (family tomb marker)
-        "θui",        # here
-        "nacna",      # related to death
-        "θapna",      # cup/offering vessel (funerary context)
+        # --- Tomb / burial markers ---
+        "suθi",  # tomb/burial
+        "suθina",  # funerary offering
+        "suθiθ",  # of the tomb (genitive)
+        "σuθi",  # variant spelling of suθi
+        "σuθiθ",  # variant genitive
+        # --- Death and life formulae ---
+        "lupu",  # died
+        "lupuce",  # died (perfective)
+        "svalce",  # lived (age formula)
+        "svalθas",  # lived (variant)
+        "avils",  # years (age formula)
+        "avil",  # year
+        "murce",  # was (in death/life formulae)
+        # --- Kinship (typical on sarcophagi/urns) ---
+        "clan",  # son
+        "sec",  # daughter
+        "puia",  # wife
+        "ati",  # mother
+        "latn",  # family/gens
+        "lautni",  # family member/freedman
+        "nefts",  # grandson/nephew
+        "papacs",  # grandfather
+        "clenaraśi",  # of the sons
+        # --- Funerary structures/contexts ---
+        "ceχa",  # grave/pit
+        "nacna",  # related to death
+        "θapna",  # cup/offering vessel (funerary)
+        "hinthial",  # shade/ghost/soul
+        "tamera",  # funerary chamber
+        "σuθic",  # of the tomb
+        "zivas",  # the living / lived
+        "ceriχunce",  # built/made (for the tomb)
+        "lavtni",  # family (on sarcophagi)
+        "huσur",  # youth (age marker)
     ],
     "votive": [
-        "turce",      # gave/dedicated
+        # --- Dedication verbs ---
+        "turce",  # gave/dedicated
         "mulvanice",  # offered (as a gift)
-        "alpan",      # gift/offering
-        "fleres",     # statue/image (votive statues)
-        "mlaχ",       # good/beautiful (votive epithets)
-        "aisera",     # divine/of the gods
+        "muluvanice",  # offered (variant)
+        "mulu",  # dedicated/offered
+        # --- Gift/offering terms ---
+        "alpan",  # gift/offering
+        "fleres",  # statue/image (votive)
+        "flerχva",  # votive offering/ritual
+        "cver",  # gift/offering
+        # --- Divine epithets ---
+        "mlaχ",  # good/beautiful (votive)
+        "aisera",  # divine/of the gods
+        "ais",  # god
+        "eiser",  # divine (adj./deity)
+        "aisna",  # divine
+        # --- Sanctuary terms ---
+        "tuθina",  # sanctuary/temple
+        "tmia",  # temple
     ],
     "boundary": [
-        "tular",      # boundary (boundary stone)
-        "rasna",      # Etruscan (ethnic self-designation)
-        "spura",      # city (civic inscriptions)
-        "meθlum",     # district/territory
+        # --- Boundary terminology ---
+        "tular",  # boundary/boundary stone
+        "tularias",  # of the boundary
+        # --- Civic/territorial ---
+        "rasna",  # Etruscan (self-designation)
+        "raśnas",  # of the Etruscans (genitive)
+        "raśneś",  # of the Etruscan (adj.)
+        "spura",  # city/civic
+        "spural",  # of the city
+        "spurana",  # civic (adj.)
+        "meθlum",  # district/territory
+        "meθlumθ",  # of the district
+        "methlumθ",  # variant
+        # --- Land terms ---
+        "vaχr",  # land/estate
     ],
     "ownership": [
-        "mi",         # I (am) — ownership formula
-        "mulu",       # dedicated/belonging to
-        "minipi",     # possessive marker
+        # --- Ownership formulae ---
+        "mi",  # I (am) — ownership formula
+        "mini",  # me / mine
+        "minipi",  # possessive marker
+        "zinace",  # made (I made = craftsman mark)
+        "zinaku",  # maker (variant)
+        "ziχuχe",  # wrote/engraved
+        # --- Vessel/object markers ---
+        "eca",  # this (demonstrative, on objects)
+        "mine",  # gift/possession
+        "apirθe",  # related to objects
     ],
     "legal": [
-        "zilχ",       # magistrate/praetor
-        "eprθnev",    # title/office
-        "purθ",       # office/magistracy
-        "marunuχ",    # magistrate title
-        "lucair",     # to rule/govern
+        # --- Magistrate titles ---
+        "zilχ",  # magistrate/praetor
+        "zilχnu",  # magistrate (variant)
+        "zilc",  # magistrate (variant)
+        "zilaθ",  # magistrate/praetor
+        "zilaχnθas",  # magistrate office
+        "zilacal",  # of the magistrate
+        "zilci",  # magistracy
+        "eprθnev",  # title/office
+        "purθ",  # office/magistracy
+        "marunuχ",  # magistrate title
+        "lucair",  # to rule/govern
+        "cepen",  # title (priestly/official)
+        "tenu",  # to hold/administer
+        "camθi",  # title/honor
+        # --- Legal actions ---
+        "amce",  # was/held (office)
+        "eslz",  # honoring (office)
+        "parχis",  # holding office
+        # --- Administrative terms ---
+        "tenθas",  # of the office
+        "naper",  # measure/norm
+        "spureśtreści",  # civic office (Liber Linteus)
     ],
     "commercial": [
-        "zal",        # two/number (weights, measures)
-        "θu",         # one (counting)
-        "pruχ",       # pitcher (trade goods)
-        "aska",       # leather bag (trade)
+        # --- Numerals (weights/measures) ---
+        "zal",  # two
+        "ci",  # three
+        "θu",  # one
+        "maχ",  # five
+        "huθ",  # four/six
+        "semφ",  # seven
+        "cezp",  # eight
+        "nurφ",  # nine
+        "śar",  # ten
+        # --- Trade goods/vessels ---
+        "pruχ",  # pitcher
+        "aska",  # leather bag/flask
+        "culiχna",  # vessel/cup (kylix)
+        "θafna",  # bowl/vessel
+        "qutum",  # vessel (pitcher)
+        "presnts",  # something weighed
     ],
     "dedicatory": [
-        "turce",      # gave/dedicated (overlaps votive)
-        "tinia",      # Jupiter/Tinia (deity)
-        "uni",        # Juno/Uni (deity)
-        "menerva",    # Minerva (deity)
-        "θesan",      # dawn goddess
-        "turan",      # Venus/Turan
+        # --- Deity names (major Etruscan pantheon) ---
+        "tinia",  # Jupiter/Tinia
+        "tinśi",  # of Tinia (genitive)
+        "uni",  # Juno/Uni
+        "unial",  # of Uni
+        "menerva",  # Minerva
+        "menrvas",  # of Minerva (gen.)
+        "θesan",  # dawn goddess Thesan
+        "θeśan",  # variant spelling
+        "turan",  # Venus/Turan
+        "fuflunś",  # Fufluns/Dionysus
+        "hercle",  # Hercules
+        "selva",  # Silvanus
+        "caθa",  # sun deity
+        "leθn",  # deity of death
+        "vetsl",  # deity
+        "śuri",  # Suri (underworld deity)
+        "śuris",  # of Suri (gen.)
+        "saucne",  # deity/ritual term
+        "aritimi",  # Artemis
+        "aplu",  # Apollo
+        "sethlans",  # Sethlans/Hephaestus
+        "turms",  # Hermes/Turms
+        # --- Temple dedication terms ---
+        "heramaśva",  # for the temple/sacred context
+        "θemiasa",  # sacred area
+        "śacni",  # sacred/sanctuary
+        "śacnicla",  # sacred rite
     ],
 }
+
 
 # Minimum labeled samples before switching from keyword to ML
 _ML_THRESHOLD = 500
@@ -98,9 +209,7 @@ class ClassificationResult:
     def to_dict(self) -> dict:
         return {
             "label": self.label,
-            "probabilities": {
-                k: round(v, 4) for k, v in self.probabilities.items()
-            },
+            "probabilities": {k: round(v, 4) for k, v in self.probabilities.items()},
             "method": self.method,
         }
 
@@ -234,8 +343,7 @@ class InscriptionClassifier:
             import joblib
         except ImportError as exc:
             raise ImportError(
-                "Saving models requires joblib. "
-                "Install with: pip install openetruscan[stats]"
+                "Saving models requires joblib. Install with: pip install openetruscan[stats]"
             ) from exc
         joblib.dump(
             {
@@ -252,8 +360,7 @@ class InscriptionClassifier:
             import joblib
         except ImportError as exc:
             raise ImportError(
-                "Loading models requires joblib. "
-                "Install with: pip install openetruscan[stats]"
+                "Loading models requires joblib. Install with: pip install openetruscan[stats]"
             ) from exc
         data = joblib.load(path)
         self._vectorizer = data["vectorizer"]

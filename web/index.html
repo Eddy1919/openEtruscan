@@ -129,11 +129,13 @@
         .tab-panel.active {
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
 
         /* ── Normalizer Panel ───────────────────────────────────── */
         #panel-normalizer {
             padding: 0;
+            overflow-y: auto;
         }
 
         #panel-normalizer .converter {
@@ -699,21 +701,22 @@
 
         .popup-id {
             font-family: var(--font-mono);
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             color: var(--accent);
             font-weight: 600;
         }
 
         .popup-text {
             font-family: var(--font-mono);
-            font-size: 0.95rem;
-            margin: 4px 0;
+            font-size: 1.15rem;
+            margin: 6px 0;
             word-break: break-all;
+            line-height: 1.4;
         }
 
         .popup-findspot {
             color: var(--text-secondary);
-            font-size: 0.8rem;
+            font-size: 0.95rem;
         }
 
         .popup-date {
@@ -809,6 +812,289 @@
             border-radius: 50%;
             animation: oe-spin 0.7s linear infinite;
         }
+
+        /* ── Classifier Panel ──────────────────────────────────────── */
+        .classifier-panel {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .classifier-hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .classifier-hero-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .classifier-hero-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .classifier-hero-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        .classifier-status {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-top: 0.75rem;
+            font-weight: 500;
+        }
+
+        .classifier-status.loading {
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            background: rgba(251,191,36,0.08);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .classifier-status.ready {
+            color: var(--success);
+            border: 1px solid var(--success);
+            background: rgba(74,222,128,0.08);
+        }
+
+        .classifier-status.error {
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            background: rgba(248,113,113,0.08);
+        }
+
+        .classifier-input-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .classifier-input-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .classifier-textarea {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            line-height: 1.5;
+            padding: 0.75rem;
+            border-radius: 6px;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .classifier-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .classifier-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-classify {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.65rem 1.8rem;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .btn-classify:hover:not(:disabled) {
+            background: var(--accent-light);
+        }
+
+        .btn-classify:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .classifier-examples {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .classifier-examples-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ── Result Card ──── */
+        .classify-result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .classify-verdict {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .classify-icon { font-size: 2rem; }
+
+        .classify-verdict-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .classify-label {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-family: var(--font-body);
+        }
+
+        .classify-confidence {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .classify-description {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .classify-input-echo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .classify-echo-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .classify-echo-text {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--accent-light);
+        }
+
+        .classify-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .classify-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .classify-bar-label {
+            font-size: 0.75rem;
+            width: 120px;
+            text-align: right;
+            color: var(--text-secondary);
+        }
+
+        .classify-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .classify-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+
+        .classify-bar-pct {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            width: 50px;
+            text-align: right;
+        }
+
+        /* ── Footer info ──── */
+        .classifier-footer-info {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .classifier-tech {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .tech-badge {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .classifier-disclaimer {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
     </style>
 </head>
 
@@ -821,6 +1107,7 @@
     <nav class="pill-tabs">
         <button class="pill-tab active" data-panel="normalizer">Normalizer</button>
         <button class="pill-tab" data-panel="explorer">Corpus Explorer</button>
+        <button class="pill-tab" data-panel="classifier">Classifier</button>
         <button class="pill-tab" data-panel="stats">Statistics</button>
     </nav>
 
@@ -1046,6 +1333,52 @@
         </div>
     </div>
 
+    <!-- ═══ TAB: Neural Classifier ═══════════════════════════════ -->
+    <div class="tab-panel" id="panel-classifier">
+        <div class="classifier-panel">
+            <div class="classifier-hero">
+                <div class="classifier-hero-icon">🧠</div>
+                <h2 class="classifier-hero-title">Neural Inscription Classifier</h2>
+                <p class="classifier-hero-desc">Character-level CNN running <strong>entirely in your browser</strong> via ONNX Runtime WebAssembly. No API calls, no server — instant, private classification.</p>
+                <div id="classifierStatus" class="classifier-status loading">Initializing…</div>
+            </div>
+
+            <div class="classifier-input-area">
+                <label for="classifierInput" class="classifier-input-label">Etruscan Inscription</label>
+                <textarea id="classifierInput" class="classifier-textarea" rows="3" placeholder="e.g. mi araθia velθurus"></textarea>
+
+                <div class="classifier-actions">
+                    <button id="classifyBtn" class="btn-classify" disabled onclick="classifyInscription()">
+                        Classify
+                    </button>
+                    <div class="classifier-examples">
+                        <span class="classifier-examples-label">Try:</span>
+                        <button class="btn-example" onclick="loadClassifierExample(0)">ownership</button>
+                        <button class="btn-example" onclick="loadClassifierExample(1)">funerary</button>
+                        <button class="btn-example" onclick="loadClassifierExample(2)">votive</button>
+                        <button class="btn-example" onclick="loadClassifierExample(3)">boundary</button>
+                        <button class="btn-example" onclick="loadClassifierExample(4)">dedicatory</button>
+                        <button class="btn-example" onclick="loadClassifierExample(5)">legal</button>
+                        <button class="btn-example" onclick="loadClassifierExample(6)">commercial</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="classifierResults" class="classifier-results"></div>
+
+            <div class="classifier-footer-info">
+                <div class="classifier-tech">
+                    <span class="tech-badge">CharCNN</span>
+                    <span class="tech-badge">27,943 params</span>
+                    <span class="tech-badge">ONNX</span>
+                    <span class="tech-badge">WebAssembly</span>
+                    <span class="tech-badge">F1 0.72</span>
+                </div>
+                <p class="classifier-disclaimer">Trained on 1,050 weakly-labeled Etruscan inscriptions via keyword-based bootstrapping. <a href="https://github.com/Eddy1919/openEtruscan" target="_blank" style="color:var(--accent)">Read the methodology →</a></p>
+            </div>
+        </div>
+    </div>
+
     <!-- API Status Pill -->
     <div class="api-pill" id="apiPill">Connecting…</div>
 
@@ -1057,11 +1390,13 @@
 
     <!-- ═══ Scripts ══════════════════════════════════════════════ -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
     <script src="corpus_data.js"></script>
     <script src="languages.js"></script>
     <script src="app.js"></script>
     <script src="config.js"></script>
     <script src="explorer.js"></script>
+    <script src="classifier.js"></script>
     <script src="stats-app.js"></script>
 </body>
 

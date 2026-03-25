@@ -294,11 +294,11 @@ def _get_httpx():
     """Import httpx or raise a helpful error."""
     try:
         import httpx
+
         return httpx
     except ImportError as exc:
         raise ImportError(
-            "Live LOD reconciliation requires httpx. "
-            "Install with: pip install openetruscan[lod]"
+            "Live LOD reconciliation requires httpx. Install with: pip install openetruscan[lod]"
         ) from exc
 
 
@@ -336,7 +336,7 @@ def reconcile_trismegistos(
             TRISMEGISTOS_API,
             params={
                 "text": text[:100],  # TM API has query length limits
-                "language": "ett",   # Etruscan ISO 639-3
+                "language": "ett",  # Etruscan ISO 639-3
             },
             timeout=timeout,
             headers={"Accept": "application/json"},
@@ -472,9 +472,7 @@ def reconcile_and_cache(
             continue
 
         try:
-            tm_id = reconcile_trismegistos(
-                inscription.id, inscription.canonical, timeout=timeout
-            )
+            tm_id = reconcile_trismegistos(inscription.id, inscription.canonical, timeout=timeout)
             if tm_id:
                 tm_mapping[inscription.id] = tm_id
                 tm_new += 1

@@ -74,6 +74,7 @@ class TestCodexSeeding:
     def test_seed_codex_imports_sections(self):
         """Test that seed_codex imports all sections."""
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
         from seed_larth import seed_codex
 
@@ -93,6 +94,7 @@ class TestCodexSeeding:
     def test_codex_sections_have_metadata(self):
         """Verify codex sections retain scholarly metadata."""
         import sys
+
         sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
         from seed_larth import seed_codex
 
