@@ -1126,9 +1126,7 @@ def auto_flag_inscription(
                 if ch not in alphabet_set and ch != " ":
                     unknown_chars.add(ch)
             if unknown_chars:
-                flags.append(
-                    f"non_alphabet_chars: {', '.join(sorted(unknown_chars))}"
-                )
+                flags.append(f"non_alphabet_chars: {', '.join(sorted(unknown_chars))}")
         except Exception:  # noqa: BLE001
             pass  # Adapter not found — skip check  # nosec B110
 
@@ -1150,9 +1148,7 @@ def auto_flag_inscription(
 
     # TF-IDF near-duplicate detection
     if corpus is not None and inscription.canonical:
-        flags.extend(
-            _check_near_duplicates(inscription, corpus, similarity_threshold)
-        )
+        flags.extend(_check_near_duplicates(inscription, corpus, similarity_threshold))
 
     return flags
 
@@ -1207,9 +1203,6 @@ def _check_near_duplicates(
     # Flag high-similarity matches
     for i, sim in enumerate(similarities):
         if sim >= threshold:
-            flags.append(
-                f"near_duplicate: {existing_ids[i]} (similarity={sim:.3f})"
-            )
+            flags.append(f"near_duplicate: {existing_ids[i]} (similarity={sim:.3f})")
 
     return flags
-

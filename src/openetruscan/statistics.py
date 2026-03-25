@@ -532,9 +532,7 @@ def estimate_date(
 
     # If no clear winner, mark as indeterminate
     sorted_scores = sorted(tag_scores.values(), reverse=True)
-    if best_score < 0.20 or (
-        len(sorted_scores) > 1 and sorted_scores[0] - sorted_scores[1] < 0.10
-    ):
+    if best_score < 0.20 or (len(sorted_scores) > 1 and sorted_scores[0] - sorted_scores[1] < 0.10):
         best_period = "indeterminate"
 
     # --- Build feature report (enriched with weight + period) ---
@@ -574,9 +572,19 @@ def estimate_date(
 
 # 50-year time bins from 700 to 50 BCE (13 bins)
 _TIME_BINS = [
-    (700, 650), (650, 600), (600, 550), (550, 500),
-    (500, 450), (450, 400), (400, 350), (350, 300),
-    (300, 250), (250, 200), (200, 150), (150, 100), (100, 50),
+    (700, 650),
+    (650, 600),
+    (600, 550),
+    (550, 500),
+    (500, 450),
+    (450, 400),
+    (400, 350),
+    (350, 300),
+    (300, 250),
+    (250, 200),
+    (200, 150),
+    (150, 100),
+    (100, 50),
 ]
 
 _BIN_LABELS = [f"{b[0]}-{b[1]} BCE" for b in _TIME_BINS]
@@ -593,53 +601,163 @@ def _bin_midpoint(time_bin: tuple[int, int]) -> int:
 _LIKELIHOODS: dict[str, list[float]] = {
     # K before /a/ — strong archaic marker, drops off after 500 BCE
     "k_before_a": [
-        0.90, 0.85, 0.80, 0.70, 0.15, 0.08,
-        0.03, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+        0.90,
+        0.85,
+        0.80,
+        0.70,
+        0.15,
+        0.08,
+        0.03,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
     ],
     # Q before /u/ — archaic tripartition
     "q_present": [
-        0.80, 0.75, 0.70, 0.60, 0.15, 0.08,
-        0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01,
+        0.80,
+        0.75,
+        0.70,
+        0.60,
+        0.15,
+        0.08,
+        0.03,
+        0.02,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
+        0.01,
     ],
     # Absence of F — marks pre-400 BCE
     "no_f": [
-        0.98, 0.97, 0.95, 0.90, 0.70, 0.40,
-        0.20, 0.10, 0.05, 0.03, 0.02, 0.02, 0.01,
+        0.98,
+        0.97,
+        0.95,
+        0.90,
+        0.70,
+        0.40,
+        0.20,
+        0.10,
+        0.05,
+        0.03,
+        0.02,
+        0.02,
+        0.01,
     ],
     # Multiple sibilants — archaic orthography
     "three_sibilants": [
-        0.85, 0.80, 0.75, 0.65, 0.45, 0.30,
-        0.20, 0.15, 0.10, 0.08, 0.05, 0.05, 0.03,
+        0.85,
+        0.80,
+        0.75,
+        0.65,
+        0.45,
+        0.30,
+        0.20,
+        0.15,
+        0.10,
+        0.08,
+        0.05,
+        0.05,
+        0.03,
     ],
     # C dominant (K/Q dropped) — classical innovation
     "c_dominant": [
-        0.05, 0.08, 0.15, 0.30, 0.70, 0.80,
-        0.85, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60,
+        0.05,
+        0.08,
+        0.15,
+        0.30,
+        0.70,
+        0.80,
+        0.85,
+        0.85,
+        0.80,
+        0.75,
+        0.70,
+        0.65,
+        0.60,
     ],
     # Frequent aspirates — peaks in classical period
     "aspirates_frequent": [
-        0.30, 0.35, 0.45, 0.55, 0.70, 0.75,
-        0.80, 0.75, 0.60, 0.50, 0.45, 0.40, 0.35,
+        0.30,
+        0.35,
+        0.45,
+        0.55,
+        0.70,
+        0.75,
+        0.80,
+        0.75,
+        0.60,
+        0.50,
+        0.45,
+        0.40,
+        0.35,
     ],
     # Genitive -al — develops from late archaic, peaks classical
     "genitive_al": [
-        0.10, 0.15, 0.25, 0.40, 0.60, 0.70,
-        0.75, 0.70, 0.65, 0.60, 0.55, 0.50, 0.45,
+        0.10,
+        0.15,
+        0.25,
+        0.40,
+        0.60,
+        0.70,
+        0.75,
+        0.70,
+        0.65,
+        0.60,
+        0.55,
+        0.50,
+        0.45,
     ],
     # F present — post-400 BCE innovation
     "f_present": [
-        0.02, 0.03, 0.05, 0.10, 0.30, 0.60,
-        0.80, 0.90, 0.95, 0.97, 0.98, 0.98, 0.99,
+        0.02,
+        0.03,
+        0.05,
+        0.10,
+        0.30,
+        0.60,
+        0.80,
+        0.90,
+        0.95,
+        0.97,
+        0.98,
+        0.98,
+        0.99,
     ],
     # Simplified sibilants — progressive reduction
     "simplified_sibilants": [
-        0.05, 0.08, 0.10, 0.15, 0.25, 0.40,
-        0.55, 0.70, 0.80, 0.85, 0.90, 0.92, 0.95,
+        0.05,
+        0.08,
+        0.10,
+        0.15,
+        0.25,
+        0.40,
+        0.55,
+        0.70,
+        0.80,
+        0.85,
+        0.90,
+        0.92,
+        0.95,
     ],
     # Latin influence — grows from 3rd century
     "latin_influence": [
-        0.01, 0.01, 0.01, 0.02, 0.03, 0.05,
-        0.10, 0.15, 0.25, 0.40, 0.55, 0.70, 0.80,
+        0.01,
+        0.01,
+        0.01,
+        0.02,
+        0.03,
+        0.05,
+        0.10,
+        0.15,
+        0.25,
+        0.40,
+        0.55,
+        0.70,
+        0.80,
     ],
 }
 
@@ -718,9 +836,7 @@ def bayesian_date(
     features["no_f"] = "f" not in canonical
     sibilant_types = sum(1 for s in ["s", "ś", "ξ", "z"] if s in canonical)
     features["three_sibilants"] = sibilant_types >= 2
-    features["c_dominant"] = (
-        "c" in canonical and "k" not in canonical and "q" not in canonical
-    )
+    features["c_dominant"] = "c" in canonical and "k" not in canonical and "q" not in canonical
     aspirate_count = sum(1 for ch in canonical if ch in ("θ", "φ", "χ"))
     features["aspirates_frequent"] = aspirate_count >= 1
     features["genitive_al"] = any(t.endswith("al") for t in tokens)
@@ -778,6 +894,7 @@ def bayesian_date(
 def _safe_log(x: float) -> float:
     """Safe natural logarithm (clamps to avoid log(0))."""
     import math
+
     return math.log(max(x, 1e-10))
 
 
@@ -805,4 +922,3 @@ def _credible_interval(
     ci_low = bins[selected_indices[0]][0]
     ci_high = bins[selected_indices[-1]][1]
     return (ci_low, ci_high)
-

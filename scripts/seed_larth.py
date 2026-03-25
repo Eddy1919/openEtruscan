@@ -295,7 +295,8 @@ def main():
     parser.add_argument("--csv-path", default=None, help="Path to local CSV (skips download)")
     parser.add_argument("--codex", action="store_true", help="Also import codex texts")
     parser.add_argument(
-        "--codex-only", action="store_true",
+        "--codex-only",
+        action="store_true",
         help="Import ONLY codex texts (skip Larth download)",
     )
     args = parser.parse_args()
@@ -326,4 +327,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

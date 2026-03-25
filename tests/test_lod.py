@@ -77,9 +77,7 @@ class TestEnrichedJsonLD:
             for b in jsonld.get("body", [])
             if isinstance(b, dict) and b.get("purpose") == "identifying"
         ]
-        assert any(
-            urlparse(s).hostname == "www.trismegistos.org" for s in sources
-        )
+        assert any(urlparse(s).hostname == "www.trismegistos.org" for s in sources)
 
     def test_jsonld_includes_eagle_uri(self):
         insc = Inscription(
@@ -103,7 +101,8 @@ class TestEnrichedJsonLD:
         )
         jsonld = inscription_to_jsonld(insc)
         identifying_bodies = [
-            b for b in jsonld.get("body", [])
+            b
+            for b in jsonld.get("body", [])
             if isinstance(b, dict) and b.get("purpose") == "identifying"
         ]
         assert len(identifying_bodies) == 0
@@ -179,8 +178,8 @@ class TestReconciliation:
         """get_wikidata_uri returns None when no cache file exists."""
         # Patch to point to a nonexistent directory
         with patch("openetruscan.lod.Path") as mock_path:
-            mock_path.return_value.parent.parent.parent.__truediv__ = (
-                lambda *a: Path("/nonexistent/path.yaml")
+            mock_path.return_value.parent.parent.parent.__truediv__ = lambda *a: Path(
+                "/nonexistent/path.yaml"
             )
             # Direct test: no wikidata_mapping.yaml → None
             result = get_wikidata_uri("Atlantis")
@@ -189,10 +188,13 @@ class TestReconciliation:
 
     def test_reconcile_tm_with_mock_api(self):
         """Test TM API reconciliation with mocked response."""
+
         class MockResponse:
             status_code = 200
+
             def raise_for_status(self):
                 pass
+
             def json(self):
                 return [{"tm_id": "999999", "text": "test"}]
 
@@ -208,20 +210,17 @@ class TestReconciliation:
 
     def test_reconcile_wikidata_with_mock_api(self):
         """Test Wikidata SPARQL reconciliation with mocked response."""
+
         class MockResponse:
             status_code = 200
+
             def raise_for_status(self):
                 pass
+
             def json(self):
                 return {
                     "results": {
-                        "bindings": [
-                            {
-                                "item": {
-                                    "value": "http://www.wikidata.org/entity/Q202210"
-                                }
-                            }
-                        ]
+                        "bindings": [{"item": {"value": "http://www.wikidata.org/entity/Q202210"}}]
                     }
                 }
 

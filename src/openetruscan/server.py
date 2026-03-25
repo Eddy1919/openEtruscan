@@ -29,6 +29,7 @@ family_graph = None
 insc_to_gens = {}
 GRAPH_READY = False
 
+
 async def _build_graph_background():
     """Build the prosopographical graph in a background thread."""
     global family_graph, insc_to_gens, GRAPH_READY
@@ -37,6 +38,7 @@ async def _build_graph_background():
 
         def _build():
             from openetruscan.prosopography import FamilyGraph
+
             fg = FamilyGraph.from_corpus(corpus)
             itg = {
                 idx: p.gentilicium
@@ -215,7 +217,7 @@ def search_by_clan(request: Request, gens: str):
     if not GRAPH_READY:
         raise HTTPException(
             status_code=503,
-            detail="Prosopographical engine is initializing. Please try again in a minute."
+            detail="Prosopographical engine is initializing. Please try again in a minute.",
         )
 
     if len(gens) > MAX_TEXT_LEN:
