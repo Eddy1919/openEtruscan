@@ -88,8 +88,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 _ALLOWED_ORIGINS = [
     "https://openetruscan.com",
     "https://www.openetruscan.com",
+    "https://eddy1919.github.io",
     "http://localhost",
     "http://localhost:80",
+    "http://localhost:8000",
     "http://127.0.0.1",
 ]
 app.add_middleware(
@@ -344,14 +346,5 @@ def pleiades_coverage():
     }
 
 
-# ── Static File Serving ────────────────────────────────────────────────────
-# Serve the web UI directly from FastAPI (correct MIME types, no nginx needed)
-_web_dir = os.path.join(os.path.dirname(__file__), "..", "..", "web")
-if not os.path.isdir(_web_dir):
-    # Fallback for production: web/ is at project root
-    _web_dir = os.path.join(os.getcwd(), "web")
-
-if os.path.isdir(_web_dir):
-    from starlette.staticfiles import StaticFiles
-
-    app.mount("/", StaticFiles(directory=_web_dir, html=True), name="static")
+# Static file serving removed — frontend is deployed on GitHub Pages.
+# API-only server: all routes are under /search, /radius, /stats, etc.

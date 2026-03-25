@@ -1,9 +1,16 @@
-name: Deploy OpenEtruscan to Podnotes
+name: Deploy Backend to GCE
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'nginx.conf'
+      - 'pyproject.toml'
+      - 'data/**'
   workflow_dispatch:
 
 permissions:
@@ -27,11 +34,28 @@ jobs:
             git reset --hard origin/main
             git pull origin main
 
-            # Rebuild web data assets (languages.js from YAML adapters)
-            python3 scripts/build_web_languages.py 2>/dev/null || true
+            # Rebuild API image
+            docker build -t openetruscan-api .
 
-            # Build the new API image (includes web/ for StaticFiles)
-            docker compose up -d --build
+            # Restart API container (keep db running)
+            docker stop api 2>/dev/null || true
+            docker rm api 2>/dev/null || true
+            docker run -d --name api \
+              --network openetruscan-net \
+              --restart unless-stopped \
+              -e DATABASE_URL=postgresql://corpus_reader:${POSTGRES_PASSWORD:-etruscan_secret}@db/corpus \
+              openetruscan-api
+
+            # Restart nginx to pick up any config changes
+            docker stop web 2>/dev/null || true
+            docker rm web 2>/dev/null || true
+            docker run -d --name web \
+              --network openetruscan-net \
+              --restart unless-stopped \
+              -p 80:80 -p 443:443 \
+              -v ~/openEtruscan/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+              -v ~/certs:/certs:ro \
+              nginx:alpine
 
             # Prune old images to save disk
             docker image prune -f

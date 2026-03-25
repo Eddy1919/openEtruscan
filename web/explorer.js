@@ -38,7 +38,7 @@ let staticMarkers = [];
 let searchMarkers = [];
 let currentCircle = null;
 let currentLines = null;
-const API_BASE = '/api';
+// API_BASE is defined in config.js
 
 // ── Initialize Explorer Map ─────────────────────────────────────────
 function initExplorerMap() {
