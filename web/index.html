@@ -759,6 +759,56 @@
             color: var(--accent);
             text-decoration: none;
         }
+
+        /* ── Loading Spinner ───────────────────────────────────────── */
+        .oe-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+            gap: 1rem;
+        }
+
+        .oe-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: oe-spin 0.8s linear infinite;
+        }
+
+        .oe-loader-text {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes oe-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Button spinner (inline) */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: oe-spin 0.7s linear infinite;
+        }
     </style>
 </head>
 

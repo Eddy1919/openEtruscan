@@ -36,14 +36,22 @@ window.loadFrequency = async function () {
     if (siteA) url.searchParams.set('findspot', siteA);
     if (siteB) url.searchParams.set('findspot_b', siteB);
 
-    document.getElementById('freqBtn').disabled = true;
+    const btn = document.getElementById('freqBtn');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    document.getElementById('freqChart')?.parentElement?.insertAdjacentHTML(
+        'beforebegin',
+        '<div id="freqLoader" class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Analyzing letter frequencies…</div></div>'
+    );
     try {
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         renderFrequencyChart(data);
     } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
-    document.getElementById('freqBtn').disabled = false;
+    document.getElementById('freqLoader')?.remove();
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
 };
 
 function renderFrequencyChart(data) {
@@ -131,14 +139,22 @@ function initStatsClusterMap() {
 
 window.loadClusters = async function () {
     const min = document.getElementById('minInsc').value;
-    document.getElementById('clusterBtn').disabled = true;
+    const btn = document.getElementById('clusterBtn');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    document.getElementById('clusterMap')?.insertAdjacentHTML(
+        'beforebegin',
+        '<div id="clusterLoader" class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Computing dialect clusters…</div></div>'
+    );
     try {
         const res = await fetch(`${API_BASE}/stats/clusters?min_inscriptions=${min}`);
         if (!res.ok) throw new Error(res.status === 429 ? 'Rate limit exceeded.' : 'Server error: ' + res.status);
         const data = await res.json();
         renderClusters(data);
     } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
-    document.getElementById('clusterBtn').disabled = false;
+    document.getElementById('clusterLoader')?.remove();
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
 };
 
 function renderClusters(data) {
@@ -211,7 +227,11 @@ function renderPCA(data) {
 window.estimateDate = async function () {
     const text = document.getElementById('dateText').value.trim();
     if (!text) return;
-    document.getElementById('dateBtn').disabled = true;
+    const btn = document.getElementById('dateBtn');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    document.getElementById('dateResult').innerHTML = '<div class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Estimating chronological period…</div></div>';
+    document.getElementById('dateResult').style.display = 'block';
     try {
         const url = new URL(API_BASE + '/stats/date-estimate', location.origin);
         url.searchParams.set('text', text);
@@ -220,7 +240,8 @@ window.estimateDate = async function () {
         const data = await res.json();
         renderDateResult(data);
     } catch (e) { alert(e.message || 'Connection error'); console.error(e); }
-    document.getElementById('dateBtn').disabled = false;
+    btn.disabled = false;
+    btn.classList.remove('btn-loading');
 };
 
 function renderDateResult(data) {

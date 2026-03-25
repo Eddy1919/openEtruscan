@@ -195,7 +195,7 @@ async function doTextSearch(e) {
     e.preventDefault();
     clearSearchState();
     const list = document.getElementById('explorerList');
-    list.innerHTML = '<div style="text-align:center; padding:2rem;">Searching…</div>';
+    list.innerHTML = '<div class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Searching corpus…</div></div>';
 
     const q = document.getElementById('explorerQ').value;
     const findspot = document.getElementById('explorerFindspot').value;
@@ -229,7 +229,7 @@ async function doRadiusSearch(e) {
     explorerMap.panTo([lat, lon]);
 
     const list = document.getElementById('explorerList');
-    list.innerHTML = '<div style="text-align:center; padding:2rem;">Running PostGIS Radius Query…</div>';
+    list.innerHTML = '<div class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Running PostGIS radius query…</div></div>';
 
     const start = performance.now();
     try {
@@ -253,7 +253,7 @@ window.searchClan = async function (gens) {
     document.getElementById('explorerQ').value = '';
     document.getElementById('explorerFindspot').value = '';
     const list = document.getElementById('explorerList');
-    list.innerHTML = `<div style="text-align:center; padding:2rem;">Mapping ${esc(gens)} Family Network…</div>`;
+    list.innerHTML = `<div class="oe-loader"><div class="oe-spinner"></div><div class="oe-loader-text">Mapping ${esc(gens)} family network…</div></div>`;
 
     const start = performance.now();
     try {
