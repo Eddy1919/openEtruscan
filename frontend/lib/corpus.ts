@@ -55,3 +55,21 @@ export const CLASS_COLORS: Record<string, string> = {
   ownership: "#38bdf8",
   unknown: "#6b6962",
 };
+
+/** Canonical → Old Italic Unicode mapping (Etruscan alphabet) */
+const CANONICAL_TO_OLD_ITALIC: Record<string, string> = {
+  a: "𐌀", c: "𐌂", e: "𐌄", v: "𐌅", z: "𐌆", h: "𐌇",
+  "θ": "𐌈", i: "𐌉", k: "𐌊", l: "𐌋", m: "𐌌", n: "𐌍",
+  p: "𐌐", "ś": "𐌑", q: "𐌒", r: "𐌓", s: "𐌔", t: "𐌕",
+  u: "𐌖", "φ": "𐌘", "χ": "𐌗", f: "𐌚",
+};
+
+/** Convert canonical Etruscan text to Old Italic Unicode */
+export function toOldItalic(canonical: string): string {
+  let result = "";
+  for (const char of canonical) {
+    result += CANONICAL_TO_OLD_ITALIC[char] || char;
+  }
+  return result;
+}
+

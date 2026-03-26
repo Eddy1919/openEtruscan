@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, dateDisplay, CLASS_COLORS } from "@/lib/corpus";
+import { loadCorpus, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 // Lazy-load the map to avoid SSR issues with WebGL
@@ -144,9 +144,10 @@ export default function ExplorerPage() {
                   </span>
                 )}
               </div>
-              <div className="inscription-text">{insc.canonical}</div>
+              <div className="inscription-text">{insc.old_italic || toOldItalic(insc.canonical)}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>{insc.canonical}</div>
               <div className={styles.resultMeta}>
-                {insc.findspot && <span>📍 {insc.findspot}</span>}
+                {insc.findspot && <span>{insc.findspot}</span>}
                 <span>{dateDisplay(insc)}</span>
               </div>
             </div>
