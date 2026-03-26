@@ -1,0 +1,60 @@
+.heading {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.epigraph {
+  font-size: 1.1rem;
+  color: var(--accent-light);
+  line-height: 1.7;
+  border-left: 3px solid var(--accent);
+  padding-left: 1.25rem;
+  margin-bottom: 2.5rem;
+  font-style: italic;
+}
+
+.section {
+  margin-bottom: 2.5rem;
+}
+
+.section h2 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.section p {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 0.75rem;
+}
+
+.section a {
+  color: var(--accent-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.section a:hover {
+  color: var(--accent);
+}
+
+.principles {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.principles li {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.principles strong {
+  color: var(--text-primary);
+}
