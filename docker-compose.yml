@@ -48,6 +48,27 @@ services:
     depends_on:
       - api
 
+  fuseki:
+    image: stain/jena-fuseki:4.10.0
+    restart: unless-stopped
+    environment:
+      ADMIN_PASSWORD: ${FUSEKI_ADMIN_PASSWORD:-etruscan_sparql}
+    volumes:
+      - fuseki_data:/fuseki/databases
+      - ./data/rdf:/staging:ro
+    ports:
+      - "3030:3030"
+    entrypoint: >
+      /bin/sh -c '
+        if [ ! -f /fuseki/databases/.loaded ]; then
+          echo "Loading RDF data...";
+          /jena-fuseki/tdbloader --loc /fuseki/databases/openetruscan /staging/corpus.ttl;
+          touch /fuseki/databases/.loaded;
+          echo "RDF loaded.";
+        fi;
+        exec /jena-fuseki/fuseki-server --loc /fuseki/databases/openetruscan /openetruscan
+      '
+
 volumes:
   pgdata:
-
+  fuseki_data:
