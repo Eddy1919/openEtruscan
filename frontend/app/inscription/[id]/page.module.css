@@ -1,0 +1,70 @@
+.breadcrumb {
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.inscId {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  color: var(--accent);
+}
+
+.textCard {
+  margin-bottom: 1.5rem;
+}
+.textCard h2 {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.textGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.textGrid label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.metaGrid h3 {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+}
+.dl dt {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.dl dd {
+  color: var(--text-primary);
+}

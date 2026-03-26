@@ -1,0 +1,247 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/* ── Design Tokens ─────────────────────────────────────── */
+:root {
+  --bg-primary: #0f0f12;
+  --bg-secondary: #1a1a22;
+  --bg-card: #1e1e28;
+  --bg-hover: #24242e;
+  --text-primary: #e8e6e3;
+  --text-secondary: #9a9890;
+  --text-muted: #6b6962;
+  --accent: #c4704b;
+  --accent-light: #d4855f;
+  --accent-dim: #8b4f35;
+  --accent-glow: rgba(196, 112, 75, 0.15);
+  --border: #2a2a36;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --font-body: "Inter", -apple-system, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent-light);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* ── Navigation ────────────────────────────────────────── */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 2rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.nav-brand span {
+  color: var(--accent);
+}
+
+.nav-pills {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.nav-pill {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-decoration: none;
+}
+.nav-pill:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-dim);
+  background: var(--accent-glow);
+  text-decoration: none;
+}
+.nav-pill.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(196, 112, 75, 0.35);
+}
+
+/* ── Cards ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+}
+.card:hover {
+  border-color: var(--accent-dim);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--accent-light);
+  box-shadow: 0 4px 16px rgba(196, 112, 75, 0.3);
+}
+.btn-secondary {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  border-color: var(--accent-dim);
+}
+
+/* ── Inputs ────────────────────────────────────────────── */
+.input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  width: 100%;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ── Badges ────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-accent {
+  background: var(--accent-glow);
+  color: var(--accent-light);
+  border: 1px solid var(--accent-dim);
+}
+.badge-success {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+/* ── Mono text (inscriptions) ──────────────────────────── */
+.inscription-text {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--accent-light);
+  letter-spacing: 0.5px;
+}
+
+/* ── Page layouts ──────────────────────────────────────── */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.split-layout {
+  display: flex;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+.split-sidebar {
+  width: 400px;
+  min-width: 400px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.split-main {
+  flex: 1;
+  position: relative;
+}
+
+/* ── Loading shimmer ───────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Map container ─────────────────────────────────────── */
+.maplibregl-map {
+  font-family: var(--font-body);
+}
