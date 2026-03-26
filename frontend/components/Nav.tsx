@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { href: "/explorer", label: "Explorer" },
   { href: "/stats", label: "Statistics" },
   { href: "/classifier", label: "Classifier" },
+  { href: "/docs", label: "Docs" },
+  { href: "/manifesto", label: "Manifesto" },
 ];
 
 export default function Nav() {
