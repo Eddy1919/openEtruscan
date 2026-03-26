@@ -1,0 +1,7 @@
+/* Etruscan chars and logo styling */
+.etruscan-chars {
+  font-size: 1.1em;
+  margin-right: 0.3rem;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}

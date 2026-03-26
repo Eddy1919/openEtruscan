@@ -1,29 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import Map from "react-map-gl/maplibre";
-import { DeckGL } from "@deck.gl/react";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { useEffect, useRef } from "react";
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from "react-leaflet";
 import type { Inscription } from "@/lib/corpus";
 import { CLASS_COLORS } from "@/lib/corpus";
-
-const INITIAL_VIEW = {
-  longitude: 11.8,
-  latitude: 42.8,
-  zoom: 6.5,
-  pitch: 0,
-  bearing: 0,
-};
-
-const MAP_STYLE =
-  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
-
-function hexToRgb(hex: string): [number, number, number] {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
-}
+import "leaflet/dist/leaflet.css";
 
 interface MapViewProps {
   inscriptions: Inscription[];
@@ -31,73 +12,80 @@ interface MapViewProps {
   onInscriptionClick: (info: { object?: Inscription }) => void;
 }
 
+function FlyToSelected({ selected }: { selected: Inscription | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (selected?.findspot_lat && selected?.findspot_lon) {
+      map.flyTo([selected.findspot_lat, selected.findspot_lon], 10, {
+        duration: 0.8,
+      });
+    }
+  }, [selected, map]);
+  return null;
+}
+
 export default function MapView({
   inscriptions,
   selected,
   onInscriptionClick,
 }: MapViewProps) {
-  const getColor = useCallback(
-    (d: Inscription): [number, number, number, number] => {
-      const cls = d.classification || "unknown";
-      const rgb = hexToRgb(CLASS_COLORS[cls] || CLASS_COLORS.unknown);
-      const isSelected = selected?.id === d.id;
-      return [...rgb, isSelected ? 255 : 180];
-    },
-    [selected]
-  );
-
-  const getRadius = useCallback(
-    (d: Inscription) => (selected?.id === d.id ? 12 : 6),
-    [selected]
-  );
-
-  const layers = useMemo(
-    () => [
-      new ScatterplotLayer<Inscription>({
-        id: "inscriptions",
-        data: inscriptions,
-        getPosition: (d) => [d.findspot_lon!, d.findspot_lat!],
-        getFillColor: getColor,
-        getRadius: getRadius,
-        radiusUnits: "pixels",
-        radiusMinPixels: 3,
-        radiusMaxPixels: 20,
-        pickable: true,
-        onClick: onInscriptionClick,
-        updateTriggers: {
-          getFillColor: [selected?.id],
-          getRadius: [selected?.id],
-        },
-      }),
-    ],
-    [inscriptions, selected, getColor, getRadius, onInscriptionClick]
-  );
-
   return (
-    <DeckGL
-      initialViewState={INITIAL_VIEW}
-      controller={true}
-      layers={layers}
-      getTooltip={({ object }: { object?: Inscription }) =>
-        object
-          ? {
-              html: `<div style="font-family:Inter,sans-serif;font-size:13px;max-width:260px">
-                <strong style="color:#c4704b">${object.id}</strong><br/>
-                <span style="font-family:monospace;color:#d4855f">${object.canonical}</span><br/>
-                <span style="color:#9a9890">📍 ${object.findspot || "unknown"}</span>
-              </div>`,
-              style: {
-                background: "#1e1e28",
-                color: "#e8e6e3",
-                border: "1px solid #2a2a36",
-                borderRadius: "8px",
-                padding: "10px 14px",
-              },
-            }
-          : null
-      }
+    <MapContainer
+      center={[42.8, 11.8]}
+      zoom={6}
+      style={{ width: "100%", height: "100%" }}
+      zoomControl={true}
     >
-      <Map mapStyle={MAP_STYLE} />
-    </DeckGL>
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      />
+      <FlyToSelected selected={selected} />
+      {inscriptions.map((insc) => {
+        const cls = insc.classification || "unknown";
+        const color = CLASS_COLORS[cls] || CLASS_COLORS.unknown;
+        const isSelected = selected?.id === insc.id;
+        return (
+          <CircleMarker
+            key={insc.id}
+            center={[insc.findspot_lat!, insc.findspot_lon!]}
+            radius={isSelected ? 10 : 5}
+            pathOptions={{
+              fillColor: color,
+              fillOpacity: isSelected ? 1 : 0.7,
+              color: isSelected ? "#fff" : color,
+              weight: isSelected ? 2 : 1,
+            }}
+            eventHandlers={{
+              click: () => onInscriptionClick({ object: insc }),
+            }}
+          >
+            <Tooltip
+              direction="top"
+              offset={[0, -8]}
+              opacity={0.95}
+            >
+              <div
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: 13,
+                  maxWidth: 260,
+                }}
+              >
+                <strong style={{ color: "#c4704b" }}>{insc.id}</strong>
+                <br />
+                <span style={{ fontFamily: "monospace", color: "#d4855f" }}>
+                  {insc.canonical}
+                </span>
+                <br />
+                <span style={{ color: "#9a9890" }}>
+                  📍 {insc.findspot || "unknown"}
+                </span>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
+    </MapContainer>
   );
 }

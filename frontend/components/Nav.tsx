@@ -17,7 +17,7 @@ export default function Nav() {
   return (
     <nav className="nav-bar">
       <Link href="/" className="nav-brand" style={{ textDecoration: "none" }}>
-        Open<span>Etruscan</span>
+        <span className="etruscan-chars">𐌏𐌐𐌄𐌍</span> Open<span>Etruscan</span>
       </Link>
       <ul className="nav-pills">
         {NAV_ITEMS.map(({ href, label }) => (
