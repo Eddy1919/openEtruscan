@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import Nav from "@/components/Nav";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body>
         <Nav />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
