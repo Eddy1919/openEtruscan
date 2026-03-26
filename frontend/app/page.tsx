@@ -5,11 +5,11 @@ export default function Home() {
     <main className={styles.hero}>
       <div className={styles.heroContent}>
         <h1 className={styles.title}>
-          Open<span>Etruscan</span>
+          <span style={{ color: "var(--text-primary)" }}>𐌏𐌐𐌄𐌍</span><span>Etruscan</span>
         </h1>
         <p className={styles.subtitle}>
-          Open-source Digital Humanities platform for the computational study of
-          Etruscan epigraphy
+          An open-source digital corpus and computational toolkit for the study
+          of Etruscan epigraphy. MIT / CC0 licensed.
         </p>
 
         <div className={styles.stats}>
@@ -19,7 +19,7 @@ export default function Home() {
           </div>
           <div className={styles.stat}>
             <span className={styles.statNumber}>45</span>
-            <span className={styles.statLabel}>Find Sites</span>
+            <span className={styles.statLabel}>Provenances</span>
           </div>
           <div className={styles.stat}>
             <span className={styles.statNumber}>41</span>
@@ -33,10 +33,10 @@ export default function Home() {
 
         <div className={styles.actions}>
           <a href="/explorer" className="btn btn-primary">
-            Explore Corpus →
+            Explore the Corpus
           </a>
           <a href="/normalizer" className="btn btn-secondary">
-            Normalize Text
+            Script Normalizer
           </a>
           <a
             href="https://github.com/Eddy1919/openEtruscan"
@@ -44,37 +44,41 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            GitHub ↗
+            Source Code
           </a>
         </div>
 
         <div className={styles.features}>
           <div className="card">
-            <h3>🗺️ Interactive Map</h3>
+            <h3>Georeferenced Corpus</h3>
             <p>
-              WebGL-powered exploration of 4,700+ georeferenced inscriptions
-              with Pleiades and GeoNames gazetteer links
+              Browse 4,700+ inscriptions on an interactive map. Each entry is
+              aligned to Pleiades and GeoNames gazetteers for interoperability
+              with other ancient-world datasets.
             </p>
           </div>
           <div className="card">
-            <h3>🔤 Script Normalizer</h3>
+            <h3>Script Normalizer</h3>
             <p>
-              Universal transcription converter supporting 5 Etruscan script
-              representations: canonical, phonetic, Old Italic, and more
+              Convert between five transcription systems — canonical, CIE,
+              philological, Old Italic Unicode (U+10300), and IPA — with
+              automatic source-system detection.
             </p>
           </div>
           <div className="card">
-            <h3>🧠 Neural Classifier</h3>
+            <h3>Inscription Classifier</h3>
             <p>
-              Character-level CNN and Transformer models classify inscriptions
-              by type — running entirely in your browser via ONNX
+              Character-level neural models (CNN, Transformer) classify
+              inscriptions by epigraphic type. Inference runs client-side via
+              ONNX Runtime. Models published on Hugging Face.
             </p>
           </div>
           <div className="card">
-            <h3>📊 Linked Open Data</h3>
+            <h3>Linked Open Data</h3>
             <p>
-              Full RDF/Turtle export with LAWD and Dublin Core ontologies, and a
-              SPARQL endpoint for cross-corpus discovery
+              The full corpus is exported as RDF/Turtle using LAWD and Dublin
+              Core ontologies. A SPARQL endpoint enables cross-corpus queries
+              within the Pelagios ecosystem.
             </p>
           </div>
         </div>
