@@ -6,6 +6,8 @@ import styles from "./page.module.css";
 import fs from "fs";
 import path from "path";
 
+import CitationExport from "@/components/CitationExport";
+
 // Load corpus at build time
 function getCorpus(): Inscription[] {
   const filePath = path.join(process.cwd(), "public", "data", "corpus.json");
@@ -174,6 +176,14 @@ export default async function InscriptionPage({
           </p>
         </div>
       )}
+
+      <CitationExport
+        id={insc.id}
+        canonical={insc.canonical}
+        findspot={insc.findspot}
+        classification={insc.classification}
+        dateApprox={insc.date_approx}
+      />
     </div>
   );
 }

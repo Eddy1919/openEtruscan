@@ -1,0 +1,19 @@
+.heading { font-family: var(--font-display); font-size: 2rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+.controls { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.controlLabel { font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; }
+.rangeSlider { accent-color: var(--accent); width: 150px; }
+.controlValue { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-light); min-width: 24px; text-align: center; }
+.stats { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+
+.canvasWrap { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--bg-card); }
+.canvas { width: 100%; height: auto; display: block; }
+
+.tableTitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; }
+.nameGrid { display: flex; flex-direction: column; gap: 0.35rem; }
+.nameRow { display: flex; align-items: center; gap: 0.75rem; }
+.nameText { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-light); width: 100px; text-align: right; }
+.nameCount { font-size: 0.7rem; color: var(--text-muted); width: 30px; text-align: right; font-family: var(--font-mono); }
+.nameBar { flex: 1; height: 14px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; }
+.nameBarFill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s ease; }
