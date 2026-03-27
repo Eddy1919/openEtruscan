@@ -8,9 +8,13 @@ const NAV_ITEMS = [
   { href: "/search", label: "Search" },
   { href: "/concordance", label: "Concordance" },
   { href: "/explorer", label: "Explorer" },
+  { href: "/timeline", label: "Timeline" },
+  { href: "/names", label: "Names" },
   { href: "/normalizer", label: "Normalizer" },
   { href: "/classifier", label: "Classifier" },
+  { href: "/compare", label: "Compare" },
   { href: "/stats", label: "Statistics" },
+  { href: "/downloads", label: "Downloads" },
   { href: "/docs", label: "Docs" },
   { href: "/manifesto", label: "Manifesto" },
 ];

@@ -1,0 +1,29 @@
+.heading { font-family: var(--font-display); font-size: 2rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+.selectors { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.selectorGroup { flex: 1; }
+.selectorLabel { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.3rem; }
+.selectorInput { width: 100%; }
+
+.compareGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.cardHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.cardId { font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent-light); font-weight: 600; }
+.cardBadge { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; }
+.oldItalic { font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.3rem; }
+.canonical { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.meta { display: flex; gap: 1rem; font-size: 0.72rem; color: var(--text-muted); }
+
+.diffTitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; }
+.diffRow { display: flex; flex-direction: column; gap: 0.5rem; }
+.diffLabel { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-right: 0.5rem; font-weight: 600; }
+.diffChars { font-family: var(--font-mono); font-size: 1rem; letter-spacing: 1px; }
+
+.charSame { color: var(--text-muted); }
+.charDiff { color: var(--danger); background: rgba(248,113,113,0.15); padding: 0 2px; border-radius: 2px; }
+.charExtra { color: var(--success); background: rgba(74,222,128,0.15); padding: 0 2px; border-radius: 2px; }
+
+.diffLegend { display: flex; gap: 1.5rem; margin-top: 0.75rem; font-size: 0.72rem; color: var(--text-muted); }
+
+.noResults { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 3rem 0; }

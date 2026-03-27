@@ -1,0 +1,16 @@
+.heading { font-family: var(--font-display); font-size: 2rem; margin-bottom: 0.25rem; }
+.subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+.controls { display: flex; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.rangeGroup { display: flex; align-items: center; gap: 0.5rem; }
+.rangeLabel { font-size: 0.8rem; color: var(--text-secondary); width: 150px; }
+.rangeSlider { width: 200px; accent-color: var(--accent); }
+.filterCount { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+
+.legend { display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.legendItem { display: flex; align-items: center; gap: 0.4rem; }
+.legendDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legendLabel { font-size: 0.75rem; color: var(--text-secondary); }
+.legendCount { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+.mapWrap { height: 500px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
