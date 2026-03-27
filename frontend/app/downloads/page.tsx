@@ -110,7 +110,7 @@ export default function DownloadsPage() {
             convert Etruscan text programmatically:
           </p>
           <pre className={styles.codeBlock}>
-{`curl -X POST https://open-etruscan.vercel.app/api/normalize \\
+{`curl -X POST https://www.openetruscan.com/api/normalize \\
   -H "Content-Type: application/json" \\
   -d '{"text": "MI AVILES"}'`}
           </pre>
