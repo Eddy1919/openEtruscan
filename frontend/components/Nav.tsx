@@ -84,7 +84,7 @@ export default function Nav() {
         <span style={{ color: "var(--accent)" }}>Etruscan</span>
       </Link>
       <ul className="nav-pills">
-        {[...PRIMARY, { href: "/classifier", label: "Classifier" }].map(({ href, label }) => (
+        {[...PRIMARY, { href: "/classifier", label: "Classifier" }, { href: "/genetics", label: "Genetics" }].map(({ href, label }) => (
           <li key={href}>
             <Link
               href={href}
