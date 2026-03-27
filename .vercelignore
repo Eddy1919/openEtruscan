@@ -1,0 +1,11 @@
+data/cie/*.pdf
+*.onnx
+web/
+src/
+tests/
+scripts/
+docker-compose.yml
+Dockerfile
+*.pyc
+__pycache__
+.git
