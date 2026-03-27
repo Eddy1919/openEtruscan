@@ -31,8 +31,9 @@ const RESOURCES = [
     title: "SPARQL Endpoint",
     url: "https://api.openetruscan.com/sparql",
     description:
-      "Apache Jena Fuseki endpoint for querying the RDF corpus. Supports federated queries with other Linked Open Data sources.",
+      "Apache Jena Fuseki 5.1 endpoint for querying the RDF corpus (34,477 triples). Supports SPARQL 1.1 and federated queries.",
   },
+
   {
     title: "PyPI Package",
     url: "https://pypi.org/project/openetruscan/",
@@ -197,7 +198,7 @@ export default function DocsPage() {
             <li><strong>Ontologies:</strong> LAWD, Dublin Core, GeoSPARQL, SKOS</li>
             <li><strong>Gazetteers:</strong> 41 findspots aligned to Pleiades, 17 to GeoNames</li>
             <li><strong>Format:</strong> RDF/Turtle (<code>corpus.ttl</code>, 1.6 MB)</li>
-            <li><strong>Endpoint:</strong> Apache Jena Fuseki (SPARQL 1.1)</li>
+            <li><strong>Endpoint:</strong> Apache Jena Fuseki 5.1 (SPARQL 1.1, 34,477 triples)</li>
 
           </ul>
         </div>

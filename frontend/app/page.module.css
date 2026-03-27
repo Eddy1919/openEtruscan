@@ -1,37 +1,65 @@
+/* ── Hero ─────────────────────────────────────────────── */
 .hero {
+  position: relative;
+  min-height: calc(100vh - 56px);
   display: flex;
+  align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 52px);
-  padding: 4rem 2rem;
+  overflow: hidden;
+}
+
+.particleLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .heroContent {
-  max-width: 960px;
+  position: relative;
+  z-index: 1;
   text-align: center;
+  padding: 3rem 2rem;
+  max-width: 700px;
 }
 
+/* ── Title ────────────────────────────────────────────── */
 .title {
   font-family: var(--font-display);
-  font-size: 3.5rem;
-  color: var(--text-primary);
+  font-size: 4rem;
+  line-height: 1;
   margin-bottom: 1rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
 }
-.title span {
+
+.titleOI {
+  color: var(--text-primary);
+  opacity: 0.6;
+  font-size: 3.2rem;
+  letter-spacing: 2px;
+  filter: drop-shadow(0 0 20px rgba(196, 112, 75, 0.3));
+}
+
+.titleLatin {
   color: var(--accent);
+  text-shadow: 0 0 40px rgba(196, 112, 75, 0.25);
 }
 
 .subtitle {
   color: var(--text-secondary);
-  font-size: 1.15rem;
+  font-size: 1rem;
   line-height: 1.6;
-  max-width: 640px;
-  margin: 0 auto 2.5rem;
+  max-width: 520px;
+  margin: 0 auto 2rem;
 }
 
+/* ── Stats ────────────────────────────────────────────── */
 .stats {
   display: flex;
   justify-content: center;
-  gap: 3rem;
+  gap: 2.5rem;
   margin-bottom: 2.5rem;
 }
 
@@ -42,38 +70,96 @@
 }
 
 .statNumber {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  text-shadow: 0 0 20px rgba(196, 112, 75, 0.2);
 }
 
 .statLabel {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-top: 0.2rem;
 }
 
+/* ── Actions ──────────────────────────────────────────── */
 .actions {
   display: flex;
+  gap: 0.75rem;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 3.5rem;
+  flex-wrap: wrap;
 }
 
+.heroBtnPrimary {
+  padding: 0.7rem 2rem;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 24px rgba(196, 112, 75, 0.3);
+}
+
+.heroBtnSecondary {
+  backdrop-filter: blur(8px);
+  background: rgba(30, 30, 40, 0.6);
+}
+
+/* ── Features ─────────────────────────────────────────── */
 .features {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+.featureGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
-  text-align: left;
 }
-.features h3 {
+
+.featureCard {
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.featureCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-dim),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureIcon {
+  font-size: 1.8rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.4;
+  filter: drop-shadow(0 0 8px rgba(196, 112, 75, 0.3));
+}
+
+.featureCard h3 {
+  font-family: var(--font-display);
   font-size: 1rem;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
-.features p {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+
+.featureCard p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
   line-height: 1.55;
 }

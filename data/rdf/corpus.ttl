@@ -110,14 +110,14 @@ oeplace:Algeria a lawd:Place ;
 oeplace:Arretium a lawd:Place ;
     rdfs:label "Arretium"@la ;
     skos:closeMatch pleiades:413032 ;
-    skos:closeMatch gn:3182749/ ;
+    skos:closeMatch gn:3182749 ;
     geo:lat "43.4613"^^xsd:float ;
     geo:long "11.8802"^^xsd:float .
 
 oeplace:Caere a lawd:Place ;
     rdfs:label "Caere"@la ;
     skos:closeMatch pleiades:422859 ;
-    skos:closeMatch gn:6541965/ ;
+    skos:closeMatch gn:6541965 ;
     geo:lat "42.0009"^^xsd:float ;
     geo:long "12.1067"^^xsd:float .
 
@@ -130,21 +130,21 @@ oeplace:Campania a lawd:Place ;
 oeplace:Clusium a lawd:Place ;
     rdfs:label "Clusium"@la ;
     skos:closeMatch pleiades:413084 ;
-    skos:closeMatch gn:3178519/ ;
+    skos:closeMatch gn:3178519 ;
     geo:lat "43.0174"^^xsd:float ;
     geo:long "11.9492"^^xsd:float .
 
 oeplace:Cortona a lawd:Place ;
     rdfs:label "Cortona"@la ;
     skos:closeMatch pleiades:413098 ;
-    skos:closeMatch gn:3177997/ ;
+    skos:closeMatch gn:3177997 ;
     geo:lat "43.2754"^^xsd:float ;
     geo:long "11.9858"^^xsd:float .
 
 oeplace:Faesulae a lawd:Place ;
     rdfs:label "Faesulae"@la ;
     skos:closeMatch pleiades:413126 ;
-    skos:closeMatch gn:3177101/ ;
+    skos:closeMatch gn:3177101 ;
     geo:lat "43.8059"^^xsd:float ;
     geo:long "11.2944"^^xsd:float .
 
@@ -152,8 +152,8 @@ oeplace:Falerii_et_Ager_Faliscus a lawd:Place ;
     rdfs:label "Falerii et Ager Faliscus"@la ;
     skos:closeMatch pleiades:413123 .
 
-oeplace:Isola_d’Elba a lawd:Place ;
-    rdfs:label "Isola d’Elba"@la .
+oeplace:Isola_dElba a lawd:Place ;
+    rdfs:label "Isola d'Elba"@la .
 
 oeplace:Latium a lawd:Place ;
     rdfs:label "Latium"@la ;
@@ -178,33 +178,33 @@ oeplace:Padana a lawd:Place ;
 oeplace:Perugia a lawd:Place ;
     rdfs:label "Perugia"@la ;
     skos:closeMatch pleiades:413248 ;
-    skos:closeMatch gn:3171180/ ;
+    skos:closeMatch gn:3171180 ;
     geo:lat "43.1107"^^xsd:float ;
     geo:long "12.3908"^^xsd:float .
 
 oeplace:Perusia a lawd:Place ;
     rdfs:label "Perusia"@la ;
     skos:closeMatch pleiades:413248 ;
-    skos:closeMatch gn:3171180/ ;
+    skos:closeMatch gn:3171180 ;
     geo:lat "43.1107"^^xsd:float ;
     geo:long "12.3908"^^xsd:float .
 
 oeplace:Piacenza a lawd:Place ;
     rdfs:label "Piacenza"@la ;
     skos:closeMatch pleiades:383741 ;
-    skos:closeMatch gn:3171077/ ;
+    skos:closeMatch gn:3171077 ;
     geo:lat "45.0522"^^xsd:float ;
     geo:long "9.693"^^xsd:float .
 
 oeplace:Pisae a lawd:Place ;
     rdfs:label "Pisae"@la ;
     skos:closeMatch pleiades:403207 ;
-    skos:closeMatch gn:3170647/ .
+    skos:closeMatch gn:3170647 .
 
 oeplace:Populonia a lawd:Place ;
     rdfs:label "Populonia"@la ;
     skos:closeMatch pleiades:413169 ;
-    skos:closeMatch gn:3170227/ ;
+    skos:closeMatch gn:3170227 ;
     geo:lat "42.9883"^^xsd:float ;
     geo:long "10.4936"^^xsd:float .
 
@@ -217,7 +217,7 @@ oeplace:Pyrgi a lawd:Place ;
 oeplace:Roma a lawd:Place ;
     rdfs:label "Roma"@la ;
     skos:closeMatch pleiades:423025 ;
-    skos:closeMatch gn:3169070/ .
+    skos:closeMatch gn:3169070 .
 
 oeplace:Rusellae a lawd:Place ;
     rdfs:label "Rusellae"@la ;
@@ -228,7 +228,7 @@ oeplace:Rusellae a lawd:Place ;
 oeplace:Saturnia a lawd:Place ;
     rdfs:label "Saturnia"@la ;
     skos:closeMatch pleiades:413186 ;
-    skos:closeMatch gn:3167074/ .
+    skos:closeMatch gn:3167074 .
 
 oeplace:Spina a lawd:Place ;
     rdfs:label "Spina"@la ;
@@ -237,7 +237,7 @@ oeplace:Spina a lawd:Place ;
 oeplace:Tarquinia a lawd:Place ;
     rdfs:label "Tarquinia"@la ;
     skos:closeMatch pleiades:413332 ;
-    skos:closeMatch gn:3165940/ ;
+    skos:closeMatch gn:3165940 ;
     geo:lat "42.2488"^^xsd:float ;
     geo:long "11.7553"^^xsd:float .
 
@@ -253,21 +253,21 @@ oeplace:Unknown_Etruria a lawd:Place ;
 oeplace:Veii a lawd:Place ;
     rdfs:label "Veii"@la ;
     skos:closeMatch pleiades:423116 ;
-    skos:closeMatch gn:3164526/ ;
+    skos:closeMatch gn:3164526 ;
     geo:lat "42.0273"^^xsd:float ;
     geo:long "12.3979"^^xsd:float .
 
 oeplace:Vetulonia a lawd:Place ;
     rdfs:label "Vetulonia"@la ;
     skos:closeMatch pleiades:413381 ;
-    skos:closeMatch gn:3164375/ ;
+    skos:closeMatch gn:3164375 ;
     geo:lat "42.8524"^^xsd:float ;
     geo:long "10.9746"^^xsd:float .
 
 oeplace:Volaterrae a lawd:Place ;
     rdfs:label "Volaterrae"@la ;
     skos:closeMatch pleiades:403292 ;
-    skos:closeMatch gn:3163972/ ;
+    skos:closeMatch gn:3163972 ;
     geo:lat "43.4015"^^xsd:float ;
     geo:long "10.8619"^^xsd:float .
 
@@ -280,7 +280,7 @@ oeplace:Volsinii a lawd:Place ;
 oeplace:Vulci a lawd:Place ;
     rdfs:label "Vulci"@la ;
     skos:closeMatch pleiades:413395 ;
-    skos:closeMatch gn:8013259/ ;
+    skos:closeMatch gn:8013259 ;
     geo:lat "42.4212"^^xsd:float ;
     geo:long "11.6323"^^xsd:float .
 
@@ -310,7 +310,7 @@ oe:Cm_2.46 a lawd:WrittenWork ;
 
 oe:Ve_6.2 a lawd:WrittenWork ;
     dc:identifier "Ve 6.2" ;
-    lawd:hasText "mi<ni> mamarce zinace"@xet ;
+    lawd:hasText "mi[ni] mamarce zinace"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Veii ;
     dcterms:date "-637"^^xsd:integer ;
@@ -583,7 +583,7 @@ oe:Ta_1.18 a lawd:WrittenWork ;
 
 oe:At_1.111 a lawd:WrittenWork ;
     dc:identifier "At 1.111" ;
-    lawd:hasText "θanχvil ruvfi puia arnθal aleθ{na}s"@xet ;
+    lawd:hasText "θanχvil ruvfi puia arnθal aleθ(na)s"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Ager_Tarquiniensis ;
     dcterms:type oevocab:funerary ;
@@ -603,7 +603,7 @@ oe:Ta_1.59 a lawd:WrittenWork ;
 
 oe:Cl_1.1502 a lawd:WrittenWork ;
     dc:identifier "Cl 1.1502" ;
-    lawd:hasText "anti { } pater • cicuσ"@xet ;
+    lawd:hasText "anti ( ) pater • cicuσ"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Clusium ;
     dcterms:type oevocab:commercial ;
@@ -843,7 +843,7 @@ oe:Ta_3.6 a lawd:WrittenWork ;
 
 oe:Cr_3.20 a lawd:WrittenWork ;
     dc:identifier "Cr 3.20" ;
-    lawd:hasText "mi<ni> aranθ ramuθaςi veςtiricinala muluvanice"@xet ;
+    lawd:hasText "mi[ni] aranθ ramuθaςi veςtiricinala muluvanice"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Caere ;
     dcterms:type oevocab:votive ;
@@ -891,7 +891,7 @@ oe:Cr_3.7 a lawd:WrittenWork ;
 
 oe:Vc_1.64 a lawd:WrittenWork ;
     dc:identifier "Vc 1.64" ;
-    lawd:hasText "larθ tutes anc farθnaχe veluis tuteis θanχviluisc turials{c}"@xet ;
+    lawd:hasText "larθ tutes anc farθnaχe veluis tuteis θanχviluisc turials(c)"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Vulci ;
     dcterms:type oevocab:funerary ;
@@ -989,7 +989,7 @@ oe:At_1.172 a lawd:WrittenWork ;
 
 oe:Ta_1.82 a lawd:WrittenWork ;
     dc:identifier "Ta 1.82" ;
-    lawd:hasText "arnθ • apunas • velus • {maa-} maχ cezpalχ • avil svalce"@xet ;
+    lawd:hasText "arnθ • apunas • velus • (maa-) maχ cezpalχ • avil svalce"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Tarquinia ;
     dcterms:type oevocab:funerary ;
@@ -1019,7 +1019,7 @@ oe:Cr_1.141 a lawd:WrittenWork ;
 
 oe:AT_1.34 a lawd:WrittenWork ;
     dc:identifier "AT 1.34" ;
-    lawd:hasText "eca mutna velθurus sta<t>lanes larisaliσ'la"@xet ;
+    lawd:hasText "eca mutna velθurus sta[t]lanes larisaliσ'la"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Ager_Tarquiniensis ;
     dcterms:type oevocab:ownership ;
@@ -1079,7 +1079,7 @@ oe:Vs_4.8 a lawd:WrittenWork ;
 
 oe:Ta_1.182 a lawd:WrittenWork ;
     dc:identifier "Ta 1.182" ;
-    lawd:hasText "camnas • larθ • larθal • σ'atnalc • clan • an • σ'uθi • lavtni • zivas • ceriχu<nce> ..."@xet ;
+    lawd:hasText "camnas • larθ • larθal • σ'atnalc • clan • an • σ'uθi • lavtni • zivas • ceriχu[nce] ..."@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Tarquinia ;
     dcterms:type oevocab:funerary ;
@@ -1245,7 +1245,7 @@ oe:AT_1.47 a lawd:WrittenWork ;
 
 oe:Vt_S.2 a lawd:WrittenWork ;
     dc:identifier "Vt S.2" ;
-    lawd:hasText "eca sren tva iχna c hercle unial cl an θra{ }sce"@xet ;
+    lawd:hasText "eca sren tva iχna c hercle unial cl an θra( )sce"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Volaterrae ;
     dcterms:type oevocab:dedicatory ;
@@ -1315,7 +1315,7 @@ oe:Cr_3.14 a lawd:WrittenWork ;
 
 oe:Ve_3.2 a lawd:WrittenWork ;
     dc:identifier "Ve 3.2" ;
-    lawd:hasText "velθur tulumneš pesn<a> <n>uzinaie mene mul[uvanice]"@xet ;
+    lawd:hasText "velθur tulumneš pesn[a] [n]uzinaie mene mul[uvanice]"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Veii ;
     dcterms:type oevocab:votive ;
@@ -1444,7 +1444,7 @@ oe:Ta_1.168 a lawd:WrittenWork ;
 
 oe:Ta_1.81 a lawd:WrittenWork ;
     dc:identifier "Ta 1.81" ;
-    lawd:hasText "θui • clθi • mutn{ai}θi vel • veluσ'a • avils cis • zaθrmisc seitiθialiσ'a"@xet ;
+    lawd:hasText "θui • clθi • mutn(ai)θi vel • veluσ'a • avils cis • zaθrmisc seitiθialiσ'a"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Tarquinia ;
     dcterms:date "-150"^^xsd:integer ;
@@ -1476,7 +1476,7 @@ oe:Pe_1.948 a lawd:WrittenWork ;
 
 oe:AS_5.1 a lawd:WrittenWork ;
     dc:identifier "AS 5.1" ;
-    lawd:hasText "aneσ' • caeσ' • puil • hu<p> ni • ei • itruta"@xet ;
+    lawd:hasText "aneσ' • caeσ' • puil • hu[p] ni • ei • itruta"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Ager_Saenensis ;
     dcterms:type oevocab:funerary ;
@@ -1486,7 +1486,7 @@ oe:AS_5.1 a lawd:WrittenWork ;
 
 oe:Pe_1.211 a lawd:WrittenWork ;
     dc:identifier "Pe 1.211" ;
-    lawd:hasText "lar{n}θ • scarpe • lautni"@xet ;
+    lawd:hasText "lar(n)θ • scarpe • lautni"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Perusia ;
     dcterms:date "-100"^^xsd:integer ;
@@ -1562,7 +1562,7 @@ oe:Ta_1.108 a lawd:WrittenWork ;
 
 oe:Cr_2.9 a lawd:WrittenWork ;
     dc:identifier "Cr 2.9" ;
-    lawd:hasText "mi titelaς θi[na] {mla} m[l]aχ mlakas"@xet ;
+    lawd:hasText "mi titelaς θi[na] (mla) m[l]aχ mlakas"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Caere ;
     dcterms:date "-687"^^xsd:integer ;
@@ -1602,7 +1602,7 @@ oe:Cr_2.42 a lawd:WrittenWork ;
 
 oe:OA_2.20 a lawd:WrittenWork ;
     dc:identifier "OA 2.20" ;
-    lawd:hasText "ica{i} patara vinumaia"@xet ;
+    lawd:hasText "ica(i) patara vinumaia"@xet ;
     dc:language "ett" ;
     dcterms:date "-500"^^xsd:integer ;
     dcterms:type oevocab:ownership ;
@@ -1611,7 +1611,7 @@ oe:OA_2.20 a lawd:WrittenWork ;
 
 oe:Ve_3.13 a lawd:WrittenWork ;
     dc:identifier "Ve 3.13" ;
-    lawd:hasText "m[i]ni mulvanice venali.a. .š.lapina.š. .e.n. mi<ni>pi capi m[i] n[u]na.i."@xet ;
+    lawd:hasText "m[i]ni mulvanice venali.a. .š.lapina.š. .e.n. mi[ni]pi capi m[i] n[u]na.i."@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Veii ;
     dcterms:date "-550"^^xsd:integer ;
@@ -1633,7 +1633,7 @@ oe:ETP_15 a lawd:WrittenWork ;
 
 oe:Ve_3.29 a lawd:WrittenWork ;
     dc:identifier "Ve 3.29" ;
-    lawd:hasText "[mini] [avi]le zuqu {me} turace men[er]avas"@xet ;
+    lawd:hasText "[mini] [avi]le zuqu (me) turace men[er]avas"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Veii ;
     dcterms:date "-550"^^xsd:integer ;
@@ -1664,7 +1664,7 @@ oe:ETP_29 a lawd:WrittenWork ;
 
 oe:OA_3.9 a lawd:WrittenWork ;
     dc:identifier "OA 3.9" ;
-    lawd:hasText "cae siprisnies {i} tur ce hercles clen ce χa munis en cae lur χve truta ala alp nina luθs inpa lxχn/a"@xet ;
+    lawd:hasText "cae siprisnies (i) tur ce hercles clen ce χa munis en cae lur χve truta ala alp nina luθs inpa lxχn/a"@xet ;
     dc:language "ett" ;
     dcterms:date "-325"^^xsd:integer ;
     dcterms:type oevocab:dedicatory ;
@@ -1716,7 +1716,7 @@ oe:AV_6.9 a lawd:WrittenWork ;
 
 oe:Pa_4.1 a lawd:WrittenWork ;
     dc:identifier "Pa 4.1" ;
-    lawd:hasText "ki • aiser • tinia • ti[---] • sil<v>anz"@xet ;
+    lawd:hasText "ki • aiser • tinia • ti[---] • sil[v]anz"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Padana ;
     dcterms:date "-500"^^xsd:integer ;
@@ -2075,7 +2075,7 @@ oe:ETP_73 a lawd:WrittenWork ;
 
 oe:ETP_74 a lawd:WrittenWork ;
     dc:identifier "ETP 74" ;
-    lawd:hasText "e{.}t • pêtruis σcê [vacat] vês êliunts • vinac • restmc • cen [vacat] u • tênθur sar • cuσuθuras • lariσaliσvla • peσc • σpante • tênθur • sa • sran • sarc • clθil • têrσna • θui • σpanθi • ml esiêθic • rasna σiii&gt; [vacat] inni • peσ • pêtrus • pavac • traulac • tiur • tênθurc • tênθa • zacinat • priniserac • zal // cs • êsis • vêrê cuσuθursum • peσ • pêtrusta • σceva[s] // nuθantur • lart • petr uni • arnt • pini • lart • vipi • luσce • lariσ • σalini • vêtnal • lart • vêlara • larθaliσa • lart • vêlara auleσa • vel • pumpu • pruciu • aule • cêlatina • σê tmnal • arnza • fêlσni • vêlθinal • vêl • luiσna lusce • vêl • uσlna • nufreσa • laru • σlanzu • larz a lartle vêl aves arnt • pêtru • raufe // êprus • ame • velχe • cuσu lariσal • cleniarc • lariσcuσu • lariσaliσa larizac • clan • lariσal • pêtru • σcêvas • arntlei • pêtrus • puia [vacat]cên • zic • ziχuχe • σparzêstis • sazleis • inθuχti • cuσuθuras • σuθiu • ame • tal • σuθivenas • ratm • θuχt . cesu • tltel • têi • σians • σparzête • θui • σalt • zic • fratuce • cuσuθurus • lariσaliσvla • pêtrusc • σcêvas • peσs • tarχianes // cnl • nuθe • malec • lart • cucrina • lauσiσa • zilaθ • meχl • rasnal • l[a]riσ • cêlatina lauσa [cl]anc • arnt • luσcni • [a]rnθal • clanc • larza • lart • turnma • σalina[l---a]pnal • cleniarc • velχe [---papal]serc • vêlχe • cuσu • aule[σa---]aninalc • lariσ • fuln[i---]rc • lart • pêtce • uσlnal [ •---]inaθur • têcσinal • vel[---]us • lariσc • cuσu • uσlna[l---] // aule σalini [vacat] cuσual [vacat]zilci • larθal • c [vacat] uσus • titlnal lariσalc • σalinis auleσla • celtinêitiσs • tarσminass • σparza • in • θuχt cesuratm • σuθiu • σuθiuσvê • velχes • cuσus auleσla • velθurus • titlnis • velθuruσla . larθalc • cêlatinas apnal • lariσalc cê latinas • titlnal"@xet ;
+    lawd:hasText "e(.)t • pêtruis σcê [vacat] vês êliunts • vinac • restmc • cen [vacat] u • tênθur sar • cuσuθuras • lariσaliσvla • peσc • σpante • tênθur • sa • sran • sarc • clθil • têrσna • θui • σpanθi • ml esiêθic • rasna σiii&gt; [vacat] inni • peσ • pêtrus • pavac • traulac • tiur • tênθurc • tênθa • zacinat • priniserac • zal // cs • êsis • vêrê cuσuθursum • peσ • pêtrusta • σceva[s] // nuθantur • lart • petr uni • arnt • pini • lart • vipi • luσce • lariσ • σalini • vêtnal • lart • vêlara • larθaliσa • lart • vêlara auleσa • vel • pumpu • pruciu • aule • cêlatina • σê tmnal • arnza • fêlσni • vêlθinal • vêl • luiσna lusce • vêl • uσlna • nufreσa • laru • σlanzu • larz a lartle vêl aves arnt • pêtru • raufe // êprus • ame • velχe • cuσu lariσal • cleniarc • lariσcuσu • lariσaliσa larizac • clan • lariσal • pêtru • σcêvas • arntlei • pêtrus • puia [vacat]cên • zic • ziχuχe • σparzêstis • sazleis • inθuχti • cuσuθuras • σuθiu • ame • tal • σuθivenas • ratm • θuχt . cesu • tltel • têi • σians • σparzête • θui • σalt • zic • fratuce • cuσuθurus • lariσaliσvla • pêtrusc • σcêvas • peσs • tarχianes // cnl • nuθe • malec • lart • cucrina • lauσiσa • zilaθ • meχl • rasnal • l[a]riσ • cêlatina lauσa [cl]anc • arnt • luσcni • [a]rnθal • clanc • larza • lart • turnma • σalina[l---a]pnal • cleniarc • velχe [---papal]serc • vêlχe • cuσu • aule[σa---]aninalc • lariσ • fuln[i---]rc • lart • pêtce • uσlnal [ •---]inaθur • têcσinal • vel[---]us • lariσc • cuσu • uσlna[l---] // aule σalini [vacat] cuσual [vacat]zilci • larθal • c [vacat] uσus • titlnal lariσalc • σalinis auleσla • celtinêitiσs • tarσminass • σparza • in • θuχt cesuratm • σuθiu • σuθiuσvê • velχes • cuσus auleσla • velθurus • titlnis • velθuruσla . larθalc • cêlatinas apnal • lariσalc cê latinas • titlnal"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Cortona ;
     dcterms:date "-250"^^xsd:integer ;
@@ -2200,7 +2200,7 @@ oe:ETP_85 a lawd:WrittenWork ;
 
 oe:ETP_86 a lawd:WrittenWork ;
     dc:identifier "ETP 86" ;
-    lawd:hasText "mi venelus σ{ }hekuntenas"@xet ;
+    lawd:hasText "mi venelus σ( )hekuntenas"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Ager_Volaterranus ;
     dcterms:date "-500"^^xsd:integer ;
@@ -2321,7 +2321,7 @@ oe:ETP_96 a lawd:WrittenWork ;
 
 oe:ETP_97 a lawd:WrittenWork ;
     dc:identifier "ETP 97" ;
-    lawd:hasText "{e} mi karku[---]"@xet ;
+    lawd:hasText "(e) mi karku[---]"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Spina ;
     dcterms:date "-200"^^xsd:integer ;
@@ -2920,7 +2920,7 @@ oe:ETP_154 a lawd:WrittenWork ;
 
 oe:ETP_155 a lawd:WrittenWork ;
     dc:identifier "ETP 155" ;
-    lawd:hasText "mine{i} uvi[e tu]ru[ce] xxx vesricenals"@xet ;
+    lawd:hasText "mine(i) uvi[e tu]ru[ce] xxx vesricenals"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Lucania ;
     dcterms:date "-512"^^xsd:integer ;
@@ -3030,7 +3030,7 @@ oe:ETP_164 a lawd:WrittenWork ;
 
 oe:ETP_165 a lawd:WrittenWork ;
     dc:identifier "ETP 165" ;
-    lawd:hasText "mi satu qurtunia{nia}s"@xet ;
+    lawd:hasText "mi satu qurtunia(nia)s"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Caere ;
     dcterms:date "-637"^^xsd:integer ;
@@ -3813,7 +3813,7 @@ oe:ETP_239 a lawd:WrittenWork ;
 
 oe:ETP_240 a lawd:WrittenWork ;
     dc:identifier "ETP 240" ;
-    lawd:hasText "vel • ber comsn a • velosa {i}"@xet ;
+    lawd:hasText "vel • ber comsn a • velosa (i)"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Ager_Saenensis ;
     dcterms:date "-50"^^xsd:integer ;
@@ -3837,7 +3837,7 @@ oe:ETP_242 a lawd:WrittenWork ;
     dc:identifier "ETP 242" ;
     lawd:hasText "[l]arθ petrus"@xet ;
     dc:language "ett" ;
-    dcterms:spatial oeplace:Isola_d’Elba ;
+    dcterms:spatial oeplace:Isola_dElba ;
     dcterms:date "-150"^^xsd:integer ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -3900,7 +3900,7 @@ oe:ETP_247 a lawd:WrittenWork ;
 
 oe:ETP_248 a lawd:WrittenWork ;
     dc:identifier "ETP 248" ;
-    lawd:hasText "lu{v}cies"@xet ;
+    lawd:hasText "lu(v)cies"@xet ;
     dc:language "ett" ;
     dcterms:spatial oeplace:Pyrgi ;
     dcterms:date "-490"^^xsd:integer ;
@@ -11941,7 +11941,7 @@ oe:7491 a lawd:WrittenWork ;
 
 oe:7526 a lawd:WrittenWork ;
     dc:identifier "7526" ;
-    lawd:hasText "χ{l}<u>r"@xet ;
+    lawd:hasText "χ(l)[u]r"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -12973,7 +12973,7 @@ oe:8725 a lawd:WrittenWork ;
 
 oe:8726 a lawd:WrittenWork ;
     dc:identifier "8726" ;
-    lawd:hasText "{upθnep}"@xet ;
+    lawd:hasText "(upθnep)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -13493,7 +13493,7 @@ oe:9231 a lawd:WrittenWork ;
 
 oe:9233 a lawd:WrittenWork ;
     dc:identifier "9233" ;
-    lawd:hasText "santase{t}θfaθ"@xet ;
+    lawd:hasText "santase(t)θfaθ"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -14397,7 +14397,7 @@ oe:10417 a lawd:WrittenWork ;
 
 oe:10418 a lawd:WrittenWork ;
     dc:identifier "10418" ;
-    lawd:hasText "miaraθia{niezt}zacies"@xet ;
+    lawd:hasText "miaraθia(niezt)zacies"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -16085,7 +16085,7 @@ oe:12517 a lawd:WrittenWork ;
 
 oe:12519 a lawd:WrittenWork ;
     dc:identifier "12519" ;
-    lawd:hasText "ma<t>nie"@xet ;
+    lawd:hasText "ma[t]nie"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -16773,7 +16773,7 @@ oe:13970 a lawd:WrittenWork ;
 
 oe:13976 a lawd:WrittenWork ;
     dc:identifier "13976" ;
-    lawd:hasText "ri<i>"@xet ;
+    lawd:hasText "ri[i]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -18533,7 +18533,7 @@ oe:15931 a lawd:WrittenWork ;
 
 oe:15940 a lawd:WrittenWork ;
     dc:identifier "15940" ;
-    lawd:hasText "{arnuauete}"@xet ;
+    lawd:hasText "(arnuauete)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -21085,7 +21085,7 @@ oe:405 a lawd:WrittenWork ;
 
 oe:406 a lawd:WrittenWork ;
     dc:identifier "406" ;
-    lawd:hasText "mi arunθ{ }i{ }a(s)"@xet ;
+    lawd:hasText "mi arunθ( )i( )a(s)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -22349,7 +22349,7 @@ oe:1047 a lawd:WrittenWork ;
 
 oe:1052 a lawd:WrittenWork ;
     dc:identifier "1052" ;
-    lawd:hasText "ap{------}rini(al)"@xet ;
+    lawd:hasText "ap(------)rini(al)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -22709,7 +22709,7 @@ oe:1226 a lawd:WrittenWork ;
 
 oe:1228 a lawd:WrittenWork ;
     dc:identifier "1228" ;
-    lawd:hasText "l{ }a{ }r(θ) felial"@xet ;
+    lawd:hasText "l( )a( )r(θ) felial"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -23037,7 +23037,7 @@ oe:1371 a lawd:WrittenWork ;
 
 oe:1377 a lawd:WrittenWork ;
     dc:identifier "1377" ;
-    lawd:hasText "a{ }rnθ a(rn)θ(us)"@xet ;
+    lawd:hasText "a( )rnθ a(rn)θ(us)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -23573,7 +23573,7 @@ oe:1628 a lawd:WrittenWork ;
 
 oe:1629 a lawd:WrittenWork ;
     dc:identifier "1629" ;
-    lawd:hasText "l(ar)θ(us){----------}"@xet ;
+    lawd:hasText "l(ar)θ(us)(----------)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -23845,7 +23845,7 @@ oe:1808 a lawd:WrittenWork ;
 
 oe:1813 a lawd:WrittenWork ;
     dc:identifier "1813" ;
-    lawd:hasText "afun{ }ei(al)"@xet ;
+    lawd:hasText "afun( )ei(al)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -23901,7 +23901,7 @@ oe:1860 a lawd:WrittenWork ;
 
 oe:1875 a lawd:WrittenWork ;
     dc:identifier "1875" ;
-    lawd:hasText "pi{}stia(s)"@xet ;
+    lawd:hasText "pi()stia(s)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -24045,7 +24045,7 @@ oe:1937 a lawd:WrittenWork ;
 
 oe:1938 a lawd:WrittenWork ;
     dc:identifier "1938" ;
-    lawd:hasText "repias{--}"@xet ;
+    lawd:hasText "repias(--)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -24325,7 +24325,7 @@ oe:2078 a lawd:WrittenWork ;
 
 oe:2081 a lawd:WrittenWork ;
     dc:identifier "2081" ;
-    lawd:hasText "{---}----ia"@xet ;
+    lawd:hasText "(---)----ia"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -24501,7 +24501,7 @@ oe:2199 a lawd:WrittenWork ;
 
 oe:2200 a lawd:WrittenWork ;
     dc:identifier "2200" ;
-    lawd:hasText "ar(nθi) vipi vuisin{-}(i)al"@xet ;
+    lawd:hasText "ar(nθi) vipi vuisin(-)(i)al"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -25213,7 +25213,7 @@ oe:2648 a lawd:WrittenWork ;
 
 oe:2659 a lawd:WrittenWork ;
     dc:identifier "2659" ;
-    lawd:hasText "rav{----}a(s)"@xet ;
+    lawd:hasText "rav(----)a(s)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -25517,7 +25517,7 @@ oe:2808 a lawd:WrittenWork ;
 
 oe:2809 a lawd:WrittenWork ;
     dc:identifier "2809" ;
-    lawd:hasText "krutpu{u}s"@xet ;
+    lawd:hasText "krutpu(u)s"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -26429,7 +26429,7 @@ oe:3445 a lawd:WrittenWork ;
 
 oe:3446 a lawd:WrittenWork ;
     dc:identifier "3446" ;
-    lawd:hasText "patnei(al) <v>estrcnas"@xet ;
+    lawd:hasText "patnei(al) [v]estrcnas"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -26517,7 +26517,7 @@ oe:3490 a lawd:WrittenWork ;
 
 oe:3491 a lawd:WrittenWork ;
     dc:identifier "3491" ;
-    lawd:hasText "ix} {"@xet ;
+    lawd:hasText "ix) ("@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:legal ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -27261,7 +27261,7 @@ oe:3968 a lawd:WrittenWork ;
 
 oe:3975 a lawd:WrittenWork ;
     dc:identifier "3975" ;
-    lawd:hasText "anein{ }ei(al) farui(alisa)"@xet ;
+    lawd:hasText "anein( )ei(al) farui(alisa)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -27485,7 +27485,7 @@ oe:4088 a lawd:WrittenWork ;
 
 oe:4090 a lawd:WrittenWork ;
     dc:identifier "4090" ;
-    lawd:hasText "venz{}etaz"@xet ;
+    lawd:hasText "venz()etaz"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -28117,7 +28117,7 @@ oe:4609 a lawd:WrittenWork ;
 
 oe:4610 a lawd:WrittenWork ;
     dc:identifier "4610" ;
-    lawd:hasText "larθi putina(s) kru(ia)l{----}"@xet ;
+    lawd:hasText "larθi putina(s) kru(ia)l(----)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -28349,7 +28349,7 @@ oe:4739 a lawd:WrittenWork ;
 
 oe:4744 a lawd:WrittenWork ;
     dc:identifier "4744" ;
-    lawd:hasText "vezana{}s"@xet ;
+    lawd:hasText "vezana()s"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -28637,7 +28637,7 @@ oe:4970 a lawd:WrittenWork ;
 
 oe:4982 a lawd:WrittenWork ;
     dc:identifier "4982" ;
-    lawd:hasText "{raiθs}"@xet ;
+    lawd:hasText "(raiθs)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -29005,7 +29005,7 @@ oe:5382 a lawd:WrittenWork ;
 
 oe:5385 a lawd:WrittenWork ;
     dc:identifier "5385" ;
-    lawd:hasText "zilc fulχuniesi{----}"@xet ;
+    lawd:hasText "zilc fulχuniesi(----)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -29629,7 +29629,7 @@ oe:5732 a lawd:WrittenWork ;
 
 oe:5749 a lawd:WrittenWork ;
     dc:identifier "5749" ;
-    lawd:hasText "ri{}l"@xet ;
+    lawd:hasText "ri()l"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:votive ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30301,7 +30301,7 @@ oe:6838 a lawd:WrittenWork ;
 
 oe:6846 a lawd:WrittenWork ;
     dc:identifier "6846" ;
-    lawd:hasText "<i>p"@xet ;
+    lawd:hasText "[i]p"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:votive ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30309,7 +30309,7 @@ oe:6846 a lawd:WrittenWork ;
 
 oe:6959 a lawd:WrittenWork ;
     dc:identifier "6959" ;
-    lawd:hasText "zaip{ei}<ie>s"@xet ;
+    lawd:hasText "zaip(ei)[ie]s"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30325,7 +30325,7 @@ oe:6976 a lawd:WrittenWork ;
 
 oe:6980 a lawd:WrittenWork ;
     dc:identifier "6980" ;
-    lawd:hasText "v<e>cial"@xet ;
+    lawd:hasText "v[e]cial"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30397,7 +30397,7 @@ oe:7044 a lawd:WrittenWork ;
 
 oe:7045 a lawd:WrittenWork ;
     dc:identifier "7045" ;
-    lawd:hasText "calisne puial{--------}"@xet ;
+    lawd:hasText "calisne puial(--------)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30645,7 +30645,7 @@ oe:7246 a lawd:WrittenWork ;
 
 oe:7254 a lawd:WrittenWork ;
     dc:identifier "7254" ;
-    lawd:hasText "mi falai[e]<a>l"@xet ;
+    lawd:hasText "mi falai[e][a]l"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -30965,7 +30965,7 @@ oe:7718 a lawd:WrittenWork ;
 
 oe:7719 a lawd:WrittenWork ;
     dc:identifier "7719" ;
-    lawd:hasText "a(rn)θ mu{ }su"@xet ;
+    lawd:hasText "a(rn)θ mu( )su"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -31165,7 +31165,7 @@ oe:7889 a lawd:WrittenWork ;
 
 oe:7901 a lawd:WrittenWork ;
     dc:identifier "7901" ;
-    lawd:hasText "at{i}ia{l}l"@xet ;
+    lawd:hasText "at(i)ia(l)l"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -31181,7 +31181,7 @@ oe:7935 a lawd:WrittenWork ;
 
 oe:7936 a lawd:WrittenWork ;
     dc:identifier "7936" ;
-    lawd:hasText "{n}<m>i n(um)a(s)"@xet ;
+    lawd:hasText "(n)[m]i n(um)a(s)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -31229,7 +31229,7 @@ oe:7950 a lawd:WrittenWork ;
 
 oe:7969 a lawd:WrittenWork ;
     dc:identifier "7969" ;
-    lawd:hasText "s{----}(eθres)"@xet ;
+    lawd:hasText "s(----)(eθres)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -31813,7 +31813,7 @@ oe:8613 a lawd:WrittenWork ;
 
 oe:8616 a lawd:WrittenWork ;
     dc:identifier "8616" ;
-    lawd:hasText "menar{er}va"@xet ;
+    lawd:hasText "menar(er)va"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -31821,7 +31821,7 @@ oe:8616 a lawd:WrittenWork ;
 
 oe:8620 a lawd:WrittenWork ;
     dc:identifier "8620" ;
-    lawd:hasText "menar{e}va"@xet ;
+    lawd:hasText "menar(e)va"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32005,7 +32005,7 @@ oe:8949 a lawd:WrittenWork ;
 
 oe:8962 a lawd:WrittenWork ;
     dc:identifier "8962" ;
-    lawd:hasText "la{v}<u>χ<u>m<a>sa(s) mi"@xet ;
+    lawd:hasText "la(v)[u]χ[u]m[a]sa(s) mi"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32117,7 +32117,7 @@ oe:9182 a lawd:WrittenWork ;
 
 oe:9183 a lawd:WrittenWork ;
     dc:identifier "9183" ;
-    lawd:hasText "}<mi> n(umas)"@xet ;
+    lawd:hasText ")[mi] n(umas)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32293,7 +32293,7 @@ oe:9276 a lawd:WrittenWork ;
 
 oe:9295 a lawd:WrittenWork ;
     dc:identifier "9295" ;
-    lawd:hasText "mi{ }ni mulvene{ }ke"@xet ;
+    lawd:hasText "mi( )ni mulvene( )ke"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32301,7 +32301,7 @@ oe:9295 a lawd:WrittenWork ;
 
 oe:9298 a lawd:WrittenWork ;
     dc:identifier "9298" ;
-    lawd:hasText "{s}l(autn)i"@xet ;
+    lawd:hasText "(s)l(autn)i"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32317,7 +32317,7 @@ oe:9303 a lawd:WrittenWork ;
 
 oe:9309 a lawd:WrittenWork ;
     dc:identifier "9309" ;
-    lawd:hasText "ac(na){s} priumnes χarun"@xet ;
+    lawd:hasText "ac(na)(s) priumnes χarun"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32413,7 +32413,7 @@ oe:9402 a lawd:WrittenWork ;
 
 oe:9403 a lawd:WrittenWork ;
     dc:identifier "9403" ;
-    lawd:hasText "a{s}<n>f{l}e{lv}"@xet ;
+    lawd:hasText "a(s)[n]f(l)e(lv)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32613,7 +32613,7 @@ oe:9672 a lawd:WrittenWork ;
 
 oe:9677 a lawd:WrittenWork ;
     dc:identifier "9677" ;
-    lawd:hasText "larzni(e)sa{----}"@xet ;
+    lawd:hasText "larzni(e)sa(----)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -32621,7 +32621,7 @@ oe:9677 a lawd:WrittenWork ;
 
 oe:9678 a lawd:WrittenWork ;
     dc:identifier "9678" ;
-    lawd:hasText "l{--------}(ar)χ(us)"@xet ;
+    lawd:hasText "l(--------)(ar)χ(us)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -33245,7 +33245,7 @@ oe:10873 a lawd:WrittenWork ;
 
 oe:10875 a lawd:WrittenWork ;
     dc:identifier "10875" ;
-    lawd:hasText "t{l}<u>rms"@xet ;
+    lawd:hasText "t(l)[u]rms"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -33381,7 +33381,7 @@ oe:11058 a lawd:WrittenWork ;
 
 oe:11071 a lawd:WrittenWork ;
     dc:identifier "11071" ;
-    lawd:hasText "{l}<u>θste"@xet ;
+    lawd:hasText "(l)[u]θste"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -33437,7 +33437,7 @@ oe:11116 a lawd:WrittenWork ;
 
 oe:11118 a lawd:WrittenWork ;
     dc:identifier "11118" ;
-    lawd:hasText "a{p}<t>re"@xet ;
+    lawd:hasText "a(p)[t]re"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:votive ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -33749,7 +33749,7 @@ oe:12140 a lawd:WrittenWork ;
 
 oe:12145 a lawd:WrittenWork ;
     dc:identifier "12145" ;
-    lawd:hasText "χeθas{}a"@xet ;
+    lawd:hasText "χeθas()a"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -33885,7 +33885,7 @@ oe:12312 a lawd:WrittenWork ;
 
 oe:12319 a lawd:WrittenWork ;
     dc:identifier "12319" ;
-    lawd:hasText "a<i>s{i}ur"@xet ;
+    lawd:hasText "a[i]s(i)ur"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34133,7 +34133,7 @@ oe:12471 a lawd:WrittenWork ;
 
 oe:12473 a lawd:WrittenWork ;
     dc:identifier "12473" ;
-    lawd:hasText "mener{e}<v>a"@xet ;
+    lawd:hasText "mener(e)[v]a"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34237,7 +34237,7 @@ oe:12594 a lawd:WrittenWork ;
 
 oe:12597 a lawd:WrittenWork ;
     dc:identifier "12597" ;
-    lawd:hasText "{ }fvuluvet"@xet ;
+    lawd:hasText "( )fvuluvet"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34365,7 +34365,7 @@ oe:12671 a lawd:WrittenWork ;
 
 oe:12676 a lawd:WrittenWork ;
     dc:identifier "12676" ;
-    lawd:hasText "<caica>"@xet ;
+    lawd:hasText "[caica]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34557,7 +34557,7 @@ oe:12840 a lawd:WrittenWork ;
 
 oe:12844 a lawd:WrittenWork ;
     dc:identifier "12844" ;
-    lawd:hasText "m{n}<i>"@xet ;
+    lawd:hasText "m(n)[i]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34621,7 +34621,7 @@ oe:12916 a lawd:WrittenWork ;
 
 oe:12920 a lawd:WrittenWork ;
     dc:identifier "12920" ;
-    lawd:hasText "{<ta>}<te>se"@xet ;
+    lawd:hasText "([ta])[te]se"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34781,7 +34781,7 @@ oe:13932 a lawd:WrittenWork ;
 
 oe:13933 a lawd:WrittenWork ;
     dc:identifier "13933" ;
-    lawd:hasText "ka{e}<v>nelnas"@xet ;
+    lawd:hasText "ka(e)[v]nelnas"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -34989,7 +34989,7 @@ oe:14395 a lawd:WrittenWork ;
 
 oe:14414 a lawd:WrittenWork ;
     dc:identifier "14414" ;
-    lawd:hasText "p{}(upln)as"@xet ;
+    lawd:hasText "p()(upln)as"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35125,7 +35125,7 @@ oe:14508 a lawd:WrittenWork ;
 
 oe:14525 a lawd:WrittenWork ;
     dc:identifier "14525" ;
-    lawd:hasText "es{ teprai(al)"@xet ;
+    lawd:hasText "es( teprai(al)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:legal ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35205,7 +35205,7 @@ oe:14573 a lawd:WrittenWork ;
 
 oe:14574 a lawd:WrittenWork ;
     dc:identifier "14574" ;
-    lawd:hasText "a{b}"@xet ;
+    lawd:hasText "a(b)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35229,7 +35229,7 @@ oe:14591 a lawd:WrittenWork ;
 
 oe:14598 a lawd:WrittenWork ;
     dc:identifier "14598" ;
-    lawd:hasText "l(ar)χ }ni(al)"@xet ;
+    lawd:hasText "l(ar)χ )ni(al)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35253,7 +35253,7 @@ oe:14612 a lawd:WrittenWork ;
 
 oe:14621 a lawd:WrittenWork ;
     dc:identifier "14621" ;
-    lawd:hasText "cupru{m}<s>"@xet ;
+    lawd:hasText "cupru(m)[s]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35333,7 +35333,7 @@ oe:14673 a lawd:WrittenWork ;
 
 oe:14679 a lawd:WrittenWork ;
     dc:identifier "14679" ;
-    lawd:hasText "}ei(al) leialisa"@xet ;
+    lawd:hasText ")ei(al) leialisa"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35349,7 +35349,7 @@ oe:14680 a lawd:WrittenWork ;
 
 oe:14682 a lawd:WrittenWork ;
     dc:identifier "14682" ;
-    lawd:hasText "teti{o<s>}<vs>"@xet ;
+    lawd:hasText "teti(o[s])[vs]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35365,7 +35365,7 @@ oe:14684 a lawd:WrittenWork ;
 
 oe:14686 a lawd:WrittenWork ;
     dc:identifier "14686" ;
-    lawd:hasText "{de}da(nt)"@xet ;
+    lawd:hasText "(de)da(nt)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35549,7 +35549,7 @@ oe:14811 a lawd:WrittenWork ;
 
 oe:14812 a lawd:WrittenWork ;
     dc:identifier "14812" ;
-    lawd:hasText "{v}<z>aθrums"@xet ;
+    lawd:hasText "(v)[z]aθrums"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35725,7 +35725,7 @@ oe:15017 a lawd:WrittenWork ;
 
 oe:15028 a lawd:WrittenWork ;
     dc:identifier "15028" ;
-    lawd:hasText "d{e}iv({e}<i>s)"@xet ;
+    lawd:hasText "d(e)iv((e)[i]s)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -35853,7 +35853,7 @@ oe:15193 a lawd:WrittenWork ;
 
 oe:15194 a lawd:WrittenWork ;
     dc:identifier "15194" ;
-    lawd:hasText "{it}ti<ti>"@xet ;
+    lawd:hasText "(it)ti[ti]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36061,7 +36061,7 @@ oe:15310 a lawd:WrittenWork ;
 
 oe:15325 a lawd:WrittenWork ;
     dc:identifier "15325" ;
-    lawd:hasText "l(e)v{viiiiiiii}ia{a}χ"@xet ;
+    lawd:hasText "l(e)v(viiiiiiii)ia(a)χ"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36077,7 +36077,7 @@ oe:15329 a lawd:WrittenWork ;
 
 oe:15331 a lawd:WrittenWork ;
     dc:identifier "15331" ;
-    lawd:hasText "peθna peθna{---}s"@xet ;
+    lawd:hasText "peθna peθna(---)s"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36109,7 +36109,7 @@ oe:15347 a lawd:WrittenWork ;
 
 oe:15354 a lawd:WrittenWork ;
     dc:identifier "15354" ;
-    lawd:hasText "{rlptχ>}"@xet ;
+    lawd:hasText "(rlptχ])"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36173,7 +36173,7 @@ oe:15445 a lawd:WrittenWork ;
 
 oe:15448 a lawd:WrittenWork ;
     dc:identifier "15448" ;
-    lawd:hasText "l{ra}<ar>θ(i)al velui(e)s"@xet ;
+    lawd:hasText "l(ra)[ar]θ(i)al velui(e)s"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36221,7 +36221,7 @@ oe:15460 a lawd:WrittenWork ;
 
 oe:15469 a lawd:WrittenWork ;
     dc:identifier "15469" ;
-    lawd:hasText "ti a{ }(ul)es"@xet ;
+    lawd:hasText "ti a( )(ul)es"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36557,7 +36557,7 @@ oe:15727 a lawd:WrittenWork ;
 
 oe:15729 a lawd:WrittenWork ;
     dc:identifier "15729" ;
-    lawd:hasText "i<d aperisv<m>"@xet ;
+    lawd:hasText "i[d aperisv[m]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36749,7 +36749,7 @@ oe:15830 a lawd:WrittenWork ;
 
 oe:15842 a lawd:WrittenWork ;
     dc:identifier "15842" ;
-    lawd:hasText "la{u}<z>(i)al"@xet ;
+    lawd:hasText "la(u)[z](i)al"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36765,7 +36765,7 @@ oe:15845 a lawd:WrittenWork ;
 
 oe:15846 a lawd:WrittenWork ;
     dc:identifier "15846" ;
-    lawd:hasText "}nies"@xet ;
+    lawd:hasText ")nies"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -36869,7 +36869,7 @@ oe:15911 a lawd:WrittenWork ;
 
 oe:15916 a lawd:WrittenWork ;
     dc:identifier "15916" ;
-    lawd:hasText "au{ }(l)i aini(al) tursni(alisa)"@xet ;
+    lawd:hasText "au( )(l)i aini(al) tursni(alisa)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -37453,7 +37453,7 @@ oe:16407 a lawd:WrittenWork ;
 
 oe:16409 a lawd:WrittenWork ;
     dc:identifier "16409" ;
-    lawd:hasText "s(e)x{s}(ti)"@xet ;
+    lawd:hasText "s(e)x(s)(ti)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -37789,7 +37789,7 @@ oe:16638 a lawd:WrittenWork ;
 
 oe:16640 a lawd:WrittenWork ;
     dc:identifier "16640" ;
-    lawd:hasText "{v}<m>enrva"@xet ;
+    lawd:hasText "(v)[m]enrva"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:legal ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -37797,7 +37797,7 @@ oe:16640 a lawd:WrittenWork ;
 
 oe:16647 a lawd:WrittenWork ;
     dc:identifier "16647" ;
-    lawd:hasText "pilonicos tase{io}<oi>"@xet ;
+    lawd:hasText "pilonicos tase(io)[oi]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:votive ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -37909,7 +37909,7 @@ oe:16679 a lawd:WrittenWork ;
 
 oe:16684 a lawd:WrittenWork ;
     dc:identifier "16684" ;
-    lawd:hasText "{l}<u>maile"@xet ;
+    lawd:hasText "(l)[u]maile"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -37981,7 +37981,7 @@ oe:16755 a lawd:WrittenWork ;
 
 oe:16766 a lawd:WrittenWork ;
     dc:identifier "16766" ;
-    lawd:hasText "f{l}<u>fl{l}<u>ns"@xet ;
+    lawd:hasText "f(l)[u]fl(l)[u]ns"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38005,7 +38005,7 @@ oe:16769 a lawd:WrittenWork ;
 
 oe:16770 a lawd:WrittenWork ;
     dc:identifier "16770" ;
-    lawd:hasText "ep(i){e}<u>r"@xet ;
+    lawd:hasText "ep(i)(e)[u]r"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:commercial ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38061,7 +38061,7 @@ oe:16824 a lawd:WrittenWork ;
 
 oe:16834 a lawd:WrittenWork ;
     dc:identifier "16834" ;
-    lawd:hasText "poc{o}<v>l{o}<v>m"@xet ;
+    lawd:hasText "poc(o)[v]l(o)[v]m"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38133,7 +38133,7 @@ oe:16898 a lawd:WrittenWork ;
 
 oe:16899 a lawd:WrittenWork ;
     dc:identifier "16899" ;
-    lawd:hasText "ti{p}pe"@xet ;
+    lawd:hasText "ti(p)pe"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:funerary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38141,7 +38141,7 @@ oe:16899 a lawd:WrittenWork ;
 
 oe:16934 a lawd:WrittenWork ;
     dc:identifier "16934" ;
-    lawd:hasText "tu{s}<r>an"@xet ;
+    lawd:hasText "tu(s)[r]an"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38437,7 +38437,7 @@ oe:17153 a lawd:WrittenWork ;
 
 oe:17154 a lawd:WrittenWork ;
     dc:identifier "17154" ;
-    lawd:hasText "<apulu>"@xet ;
+    lawd:hasText "[apulu]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:boundary ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38453,7 +38453,7 @@ oe:17155 a lawd:WrittenWork ;
 
 oe:17157 a lawd:WrittenWork ;
     dc:identifier "17157" ;
-    lawd:hasText "tondo{f}<r>os"@xet ;
+    lawd:hasText "tondo(f)[r]os"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38501,7 +38501,7 @@ oe:17229 a lawd:WrittenWork ;
 
 oe:17253 a lawd:WrittenWork ;
     dc:identifier "17253" ;
-    lawd:hasText "castv{d}"@xet ;
+    lawd:hasText "castv(d)"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:votive ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38589,7 +38589,7 @@ oe:17279 a lawd:WrittenWork ;
 
 oe:17286 a lawd:WrittenWork ;
     dc:identifier "17286" ;
-    lawd:hasText "h{e}<i>c"@xet ;
+    lawd:hasText "h(e)[i]c"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -38749,7 +38749,7 @@ oe:17349 a lawd:WrittenWork ;
 
 oe:17350 a lawd:WrittenWork ;
     dc:identifier "17350" ;
-    lawd:hasText "p{k}<r>obom"@xet ;
+    lawd:hasText "p(k)[r]obom"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:ownership ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -39029,7 +39029,7 @@ oe:20900 a lawd:WrittenWork ;
 
 oe:20906 a lawd:WrittenWork ;
     dc:identifier "20906" ;
-    lawd:hasText "<antar>"@xet ;
+    lawd:hasText "[antar]"@xet ;
     dc:language "ett" ;
     dcterms:type oevocab:dedicatory ;
     dc:source "Larth (Vico & Spanakis, 2023)" ;
@@ -39085,7 +39085,7 @@ oe:CODEX_LL_VI a lawd:WrittenWork ;
     dcterms:medium "linen" ;
     dc:type "book (linen wrappings)" ;
     dc:source "TLE 1; CIE 8340" ;
-    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
+    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb - A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
 
 oe:CODEX_LL_VII a lawd:WrittenWork ;
     dc:identifier "CODEX_LL_VII" ;
@@ -39097,7 +39097,7 @@ oe:CODEX_LL_VII a lawd:WrittenWork ;
     dcterms:medium "linen" ;
     dc:type "book (linen wrappings)" ;
     dc:source "TLE 1; CIE 8340" ;
-    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
+    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb - A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
 
 oe:CODEX_LL_VIII a lawd:WrittenWork ;
     dc:identifier "CODEX_LL_VIII" ;
@@ -39109,7 +39109,7 @@ oe:CODEX_LL_VIII a lawd:WrittenWork ;
     dcterms:medium "linen" ;
     dc:type "book (linen wrappings)" ;
     dc:source "TLE 1; CIE 8340" ;
-    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
+    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb - A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
 
 oe:CODEX_LL_IX a lawd:WrittenWork ;
     dc:identifier "CODEX_LL_IX" ;
@@ -39121,7 +39121,7 @@ oe:CODEX_LL_IX a lawd:WrittenWork ;
     dcterms:medium "linen" ;
     dc:type "book (linen wrappings)" ;
     dc:source "TLE 1; CIE 8340" ;
-    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
+    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb - A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
 
 oe:CODEX_LL_X a lawd:WrittenWork ;
     dc:identifier "CODEX_LL_X" ;
@@ -39133,7 +39133,7 @@ oe:CODEX_LL_X a lawd:WrittenWork ;
     dcterms:medium "linen" ;
     dc:type "book (linen wrappings)" ;
     dc:source "TLE 1; CIE 8340" ;
-    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb — A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
+    dcterms:bibliographicCitation "van der Meer, L.B. (2007). Liber Linteus Zagrabiensis: The Linen Book of Zagreb - A Comment on the Longest Etruscan Text. Louvain: Peeters; Pallottino, M. (1968). Testimonia Linguae Etruscae, 2nd ed." .
 
 oe:CODEX_TC_I a lawd:WrittenWork ;
     dc:identifier "CODEX_TC_I" ;
