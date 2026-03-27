@@ -122,9 +122,20 @@ npm run dev
 
 ### Deployment
 
+**Development & Preview**
+Push local dev environment variables and deploy a Preview build:
 ```bash
-cd openEtruscan
-npx vercel --prod
+# Pull Vercel preview/dev environment variables
+npx vercel env pull .env.local
+
+# Deploy to Vercel Preview Environment
+npx vercel -y
+```
+
+**Production**
+Push directly to the live production site and SPARQL endpoint:
+```bash
+npx vercel --prod -y
 ```
 
 ## Licence
