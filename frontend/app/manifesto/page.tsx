@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Manifesto — OpenEtruscan",
+  title: "Manifesto | OpenEtruscan",
   description:
     "The principles, motivations, and scholarly commitments behind the OpenEtruscan platform.",
 };
@@ -21,9 +21,9 @@ export default function ManifestoPage() {
       <section className={styles.section}>
         <h2>Why this project exists</h2>
         <p>
-          Existing corpora of Etruscan epigraphy — the <em>Corpus
+          Existing corpora of Etruscan epigraphy, notably the <em>Corpus
           Inscriptionum Etruscarum</em> (CIE), the <em>Etruskische Texte</em>
-          (ET), and the <em>Thesaurus Linguae Etruscae</em> (TLE) — are
+          (ET), and the <em>Thesaurus Linguae Etruscae</em> (TLE), are
           indispensable, but they were born in the age of print. Access
           depends on institutional subscriptions, physical library holdings,
           or scanned PDFs that resist machine analysis.
@@ -43,7 +43,7 @@ export default function ManifestoPage() {
           <li>
             <strong>Open by default.</strong> All data, code, and models are
             published openly. If something is closed, it is because we have not
-            yet been able to open it — not by design.
+            yet been able to open it, not by design.
           </li>
           <li>
             <strong>Interoperability over isolation.</strong> We align our

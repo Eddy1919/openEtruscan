@@ -60,8 +60,8 @@ export default function Home() {
           <div className="card">
             <h3>Script Normalizer</h3>
             <p>
-              Convert between five transcription systems — canonical, CIE,
-              philological, Old Italic Unicode (U+10300), and IPA — with
+              Convert between five transcription systems: canonical, CIE,
+              philological, Old Italic Unicode (U+10300), and IPA. Includes
               automatic source-system detection.
             </p>
           </div>
