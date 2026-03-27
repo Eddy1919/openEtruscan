@@ -61,3 +61,4 @@ data/models/
 *.joblibdata/cie/*.pdf
 data/cie/*.pdf
 .vercel
+.env*.local
