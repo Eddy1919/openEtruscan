@@ -34,8 +34,8 @@ jobs:
             git reset --hard origin/main
             git pull origin main
 
-            # Rebuild and restart all services
-            docker compose up -d --build
+            # Rebuild and restart all services using the compose container (required for COS)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:$PWD" -w="$PWD" docker/compose:1.29.2 up -d --build
 
             # Prune old images to save disk
             docker image prune -f
