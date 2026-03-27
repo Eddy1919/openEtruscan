@@ -18,7 +18,7 @@ function toBibTeX(props: CitationProps): string {
   title     = {${props.id}: "${props.canonical}"},
   author    = {{OpenEtruscan Project}},
   year      = {2025},
-  url       = {https://open-etruscan.vercel.app/inscription/${encodeURIComponent(props.id)}},
+  url       = {https://www.openetruscan.com/inscription/${encodeURIComponent(props.id)}},
   note      = {${props.findspot || "Unknown provenance"}${year ? `, ca. ${year}${era}` : ""}${props.classification ? `, ${props.classification}` : ""}}
 }`;
 }
@@ -32,7 +32,7 @@ function toCSLJSON(props: CitationProps): string {
         title: `${props.id}: "${props.canonical}"`,
         author: [{ literal: "OpenEtruscan Project" }],
         issued: { "date-parts": [[2025]] },
-        URL: `https://open-etruscan.vercel.app/inscription/${encodeURIComponent(props.id)}`,
+        URL: `https://www.openetruscan.com/inscription/${encodeURIComponent(props.id)}`,
         note: [
           props.findspot || "Unknown provenance",
           props.classification,

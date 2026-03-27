@@ -9,7 +9,7 @@
 [![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![PyPI](https://img.shields.io/pypi/v/openetruscan.svg)](https://pypi.org/project/openetruscan/)
 
-**[open-etruscan.vercel.app](https://open-etruscan.vercel.app)**
+**[www.openetruscan.com](https://www.openetruscan.com)**
 
 </div>
 
@@ -27,23 +27,23 @@ The web interface is built with Next.js 15 (App Router) and deployed on Vercel. 
 
 | Page | Description |
 |---|---|
-| [Search](https://open-etruscan.vercel.app/search) | Full-text search with faceted classification filtering and sorting |
-| [Concordance](https://open-etruscan.vercel.app/concordance) | Keyword-in-Context (KWIC) display across the entire corpus |
-| [Explorer](https://open-etruscan.vercel.app/explorer) | Interactive map of inscription findspots with Old Italic rendering |
-| [Timeline](https://open-etruscan.vercel.app/timeline) | Temporal distribution with century range slider |
-| [Names](https://open-etruscan.vercel.app/names) | Prosopography network graph of personal name co-occurrences |
-| [Normalizer](https://open-etruscan.vercel.app/normalizer) | Convert between CIE, philological, Old Italic, IPA, and web-safe |
-| [Classifier](https://open-etruscan.vercel.app/classifier) | Dual-model (CNN vs Transformer) epigraphic classification via ONNX |
-| [Compare](https://open-etruscan.vercel.app/compare) | Side-by-side inscription diff with character-level highlighting |
-| [Statistics](https://open-etruscan.vercel.app/stats) | Corpus-wide distributions and classification breakdowns |
-| [Downloads](https://open-etruscan.vercel.app/downloads) | Corpus JSON/RDF, ONNX models, and language data |
+| [Search](https://www.openetruscan.com/search) | Full-text search with faceted classification filtering and sorting |
+| [Concordance](https://www.openetruscan.com/concordance) | Keyword-in-Context (KWIC) display across the entire corpus |
+| [Explorer](https://www.openetruscan.com/explorer) | Interactive map of inscription findspots with Old Italic rendering |
+| [Timeline](https://www.openetruscan.com/timeline) | Temporal distribution with century range slider |
+| [Names](https://www.openetruscan.com/names) | Prosopography network graph of personal name co-occurrences |
+| [Normalizer](https://www.openetruscan.com/normalizer) | Convert between CIE, philological, Old Italic, IPA, and web-safe |
+| [Classifier](https://www.openetruscan.com/classifier) | Dual-model (CNN vs Transformer) epigraphic classification via ONNX |
+| [Compare](https://www.openetruscan.com/compare) | Side-by-side inscription diff with character-level highlighting |
+| [Statistics](https://www.openetruscan.com/stats) | Corpus-wide distributions and classification breakdowns |
+| [Downloads](https://www.openetruscan.com/downloads) | Corpus JSON/RDF, ONNX models, and language data |
 
 ## API
 
 A REST endpoint is available for programmatic normalisation:
 
 ```bash
-curl -X POST https://open-etruscan.vercel.app/api/normalize \
+curl -X POST https://www.openetruscan.com/api/normalize \
   -H "Content-Type: application/json" \
   -d '{"text": "MI AVILES"}'
 ```

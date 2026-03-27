@@ -162,6 +162,6 @@ export async function GET() {
       source_system: "string",
       tokens: "string[]",
     },
-    example: 'curl -X POST -H "Content-Type: application/json" -d \'{"text":"MI AVILES"}\' https://open-etruscan.vercel.app/api/normalize',
+    example: 'curl -X POST -H "Content-Type: application/json" -d \'{"text":"MI AVILES"}\' https://www.openetruscan.com/api/normalize',
   });
 }
