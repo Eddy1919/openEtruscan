@@ -60,3 +60,4 @@ data/models/
 *.pkl
 *.joblibdata/cie/*.pdf
 data/cie/*.pdf
+.vercel
