@@ -4,7 +4,7 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "Manifesto | OpenEtruscan",
   description:
-    "The principles, motivations, and scholarly commitments behind the OpenEtruscan platform.",
+    "The visionary principles and scholarly commitments behind the OpenEtruscan platform.",
 };
 
 export default function ManifestoPage() {
@@ -12,126 +12,62 @@ export default function ManifestoPage() {
     <div className="page-container" style={{ maxWidth: 760 }}>
       <h1 className={styles.heading}>Manifesto</h1>
       <p className={styles.epigraph}>
-        The Etruscan language is one of the least-documented languages of the
-        ancient Mediterranean, yet it left behind thousands of inscriptions
-        scattered across museums, publications, and archaeological sites. We
-        believe these inscriptions belong to everyone.
+        The Etruscan language is one of the least-understood voices of the ancient Mediterranean. 
+        In an era where artificial intelligence is trained on billions of words from modern, ubiquitous languages, fragmented and ancient tongues risk being left permanently behind in the dark. 
+        We built OpenEtruscan to ensure they are not.
       </p>
 
       <section className={styles.section}>
-        <h2>Why this project exists</h2>
+        <h2>The Vision: Empowering the Margins</h2>
         <p>
-          Existing corpora of Etruscan epigraphy, notably the <em>Corpus
-          Inscriptionum Etruscarum</em> (CIE), the <em>Etruskische Texte</em>
-          (ET), and the <em>Thesaurus Linguae Etruscae</em> (TLE), are
-          indispensable, but they were born in the age of print. Access
-          depends on institutional subscriptions, physical library holdings,
-          or scanned PDFs that resist machine analysis.
+          The digital revolution and the rapid rise of Artificial Intelligence represent a profound challenge for small, under-resourced fields of study. Modern machine learning models are inherently data-hungry; languages with limited, fragmented, or physically siloed corpora are largely invisible to them. If we do not actively digitize, computationally structure, and completely open the epigraphic records of ancient civilizations, their voices will fail to survive the transition into the AI age.
         </p>
         <p>
-          OpenEtruscan is a response to this situation. It provides a fully
-          open, computationally accessible version of the Etruscan epigraphic
-          record, published under permissive licences (MIT for code, CC0 for
-          data) so that any scholar, student, or enthusiast can use, modify,
-          and redistribute the material without restriction.
+          OpenEtruscan is not merely a database for Etruscologists. It is a <strong>blueprint for empowering marginalized languages</strong>. We aim to prove that small fields can be equipped with the exact same advanced neural classification, semantic search, and massive statistical tools that are currently monopolized by the world&apos;s most spoken languages. 
         </p>
       </section>
 
       <section className={styles.section}>
-        <h2>Principles</h2>
+        <h2>Why this project exists</h2>
+        <p>
+          The foundational corpora of Etruscan epigraphy—such as the <em>Corpus Inscriptionum Etruscarum</em> (CIE) and the <em>Etruskische Texte</em> (ET)—are masterworks of classical philology. However, they were born in the age of print. Today, access to this knowledge depends heavily on institutional subscriptions, physical library holdings, or static, scanned PDFs that resist any form of algorithmic analysis.
+        </p>
+        <p>
+          OpenEtruscan dismantles these barriers. It provides a fully machine-readable, computationally accessible version of the Etruscan epigraphic record. Published entirely under permissive licences (MIT for code, CC0 for data), the platform guarantees that any scholar, student, or curious intellect worldwide can use, modify, and redistribute the material without restriction.
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Our Principles</h2>
         <ol className={styles.principles}>
-          <li>
-            <strong>Open by default.</strong> All data, code, and models are
-            published openly. If something is closed, it is because we have not
-            yet been able to open it, not by design.
+           <li>
+            <strong>Open by default.</strong> The preservation of human history should not be hidden behind institutional paywalls. All data, code, pipeline architectures, and neural models are public property. Our datasets are yours.
           </li>
           <li>
-            <strong>Interoperability over isolation.</strong> We align our
-            identifiers with established gazetteers (Pleiades, GeoNames,
-            Trismegistos) and publish as Linked Open Data so that the corpus
-            participates in the wider ecosystem of ancient-world information,
-            rather than standing apart.
+            <strong>AI for the Margins.</strong> Computational tools must respect the profound ambiguity of ancient fragments. We train specialized, lightweight neural networks that execute <em>client-side</em> in the browser. This democratizes machine learning, making it instantly accessible on any device, anywhere in the world.
           </li>
           <li>
-            <strong>Computational methods as a complement to philology.</strong>
-            {" "}Neural classifiers, normalizers, and statistical analyses are
-            tools, not replacements for close reading. Their value lies in
-            surfacing patterns across a corpus too large for one scholar to
-            hold in memory.
+            <strong>Radical Interdisciplinarity.</strong> A language cannot be resurrected in isolation. By integrating Natural Language Processing with archaeogenetics, geospatial analysis, and Linked Open Data, we move beyond text to reconstruct the physical and human realities behind the inscriptions.
           </li>
           <li>
-            <strong>Provenance and attribution.</strong> Every inscription
-            carries its bibliographic source. When we disagree with a reading,
-            we note the alternative. Scholarly consensus is tracked, not
-            overridden.
+            <strong>Interoperability over isolation.</strong> We align our identifiers with the semantic web (Pleiades, GeoNames) and host public SPARQL endpoints, ensuring the Etruscan corpus participates dynamically in the wider ecosystem of global knowledge.
           </li>
           <li>
-            <strong>Low-barrier access.</strong> The entire platform runs in a
-            web browser. Neural models execute client-side; no data leaves the
-            user&apos;s machine. There are no accounts, no paywalls, and no
-            tracking beyond anonymised performance telemetry.
+            <strong>Provenance and attribution.</strong> Philology remains supreme. Every token carries its bibliographic source. Where machine models predict, human scholars verify. Scholarly consensus is strictly tracked, never overridden.
           </li>
         </ol>
       </section>
 
       <section className={styles.section}>
-        <h2>Scope</h2>
+        <h2>An Open Invitation</h2>
         <p>
-          The current corpus contains 4,728 inscriptions in Etruscan and
-          related Italic scripts (Faliscan, Lemnian, Oscan, Umbrian),
-          georeferenced to 45 archaeological sites across Italy. We aim to
-          extend coverage as new publications appear and as OCR extraction from
-          the CIE fascicles matures.
+          Etruscology is a profoundly challenging field. The epigraphic record is fractured, the grammar only partially decoded, and the community of dedicated specialists is distributed across continents. We believe that radically open tools and datasets can lower the barrier to entry, connect researchers who would otherwise struggle in isolation, and breathe life into a body of evidence that demands wider global attention.
         </p>
         <p>
-          We welcome corrections, additions, and alternative readings.
-          Contributions can be submitted via the project&apos;s{" "}
-          <a
-            href="https://github.com/Eddy1919/openEtruscan"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub repository
-          </a>
-          .
+          By demonstrating that cutting-edge AI, data engineering, and classical philology can be seamlessly integrated for a language with fewer than 10,000 surviving texts, we hope OpenEtruscan inspires a wave of similar revivals for under-resourced languages across the globe.
         </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2>Scholarly context</h2>
-        <p>
-          OpenEtruscan follows the FAIR data principles (Findable,
-          Accessible, Interoperable, Reusable). The Linked Open Data layer
-          uses the <em>Linking Ancient World Data</em> (LAWD) ontology, Dublin
-          Core, and GeoSPARQL.
-        </p>
-        <p>
-          The classifier models are described in a forthcoming technical note.
-          Training data, evaluation metrics, and model weights are available
-          on{" "}
-          <a
-            href="https://huggingface.co/Eddy1919/openetruscan-classifier"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Hugging Face
-          </a>
-          .
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2>Invitation</h2>
-        <p>
-          Etruscology is a small field. The epigraphic record is fragmentary,
-          the language only partially understood, and the community of
-          specialists is distributed across continents. We believe that open
-          tools and open data can lower the barrier to entry, connect
-          researchers who would otherwise work in isolation, and preserve a
-          body of evidence that deserves wider attention.
-        </p>
-        <p>
-          This project is an invitation to participate.
+        <p style={{ marginTop: "1.5rem", fontWeight: "bold", color: "var(--accent)" }}>
+          This project belongs to everyone. Join us.
         </p>
       </section>
     </div>
