@@ -13,7 +13,6 @@ const PRIMARY = [
 
 const TOOLS = [
   { href: "/normalizer", label: "Normalizer" },
-  { href: "/classifier", label: "Classifier" },
   { href: "/compare", label: "Compare" },
   { href: "/timeline", label: "Timeline" },
   { href: "/names", label: "Names" },
@@ -23,7 +22,6 @@ const REFERENCE = [
   { href: "/stats", label: "Statistics" },
   { href: "/downloads", label: "Downloads" },
   { href: "/docs", label: "Docs" },
-  { href: "/manifesto", label: "Manifesto" },
 ];
 
 function Dropdown({
@@ -86,7 +84,7 @@ export default function Nav() {
         <span style={{ color: "var(--accent)" }}>Etruscan</span>
       </Link>
       <ul className="nav-pills">
-        {PRIMARY.map(({ href, label }) => (
+        {[...PRIMARY, { href: "/classifier", label: "Classifier" }].map(({ href, label }) => (
           <li key={href}>
             <Link
               href={href}
@@ -101,6 +99,14 @@ export default function Nav() {
         </li>
         <li>
           <Dropdown label="Reference" items={REFERENCE} pathname={pathname} />
+        </li>
+        <li>
+          <Link
+            href="/manifesto"
+            className={`nav-pill${pathname === "/manifesto" ? " active" : ""}`}
+          >
+            Manifesto
+          </Link>
         </li>
       </ul>
     </nav>

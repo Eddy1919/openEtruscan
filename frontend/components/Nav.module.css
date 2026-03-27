@@ -1,42 +1,48 @@
 .dropdown {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .dropBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  line-height: 1.4;
 }
 
 .caret {
-  font-size: 0.6rem;
-  opacity: 0.6;
+  font-size: 0.55rem;
+  opacity: 0.5;
+  margin-top: 1px;
 }
 
 .dropMenu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   left: 0;
-  background: var(--bg-secondary);
+  background: rgba(26, 26, 34, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 8px;
   min-width: 160px;
   padding: 0.35rem 0;
   z-index: 100;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .dropItem {
   display: block;
   padding: 0.45rem 1rem;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   text-decoration: none;
   transition: all 0.15s;
 }
 
 .dropItem:hover {
-  background: var(--bg-hover);
+  background: rgba(196, 112, 75, 0.08);
   color: var(--text-primary);
   text-decoration: none;
 }

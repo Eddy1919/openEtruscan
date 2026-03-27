@@ -1,6 +1,6 @@
-# OpenEtruscan Backend-Only Stack
-# Frontend is deployed on GitHub Pages (openetruscan.com)
-# API + PostGIS run here behind nginx TLS proxy (api.openetruscan.com)
+# OpenEtruscan Backend Stack
+# Frontend is deployed on Vercel (openetruscan.com)
+# API + PostGIS + Fuseki run here behind nginx TLS proxy (api.openetruscan.com)
 #
 # Production (COS): use raw docker commands (no docker compose on COS)
 # Local dev: docker compose up -d --build
@@ -47,24 +47,30 @@ services:
       - ~/certs:/certs:ro
     depends_on:
       - api
+      - fuseki
 
   fuseki:
-    image: stain/jena-fuseki:4.10.0
+    image: stain/jena-fuseki:latest
     restart: unless-stopped
+    user: root
     environment:
       ADMIN_PASSWORD: ${FUSEKI_ADMIN_PASSWORD:-etruscan_sparql}
+      FUSEKI_DATASET_1: openetruscan
     volumes:
-      - fuseki_data:/fuseki/databases
+      - fuseki_data:/fuseki
       - ./data/rdf:/staging:ro
-    ports:
-      - "3030:3030"
+    expose:
+      - "3030"
     entrypoint: >
-      /bin/sh -c '
-        if [ ! -f /fuseki/databases/.loaded ]; then
-          echo "Loading RDF data...";
+      /bin/bash -c '
+        mkdir -p /fuseki/databases/openetruscan;
+        if [ ! -f /fuseki/databases/openetruscan/.loaded ]; then
+          echo "Loading RDF data into TDB1...";
           /jena-fuseki/tdbloader --loc /fuseki/databases/openetruscan /staging/corpus.ttl;
-          touch /fuseki/databases/.loaded;
-          echo "RDF loaded.";
+          touch /fuseki/databases/openetruscan/.loaded;
+          echo "RDF loaded successfully.";
+        else
+          echo "RDF data already loaded, skipping.";
         fi;
         exec /jena-fuseki/fuseki-server --loc /fuseki/databases/openetruscan /openetruscan
       '

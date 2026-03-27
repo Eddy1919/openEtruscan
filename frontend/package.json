@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",

@@ -98,7 +98,7 @@ The corpus is published as RDF/Turtle using the LAWD, Dublin Core, and GeoSPARQL
 
 - 41 findspots aligned to Pleiades
 - 17 findspots aligned to GeoNames
-- SPARQL endpoint via Apache Jena Fuseki
+- SPARQL endpoint: Apache Jena Fuseki 5.1 (34,477 triples, SPARQL 1.1)
 
 ## Neural Classification
 
