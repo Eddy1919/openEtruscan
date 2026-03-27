@@ -134,27 +134,27 @@ export default function NormalizerPage() {
             <div className="card">
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>CANONICAL</span>
-                <button onClick={() => copyToClipboard(result.canonical)} className={styles.copyBtn} title="Copy">📋</button>
+                <button onClick={() => copyToClipboard(result.canonical)} className={styles.copyBtn} title="Copy">Copy</button>
               </div>
-              <p className="inscription-text" style={{ fontSize: "1.2rem" }}>{result.canonical || "—"}</p>
+              <p className="inscription-text" style={{ fontSize: "1.2rem" }}>{result.canonical || "-"}</p>
               <p className={styles.cardDesc}>Standardized philological form</p>
             </div>
 
             <div className="card">
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>OLD ITALIC UNICODE</span>
-                <button onClick={() => copyToClipboard(result.old_italic)} className={styles.copyBtn} title="Copy">📋</button>
+                <button onClick={() => copyToClipboard(result.old_italic)} className={styles.copyBtn} title="Copy">Copy</button>
               </div>
-              <p className="inscription-text" style={{ fontSize: "1.4rem" }}>{result.old_italic || "—"}</p>
+              <p className="inscription-text" style={{ fontSize: "1.4rem" }}>{result.old_italic || "-"}</p>
               <p className={styles.cardDesc}>Unicode U+10300 block</p>
             </div>
 
             <div className="card">
               <div className={styles.cardHeader}>
                 <span className={styles.cardLabel}>PHONETIC (IPA)</span>
-                <button onClick={() => copyToClipboard(result.phonetic)} className={styles.copyBtn} title="Copy">📋</button>
+                <button onClick={() => copyToClipboard(result.phonetic)} className={styles.copyBtn} title="Copy">Copy</button>
               </div>
-              <p className="inscription-text" style={{ fontSize: "1.2rem" }}>{result.phonetic || "—"}</p>
+              <p className="inscription-text" style={{ fontSize: "1.2rem" }}>{result.phonetic || "-"}</p>
               <p className={styles.cardDesc}>International Phonetic Alphabet</p>
             </div>
 
@@ -163,7 +163,7 @@ export default function NormalizerPage() {
                 <span className={styles.cardLabel}>TOKENS</span>
               </div>
               <p className="inscription-text" style={{ fontSize: "1.2rem" }}>
-                {result.tokens.map((t) => `[${t}]`).join(" ") || "—"}
+                {result.tokens.map((t) => `[${t}]`).join(" ") || "-"}
               </p>
               <p className={styles.cardDesc}>Word segmentation</p>
             </div>

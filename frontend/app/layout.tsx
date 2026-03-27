@@ -17,7 +17,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OpenEtruscan — Digital Corpus Platform",
+  title: "OpenEtruscan | Digital Corpus Platform",
   description:
     "Open-source tools for Etruscan epigraphy: normalize ancient texts, explore 4,700+ inscriptions on an interactive map, and classify inscriptions with neural networks.",
 };

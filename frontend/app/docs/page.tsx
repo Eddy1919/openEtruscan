@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Documentation — OpenEtruscan",
+  title: "Documentation | OpenEtruscan",
   description:
     "Technical documentation for the OpenEtruscan digital corpus platform: API, data formats, models, and LOD infrastructure.",
 };

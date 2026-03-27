@@ -29,7 +29,7 @@ export async function generateMetadata({
   const insc = corpus.find((i) => i.id === decodedId);
   if (!insc) return { title: "Not Found" };
   return {
-    title: `${insc.id} — OpenEtruscan`,
+    title: `${insc.id} | OpenEtruscan`,
     description: `Etruscan inscription ${insc.id}: "${insc.canonical}" from ${insc.findspot || "unknown provenance"}`,
   };
 }
@@ -161,7 +161,7 @@ export default async function InscriptionPage({
               </>
             )}
             <dt>Source</dt>
-            <dd>{insc.source || "—"}</dd>
+            <dd>{insc.source || "-"}</dd>
           </dl>
         </div>
       </div>

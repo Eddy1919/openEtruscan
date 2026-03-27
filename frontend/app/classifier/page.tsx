@@ -60,7 +60,7 @@ export default function ClassifierPage() {
       </h1>
       <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", lineHeight: 1.6 }}>
         Classify Etruscan inscriptions by epigraphic type. Two neural
-        architectures — a character-level CNN and a Transformer encoder — run
+        architectures, a character-level CNN and a Transformer encoder, run
         side-by-side via ONNX Runtime (WASM). All inference is client-side.
       </p>
 
@@ -137,7 +137,7 @@ export default function ClassifierPage() {
             </span>
           ) : (
             <span style={{ color: "var(--warning)" }}>
-              Models disagree — CNN: <strong>{cnnResult.predictions[0].label}</strong>
+              Models disagree. CNN: <strong>{cnnResult.predictions[0].label}</strong>
               {" "}vs Transformer: <strong>{tfResult.predictions[0].label}</strong>
             </span>
           )}
