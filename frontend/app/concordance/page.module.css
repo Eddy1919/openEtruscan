@@ -1,0 +1,158 @@
+.heading {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Controls */
+.controls {
+  margin-bottom: 1.5rem;
+}
+
+.searchInput {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.controlLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selectSmall {
+  width: auto;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.resultCount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* KWIC Table */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.kwicTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.kwicTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.kwicTable th {
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.thId {
+  width: 100px;
+}
+
+.thLeft {
+  width: 38%;
+  text-align: right;
+}
+
+.thKw {
+  width: 80px;
+  text-align: center;
+}
+
+.thRight {
+  width: 38%;
+}
+
+.kwicTable td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kwicTable tr:hover td {
+  background: var(--bg-hover);
+}
+
+.tdId {
+  width: 100px;
+}
+
+.tdId a {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.tdId a:hover {
+  text-decoration: underline;
+}
+
+.tdLeft {
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.tdKw {
+  text-align: center;
+  color: var(--accent-light);
+  font-weight: 700;
+  background: var(--accent-glow);
+}
+
+.tdRight {
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.noResults {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 3rem 0;
+}

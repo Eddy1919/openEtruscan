@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
-  { href: "/normalizer", label: "Normalizer" },
+  { href: "/search", label: "Search" },
+  { href: "/concordance", label: "Concordance" },
   { href: "/explorer", label: "Explorer" },
-  { href: "/stats", label: "Statistics" },
+  { href: "/normalizer", label: "Normalizer" },
   { href: "/classifier", label: "Classifier" },
+  { href: "/stats", label: "Statistics" },
   { href: "/docs", label: "Docs" },
   { href: "/manifesto", label: "Manifesto" },
 ];
