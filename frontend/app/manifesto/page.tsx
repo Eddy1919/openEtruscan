@@ -100,8 +100,7 @@ export default function ManifestoPage() {
       <section className={styles.section}>
         <h2>Scholarly context</h2>
         <p>
-          OpenEtruscan is developed in dialogue with the Pelagios Network and
-          follows the recommendations of the FAIR data principles (Findable,
+          OpenEtruscan follows the FAIR data principles (Findable,
           Accessible, Interoperable, Reusable). The Linked Open Data layer
           uses the <em>Linking Ancient World Data</em> (LAWD) ontology, Dublin
           Core, and GeoSPARQL.

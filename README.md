@@ -1,204 +1,149 @@
 <div align="center">
 
-# 𐌏𐌐𐌄𐌍 𐌄𐌕𐌓𐌖𐌔𐌂𐌀𐌍
-
 # OpenEtruscan
 
-**Open-source tools for ancient epigraphy — built for Etruscan, designed to be copied.**
+**Open-source digital corpus platform for Etruscan epigraphy**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/Eddy1919/openEtruscan/actions/workflows/ci.yml/badge.svg)](https://github.com/Eddy1919/openEtruscan/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/openetruscan.svg)](https://pypi.org/project/openetruscan/)
 [![Data: CC0](https://img.shields.io/badge/data-CC0-green.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
+[![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![PyPI](https://img.shields.io/pypi/v/openetruscan.svg)](https://pypi.org/project/openetruscan/)
 
-🌐 **Live at [openetruscan.com](https://openetruscan.com)**
-
-*Normalize · Search · Map · Export · Contribute*
+**[open-etruscan.vercel.app](https://open-etruscan.vercel.app)**
 
 </div>
 
 ---
 
-## What Is This?
+## Overview
 
-OpenEtruscan is a Python toolkit that solves the **transcription chaos** in Etruscan studies. The same word appears as 5+ incompatible forms across publications — making cross-corpus search impossible.
+OpenEtruscan provides computationally accessible tools for the Etruscan epigraphic record. The platform normalises transcriptions across five notation systems, classifies inscriptions using neural models, and publishes the full corpus as Linked Open Data.
 
-We fix that. One `pip install`, zero servers, works offline forever.
+The corpus contains 4,728 inscriptions in Etruscan and related Italic scripts, georeferenced to 45 archaeological sites.
 
-```python
-from openetruscan import normalize
+## Platform
 
-# Input in ANY transcription system
-result = normalize("LARTHAL")       # CIE standard
-result = normalize("Larθal")        # Philological
-result = normalize("𐌓𐌀𐌓𐌈𐌀𐌋")  # Unicode Old Italic
+The web interface is built with Next.js 15 (App Router) and deployed on Vercel. All tools run client-side; no data leaves the user's browser.
 
-# Always get the same canonical output
-print(result.canonical)   # → "larθal"
-print(result.phonetic)    # → "/lar.tʰal/"
-print(result.old_italic)  # → "𐌓𐌀𐌓𐌈𐌀𐌋"
+| Page | Description |
+|---|---|
+| [Search](https://open-etruscan.vercel.app/search) | Full-text search with faceted classification filtering and sorting |
+| [Concordance](https://open-etruscan.vercel.app/concordance) | Keyword-in-Context (KWIC) display across the entire corpus |
+| [Explorer](https://open-etruscan.vercel.app/explorer) | Interactive map of inscription findspots with Old Italic rendering |
+| [Timeline](https://open-etruscan.vercel.app/timeline) | Temporal distribution with century range slider |
+| [Names](https://open-etruscan.vercel.app/names) | Prosopography network graph of personal name co-occurrences |
+| [Normalizer](https://open-etruscan.vercel.app/normalizer) | Convert between CIE, philological, Old Italic, IPA, and web-safe |
+| [Classifier](https://open-etruscan.vercel.app/classifier) | Dual-model (CNN vs Transformer) epigraphic classification via ONNX |
+| [Compare](https://open-etruscan.vercel.app/compare) | Side-by-side inscription diff with character-level highlighting |
+| [Statistics](https://open-etruscan.vercel.app/stats) | Corpus-wide distributions and classification breakdowns |
+| [Downloads](https://open-etruscan.vercel.app/downloads) | Corpus JSON/RDF, ONNX models, and language data |
+
+## API
+
+A REST endpoint is available for programmatic normalisation:
+
+```bash
+curl -X POST https://open-etruscan.vercel.app/api/normalize \
+  -H "Content-Type: application/json" \
+  -d '{"text": "MI AVILES"}'
 ```
 
-## Quick Start
+Response:
+
+```json
+{
+  "canonical": "mi aviles",
+  "phonetic": "/mi.aviles/",
+  "old_italic": "\ud800\udf0c\ud800\udf09 \ud800\udf00\ud800\udf05\ud800\udf09\ud800\udf0b\ud800\udf04\ud800\udf14",
+  "source_system": "cie",
+  "tokens": ["mi", "aviles"]
+}
+```
+
+## Python Package
 
 ```bash
 pip install openetruscan
 ```
 
-### Normalize a text
+```python
+from openetruscan import normalize
 
-```bash
-openetruscan normalize "LARTHAL LECNES"
+result = normalize("LARTHAL")
+print(result.canonical)   # larθal
+print(result.phonetic)    # /lar.tʰal/
+print(result.old_italic)  # 𐌓𐌀𐌓𐌈𐌀𐌋
 ```
 
-### Batch process a file
-
-```bash
-openetruscan batch corpus.txt --format csv --output clean.csv
-```
-
-### Validate encoding
-
-```bash
-openetruscan validate my_transcription.txt
-```
-
-### Run the API + Web UI locally
-
-```bash
-pip install openetruscan[all]
-uvicorn openetruscan.server:app --reload
-# Open http://localhost:8000/web/index.html
-```
-
-## Why?
-
-| Problem | Today | With OpenEtruscan |
-|---|---|---|
-| "Where else does this word appear?" | Flip through 300 pages of print volumes | `corpus.search(text="*al lecn*")` |
-| "Is this spelling a dialect variant?" | An entire journal article to pose the question | One query, 30 seconds |
-| "I need to publish my thesis data" | Word doc, usable only by the author | `openetruscan batch thesis.txt --format epidoc` → PR → global corpus |
-| "How widespread was this clan?" | Months of manual index-reading | `corpus.names.search(gens="lecne")` → interactive map |
-
-## Architecture
-
-The core engine is **language-agnostic**. Each language is a YAML config file:
+## Repository Structure
 
 ```
-openetruscan/
-├── engine/          # Universal normalizer, parser, exporter
-├── adapters/
-│   ├── etruscan.yaml    # Etruscan alphabet, phonotactics, names
-│   ├── oscan.yaml       # Same engine, different YAML
-│   ├── faliscan.yaml    # ... add any ancient script
-│   └── YOUR_LANG.yaml   # Fork this pattern
-├── corpus/          # Structured dataset (Local SQLite / Cloud PostgreSQL)
-├── prosopography/   # NLP name parser + kinship graph + Neo4j export
-└── exporters/       # EpiDoc XML, CSV, JSON-LD, GeoJSON
+openEtruscan/
+  frontend/          Next.js 15 web application (TypeScript, CSS Modules)
+    app/             App Router pages and API routes
+    components/      Shared UI components (Nav, Footer, CitationExport)
+    lib/             Corpus loader, normalizer engine, ONNX classifier
+    public/
+      data/          corpus.json, languages.json
+      models/        cnn.onnx, transformer.onnx + metadata
+  src/               Python package source
+  data/              Corpus data, RDF exports, CIE fascicles
+  web/               Legacy static site (deprecated)
+  .github/           CI/CD workflows
 ```
 
-**Want to support another language?** Write 50 lines of YAML. The engine does the rest.
+## Linked Open Data
 
-## Web Interface
+The corpus is published as RDF/Turtle using the LAWD, Dublin Core, and GeoSPARQL ontologies:
 
-OpenEtruscan ships with three interconnected browser-based tools, live at [openetruscan.com](https://openetruscan.com):
+- 41 findspots aligned to Pleiades
+- 17 findspots aligned to GeoNames
+- SPARQL endpoint via Apache Jena Fuseki
 
-| Page | Description |
-|---|---|
-| **Normalizer** ([`index.html`](web/index.html)) | Convert any Etruscan text between transcription systems in real time |
-| **Search** ([`search.html`](web/search.html)) | Full-text search across the corpus with clickable Clan network badges |
-| **Map** ([`map.html`](web/map.html)) | Interactive Leaflet map of inscription findspots across Etruria |
+## Neural Classification
 
-## Self-Hosting
+Two character-level models classify inscriptions into 7 epigraphic types:
 
-OpenEtruscan is designed for easy self-hosting. Copy the `docker-compose.yml` and you're done:
+| Model | Parameters | Size | Architecture |
+|---|---|---|---|
+| CharCNN | ~28K | 111 KB | 1D convolution, max-pool, dense |
+| Transformer | ~300K | 1.2 MB | 2-layer Transformer encoder, classifier head |
+
+Both models are exported as ONNX and run client-side via WebAssembly. Available on [Hugging Face](https://huggingface.co/Eddy1919/openetruscan-classifier).
+
+## Development
 
 ```bash
 git clone https://github.com/Eddy1919/openEtruscan.git
-cd openEtruscan
-cp .env.example .env    # Edit with your DATABASE_URL
-docker compose up -d --build
+cd openEtruscan/frontend
+npm install
+npm run dev
 ```
 
-See [`.env.example`](.env.example) for all configuration options. By default, OpenEtruscan runs in **zero-config mode** with a bundled SQLite database — no external database required.
-
-## Packages
-
-| Package | Description | Status |
-|---|---|---|
-| `openetruscan` (core) | Normalizer + CLI + adapters | ✅ Released |
-| `openetruscan[corpus]` | Structured dataset + query API | ✅ Released |
-| `openetruscan[prosopography]` | NLP name parser + kinship graph | ✅ Released |
-| `openetruscan[stats]` | Bayesian dating, clustering, ML classifier | ✅ Released |
-| `openetruscan[lod]` | Live LOD reconciliation (TM, Wikidata SPARQL) | ✅ Released |
-| `openetruscan[server]` | FastAPI backend + Web UI | ✅ Released |
-| `openetruscan[all]` | Everything | ✅ Released |
-
-## Contributing
-
-We welcome contributions from epigraphers, linguists, and developers alike. See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
-
-**Quick paths:**
-
-- 📝 **Add data** — submit new inscriptions via CSV or CLI
-- 🔤 **Improve mappings** — fix transliteration rules in the YAML adapters
-- 🌍 **Add a language** — copy a YAML adapter, fill in your script
-- 🐛 **Report bugs** — open an issue with reproduction steps
-- 💻 **Write code** — fork, hack, PR
+### Deployment
 
 ```bash
-git clone https://github.com/Eddy1919/openEtruscan.git
 cd openEtruscan
-pip install -e ".[dev]"
-pytest
+npx vercel --prod
 ```
 
-## Roadmap
+## Licence
 
-### ✅ Done (v0.3.0)
+- **Code:** MIT
+- **Data:** CC0 1.0 (Public Domain)
+- **Models:** Apache 2.0
 
-- [x] **Normalizer engine** — auto-detect 5 transcription systems, fold to canonical, phonotactic validation
-- [x] **CLI** — `normalize`, `batch`, `convert`, `validate`, `adapters`, `search`, `import`, `export`, `frequency`, `cluster`, `date`
-- [x] **Multi-language adapters** — Etruscan, Oscan, Faliscan, Rhaetic, Lemnian (Tyrsenian family)
-- [x] **Corpus database** — SQLite + PostgreSQL, 4,700+ inscriptions + 6 major codex texts
-- [x] **Prosopography engine** — NLP name parser, 633 clans, kinship graph, fuzzy phonological matching
-- [x] **Web UI** — Normalizer, full-text Search, interactive Map with clan network visualization
-- [x] **Production deployment** — Docker + Nginx + HTTPS on [openetruscan.com](https://openetruscan.com)
-- [x] **CI/CD** — GitHub Actions (lint + SAST + test on Python 3.10–3.13, auto-deploy, PyPI publish)
-- [x] **175 tests** passing across all modules
-- [x] **Linked Open Data** — Pleiades, Trismegistos, EAGLE, Wikidata SPARQL reconciliation
-- [x] **ML Classifier** — Naive Bayes inscription classification with keyword fallback
-- [x] **Bayesian dating** — aoristic model with 13 time bins and 95% credible intervals
-- [x] **TF-IDF deduplication** — cosine-similarity near-duplicate detection across the corpus
-- [x] **Phonological NER** — IPA-aware edit distance for fuzzy name matching
-- [x] **Codex texts** — Liber Linteus, Tabula Capuana, Pyrgi Tablets, Cippus Perusinus, and more
+## Acknowledgements
 
-### 🗓️ Planned
-
-- [ ] **Transformer classifier** — DistilBERT fine-tuned on the inscription corpus
-- [ ] **CLTK Etruscan module** — contribute to the [Classical Language Toolkit](https://cltk.org)
-
-## License
-
-- **Code:** [MIT](LICENSE) — do whatever you want
-- **Data:** [CC0](https://creativecommons.org/publicdomain/zero/1.0/) — public domain, no restrictions
-
-## Acknowledgments
-
-OpenEtruscan builds on decades of work by epigraphers and Etruscologists. We are especially grateful to:
-
-- The compilers of the [Corpus Inscriptionum Etruscarum](https://www.studietruschi.org)
-- The [Etruscan Texts Project](https://etp.classics.umass.edu) (UMass Amherst)
-- The [Larth Dataset](https://github.com/gianlucavico/Larth) (Vico & Spanakis, 2023)
-- The [EpiDoc](https://epidoc.stoa.org) community
-- The [Classical Language Toolkit](https://cltk.org)
+- Compilers of the *Corpus Inscriptionum Etruscarum*
+- The *Etruscan Texts Project* (UMass Amherst)
+- The *Larth Dataset* (Vico and Spanakis, 2023)
+- The EpiDoc community
+- The Classical Language Toolkit
 
 ---
 
 <div align="center">
-
-*Built for Etruscan. Designed to be copied.*
 
 𐌀 𐌁 𐌂 𐌃 𐌄 𐌅 𐌆 𐌇 𐌈 𐌉 𐌊 𐌋 𐌌 𐌍 𐌎 𐌏 𐌐 𐌑 𐌓 𐌔 𐌕 𐌖 𐌗 𐌘 𐌙 𐌚
 

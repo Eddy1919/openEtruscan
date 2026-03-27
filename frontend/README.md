@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenEtruscan Frontend
 
-## Getting Started
+Next.js 15 (App Router) web application for the OpenEtruscan digital corpus platform.
 
-First, run the development server:
+## Stack
+
+- **Framework:** Next.js 15 with App Router (TypeScript)
+- **Styling:** CSS Modules with custom design tokens
+- **Maps:** react-leaflet with CartoDB dark tiles
+- **Classification:** ONNX Runtime Web (client-side inference)
+- **Charts:** Chart.js + react-chartjs-2
+- **Fonts:** Inter, DM Serif Display, JetBrains Mono (via next/font)
+- **Analytics:** Vercel Speed Insights
+- **Deployment:** Vercel (CLI-based, from repo root)
+
+## Pages
+
+| Route | Type | Description |
+|---|---|---|
+| `/` | Static | Home page with corpus overview |
+| `/search` | Client | Full-text search with faceted classification sidebar |
+| `/concordance` | Client | KWIC (Keyword-in-Context) concordance viewer |
+| `/explorer` | Client | Leaflet map with inscription sidebar |
+| `/timeline` | Client | Temporal heatmap with century range slider |
+| `/names` | Client | Prosopography force-directed graph |
+| `/normalizer` | Client | 5-system script normalizer |
+| `/classifier` | Client | CNN vs Transformer dual-model comparison |
+| `/compare` | Client | Side-by-side inscription diff |
+| `/stats` | Client | Corpus statistics with Chart.js |
+| `/downloads` | Static | Download corpus data, models, and language files |
+| `/docs` | Static | Technical documentation and resource links |
+| `/manifesto` | Static | Project principles and scholarly context |
+| `/inscription/[id]` | SSG | 4,728 individual inscription pages with citation export |
+| `/api/normalize` | API | REST endpoint for programmatic normalisation |
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deployment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Deploy from the repository root (not from `frontend/`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd /path/to/openEtruscan
+npx vercel --prod
+```
 
-## Learn More
+The Vercel project has `frontend` configured as the root directory in its dashboard settings.
 
-To learn more about Next.js, take a look at the following resources:
+## Data
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `public/data/corpus.json` -- 4,728 inscriptions
+- `public/data/languages.json` -- Alphabet tables for 5 Italic scripts
+- `public/models/cnn.onnx` -- CharCNN classifier (111 KB)
+- `public/models/transformer.onnx` -- Transformer classifier (1.2 MB)
+- `public/models/cnn.json`, `transformer.json` -- Model metadata

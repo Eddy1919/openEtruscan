@@ -78,7 +78,7 @@ export default function Home() {
             <p>
               The full corpus is exported as RDF/Turtle using LAWD and Dublin
               Core ontologies. A SPARQL endpoint enables cross-corpus queries
-              within the Pelagios ecosystem.
+              within the Linked Open Data ecosystem.
             </p>
           </div>
         </div>
