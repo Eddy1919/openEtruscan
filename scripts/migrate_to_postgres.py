@@ -199,8 +199,9 @@ def migrate(source_path: str, target_url: str) -> None:
 
     # Create read-only user
     print("\nCreating read-only user 'corpus_reader'...")
-    # Note: Use a strong password in production or read from env
-    pg.create_readonly_user("openetruscan_readonly_user_pass")
+    import os
+    reader_pass = os.environ.get("POSTGRES_READER_PASSWORD", "openetruscan_readonly_user_pass")
+    pg.create_readonly_user(reader_pass)
     print("Done. Public read-only access configured.")
 
     # Final count check
