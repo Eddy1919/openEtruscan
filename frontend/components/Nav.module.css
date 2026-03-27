@@ -1,7 +1,47 @@
-/* Etruscan chars and logo styling */
-.etruscan-chars {
-  font-size: 1.1em;
-  margin-right: 0.3rem;
-  opacity: 0.7;
-  letter-spacing: 1px;
+.dropdown {
+  position: relative;
+}
+
+.dropBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.caret {
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+.dropMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 160px;
+  padding: 0.35rem 0;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dropItem {
+  display: block;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.dropItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.dropItemActive {
+  color: var(--accent-light);
+  font-weight: 600;
 }
