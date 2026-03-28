@@ -7,7 +7,7 @@
 
 services:
   db:
-    image: postgis/postgis:16-3.4-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_DB: corpus
@@ -15,6 +15,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-etruscan_secret}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/init_extensions.sql:/docker-entrypoint-initdb.d/01-extensions.sql:ro
     expose:
       - "5432"
     healthcheck:
