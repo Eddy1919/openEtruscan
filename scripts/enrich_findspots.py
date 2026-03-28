@@ -14,9 +14,7 @@ regenerates the RDF/Turtle corpus file.
 """
 
 import json
-import re
-import copy
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -67,7 +65,7 @@ CIE_PREFIX_MAP = {
 
 # ── Findspot name → coordinates (for propagation) ──
 FINDSPOT_COORDS = {}
-for prefix, (name, lat, lon, pleiades, geonames) in CIE_PREFIX_MAP.items():
+for _prefix, (name, lat, lon, pleiades, geonames) in CIE_PREFIX_MAP.items():
     if lat and lon:
         FINDSPOT_COORDS[name] = (lat, lon, pleiades, geonames)
 
@@ -171,7 +169,7 @@ def main():
     filled = missing_before - missing_after
 
     print(f"\n{'='*50}")
-    print(f"RESULTS")
+    print("RESULTS")
     print(f"{'='*50}")
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
@@ -180,11 +178,11 @@ def main():
 
     # Show new findspot distribution
     fs_dist = Counter(d.get("findspot") or "UNKNOWN" for d in data)
-    print(f"\nFindspot distribution (top 20):")
+    print("\nFindspot distribution (top 20):")
     for fs, c in fs_dist.most_common(20):
         print(f"  {fs}: {c}")
 
-    print(f"\nSaving enriched corpus...")
+    print("\nSaving enriched corpus...")
     save_corpus(data)
     print(f"  Saved to {CORPUS_PATH}")
 
