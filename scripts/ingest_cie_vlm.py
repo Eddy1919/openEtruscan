@@ -159,7 +159,7 @@ PROMPT = (
 
 URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    f"gemini-2.5-flash:generateContent?key={API_KEY}"
+    "gemini-2.5-flash:generateContent"
 )
 
 
@@ -194,7 +194,10 @@ def call_gemini(pil_image, retries=5):
     for attempt in range(retries):
         try:
             resp = requests.post(
-                URL, json=payload, timeout=(10, 180)
+                URL,
+                params={"key": API_KEY},
+                json=payload,
+                timeout=(10, 180),
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -211,10 +214,12 @@ def call_gemini(pil_image, retries=5):
                 )
                 time.sleep(wait)
             else:
+                # Sanitise response to avoid logging the API key
+                safe_body = resp.text[:300].replace(API_KEY, "<REDACTED>")
                 log.error(
                     "  [%d/%d] API Error %d: %s",
                     attempt + 1, retries,
-                    resp.status_code, resp.text[:300],
+                    resp.status_code, safe_body,
                 )
                 time.sleep(backoff)
         except Exception as e:
