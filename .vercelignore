@@ -9,3 +9,11 @@ Dockerfile
 *.pyc
 __pycache__
 .git
+.venv/
+venv/
+data/
+data/models/
+data/cie/
+postgres_data/
+node_modules/
+frontend/node_modules/
