@@ -674,7 +674,9 @@ class Corpus(BaseCorpus):
         field: str = "emb_combined",
         limit: int = 20,
     ) -> SearchResults:
-        raise NotImplementedError("semantic_search is only supported in PostgresCorpus with pgvector")
+        raise NotImplementedError(
+            "semantic_search is only supported in PostgresCorpus with pgvector"
+        )
 
     def count(self) -> int:
         """Total number of inscriptions."""
@@ -844,10 +846,9 @@ class PostgresCorpus(BaseCorpus):
                     "ON inscriptions USING GIST (geom);"
                 )
                 # Vector indexes — only create once data exists
-                try:
+                import contextlib
+                with contextlib.suppress(psycopg2.Error):
                     cur.execute(_PG_VECTOR_INDEXES)
-                except psycopg2.Error:
-                    pass  # HNSW indexes need data; safe to skip on empty table
             self._conn.commit()
         except psycopg2.Error:
             self._conn.rollback()

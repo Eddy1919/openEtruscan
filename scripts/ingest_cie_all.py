@@ -187,7 +187,9 @@ def call_gemini(pil_image, log, retries=5):
                 time.sleep(wait)
             else:
                 safe_body = resp.text[:300].replace(API_KEY, "<REDACTED>")
-                log.error("  [%d/%d] API Error %d: %s", attempt + 1, retries, resp.status_code, safe_body)
+                log.error(
+                    "  [%d/%d] API Error %d: %s", attempt + 1, retries, resp.status_code, safe_body
+                )
                 time.sleep(backoff)
         except Exception as e:
             log.error("  [%d/%d] Network Exception: %s", attempt + 1, retries, e)
@@ -213,7 +215,8 @@ def ingest_into_db(entries: list[dict], source_label: str) -> int:
                 (
                     formatted_id,
                     entry.get("etruscan_text_transliterated", ""),
-                    entry.get("etruscan_text_original") or entry.get("etruscan_text_transliterated", ""),
+                    entry.get("etruscan_text_original")
+                    or entry.get("etruscan_text_transliterated", ""),
                     entry.get("latin_findspot", ""),
                     entry.get("latin_commentary", ""),
                     entry.get("bibliography") or "",
@@ -243,7 +246,7 @@ def process_pdf(pdf_name: str, skip_pages: int = 4):
     log.info("Resume: %d pages done, %d entries so far", len(done), progress["total_entries"])
 
     # Determine source label from filename
-    source_label = f"CIE Volume I (VLM Extracted)"
+    source_label = "CIE Volume I (VLM Extracted)"
     if "Clusium" in pdf_name and "475" in pdf_name:
         source_label = "CIE Vol I Clusium 475-1742 (VLM)"
     elif "Clusium" in pdf_name and "1743" in pdf_name:
