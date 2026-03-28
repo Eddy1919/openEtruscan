@@ -988,14 +988,17 @@ class PostgresCorpus(BaseCorpus):
         if field not in ("emb_text", "emb_context", "emb_combined"):
             raise ValueError(f"Invalid embedding field: {field}")
 
-        query = f"""
+        from psycopg2 import sql
+
+        query = sql.SQL("""
             SELECT *,
                    1 - ({field} <=> %s::vector) AS similarity
             FROM inscriptions
             WHERE {field} IS NOT NULL
             ORDER BY {field} <=> %s::vector
             LIMIT %s
-        """
+        """).format(field=sql.Identifier(field))
+
         # Format the embedding for pgvector
         vec_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
