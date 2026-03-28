@@ -11,7 +11,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Path, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -256,6 +256,26 @@ async def semantic_search(
 
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
+
+
+@app.get("/inscriptions/{id}/genetics")
+@limiter.limit("30/minute")
+def get_genetic_matches(
+    request: Request,
+    id: str = Path(..., description="ID of the inscription to find genetic matches for"),
+    limit: int = Query(5, ge=1, le=20),
+):
+    """Spatio-temporal matchmaking between inscriptions and archaeogenetic samples."""
+    try:
+        matches = corpus.find_genetic_matches(id, limit=limit)
+        return {"total": len(matches), "inscription_id": id, "matches": matches}
+    except NotImplementedError as e:
+        raise HTTPException(status_code=501, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"Genetics search failed: {e}")
+        raise HTTPException(
+            status_code=500, detail="Database error during genetics search"
+        ) from e
 
 
 @app.get("/clan/{gens}", response_model=SearchResponse)

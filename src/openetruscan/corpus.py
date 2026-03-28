@@ -122,6 +122,35 @@ class Inscription:
 
 
 @dataclass
+class GeneticSample:
+    """A single archaeogenetic sample record."""
+
+    id: str
+    findspot: str = ""
+    findspot_lat: float | None = None
+    findspot_lon: float | None = None
+    date_approx: int | None = None
+    date_uncertainty: int | None = None
+    y_haplogroup: str | None = None
+    mt_haplogroup: str | None = None
+    source: str = ""
+    notes: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "findspot": self.findspot,
+            "findspot_lat": self.findspot_lat,
+            "findspot_lon": self.findspot_lon,
+            "date_approx": self.date_approx,
+            "date_uncertainty": self.date_uncertainty,
+            "y_haplogroup": self.y_haplogroup,
+            "mt_haplogroup": self.mt_haplogroup,
+            "source": self.source,
+            "notes": self.notes,
+        }
+
+@dataclass
 class SearchResults:
     """Container for corpus search results."""
 
@@ -285,6 +314,25 @@ CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
 CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
+
+CREATE TABLE IF NOT EXISTS genetic_samples (
+    id TEXT PRIMARY KEY,
+    findspot TEXT DEFAULT '',
+    findspot_lat DOUBLE PRECISION,
+    findspot_lon DOUBLE PRECISION,
+    date_approx INTEGER,
+    date_uncertainty INTEGER,
+    y_haplogroup TEXT,
+    mt_haplogroup TEXT,
+    source TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    geom geometry(Point, 4326),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_genetic_geom ON genetic_samples USING GIST (geom);
+CREATE INDEX IF NOT EXISTS idx_genetic_date ON genetic_samples(date_approx);
 """
 
 _PG_VECTOR_INDEXES = """
@@ -376,6 +424,19 @@ class BaseCorpus(ABC):
         csv_path: str | Path,
         language: str = "etruscan",
     ) -> int: ...
+
+    @abstractmethod
+    def add_genetic_sample(
+        self,
+        sample: GeneticSample,
+    ) -> None: ...
+
+    @abstractmethod
+    def find_genetic_matches(
+        self,
+        inscription_id: str,
+        limit: int = 5,
+    ) -> list[dict]: ...
 
     def export_all(self, fmt: str = "csv") -> str:
         """Export the entire corpus."""
@@ -683,6 +744,85 @@ class Corpus(BaseCorpus):
         return self.conn.execute(
             "SELECT COUNT(*) FROM inscriptions",
         ).fetchone()[0]
+
+    def add_genetic_sample(
+        self,
+        sample: GeneticSample,
+    ) -> None:
+        """Add a genetic sample to the SQLite fallback DB."""
+        sql = """
+            INSERT OR REPLACE INTO genetic_samples (
+                id, findspot, findspot_lat, findspot_lon,
+                date_approx, date_uncertainty, y_haplogroup, mt_haplogroup,
+                source, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        self.conn.execute(
+            sql,
+            (
+                sample.id,
+                sample.findspot,
+                sample.findspot_lat,
+                sample.findspot_lon,
+                sample.date_approx,
+                sample.date_uncertainty,
+                sample.y_haplogroup,
+                sample.mt_haplogroup,
+                sample.source,
+                sample.notes,
+            ),
+        )
+        self.conn.commit()
+
+    def find_genetic_matches(
+        self,
+        inscription_id: str,
+        limit: int = 5,
+    ) -> list[dict]:
+        """Haversine fallback for genetic matching in SQLite."""
+        # Find the inscription's coordinates and date
+        insc_row = self.conn.execute(
+            "SELECT findspot_lat, findspot_lon, date_approx FROM inscriptions WHERE id = ?",
+            (inscription_id,),
+        ).fetchone()
+
+        if not insc_row or not insc_row["findspot_lat"] or not insc_row["findspot_lon"]:
+            return []
+
+        lat = insc_row["findspot_lat"]
+        lon = insc_row["findspot_lon"]
+        date_approx = insc_row["date_approx"] or 0
+
+        # Fetch all genetic samples
+        genes = self.conn.execute(
+            "SELECT * FROM genetic_samples "
+            "WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL"
+        ).fetchall()
+
+        from openetruscan.geo import haversine
+
+        results = []
+        for g in genes:
+            dist = haversine(
+                lat,
+                lon,
+                g["findspot_lat"],
+                g["findspot_lon"],
+            )
+            g_date = g["date_approx"] or 0
+            date_diff = abs(date_approx - g_date)
+
+            # Score = Distance_Km + (Date_Diff_Yrs * 0.5)
+            score = dist + (date_diff * 0.5)
+
+            row_dict = dict(g)
+            row_dict["distance_km"] = dist
+            row_dict["date_diff_years"] = date_diff
+            row_dict["match_score"] = score
+            results.append((score, row_dict))
+
+        results.sort(key=lambda x: x[0])
+        return [r[1] for r in results[:limit]]
 
     def import_csv(
         self,
@@ -1010,6 +1150,101 @@ class PostgresCorpus(BaseCorpus):
             inscriptions = [_dict_to_inscription(row) for row in rows]
 
         return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
+
+    def add_genetic_sample(
+        self,
+        sample: GeneticSample,
+    ) -> None:
+        """Add a genetic sample to the Postgres DB with PostGIS."""
+        sql = """
+            INSERT INTO genetic_samples (
+                id, findspot, findspot_lat, findspot_lon,
+                date_approx, date_uncertainty, y_haplogroup, mt_haplogroup,
+                source, notes, geom
+            ) VALUES (
+                %s, %s, %s, %s,
+                %s, %s, %s, %s,
+                %s, %s,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+            )
+            ON CONFLICT (id) DO UPDATE SET
+                findspot = EXCLUDED.findspot,
+                findspot_lat = EXCLUDED.findspot_lat,
+                findspot_lon = EXCLUDED.findspot_lon,
+                date_approx = EXCLUDED.date_approx,
+                date_uncertainty = EXCLUDED.date_uncertainty,
+                y_haplogroup = EXCLUDED.y_haplogroup,
+                mt_haplogroup = EXCLUDED.mt_haplogroup,
+                source = EXCLUDED.source,
+                notes = EXCLUDED.notes,
+                geom = EXCLUDED.geom,
+                updated_at = NOW()
+        """
+        vals = (
+            sample.id,
+            sample.findspot,
+            sample.findspot_lat,
+            sample.findspot_lon,
+            sample.date_approx,
+            sample.date_uncertainty,
+            sample.y_haplogroup,
+            sample.mt_haplogroup,
+            sample.source,
+            sample.notes,
+            # for MakePoint: lon, lat
+            sample.findspot_lon if sample.findspot_lon is not None else 0.0,
+            sample.findspot_lat if sample.findspot_lat is not None else 0.0,
+        )
+        if sample.findspot_lon is None or sample.findspot_lat is None:
+            sql = sql.replace("ST_SetSRID(ST_MakePoint(%s, %s), 4326)", "NULL")
+            vals = vals[:-2]
+
+        with self._conn.cursor() as cur:
+            cur.execute(sql, vals)
+        self._conn.commit()
+
+    def find_genetic_matches(
+        self,
+        inscription_id: str,
+        limit: int = 5,
+    ) -> list[dict]:
+        """Find best genetic matches using spatio-temporal weighting in PostGIS."""
+        import psycopg2.extras
+
+        query = """
+            WITH insc AS (
+                SELECT geom, date_approx
+                FROM inscriptions
+                WHERE id = %s AND geom IS NOT NULL
+            )
+            SELECT
+                g.*,
+                ST_Distance(g.geom::geography, insc.geom::geography) / 1000.0 AS distance_km,
+                ABS(COALESCE(g.date_approx, 0) - COALESCE(insc.date_approx, 0)) AS date_diff_years,
+                (ST_Distance(g.geom::geography, insc.geom::geography) / 1000.0) +
+                (ABS(COALESCE(g.date_approx, 0) - COALESCE(insc.date_approx, 0)) * 0.5)
+                AS match_score
+            FROM genetic_samples g, insc
+            WHERE g.geom IS NOT NULL
+            ORDER BY match_score ASC
+            LIMIT %s
+        """
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, (inscription_id, limit))
+            rows = cur.fetchall()
+
+            # PostGIS geometry objects are not JSON serializable, so remove them
+            results = []
+            for row in rows:
+                r = dict(row)
+                r.pop('geom', None)
+                # Convert datetime types from postgres automatically generated timestamps
+                if 'created_at' in r and r['created_at']:
+                    r['created_at'] = r['created_at'].isoformat()
+                if 'updated_at' in r and r['updated_at']:
+                    r['updated_at'] = r['updated_at'].isoformat()
+                results.append(r)
+            return results
 
     def count(self) -> int:
         with self._conn.cursor() as cur:
