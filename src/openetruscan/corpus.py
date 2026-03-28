@@ -272,6 +272,9 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     provenance_status TEXT NOT NULL DEFAULT 'verified',
     provenance_flags TEXT NOT NULL DEFAULT '',
     geom geometry(Point, 4326),
+    emb_text vector(768),
+    emb_context vector(768),
+    emb_combined vector(768),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -282,6 +285,15 @@ CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
 CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
+"""
+
+_PG_VECTOR_INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_emb_text_hnsw
+    ON inscriptions USING hnsw (emb_text vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_emb_context_hnsw
+    ON inscriptions USING hnsw (emb_context vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_emb_combined_hnsw
+    ON inscriptions USING hnsw (emb_combined vector_cosine_ops);
 """
 
 # Columns used for INSERT/SELECT (shared between backends)
@@ -345,6 +357,14 @@ class BaseCorpus(ABC):
         lon: float,
         radius_km: float = 50.0,
         limit: int = 100,
+    ) -> SearchResults: ...
+
+    @abstractmethod
+    def semantic_search(
+        self,
+        query_embedding: list[float],
+        field: str = "emb_combined",
+        limit: int = 20,
     ) -> SearchResults: ...
 
     @abstractmethod
@@ -648,6 +668,14 @@ class Corpus(BaseCorpus):
         results = [insc for _, insc in inscriptions[:limit]]
         return SearchResults(inscriptions=results, total=len(inscriptions))
 
+    def semantic_search(
+        self,
+        query_embedding: list[float],
+        field: str = "emb_combined",
+        limit: int = 20,
+    ) -> SearchResults:
+        raise NotImplementedError("semantic_search is only supported in PostgresCorpus with pgvector")
+
     def count(self) -> int:
         """Total number of inscriptions."""
         return self.conn.execute(
@@ -808,12 +836,18 @@ class PostgresCorpus(BaseCorpus):
         try:
             with self._conn.cursor() as cur:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+                cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
                 cur.execute(_PG_SCHEMA)
                 cur.execute(IMAGES_PG_SCHEMA)
                 cur.execute(
                     "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom "
                     "ON inscriptions USING GIST (geom);"
                 )
+                # Vector indexes — only create once data exists
+                try:
+                    cur.execute(_PG_VECTOR_INDEXES)
+                except psycopg2.Error:
+                    pass  # HNSW indexes need data; safe to skip on empty table
             self._conn.commit()
         except psycopg2.Error:
             self._conn.rollback()
@@ -940,6 +974,38 @@ class PostgresCorpus(BaseCorpus):
             total = cur.fetchone()["count"]
 
         return SearchResults(inscriptions=inscriptions, total=total)
+
+    def semantic_search(
+        self,
+        query_embedding: list[float],
+        field: str = "emb_combined",
+        limit: int = 20,
+    ) -> SearchResults:
+        """Find similar inscriptions using pgvector cosine similarity."""
+        import psycopg2.extras
+
+        if field not in ("emb_text", "emb_context", "emb_combined"):
+            raise ValueError(f"Invalid embedding field: {field}")
+
+        query = f"""
+            SELECT *,
+                   1 - ({field} <=> %s::vector) AS similarity
+            FROM inscriptions
+            WHERE {field} IS NOT NULL
+            ORDER BY {field} <=> %s::vector
+            LIMIT %s
+        """
+        # Format the embedding for pgvector
+        vec_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
+
+        with self._conn.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor,
+        ) as cur:
+            cur.execute(query, (vec_str, vec_str, limit))
+            rows = cur.fetchall()
+            inscriptions = [_dict_to_inscription(row) for row in rows]
+
+        return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
 
     def count(self) -> int:
         with self._conn.cursor() as cur:

@@ -210,6 +210,53 @@ def search_by_radius(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+@app.get("/semantic-search", response_model=SearchResponse)
+@limiter.limit("30/minute")
+async def semantic_search(
+    request: Request,
+    q: str = Query(..., description="Query text to search for", max_length=MAX_TEXT_LEN),
+    field: str = Query("emb_combined", description="Vector field to compare against"),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """Semantic pgvector search using Gemini text-embedding-004."""
+    import time
+    import requests
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500, detail="GEMINI_API_KEY not configured on server"
+        )
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+    payload = {"content": {"parts": [{"text": q[:2048]}]}}
+    
+    def _fetch_emb():
+        resp = requests.post(url, json=payload, timeout=10)
+        resp.raise_for_status()
+        return resp.json()["embedding"]["values"]
+
+    try:
+        query_embedding = await asyncio.to_thread(_fetch_emb)
+    except Exception as e:
+        logger.error(f"Embedding failed: {e}")
+        raise HTTPException(status_code=502, detail="Failed to embed query")
+
+    try:
+        results = corpus.semantic_search(
+            query_embedding=query_embedding,
+            field=field,
+            limit=_clamp_limit(limit),
+        )
+    except NotImplementedError as e:
+        raise HTTPException(status_code=501, detail=str(e))
+    except Exception as e:
+        logger.error(f"Semantic search failed: {e}")
+        raise HTTPException(status_code=500, detail="Database error during vector search")
+
+    data = [_build_model(i) for i in results.inscriptions]
+    return {"total": results.total, "count": len(data), "results": data}
+
+
 @app.get("/clan/{gens}", response_model=SearchResponse)
 @limiter.limit("30/minute")
 def search_by_clan(request: Request, gens: str):
