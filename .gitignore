@@ -60,5 +60,9 @@ data/models/
 *.pkl
 *.joblibdata/cie/*.pdf
 data/cie/*.pdf
+data/cie/pages/
+data/cie/progress.json
+data/cie/ingest.log
+data/cie/full_extraction.json
 .vercel
 .env*.local
