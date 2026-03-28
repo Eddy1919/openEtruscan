@@ -281,3 +281,33 @@ a:hover {
 .maplibregl-map {
   font-family: var(--font-body);
 }
+
+/* ── Mobile Responsiveness ─────────────────────────────── */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .nav-bar {
+    padding: 0.6rem 1rem;
+    gap: 1rem;
+  }
+
+  .split-layout {
+    flex-direction: column-reverse; /* Map on top, sidebar below */
+  }
+
+  .split-sidebar {
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    flex: 6; /* 60% relative ratio for list */
+  }
+
+  .split-main {
+    flex: 4; /* 40% height for map */
+    width: 100%;
+    min-height: 250px;
+  }
+}

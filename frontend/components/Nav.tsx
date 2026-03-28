@@ -76,6 +76,11 @@ function Dropdown({
 
 export default function Nav() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <nav className="nav-bar">
@@ -83,7 +88,22 @@ export default function Nav() {
         <span style={{ color: "var(--text-primary)" }}>𐌏𐌐𐌄𐌍</span>
         <span style={{ color: "var(--accent)" }}>Etruscan</span>
       </Link>
-      <ul className="nav-pills">
+
+      <button
+        className={styles.hamburger}
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label="Toggle mobile menu"
+      >
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
+          {mobileMenuOpen ? (
+            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+          ) : (
+            <path d="M4 12h16M4 6h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
+          )}
+        </svg>
+      </button>
+
+      <ul className={`nav-pills ${mobileMenuOpen ? styles.mobileOpen : styles.mobileClosed}`}>
         {[...PRIMARY, { href: "/classifier", label: "Classifier" }, { href: "/genetics", label: "Genetics" }].map(({ href, label }) => (
           <li key={href}>
             <Link

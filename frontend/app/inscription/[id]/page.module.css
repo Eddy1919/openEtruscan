@@ -68,3 +68,11 @@
 .dl dd {
   color: var(--text-primary);
 }
+
+/* ── Mobile Responsiveness ─────────────────────────────── */
+@media (max-width: 768px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
