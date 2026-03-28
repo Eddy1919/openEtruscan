@@ -16,6 +16,7 @@ Features:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sqlite3
 import sys
@@ -64,6 +65,42 @@ COMMERCIAL_PATTERNS = re.compile(
     r"(zathrum|ci|huth|mach|semph|thu|cezp)",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------------------------
+# VLM Hallucination Validation Rules
+# ---------------------------------------------------------------------------
+
+CIE_PATTERN = re.compile(r"^CIE\s+\d+[a-zA-Z]?$")
+# Etruscan has no B, D, G, J, O, W, X, Y
+INVALID_CHARS_PATTERN = re.compile(r"[bdgjowxy]", re.IGNORECASE)
+LATIN_STOP_WORDS = re.compile(
+    r"\b(inscriptio|sepulcrum|titulus|lectus|pagina|tabula|tab|figuram|etruscorum)\b", 
+    re.IGNORECASE
+)
+
+def validate_extracted_record(cie_id: str, canonical: str) -> list[str]:
+    """Validates a VLM-extracted record to prevent hallucinations."""
+    flags = []
+    
+    if not CIE_PATTERN.match(cie_id.strip()):
+        flags.append("invalid_id_format")
+        
+    if not canonical or len(canonical.strip()) == 0:
+        flags.append("empty_text")
+        return flags
+        
+    canonical_clean = canonical.lower()
+    if INVALID_CHARS_PATTERN.search(canonical_clean):
+        flags.append("hallucinated_latin_characters")
+        
+    if len(canonical_clean) > 250 or len(canonical_clean.split()) > 30:
+        flags.append("exceeds_length_limit")
+        
+    if LATIN_STOP_WORDS.search(canonical_clean):
+        flags.append("contains_latin_stop_words")
+        
+    return flags
 
 
 def classify_inscription(text: str) -> str:
@@ -131,11 +168,20 @@ def migrate(source_path: str, target_url: str) -> None:
     # Migrate inscriptions
     rows = src.execute("SELECT * FROM inscriptions").fetchall()
     migrated = 0
+    rejected = 0
     classifications: dict[str, int] = {}
 
     for row in rows:
         canonical = row["canonical"]
         raw_text = row["raw_text"]
+        cie_id = row["id"]
+
+        # VLM Hallucination Check
+        validation_flags = validate_extracted_record(cie_id, canonical or raw_text)
+        if validation_flags:
+            rejected += 1
+            print(f"Skipping hallucinated record {cie_id} flags: {validation_flags}")
+            continue
 
         # Auto-classify
         classification = classify_inscription(canonical or raw_text)
@@ -186,6 +232,8 @@ def migrate(source_path: str, target_url: str) -> None:
 
     pg._conn.commit()
     print(f"\nMigrated {migrated} inscriptions.")
+    if rejected > 0:
+        print(f"Cleaned/Skipped {rejected} hallucinated VLM records.")
 
     # Show classification distribution
     print("\nClassification distribution:")
