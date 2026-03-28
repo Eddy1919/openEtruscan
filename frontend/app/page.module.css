@@ -163,3 +163,36 @@
   color: var(--text-muted);
   line-height: 1.55;
 }
+
+/* ── Mobile Responsiveness ─────────────────────────────── */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  
+  .titleOI {
+    font-size: 2.2rem;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
+  
+  .stats {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .heroContent {
+    padding: 2rem 1rem;
+  }
+}
