@@ -17,7 +17,7 @@ function getCorpus(): Inscription[] {
 
 export async function generateStaticParams() {
   const corpus = getCorpus();
-  return corpus.map((i) => ({ id: encodeURIComponent(i.id) }));
+  return corpus.map((i) => ({ id: i.id }));
 }
 
 export async function generateMetadata({
