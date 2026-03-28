@@ -219,7 +219,6 @@ async def semantic_search(
     limit: int = Query(20, ge=1, le=100),
 ):
     """Semantic pgvector search using Gemini text-embedding-004."""
-    import time
     import requests
 
     api_key = os.getenv("GEMINI_API_KEY")
@@ -229,7 +228,7 @@ async def semantic_search(
         )
     url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
     payload = {"content": {"parts": [{"text": q[:2048]}]}}
-    
+
     def _fetch_emb():
         resp = requests.post(url, json=payload, timeout=10)
         resp.raise_for_status()
@@ -239,7 +238,7 @@ async def semantic_search(
         query_embedding = await asyncio.to_thread(_fetch_emb)
     except Exception as e:
         logger.error(f"Embedding failed: {e}")
-        raise HTTPException(status_code=502, detail="Failed to embed query")
+        raise HTTPException(status_code=502, detail="Failed to embed query") from e
 
     try:
         results = corpus.semantic_search(
@@ -248,10 +247,12 @@ async def semantic_search(
             limit=_clamp_limit(limit),
         )
     except NotImplementedError as e:
-        raise HTTPException(status_code=501, detail=str(e))
+        raise HTTPException(status_code=501, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Semantic search failed: {e}")
-        raise HTTPException(status_code=500, detail="Database error during vector search")
+        raise HTTPException(
+            status_code=500, detail="Database error during vector search"
+        ) from e
 
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}

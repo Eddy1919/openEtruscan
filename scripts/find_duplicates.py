@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import sqlite3
-import re
 import difflib
+import re
+import sqlite3
 from pathlib import Path
-from collections import defaultdict
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "corpus.db"
@@ -30,7 +29,7 @@ def find_duplicates(similarity_threshold=0.85):
     print("Loading Larth dataset...")
     c.execute("SELECT id, canonical, raw_text FROM inscriptions WHERE source LIKE '%Larth%'")
     larth_records = c.fetchall()
-    
+
     # Pre-compute normalized texts for Larth
     larth_normalized = []
     for row in larth_records:
@@ -55,7 +54,7 @@ def find_duplicates(similarity_threshold=0.85):
         text_to_compare = cie_canon if cie_canon else cie_raw
         if not text_to_compare:
             continue
-            
+
         cie_norm = normalize_text(text_to_compare)
         if len(cie_norm) < 3: # Skip very short inscriptions to avoid false positives
             continue
@@ -63,13 +62,13 @@ def find_duplicates(similarity_threshold=0.85):
         best_match = None
         highest_ratio = 0.0
 
-        for larth_id, larth_canon, larth_raw, larth_norm in larth_normalized:
+        for larth_id, larth_canon, _larth_raw, larth_norm in larth_normalized:
             # Exact match check
             if cie_norm == larth_norm:
                 exact_matches.append((cie_id, cie_canon, larth_id, larth_canon))
                 best_match = None # Reset so we don't also add to fuzzy
                 break
-            
+
             # Fuzzy match check
             ratio = difflib.SequenceMatcher(None, cie_norm, larth_norm).ratio()
             if ratio > highest_ratio:
@@ -85,10 +84,16 @@ def find_duplicates(similarity_threshold=0.85):
     # Generate Report
     with open(OUTPUT_REPORT, "w", encoding="utf-8") as f:
         f.write("# CIE vs Larth Overlap Report\n\n")
-        f.write(f"This report identifies potential duplicates between the new CIE VLM ingestion and the existing Larth (Etruskische Texte) dataset base on text similarity.\n\n")
-        
+        f.write(
+            "This report identifies potential duplicates between the new CIE VLM ingestion "
+            "and the existing Larth (Etruskische Texte) dataset base on text similarity.\n\n"
+        )
+
         f.write("## Exact Matches\n")
-        f.write("Documents whose text, after removing spaces and punctuation, is completely identical.\n\n")
+        f.write(
+            "Documents whose text, after removing spaces and punctuation, "
+            "is completely identical.\n\n"
+        )
         f.write("| CIE ID | CIE Text | Larth ID | Larth Text |\n")
         f.write("|--------|----------|----------|------------|\n")
         for cie_id, cie_txt, larth_id, larth_txt in exact_matches:
@@ -98,10 +103,13 @@ def find_duplicates(similarity_threshold=0.85):
             f.write(f"| {cie_id} | {c_t} | {larth_id} | {l_t} |\n")
 
         f.write("\n## Fuzzy Matches\n")
-        f.write(f"Documents whose normalized text is at least {similarity_threshold*100}% similar.\n\n")
+        f.write(
+            f"Documents whose normalized text is at least "
+            f"{similarity_threshold*100}% similar.\n\n"
+        )
         f.write("| CIE ID | CIE Text | Larth ID | Larth Text | Similarity |\n")
         f.write("|--------|----------|----------|------------|------------|\n")
-        
+
         # Sort fuzzy matches by ratio (highest first)
         fuzzy_matches.sort(key=lambda x: x[4], reverse=True)
         for cie_id, cie_txt, larth_id, larth_txt, ratio in fuzzy_matches:
