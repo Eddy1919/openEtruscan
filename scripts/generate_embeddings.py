@@ -210,7 +210,11 @@ def main():
             elif args.field == "combined":
                 cur.execute("SELECT * FROM inscriptions WHERE emb_combined IS NULL ORDER BY id")
             else:
-                cur.execute("SELECT * FROM inscriptions WHERE emb_text IS NULL OR emb_context IS NULL OR emb_combined IS NULL ORDER BY id")
+                cur.execute(
+                    "SELECT * FROM inscriptions "
+                    "WHERE emb_text IS NULL OR emb_context IS NULL OR emb_combined IS NULL "
+                    "ORDER BY id"
+                )
         rows = cur.fetchall()
 
     total = len(rows)
