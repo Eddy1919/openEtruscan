@@ -12,6 +12,9 @@ cd openEtruscan
 # Install in development mode
 pip install -e ".[dev]"
 
+# Install pre-commit hooks
+pre-commit install
+
 # Run the test suite
 pytest
 
@@ -110,6 +113,31 @@ See the existing [Oscan](src/openetruscan/adapters/oscan.yaml) and [Faliscan](sr
 - **Line length:** 100 characters max
 - **Python:** 3.10+ compatible
 
+### Pre-commit Hooks
+
+We use [pre-commit](https://pre-commit.com/) to ensure code quality. After installing (`pip install -e ".[dev]"`), run:
+
+```bash
+# Install the git hook scripts
+pre-commit install
+
+# (Optional) Run against all files to check everything is set up
+pre-commit run --all-files
+```
+
+The pre-commit hooks will automatically:
+- Trim trailing whitespace and fix end-of-file newlines
+- Validate YAML, JSON, and TOML syntax
+- Prevent large files (>500KB) from being committed
+- Check for merge conflict markers and Python debug statements
+- Run Ruff linting and formatting on Python files
+- Run mypy type checking
+
+If you need to skip the hooks temporarily (e.g., for a WIP commit), use:
+```bash
+git commit -m "WIP" --no-verify
+```
+
 ### Pull Request Checklist
 
 Before submitting a PR, confirm:
@@ -117,16 +145,21 @@ Before submitting a PR, confirm:
 - [ ] All tests pass: `pytest`
 - [ ] Linter is clean: `ruff check src/ tests/`
 - [ ] Security scan passes: `bandit -r src/openetruscan/`
+- [ ] Advanced security check: `semgrep scan --config auto`
+- [ ] OpenAPI schema is in sync: `python scripts/export_openapi.py` (check for changes in `docs/openapi.json`)
 - [ ] New features include test cases
 - [ ] Documentation is updated if applicable
 
 ### CI Pipeline
 
 Every PR triggers:
-1. **SAST** — Bandit security scan (`bandit -r src/openetruscan/`)
-2. **Lint** — Ruff checks across all Python files
-3. **Test** — pytest on Python 3.10, 3.11, 3.12, and 3.13
-4. **Coverage** — pytest-cov on Python 3.12
+1. **SAST** — Bandit & Semgrep security scans
+2. **Secret Scanning** — Gitleaks check for exposed tokens
+3. **Dependency Audit** — pip-audit & Dependabot verification
+4. **OpenAPI Sync** — Verification that `docs/openapi.json` matches the code
+5. **Lint** — Ruff checks across all Python files
+6. **Test** — pytest on Python 3.10, 3.11, 3.12, and 3.13
+7. **Coverage** — pytest-cov on Python 3.12
 
 ## Data Licensing
 

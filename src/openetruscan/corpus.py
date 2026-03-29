@@ -716,11 +716,35 @@ class Corpus(BaseCorpus):
         radius_km: float = 50.0,
         limit: int = 100,
     ) -> SearchResults:
-        """Haversine fallback for SQLite."""
+        """
+        Haversine fallback for SQLite with bounding box optimization.
+        
+        Uses a bounding box pre-filter to avoid calculating Haversine distance
+        for points that are definitely outside the radius.
+        """
         from openetruscan.geo import haversine
 
+        # Calculate bounding box (approximate)
+        # 1 degree latitude ≈ 111 km
+        # 1 degree longitude ≈ 111 km * cos(latitude)
+        lat_delta = radius_km / 111.0
+        # Clamp cos to avoid division issues near poles (though Etruscan sites are mid-latitude)
+        import math
+        lon_delta = radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
+
+        lat_min, lat_max = lat - lat_delta, lat + lat_delta
+        lon_min, lon_max = lon - lon_delta, lon + lon_delta
+
+        # Query only points within bounding box first (much faster)
         rows = self.conn.execute(
-            "SELECT * FROM inscriptions WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL"
+            """
+            SELECT * FROM inscriptions 
+            WHERE findspot_lat IS NOT NULL 
+              AND findspot_lon IS NOT NULL
+              AND findspot_lat >= ? AND findspot_lat <= ?
+              AND findspot_lon >= ? AND findspot_lon <= ?
+            """,
+            (lat_min, lat_max, lon_min, lon_max),
         ).fetchall()
 
         inscriptions = []
@@ -788,7 +812,10 @@ class Corpus(BaseCorpus):
         inscription_id: str,
         limit: int = 5,
     ) -> list[dict]:
-        """Haversine fallback for genetic matching in SQLite."""
+        """Haversine fallback for genetic matching in SQLite with bounding box optimization."""
+        import math
+        from openetruscan.geo import haversine
+
         # Find the inscription's coordinates and date
         insc_row = self.conn.execute(
             "SELECT findspot_lat, findspot_lon, date_approx FROM inscriptions WHERE id = ?",
@@ -802,10 +829,24 @@ class Corpus(BaseCorpus):
         lon = insc_row["findspot_lon"]
         date_approx = insc_row["date_approx"] or 0
 
-        # Fetch all genetic samples
+        # Use a generous bounding box for genetic matching (500km)
+        max_radius_km = 500.0
+        lat_delta = max_radius_km / 111.0
+        lon_delta = max_radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
+
+        lat_min, lat_max = lat - lat_delta, lat + lat_delta
+        lon_min, lon_max = lon - lon_delta, lon + lon_delta
+
+        # Fetch genetic samples within bounding box
         genes = self.conn.execute(
-            "SELECT * FROM genetic_samples "
-            "WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL"
+            """
+            SELECT * FROM genetic_samples 
+            WHERE findspot_lat IS NOT NULL 
+              AND findspot_lon IS NOT NULL
+              AND findspot_lat >= ? AND findspot_lat <= ?
+              AND findspot_lon >= ? AND findspot_lon <= ?
+            """,
+            (lat_min, lat_max, lon_min, lon_max),
         ).fetchall()
 
         from openetruscan.geo import haversine
