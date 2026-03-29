@@ -21,13 +21,21 @@ export interface Inscription {
   provenance_status: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
+
 let _cache: Inscription[] | null = null;
 
 export async function loadCorpus(): Promise<Inscription[]> {
   if (_cache) return _cache;
-  const res = await fetch("/data/corpus.json");
-  _cache = (await res.json()) as Inscription[];
-  return _cache;
+  try {
+    const res = await fetch(`${API_URL}/corpus`, { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error("Failed to fetch corpus");
+    _cache = (await res.json()) as Inscription[];
+    return _cache;
+  } catch (err) {
+    console.error("Corpus load error:", err);
+    return [];
+  }
 }
 
 export function dateDisplay(insc: Inscription): string {

@@ -11,9 +11,9 @@ const DOWNLOADS = [
   {
     title: "Corpus (JSON)",
     filename: "corpus.json",
-    path: "/data/corpus.json",
-    size: "~800 KB",
-    description: "Complete corpus of 4,728 inscriptions in structured JSON. Includes canonical text, Old Italic Unicode, phonetic transcription, findspot coordinates, classification, and gazetteer links.",
+    url: "https://api.openetruscan.com/corpus",
+    size: "~6.8 MB",
+    description: "Complete corpus of 11,361 inscriptions natively synced from the live PostgreSQL database. Includes canonical text, AI classifications, LOD linkages, and spatial tagging.",
     format: "JSON",
   },
   {

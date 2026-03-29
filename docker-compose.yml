@@ -6,36 +6,11 @@
 # Local dev: docker compose up -d --build
 
 services:
-  db:
-    build:
-      context: .
-      dockerfile: data/Dockerfile.db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: corpus
-      POSTGRES_USER: corpus_reader
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-etruscan_secret}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./scripts/init_extensions.sql:/docker-entrypoint-initdb.d/01-extensions.sql:ro
-    ports:
-      - "127.0.0.1:5432:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U corpus_reader -d corpus" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
     build: .
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      - DATABASE_URL=postgresql://corpus_reader:${POSTGRES_PASSWORD:-etruscan_secret}@db/corpus
-    depends_on:
-      db:
-        condition: service_healthy
     expose:
       - "8000"
 
@@ -79,5 +54,4 @@ services:
       '
 
 volumes:
-  pgdata:
   fuseki_data:

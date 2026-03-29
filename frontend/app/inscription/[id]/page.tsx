@@ -1,22 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Inscription } from "@/lib/corpus";
-import { dateDisplay, pleiadesUrl, geonamesUrl, trismegistosUrl, eagleUrl, CLASS_COLORS } from "@/lib/corpus";
+import { dateDisplay, pleiadesUrl, geonamesUrl, trismegistosUrl, eagleUrl, CLASS_COLORS, loadCorpus } from "@/lib/corpus";
 import styles from "./page.module.css";
-import fs from "fs";
-import path from "path";
-
 import CitationExport from "@/components/CitationExport";
 
-// Load corpus at build time
-function getCorpus(): Inscription[] {
-  const filePath = path.join(process.cwd(), "public", "data", "corpus.json");
-  const raw = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(raw);
-}
-
 export async function generateStaticParams() {
-  const corpus = getCorpus();
+  const corpus = await loadCorpus();
   return corpus.map((i) => ({ id: i.id }));
 }
 
@@ -27,7 +17,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
-  const corpus = getCorpus();
+  const corpus = await loadCorpus();
   const insc = corpus.find((i) => i.id === decodedId);
   if (!insc) return { title: "Not Found" };
   return {
@@ -43,7 +33,7 @@ export default async function InscriptionPage({
 }) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
-  const corpus = getCorpus();
+  const corpus = await loadCorpus();
   const insc = corpus.find((i) => i.id === decodedId);
   if (!insc) notFound();
 
