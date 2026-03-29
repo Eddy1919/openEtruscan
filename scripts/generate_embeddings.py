@@ -203,17 +203,14 @@ def main():
             cur.execute("SELECT * FROM inscriptions ORDER BY id")
         else:
             # Only fetch rows missing at least one embedding
-            where_parts = []
-            if args.field in ("text", "all"):
-                where_parts.append("emb_text IS NULL")
-            if args.field in ("context", "all"):
-                where_parts.append("emb_context IS NULL")
-            if args.field in ("combined", "all"):
-                where_parts.append("emb_combined IS NULL")
-            where_clause = " OR ".join(where_parts) if where_parts else "TRUE"
-            cur.execute(
-                f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY id"
-            )  # nosemgrep
+            if args.field == "text":
+                cur.execute("SELECT * FROM inscriptions WHERE emb_text IS NULL ORDER BY id")
+            elif args.field == "context":
+                cur.execute("SELECT * FROM inscriptions WHERE emb_context IS NULL ORDER BY id")
+            elif args.field == "combined":
+                cur.execute("SELECT * FROM inscriptions WHERE emb_combined IS NULL ORDER BY id")
+            else:
+                cur.execute("SELECT * FROM inscriptions WHERE emb_text IS NULL OR emb_context IS NULL OR emb_combined IS NULL ORDER BY id")
         rows = cur.fetchall()
 
     total = len(rows)
@@ -271,7 +268,8 @@ def main():
                     updates.append("updated_at = NOW()")
                     params.append(row["id"])
                     sql = f"UPDATE inscriptions SET {', '.join(updates)} WHERE id = %s"
-                    cur.execute(sql, params)  # nosemgrep
+                    # nosemgrep
+                    cur.execute(sql, params)
 
         conn.commit()
         embedded += len(batch)

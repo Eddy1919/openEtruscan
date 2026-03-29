@@ -650,19 +650,18 @@ class Corpus(BaseCorpus):
         """Add new columns to existing databases."""
         cursor = self.conn.execute("PRAGMA table_info(inscriptions)")
         existing = {row[1] for row in cursor.fetchall()}
-        migrations = [
-            ("language", "TEXT NOT NULL DEFAULT 'etruscan'"),
-            ("classification", "TEXT NOT NULL DEFAULT 'unknown'"),
-            ("script_system", "TEXT NOT NULL DEFAULT 'old_italic'"),
-            ("completeness", "TEXT NOT NULL DEFAULT 'complete'"),
-            ("provenance_status", "TEXT NOT NULL DEFAULT 'verified'"),
-            ("provenance_flags", "TEXT NOT NULL DEFAULT ''"),
-        ]
-        for col_name, col_def in migrations:
-            if col_name not in existing:
-                self.conn.execute(
-                    f"ALTER TABLE inscriptions ADD COLUMN {col_name} {col_def}"
-                )  # nosemgrep
+        if 'language' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN language TEXT NOT NULL DEFAULT 'etruscan'")
+        if 'classification' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN classification TEXT NOT NULL DEFAULT 'unknown'")
+        if 'script_system' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN script_system TEXT NOT NULL DEFAULT 'old_italic'")
+        if 'completeness' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN completeness TEXT NOT NULL DEFAULT 'complete'")
+        if 'provenance_status' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN provenance_status TEXT NOT NULL DEFAULT 'verified'")
+        if 'provenance_flags' not in existing:
+            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN provenance_flags TEXT NOT NULL DEFAULT ''")
         self.conn.commit()
 
     def add(
@@ -674,8 +673,9 @@ class Corpus(BaseCorpus):
         inscription = self._prepare_inscription(inscription, language)
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["?"] * len(_COLUMNS))
+        # nosemgrep
         self.conn.execute(
-            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",  # nosemgrep
+            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",
             self._inscription_values(inscription),
         )
         self.conn.commit()
@@ -1197,7 +1197,8 @@ class PostgresCorpus(BaseCorpus):
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, (vec_str, vec_str, limit))  # nosemgrep
+            # nosemgrep
+            cur.execute(query, (vec_str, vec_str, limit))
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
 
