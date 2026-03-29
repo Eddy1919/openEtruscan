@@ -30,26 +30,23 @@ jobs:
           workload_identity_provider: 'projects/19927826393/locations/global/workloadIdentityPools/github-actions/providers/github-provider'
           service_account: 'gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com'
 
-      - id: 'compute-ssh'
-        name: 'Execute Remote SSH Commands via IAP'
-        uses: 'google-github-actions/ssh-compute@v2'
-        with:
-          instance_name: 'openetruscan-eu'
-          zone: 'europe-west4-a'
-          project_id: 'long-facet-427508-j2'
-          command: |
-            set -e
-            # Find the openEtruscan directory in /home
-            REPO_DIR=$(find /home -maxdepth 2 -name "openEtruscan" -type d | head -n 1)
-            if [ -z "$REPO_DIR" ]; then echo "Repository not found"; exit 1; fi
-            cd "$REPO_DIR"
-            
-            # Execute commands as root to avoid permission issues with the new ephemeral user
-            sudo sh -c "cd $REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main"
-            
-            # Rebuild and restart all services using the compose container (required for COS)
-            sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$REPO_DIR:$REPO_DIR" -w="$REPO_DIR" docker/compose:1.29.2 up -d --build
-            
-            # Prune old images to save disk
-            sudo docker image prune -f
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: 'Execute Remote SSH Commands via IAP'
+        run: |
+          gcloud compute ssh openetruscan-eu \
+            --zone=europe-west4-a \
+            --project=long-facet-427508-j2 \
+            --tunnel-through-iap \
+            --quiet \
+            --command="
+              set -e
+              REPO_DIR=\$(find /home -maxdepth 2 -name 'openEtruscan' -type d | head -n 1)
+              if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
+              cd \"\$REPO_DIR\"
+              sudo sh -c \"cd \$REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main\"
+              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker/compose:1.29.2 up -d --build
+              sudo docker image prune -f
+            "
 
