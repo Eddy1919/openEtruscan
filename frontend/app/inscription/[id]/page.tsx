@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Inscription } from "@/lib/corpus";
-import { dateDisplay, pleiadesUrl, geonamesUrl, CLASS_COLORS } from "@/lib/corpus";
+import { dateDisplay, pleiadesUrl, geonamesUrl, trismegistosUrl, eagleUrl, CLASS_COLORS } from "@/lib/corpus";
 import styles from "./page.module.css";
 import fs from "fs";
 import path from "path";
@@ -69,6 +69,32 @@ export default async function InscriptionPage({
             }}
           >
             {insc.classification}
+          </span>
+        )}
+        {insc.provenance_status === "rejected" && (
+          <span
+            className="badge"
+            style={{
+              borderColor: "#ef4444",
+              color: "#ef4444",
+              border: `1px solid #ef4444`,
+              background: `#ef444415`,
+            }}
+          >
+            unverified
+          </span>
+        )}
+        {insc.is_codex && (
+          <span
+            className="badge"
+            style={{
+              borderColor: "#8b5cf6",
+              color: "#8b5cf6",
+              border: `1px solid #8b5cf6`,
+              background: `#8b5cf615`,
+            }}
+          >
+            codex
           </span>
         )}
       </div>
@@ -158,6 +184,34 @@ export default async function InscriptionPage({
                     rel="noopener noreferrer"
                   >
                     geonames:{insc.geonames_id} ↗
+                  </a>
+                </dd>
+              </>
+            )}
+            {insc.trismegistos_id && (
+              <>
+                <dt>Trismegistos</dt>
+                <dd>
+                  <a
+                    href={trismegistosUrl(insc.trismegistos_id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    TM {insc.trismegistos_id} ↗
+                  </a>
+                </dd>
+              </>
+            )}
+            {insc.eagle_id && (
+              <>
+                <dt>EAGLE</dt>
+                <dd>
+                  <a
+                    href={eagleUrl(insc.eagle_id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    eagle:{insc.eagle_id} ↗
                   </a>
                 </dd>
               </>
