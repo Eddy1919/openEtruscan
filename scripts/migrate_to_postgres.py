@@ -492,6 +492,8 @@ def migrate(
             classification,
             (row["script_system"] if "script_system" in src_columns else "old_italic"),
             completeness,
+            (row["provenance_status"] if "provenance_status" in src_columns else "extracted"),
+            (row["provenance_flags"] if "provenance_flags" in src_columns else ""),
         )
 
         # Insert into PostgreSQL
