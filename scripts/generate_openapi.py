@@ -18,11 +18,12 @@ def generate_openapi(format: str = "json") -> str:
     """Generate OpenAPI schema from the FastAPI application."""
     # Import here to avoid requiring server deps for doc generation
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-    
+
     from fastapi.openapi.utils import get_openapi
-    from openetruscan.server import app
+
     from openetruscan import __version__
-    
+    from openetruscan.server import app
+
     openapi_schema = get_openapi(
         title=app.title,
         version=__version__,
@@ -30,7 +31,7 @@ def generate_openapi(format: str = "json") -> str:
         routes=app.routes,
         tags=app.openapi_tags,
     )
-    
+
     # Add additional metadata
     openapi_schema["info"]["contact"] = {
         "name": "OpenEtruscan Contributors",
@@ -40,13 +41,13 @@ def generate_openapi(format: str = "json") -> str:
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT",
     }
-    
+
     # Add servers
     openapi_schema["servers"] = [
         {"url": "https://www.openetruscan.com", "description": "Production"},
         {"url": "http://localhost:8000", "description": "Local development"},
     ]
-    
+
     if format == "yaml":
         try:
             import yaml
@@ -54,7 +55,7 @@ def generate_openapi(format: str = "json") -> str:
         except ImportError:
             print("PyYAML not installed, outputting JSON instead", file=sys.stderr)
             format = "json"
-    
+
     return json.dumps(openapi_schema, indent=2)
 
 
@@ -75,11 +76,11 @@ def main():
         default="json",
         help="Output format (default: json)",
     )
-    
+
     args = parser.parse_args()
-    
+
     schema = generate_openapi(format=args.format)
-    
+
     if args.output:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)

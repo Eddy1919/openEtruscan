@@ -13,18 +13,17 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
+from fastapi import FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from openetruscan import __version__
 from openetruscan.config import settings
 from openetruscan.corpus import Corpus
-from openetruscan import __version__
 
 logger = logging.getLogger("openetruscan")
 
@@ -629,6 +628,7 @@ def date_estimate(
 def pelagios_feed():
     """Pelagios-compatible JSON-LD feed for Linked Open Data."""
     from fastapi.responses import Response
+
     from openetruscan.lod import corpus_to_pelagios_jsonld
 
     jsonld = corpus_to_pelagios_jsonld(corpus)

@@ -290,7 +290,11 @@ def load_training_data(
         from psycopg2.extras import DictCursor
         conn = psycopg2.connect(str(db_path))
         with conn.cursor(cursor_factory=DictCursor) as cur:
-            cur.execute("SELECT canonical, classification FROM inscriptions WHERE canonical != '' AND provenance_status = 'verified'")
+            cur.execute(
+                "SELECT canonical, classification FROM inscriptions"
+                " WHERE canonical != ''"
+                " AND provenance_status = 'verified'"
+            )
             rows = cur.fetchall()
         conn.close()
     else:

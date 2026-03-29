@@ -10,6 +10,7 @@ Tests cover:
 - Error handling
 """
 import os
+
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["ENABLE_DOCS"] = "1"
 
@@ -17,9 +18,10 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
-from openetruscan.corpus import Corpus, Inscription
-from openetruscan import server
 from fastapi.testclient import TestClient
+
+from openetruscan import server
+from openetruscan.corpus import Corpus, Inscription
 
 
 def _make_inscription(**kwargs):
@@ -34,33 +36,33 @@ def _test_client_with_corpus():
     """Context manager that provides a test client with a populated test corpus."""
     fd, db_path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
-    
+
     corpus = Corpus.load(db_path)
-    
+
     # Add test data
     test_data = [
         ("ETR_001", "LARTHAL", "larθal", "Cerveteri", 42.0, 12.0, "etruscan", "funerary"),
         ("ETR_002", "ARNTH", "arnθ", "Tarquinia", 42.5, 11.5, "etruscan", "funerary"),
         ("ETR_003", "TEST", "test", "Rome", 41.9, 12.5, "latin", "legal"),
     ]
-    
+
     for id_, raw, canon, spot, lat, lon, lang, cls in test_data:
         corpus.add(_make_inscription(
             id=id_, raw_text=raw, canonical=canon, findspot=spot,
             findspot_lat=lat, findspot_lon=lon, language=lang, classification=cls
         ))
-    
+
     # Store original state
     orig_corpus = server.corpus
     orig_graph = server.GRAPH_READY
-    
+
     # Set test state
     server.corpus = corpus
     server.GRAPH_READY = True
-    
+
     # Create client without lifespan to avoid Corpus.load() being called
     client = TestClient(server.app)
-    
+
     try:
         yield client
     finally:
@@ -87,7 +89,10 @@ def test_health_response_structure():
     with _test_client_with_corpus() as client:
         response = client.get("/health")
         data = response.json()
-        required = ["status", "version", "uptime_seconds", "corpus_loaded", "graph_ready", "timestamp"]
+        required = [
+            "status", "version", "uptime_seconds",
+            "corpus_loaded", "graph_ready", "timestamp",
+        ]
         assert all(k in data for k in required)
 
 
