@@ -79,11 +79,15 @@ class Inscription:
     # Classification fields
     language: str = "etruscan"
     classification: str = "unknown"
-    script_system: str = "old_italic"
-    completeness: str = "complete"
-    # Provenance fields
-    provenance_status: str = "verified"
-    provenance_flags: str = ""  # JSON-encoded list of detected issues
+    script_system: str | None = None
+    completeness: str | None = None
+    provenance_status: str | None = "verified"
+    provenance_flags: list[str] = field(default_factory=list)
+    trismegistos_id: str | None = None
+    eagle_id: str | None = None
+    pleiades_id: str | None = None
+    geonames_id: str | None = None
+    is_codex: bool = False
 
     def date_display(self) -> str:
         """Human-readable date string."""
@@ -118,6 +122,11 @@ class Inscription:
             "completeness": self.completeness,
             "provenance_status": self.provenance_status,
             "provenance_flags": self.provenance_flags,
+            "trismegistos_id": self.trismegistos_id,
+            "eagle_id": self.eagle_id,
+            "pleiades_id": self.pleiades_id,
+            "geonames_id": self.geonames_id,
+            "is_codex": self.is_codex,
         }
 
 
@@ -1342,10 +1351,15 @@ def _row_to_inscription(row: sqlite3.Row) -> Inscription:
         notes=row["notes"],
         language=row["language"] if "language" in keys else "etruscan",
         classification=(row["classification"] if "classification" in keys else "unknown"),
-        script_system=(row["script_system"] if "script_system" in keys else "old_italic"),
-        completeness=(row["completeness"] if "completeness" in keys else "complete"),
+        script_system=(row["script_system"] if "script_system" in keys else None),
+        completeness=(row["completeness"] if "completeness" in keys else None),
         provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
-        provenance_flags=(row["provenance_flags"] if "provenance_flags" in keys else ""),
+        provenance_flags=([] if not ("provenance_flags" in keys and row["provenance_flags"]) else row["provenance_flags"].split(",")),
+        trismegistos_id=(row["trismegistos_id"] if "trismegistos_id" in keys else None),
+        eagle_id=(row["eagle_id"] if "eagle_id" in keys else None),
+        pleiades_id=(row["pleiades_id"] if "pleiades_id" in keys else None),
+        geonames_id=(row["geonames_id"] if "geonames_id" in keys else None),
+        is_codex=(row["is_codex"] if "is_codex" in keys else False),
     )
 
 
@@ -1369,10 +1383,15 @@ def _dict_to_inscription(row: dict) -> Inscription:
         notes=row.get("notes", ""),
         language=row.get("language", "etruscan"),
         classification=row.get("classification", "unknown"),
-        script_system=row.get("script_system", "old_italic"),
-        completeness=row.get("completeness", "complete"),
+        script_system=row.get("script_system", None),
+        completeness=row.get("completeness", None),
         provenance_status=row.get("provenance_status", "verified"),
-        provenance_flags=row.get("provenance_flags", ""),
+        provenance_flags=([] if not row.get("provenance_flags") else row["provenance_flags"].split(",")),
+        trismegistos_id=row.get("trismegistos_id", None),
+        eagle_id=row.get("eagle_id", None),
+        pleiades_id=row.get("pleiades_id", None),
+        geonames_id=row.get("geonames_id", None),
+        is_codex=row.get("is_codex", False),
     )
 
 

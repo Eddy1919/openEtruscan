@@ -144,6 +144,12 @@ class InscriptionModel(BaseModel):
     language: str
     classification: str
     gens: str | None = None
+    pleiades_id: str | None = None
+    geonames_id: str | None = None
+    trismegistos_id: str | None = None
+    eagle_id: str | None = None
+    is_codex: bool = False
+    provenance_status: str | None = "verified"
 
 
 class SearchResponse(BaseModel):
@@ -168,7 +174,20 @@ def _build_model(i) -> InscriptionModel:
         language=i.language,
         classification=i.classification,
         gens=insc_to_gens.get(i.id),
+        pleiades_id=i.pleiades_id,
+        geonames_id=i.geonames_id,
+        trismegistos_id=i.trismegistos_id,
+        eagle_id=i.eagle_id,
+        is_codex=i.is_codex,
+        provenance_status=i.provenance_status,
     )
+
+@app.get("/corpus", response_model=list[InscriptionModel])
+@limiter.limit("5/minute")
+def get_full_corpus(request: Request):
+    """Fetch the entire unified corpus asynchronously. High bandwidth endpoint."""
+    results = corpus.search(limit=99999)
+    return [_build_model(i) for i in results.inscriptions]
 
 
 @app.get("/search", response_model=SearchResponse)
