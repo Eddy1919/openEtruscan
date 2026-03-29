@@ -44,7 +44,7 @@ jobs:
               set -e
               REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
               if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
-              OWNER=\$(stat -c '%U' \"\$REPO_DIR\")
+              OWNER=\$(sudo stat -c '%U' \"\$REPO_DIR\")
               sudo -u \"\$OWNER\" sh -c \"cd \$REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main\"
               sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker/compose:1.29.2 up -d --build
               sudo docker image prune -f
