@@ -39,13 +39,13 @@ log = logging.getLogger("embed")
 API_KEY = os.getenv("GEMINI_API_KEY")
 EMBED_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "text-embedding-004:embedContent"
+    "gemini-embedding-001:embedContent"
 )
 BATCH_EMBED_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "text-embedding-004:batchEmbedContents"
+    "gemini-embedding-001:batchEmbedContents"
 )
-EMBED_DIM = 768
+EMBED_DIM = 3072
 MAX_BATCH = 100  # Gemini batch limit
 
 
@@ -87,7 +87,7 @@ def embed_batch(texts: list[str], retries: int = 3) -> list[list[float] | None]:
     for i, text in enumerate(texts):
         if text and text.strip():
             requests_list.append({
-                "model": "models/text-embedding-004",
+                "model": "models/gemini-embedding-001",
                 "content": {"parts": [{"text": text[:2048]}]},
             })
             positions.append(i)
