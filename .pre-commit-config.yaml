@@ -1,0 +1,41 @@
+# Pre-commit hooks for OpenEtruscan
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(data/|frontend/)
+      - id: end-of-file-fixer
+        exclude: ^(data/|frontend/)
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+        language_version: python3
+
+  # Ruff - Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.10
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        files: ^(src/|tests/)
+      # Run the formatter
+      - id: ruff-format
+        files: ^(src/|tests/)
+
+  # Mypy - Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        files: ^src/openetruscan/
+        additional_dependencies: [types-PyYAML, types-requests]

@@ -66,3 +66,6 @@ data/cie/ingest.log
 data/cie/full_extraction.json
 .vercel
 .env*.local
+
+# Local security audit (contains grep patterns for secrets — keep local)
+scripts/security_check.sh
