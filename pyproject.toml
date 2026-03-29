@@ -121,3 +121,9 @@ module = [
     "onnxruntime.*",
 ]
 ignore_missing_imports = true
+
+[tool.pyright]
+typeCheckingMode = "basic"
+reportArgumentType = "none"
+reportGeneralTypeIssues = "none"
+reportOperatorIssue = "none"
