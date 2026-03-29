@@ -21,17 +21,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: 'actions/checkout@v4'
+      - uses: 'actions/checkout@v6'
       
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+        uses: 'google-github-actions/auth@v3'
         with:
           workload_identity_provider: 'projects/19927826393/locations/global/workloadIdentityPools/github-actions/providers/github-provider'
           service_account: 'gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com'
 
       - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: 'google-github-actions/setup-gcloud@v3'
 
       - name: 'Execute Remote SSH Commands via IAP'
         run: |
