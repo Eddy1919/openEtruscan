@@ -37,8 +37,6 @@ COPY --from=builder /install /usr/local
 
 # Copy application source (no tests, scripts, data, frontend)
 COPY src/ src/
-COPY data/adapters/ data/adapters/
-COPY data/gazetteers/ data/gazetteers/
 
 # Create non-root user
 RUN groupadd --system appuser && useradd --system --gid appuser appuser
