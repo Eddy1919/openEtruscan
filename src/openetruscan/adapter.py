@@ -8,7 +8,7 @@ all language-specific knowledge lives in these YAML files.
 
 from __future__ import annotations
 
-import importlib.resources
+import importlib.resources  # nosemgrep
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any

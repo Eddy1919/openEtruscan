@@ -1,0 +1,1069 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenEtruscan Corpus API",
+    "description": "REST API for querying the OpenEtruscan dataset.",
+    "version": "0.3.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint for monitoring and load balancers.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Readiness Check",
+        "description": "Readiness probe for Kubernetes.",
+        "operationId": "readiness_check_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness Check",
+        "description": "Liveness probe for Kubernetes.",
+        "operationId": "liveness_check_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/corpus": {
+      "get": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Get Full Corpus",
+        "description": "Fetch the entire unified corpus asynchronously. High bandwidth endpoint.",
+        "operationId": "get_full_corpus_corpus_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InscriptionModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Full Corpus Corpus Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search Corpus",
+        "description": "Search by text, location, or metadata.",
+        "operationId": "search_corpus_search_get",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wildcard text search (e.g. *larth*)",
+              "title": "Text"
+            },
+            "description": "Wildcard text search (e.g. *larth*)"
+          },
+          {
+            "name": "findspot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Findspot name",
+              "title": "Findspot"
+            },
+            "description": "Findspot name"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Language filter",
+              "title": "Language"
+            },
+            "description": "Language filter"
+          },
+          {
+            "name": "classification",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Classification filter",
+              "title": "Classification"
+            },
+            "description": "Classification filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/radius": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search By Radius",
+        "description": "Search by spatial radius.",
+        "operationId": "search_by_radius_radius_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Latitude of center point",
+              "title": "Lat"
+            },
+            "description": "Latitude of center point"
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 180,
+              "minimum": -180,
+              "description": "Longitude of center point",
+              "title": "Lon"
+            },
+            "description": "Longitude of center point"
+          },
+          {
+            "name": "radius_km",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 500,
+              "minimum": 0.1,
+              "description": "Radius in kilometers",
+              "default": 50.0,
+              "title": "Radius Km"
+            },
+            "description": "Radius in kilometers"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/semantic-search": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Semantic Search",
+        "description": "Semantic pgvector search using Gemini text-embedding-004.",
+        "operationId": "semantic_search_semantic_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Query text to search for",
+              "title": "Q"
+            },
+            "description": "Query text to search for"
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(emb_text|emb_context|emb_combined)$",
+              "description": "Vector field to compare against",
+              "default": "emb_combined",
+              "title": "Field"
+            },
+            "description": "Vector field to compare against"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscriptions/{id}/genetics": {
+      "get": {
+        "tags": [
+          "Genetics"
+        ],
+        "summary": "Get Genetic Matches",
+        "description": "Spatio-temporal matchmaking between inscriptions and archaeogenetic samples.",
+        "operationId": "get_genetic_matches_inscriptions__id__genetics_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the inscription to find genetic matches for",
+              "title": "Id"
+            },
+            "description": "ID of the inscription to find genetic matches for"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clan/{gens}": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Search By Clan",
+        "description": "Prosopographical network search by clan/gens.",
+        "operationId": "search_by_clan_clan__gens__get",
+        "parameters": [
+          {
+            "name": "gens",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Gentilicium (clan name) to search for",
+              "title": "Gens"
+            },
+            "description": "Gentilicium (clan name) to search for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Corpus Stats",
+        "description": "Get corpus counts.",
+        "operationId": "corpus_stats_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/frequency": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Frequency Analysis",
+        "description": "Letter frequency analysis, optionally comparing two sites (chi\u00b2 test).",
+        "operationId": "frequency_analysis_stats_frequency_get",
+        "parameters": [
+          {
+            "name": "findspot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by findspot",
+              "title": "Findspot"
+            },
+            "description": "Filter by findspot"
+          },
+          {
+            "name": "findspot_b",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Second findspot for comparison",
+              "title": "Findspot B"
+            },
+            "description": "Second findspot for comparison"
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date range start (BCE, positive int)",
+              "title": "Date From"
+            },
+            "description": "Date range start (BCE, positive int)"
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date range end (BCE, positive int)",
+              "title": "Date To"
+            },
+            "description": "Date range end (BCE, positive int)"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Language adapter to use",
+              "default": "etruscan",
+              "title": "Language"
+            },
+            "description": "Language adapter to use"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/clusters": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Dialect Clusters",
+        "description": "Dialect clustering via Ward's hierarchical method with cosine distance.",
+        "operationId": "dialect_clusters_stats_clusters_get",
+        "parameters": [
+          {
+            "name": "min_inscriptions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 2,
+              "description": "Minimum inscriptions per site",
+              "default": 5,
+              "title": "Min Inscriptions"
+            },
+            "description": "Minimum inscriptions per site"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Language adapter",
+              "default": "etruscan",
+              "title": "Language"
+            },
+            "description": "Language adapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/date-estimate": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Date Estimate",
+        "description": "Estimate chronological period from orthographic features.",
+        "operationId": "date_estimate_stats_date_estimate_get",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Inscription text to analyze",
+              "title": "Text"
+            },
+            "description": "Inscription text to analyze"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Language adapter",
+              "default": "etruscan",
+              "title": "Language"
+            },
+            "description": "Language adapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pelagios.jsonld": {
+      "get": {
+        "tags": [
+          "Linked Data"
+        ],
+        "summary": "Pelagios Feed",
+        "description": "Pelagios-compatible JSON-LD feed for Linked Open Data.",
+        "operationId": "pelagios_feed_pelagios_jsonld_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pleiades-stats": {
+      "get": {
+        "tags": [
+          "Linked Data"
+        ],
+        "summary": "Pleiades Coverage",
+        "description": "Pleiades coverage statistics.",
+        "operationId": "pleiades_coverage_pleiades_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds"
+          },
+          "corpus_loaded": {
+            "type": "boolean",
+            "title": "Corpus Loaded"
+          },
+          "graph_ready": {
+            "type": "boolean",
+            "title": "Graph Ready"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "uptime_seconds",
+          "corpus_loaded",
+          "graph_ready",
+          "timestamp"
+        ],
+        "title": "HealthResponse"
+      },
+      "InscriptionModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "canonical": {
+            "type": "string",
+            "title": "Canonical"
+          },
+          "phonetic": {
+            "type": "string",
+            "title": "Phonetic"
+          },
+          "old_italic": {
+            "type": "string",
+            "title": "Old Italic"
+          },
+          "raw_text": {
+            "type": "string",
+            "title": "Raw Text"
+          },
+          "findspot": {
+            "type": "string",
+            "title": "Findspot"
+          },
+          "findspot_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findspot Lat"
+          },
+          "findspot_lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findspot Lon"
+          },
+          "date_display": {
+            "type": "string",
+            "title": "Date Display"
+          },
+          "medium": {
+            "type": "string",
+            "title": "Medium"
+          },
+          "object_type": {
+            "type": "string",
+            "title": "Object Type"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "classification": {
+            "type": "string",
+            "title": "Classification"
+          },
+          "gens": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gens"
+          },
+          "pleiades_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pleiades Id"
+          },
+          "geonames_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geonames Id"
+          },
+          "trismegistos_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trismegistos Id"
+          },
+          "eagle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eagle Id"
+          },
+          "is_codex": {
+            "type": "boolean",
+            "title": "Is Codex",
+            "default": false
+          },
+          "provenance_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Status",
+            "default": "verified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "canonical",
+          "phonetic",
+          "old_italic",
+          "raw_text",
+          "findspot",
+          "findspot_lat",
+          "findspot_lon",
+          "date_display",
+          "medium",
+          "object_type",
+          "language",
+          "classification"
+        ],
+        "title": "InscriptionModel"
+      },
+      "SearchResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/InscriptionModel"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "count",
+          "results"
+        ],
+        "title": "SearchResponse"
+      },
+      "StatsResponse": {
+        "properties": {
+          "total_inscriptions": {
+            "type": "integer",
+            "title": "Total Inscriptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_inscriptions"
+        ],
+        "title": "StatsResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
