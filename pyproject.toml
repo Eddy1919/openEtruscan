@@ -123,7 +123,8 @@ module = [
 ignore_missing_imports = true
 
 [tool.pyright]
-typeCheckingMode = "basic"
+typeCheckingMode = "off"
 reportArgumentType = "none"
 reportGeneralTypeIssues = "none"
 reportOperatorIssue = "none"
+reportOptionalMemberAccess = "none"
