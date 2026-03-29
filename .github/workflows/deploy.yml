@@ -42,7 +42,7 @@ jobs:
             --quiet \
             --command="
               set -e
-              REPO_DIR=\$(find /home -maxdepth 2 -name 'openEtruscan' -type d | head -n 1)
+              REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
               if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
               cd \"\$REPO_DIR\"
               sudo sh -c \"cd \$REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main\"
