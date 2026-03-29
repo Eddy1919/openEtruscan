@@ -15,6 +15,10 @@ export interface Inscription {
   notes: string | null;
   pleiades_id: string | null;
   geonames_id: string | null;
+  trismegistos_id: string | null;
+  eagle_id: string | null;
+  is_codex: boolean;
+  provenance_status: string;
 }
 
 let _cache: Inscription[] | null = null;
@@ -42,6 +46,14 @@ export function pleiadesUrl(id: string): string {
 
 export function geonamesUrl(id: string): string {
   return `https://sws.geonames.org/${id}/`;
+}
+
+export function trismegistosUrl(id: string): string {
+  return `https://www.trismegistos.org/text/${id}`;
+}
+
+export function eagleUrl(id: string): string {
+  return `https://www.eagle-network.eu/info/${id}`;
 }
 
 /** Classification color palette */

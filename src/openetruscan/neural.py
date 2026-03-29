@@ -285,14 +285,22 @@ def load_training_data(
 
     Returns (texts, labels) for inscriptions that received a label.
     """
-    import sqlite3
-
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        "SELECT canonical, classification FROM inscriptions WHERE canonical != ''"
-    ).fetchall()
-    conn.close()
+    if str(db_path).startswith("postgres"):
+        import psycopg2
+        from psycopg2.extras import DictCursor
+        conn = psycopg2.connect(str(db_path))
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute("SELECT canonical, classification FROM inscriptions WHERE canonical != '' AND provenance_status = 'verified'")
+            rows = cur.fetchall()
+        conn.close()
+    else:
+        import sqlite3
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT canonical, classification FROM inscriptions WHERE canonical != ''"
+        ).fetchall()
+        conn.close()
 
     texts: list[str] = []
     labels: list[str] = []
