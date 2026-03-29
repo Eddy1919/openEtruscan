@@ -718,7 +718,7 @@ class Corpus(BaseCorpus):
     ) -> SearchResults:
         """
         Haversine fallback for SQLite with bounding box optimization.
-        
+
         Uses a bounding box pre-filter to avoid calculating Haversine distance
         for points that are definitely outside the radius.
         """
@@ -738,8 +738,8 @@ class Corpus(BaseCorpus):
         # Query only points within bounding box first (much faster)
         rows = self.conn.execute(
             """
-            SELECT * FROM inscriptions 
-            WHERE findspot_lat IS NOT NULL 
+            SELECT * FROM inscriptions
+            WHERE findspot_lat IS NOT NULL
               AND findspot_lon IS NOT NULL
               AND findspot_lat >= ? AND findspot_lat <= ?
               AND findspot_lon >= ? AND findspot_lon <= ?
@@ -814,6 +814,7 @@ class Corpus(BaseCorpus):
     ) -> list[dict]:
         """Haversine fallback for genetic matching in SQLite with bounding box optimization."""
         import math
+
         from openetruscan.geo import haversine
 
         # Find the inscription's coordinates and date
@@ -840,8 +841,8 @@ class Corpus(BaseCorpus):
         # Fetch genetic samples within bounding box
         genes = self.conn.execute(
             """
-            SELECT * FROM genetic_samples 
-            WHERE findspot_lat IS NOT NULL 
+            SELECT * FROM genetic_samples
+            WHERE findspot_lat IS NOT NULL
               AND findspot_lon IS NOT NULL
               AND findspot_lat >= ? AND findspot_lat <= ?
               AND findspot_lon >= ? AND findspot_lon <= ?
@@ -849,7 +850,6 @@ class Corpus(BaseCorpus):
             (lat_min, lat_max, lon_min, lon_max),
         ).fetchall()
 
-        from openetruscan.geo import haversine
 
         results = []
         for g in genes:
@@ -1395,7 +1395,11 @@ def _row_to_inscription(row: sqlite3.Row) -> Inscription:
         script_system=(row["script_system"] if "script_system" in keys else None),
         completeness=(row["completeness"] if "completeness" in keys else None),
         provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
-        provenance_flags=([] if not ("provenance_flags" in keys and row["provenance_flags"]) else row["provenance_flags"].split(",")),
+        provenance_flags=(
+            []
+            if not ("provenance_flags" in keys and row["provenance_flags"])
+            else row["provenance_flags"].split(",")
+        ),
         trismegistos_id=(row["trismegistos_id"] if "trismegistos_id" in keys else None),
         eagle_id=(row["eagle_id"] if "eagle_id" in keys else None),
         pleiades_id=(row["pleiades_id"] if "pleiades_id" in keys else None),
@@ -1424,14 +1428,18 @@ def _dict_to_inscription(row: dict) -> Inscription:
         notes=row.get("notes", ""),
         language=row.get("language", "etruscan"),
         classification=row.get("classification", "unknown"),
-        script_system=row.get("script_system", None),
-        completeness=row.get("completeness", None),
+        script_system=row.get("script_system"),
+        completeness=row.get("completeness"),
         provenance_status=row.get("provenance_status", "verified"),
-        provenance_flags=([] if not row.get("provenance_flags") else row["provenance_flags"].split(",")),
-        trismegistos_id=row.get("trismegistos_id", None),
-        eagle_id=row.get("eagle_id", None),
-        pleiades_id=row.get("pleiades_id", None),
-        geonames_id=row.get("geonames_id", None),
+        provenance_flags=(
+            []
+            if not row.get("provenance_flags")
+            else row["provenance_flags"].split(",")
+        ),
+        trismegistos_id=row.get("trismegistos_id"),
+        eagle_id=row.get("eagle_id"),
+        pleiades_id=row.get("pleiades_id"),
+        geonames_id=row.get("geonames_id"),
         is_codex=row.get("is_codex", False),
     )
 

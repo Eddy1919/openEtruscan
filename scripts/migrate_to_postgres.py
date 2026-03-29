@@ -178,8 +178,10 @@ Respond with a JSON object:
 
 Rules for your judgement:
 - If the text looks like an Etruscan name formula or short inscription → valid_etruscan: true
-- If the text is clearly Latin commentary, a findspot description, or bibliography → valid_etruscan: false
-- If you are uncertain but the text plausibly *could* be Etruscan → valid_etruscan: true (err on the side of inclusion)
+- If the text is clearly Latin commentary, a findspot description,
+  or bibliography → valid_etruscan: false
+- If you are uncertain but the text plausibly *could* be Etruscan
+  → valid_etruscan: true (err on the side of inclusion)
 - If the text is empty, nonsensical, or a page number → valid_etruscan: false
 """
 
