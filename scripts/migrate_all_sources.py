@@ -27,6 +27,39 @@ def run_migrations():
     with conn.cursor() as cur:
         print("[MIGRATION] Applying structural schema upgrades...")
         
+        # Ensure table exists with 3072 dimensions for embeddings
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS inscriptions (
+                id TEXT PRIMARY KEY,
+                raw_text TEXT NOT NULL,
+                canonical TEXT NOT NULL,
+                phonetic TEXT NOT NULL,
+                old_italic TEXT NOT NULL,
+                findspot TEXT DEFAULT '',
+                findspot_lat DOUBLE PRECISION,
+                findspot_lon DOUBLE PRECISION,
+                date_approx INTEGER,
+                date_uncertainty INTEGER,
+                medium TEXT DEFAULT '',
+                object_type TEXT DEFAULT '',
+                source TEXT DEFAULT '',
+                bibliography TEXT DEFAULT '',
+                notes TEXT DEFAULT '',
+                language TEXT NOT NULL DEFAULT 'etruscan',
+                classification TEXT NOT NULL DEFAULT 'unknown',
+                script_system TEXT NOT NULL DEFAULT 'old_italic',
+                completeness TEXT NOT NULL DEFAULT 'complete',
+                provenance_status TEXT NOT NULL DEFAULT 'verified',
+                provenance_flags TEXT NOT NULL DEFAULT '',
+                geom geometry(Point, 4326),
+                emb_text vector(3072),
+                emb_context vector(3072),
+                emb_combined vector(3072),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+        """)
+
         # Add provenience columns safely
         cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;")
         cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")

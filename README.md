@@ -17,13 +17,14 @@
 
 ## Overview
 
-OpenEtruscan provides computationally accessible tools for the Etruscan epigraphic record. The platform normalises transcriptions across five notation systems, classifies inscriptions using neural models, and publishes the full corpus as Linked Open Data.
+OpenEtruscan provides computationally accessible tools for the Etruscan epigraphic record. The platform normalises transcriptions across notation systems, classifies inscriptions using neural models, and publishes the full corpus as Linked Open Data.
 
-The corpus contains 4,728 inscriptions in Etruscan and related Italic scripts, georeferenced to 45 archaeological sites.
+The corpus currently contains a unified, verified dataset of **11,361 inscriptions** georeferenced to 184 archaeological sites, with high-fidelity semantic links to Trismegistos, EAGLE, and Pleiades.
 
-## Platform
-
-The web interface is built with Next.js 15 (App Router) and deployed on Vercel. All tools run client-side; no data leaves the user's browser.
+The platform follows a decoupled, cloud-native architecture:
+- **Data Layer:** PostgreSQL (PostGIS + pgvector) hosted on Google Cloud SQL, featuring 3,072-dimensional semantic embeddings for high-precision epigraphic similarity search.
+- **Backend Layer:** FastAPI service on GCE (App VM) serving structured data and neural inference proxies.
+- **Frontend Layer:** Next.js 15 (App Router) deployed on Vercel, fetching dynamically from the live production API.
 
 | Page | Description |
 |---|---|
@@ -84,7 +85,7 @@ openEtruscan/
     components/      Shared UI components (Nav, Footer, CitationExport)
     lib/             Corpus loader, normalizer engine, ONNX classifier
     public/
-      data/          corpus.json, languages.json
+      data/          languages.json
       models/        cnn.onnx, transformer.onnx + metadata
   src/               Python package source
   data/              Corpus data, RDF exports, CIE fascicles
