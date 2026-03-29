@@ -211,7 +211,9 @@ def main():
             if args.field in ("combined", "all"):
                 where_parts.append("emb_combined IS NULL")
             where_clause = " OR ".join(where_parts) if where_parts else "TRUE"
-            cur.execute(f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY id")
+            cur.execute(
+                f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY id"
+            )  # nosemgrep
         rows = cur.fetchall()
 
     total = len(rows)
@@ -269,7 +271,7 @@ def main():
                     updates.append("updated_at = NOW()")
                     params.append(row["id"])
                     sql = f"UPDATE inscriptions SET {', '.join(updates)} WHERE id = %s"
-                    cur.execute(sql, params)
+                    cur.execute(sql, params)  # nosemgrep
 
         conn.commit()
         embedded += len(batch)

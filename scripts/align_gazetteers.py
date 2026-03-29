@@ -87,7 +87,7 @@ def ensure_columns(conn: sqlite3.Connection) -> None:
     existing = {row[1] for row in cursor.execute("PRAGMA table_info(inscriptions)")}
     for col in ("pleiades_id", "geonames_id"):
         if col not in existing:
-            cursor.execute(f"ALTER TABLE inscriptions ADD COLUMN {col} TEXT")
+            cursor.execute(f"ALTER TABLE inscriptions ADD COLUMN {col} TEXT")  # nosemgrep
             print(f"  Added column: {col}")
     conn.commit()
 

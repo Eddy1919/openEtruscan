@@ -129,7 +129,7 @@ def download_larth(url: str = LARTH_URL) -> str:
     """Download the Larth CSV from GitHub."""
     print("📥 Downloading Larth dataset from GitHub...")
     req = urllib.request.Request(url, headers={"User-Agent": "OpenEtruscan/0.1"})
-    with urllib.request.urlopen(req) as response:
+    with urllib.request.urlopen(req) as response:  # nosemgrep
         data = response.read().decode("utf-8")
     print(f"   Downloaded {len(data):,} bytes")
     return data

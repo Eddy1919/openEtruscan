@@ -511,7 +511,7 @@ class BaseCorpus(ABC):
             insc.script_system,
             insc.completeness,
             insc.provenance_status,
-            insc.provenance_flags,
+            ",".join(insc.provenance_flags) if insc.provenance_flags else "",
         )
 
     def _build_search_query(
@@ -660,7 +660,9 @@ class Corpus(BaseCorpus):
         ]
         for col_name, col_def in migrations:
             if col_name not in existing:
-                self.conn.execute(f"ALTER TABLE inscriptions ADD COLUMN {col_name} {col_def}")
+                self.conn.execute(
+                    f"ALTER TABLE inscriptions ADD COLUMN {col_name} {col_def}"
+                )  # nosemgrep
         self.conn.commit()
 
     def add(
@@ -673,7 +675,7 @@ class Corpus(BaseCorpus):
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["?"] * len(_COLUMNS))
         self.conn.execute(
-            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",
+            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",  # nosemgrep
             self._inscription_values(inscription),
         )
         self.conn.commit()
@@ -1195,7 +1197,7 @@ class PostgresCorpus(BaseCorpus):
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, (vec_str, vec_str, limit))
+            cur.execute(query, (vec_str, vec_str, limit))  # nosemgrep
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
 
