@@ -651,17 +651,33 @@ class Corpus(BaseCorpus):
         cursor = self.conn.execute("PRAGMA table_info(inscriptions)")
         existing = {row[1] for row in cursor.fetchall()}
         if 'language' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN language TEXT NOT NULL DEFAULT 'etruscan'")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN language TEXT NOT NULL DEFAULT 'etruscan'"
+            )
         if 'classification' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN classification TEXT NOT NULL DEFAULT 'unknown'")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN classification TEXT NOT NULL DEFAULT 'unknown'"
+            )
         if 'script_system' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN script_system TEXT NOT NULL DEFAULT 'old_italic'")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN "
+                "script_system TEXT NOT NULL DEFAULT 'old_italic'"
+            )
         if 'completeness' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN completeness TEXT NOT NULL DEFAULT 'complete'")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN "
+                "completeness TEXT NOT NULL DEFAULT 'complete'"
+            )
         if 'provenance_status' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN provenance_status TEXT NOT NULL DEFAULT 'verified'")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN "
+                "provenance_status TEXT NOT NULL DEFAULT 'verified'"
+            )
         if 'provenance_flags' not in existing:
-            self.conn.execute("ALTER TABLE inscriptions ADD COLUMN provenance_flags TEXT NOT NULL DEFAULT ''")
+            self.conn.execute(
+                "ALTER TABLE inscriptions ADD COLUMN "
+                "provenance_flags TEXT NOT NULL DEFAULT ''"
+            )
         self.conn.commit()
 
     def add(
