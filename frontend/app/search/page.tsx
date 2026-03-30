@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, toOldItalic, dateDisplay, CLASS_COLORS } from "@/lib/corpus";
+import type { Inscription, StatsSummary } from "@/lib/corpus";
+import { searchCorpus, fetchStatsSummary, toOldItalic, dateDisplay, CLASS_COLORS } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 const CLASSIFICATIONS = [
@@ -16,37 +16,64 @@ const PAGE_SIZE = 50;
 type SortKey = "relevance" | "date" | "site" | "id";
 
 export default function SearchPage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [results, setResults] = useState<Inscription[]>([]);
+  const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("relevance");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<StatsSummary | null>(null);
+  const [offset, setOffset] = useState(0);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Fetch stats for facet counts
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchStatsSummary().then(setStats).catch(console.error);
   }, []);
 
-  const queryLower = query.toLowerCase().trim();
+  // Debounced search
+  const doSearch = useCallback(
+    (text: string, classification: string | null, newOffset: number) => {
+      setLoading(true);
+      searchCorpus({
+        text: text || undefined,
+        classification: classification || undefined,
+        limit: PAGE_SIZE,
+        offset: newOffset,
+      })
+        .then((res) => {
+          if (newOffset === 0) {
+            setResults(res.results);
+          } else {
+            setResults((prev) => [...prev, ...res.results]);
+          }
+          setTotal(res.total);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    },
+    []
+  );
 
-  const filtered = useMemo(() => {
-    if (!queryLower && !activeClass) return corpus;
-    return corpus.filter((insc) => {
-      if (activeClass) {
-        const cls = insc.classification || "unknown";
-        if (cls !== activeClass) return false;
-      }
-      if (!queryLower) return true;
-      return (
-        insc.canonical.toLowerCase().includes(queryLower) ||
-        insc.id.toLowerCase().includes(queryLower) ||
-        (insc.findspot || "").toLowerCase().includes(queryLower) ||
-        (insc.old_italic || "").includes(queryLower)
-      );
-    });
-  }, [corpus, queryLower, activeClass]);
+  // Initial load
+  useEffect(() => {
+    doSearch("", null, 0);
+  }, [doSearch]);
+
+  // Trigger search on query or filter change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setOffset(0);
+      doSearch(query, activeClass, 0);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, activeClass, doSearch]);
 
   const sorted = useMemo(() => {
-    const arr = [...filtered];
+    const arr = [...results];
     switch (sortBy) {
       case "date":
         return arr.sort((a, b) => (a.date_approx ?? 9999) - (b.date_approx ?? 9999));
@@ -57,22 +84,25 @@ export default function SearchPage() {
       default:
         return arr;
     }
-  }, [filtered, sortBy]);
+  }, [results, sortBy]);
 
   const facets = useMemo(() => {
-    const map = new Map<string, number>();
-    filtered.forEach((insc) => {
-      const cls = insc.classification || "unknown";
-      map.set(cls, (map.get(cls) || 0) + 1);
-    });
+    if (!stats) return [];
     return CLASSIFICATIONS
-      .map((cls) => ({ cls, count: map.get(cls) || 0 }))
+      .map((cls) => ({
+        cls,
+        count: stats.classification_counts.find(([c]) => c === cls)?.[1] || 0,
+      }))
       .filter((f) => f.count > 0);
-  }, [filtered]);
+  }, [stats]);
 
-  const visible = sorted.slice(0, visibleCount);
+  const handleLoadMore = () => {
+    const nextOffset = offset + PAGE_SIZE;
+    setOffset(nextOffset);
+    doSearch(query, activeClass, nextOffset);
+  };
 
-  if (!corpus.length) {
+  if (loading && results.length === 0) {
     return (
       <div className="page-container">
         <div className="loading-shimmer" style={{ height: 200 }} />
@@ -84,7 +114,7 @@ export default function SearchPage() {
     <div className="page-container" style={{ maxWidth: 1100 }}>
       <h1 className={styles.heading}>Search the Corpus</h1>
       <p className={styles.subtitle}>
-        Query {corpus.length.toLocaleString()} inscriptions by text, identifier,
+        Query {(stats?.total || total).toLocaleString()} inscriptions by text, identifier,
         findspot, or Old Italic Unicode.
       </p>
 
@@ -95,14 +125,11 @@ export default function SearchPage() {
           className={`input ${styles.searchInput}`}
           placeholder="e.g. laris, turce, Volsinii, Cr 2.20"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setVisibleCount(PAGE_SIZE);
-          }}
+          onChange={(e) => setQuery(e.target.value)}
         />
         <div className={styles.sortRow}>
           <span className={styles.resultCount}>
-            {filtered.length.toLocaleString()} result{filtered.length !== 1 ? "s" : ""}
+            {total.toLocaleString()} result{total !== 1 ? "s" : ""}
           </span>
           <select
             className={`input ${styles.sortSelect}`}
@@ -124,7 +151,7 @@ export default function SearchPage() {
           {activeClass && (
             <button
               className={styles.clearFilter}
-              onClick={() => { setActiveClass(null); setVisibleCount(PAGE_SIZE); }}
+              onClick={() => setActiveClass(null)}
             >
               Clear filter
             </button>
@@ -134,10 +161,7 @@ export default function SearchPage() {
               <li key={cls}>
                 <button
                   className={`${styles.facetBtn} ${activeClass === cls ? styles.facetActive : ""}`}
-                  onClick={() => {
-                    setActiveClass(activeClass === cls ? null : cls);
-                    setVisibleCount(PAGE_SIZE);
-                  }}
+                  onClick={() => setActiveClass(activeClass === cls ? null : cls)}
                 >
                   <span
                     className={styles.facetDot}
@@ -153,7 +177,7 @@ export default function SearchPage() {
 
         {/* Results */}
         <div className={styles.results}>
-          {visible.map((insc) => {
+          {sorted.map((insc) => {
             const cls = insc.classification || "unknown";
             const color = CLASS_COLORS[cls] || CLASS_COLORS.unknown;
             return (
@@ -183,17 +207,18 @@ export default function SearchPage() {
             );
           })}
 
-          {visibleCount < sorted.length && (
+          {results.length < total && (
             <button
               className="btn btn-secondary"
               style={{ width: "100%", justifyContent: "center" }}
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              onClick={handleLoadMore}
+              disabled={loading}
             >
-              Load more ({sorted.length - visibleCount} remaining)
+              {loading ? "Loading..." : `Load more (${total - results.length} remaining)`}
             </button>
           )}
 
-          {filtered.length === 0 && (
+          {!loading && results.length === 0 && (
             <p className={styles.noResults}>
               No inscriptions match the current query and filters.
             </p>

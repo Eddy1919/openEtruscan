@@ -1,55 +1,16 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, CLASS_COLORS } from "@/lib/corpus";
+import { useEffect, useState } from "react";
+import type { StatsSummary } from "@/lib/corpus";
+import { fetchStatsSummary, CLASS_COLORS } from "@/lib/corpus";
 
 export default function StatsPage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [stats, setStats] = useState<StatsSummary | null>(null);
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchStatsSummary().then(setStats).catch(console.error);
   }, []);
 
-  const siteCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    corpus.forEach((i) => {
-      const site = i.findspot || "Unknown";
-      map.set(site, (map.get(site) || 0) + 1);
-    });
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 20);
-  }, [corpus]);
-
-  const classCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    corpus.forEach((i) => {
-      const cls = i.classification || "unknown";
-      map.set(cls, (map.get(cls) || 0) + 1);
-    });
-    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
-  }, [corpus]);
-
-  const textLengths = useMemo(() => {
-    const buckets = new Map<string, number>();
-    corpus.forEach((i) => {
-      const len = i.canonical.length;
-      const bucket =
-        len <= 5
-          ? "1-5"
-          : len <= 10
-            ? "6-10"
-            : len <= 20
-              ? "11-20"
-              : len <= 50
-                ? "21-50"
-                : "50+";
-      buckets.set(bucket, (buckets.get(bucket) || 0) + 1);
-    });
-    return Array.from(buckets.entries());
-  }, [corpus]);
-
-  if (!corpus.length) {
+  if (!stats) {
     return (
       <div className="page-container">
         <div className="loading-shimmer" style={{ height: 200 }} />
@@ -78,27 +39,10 @@ export default function StatsPage() {
         }}
       >
         {[
-          { label: "Total Inscriptions", value: corpus.length.toLocaleString() },
-          {
-            label: "With Coordinates",
-            value: corpus
-              .filter((i) => i.findspot_lat != null)
-              .length.toLocaleString(),
-          },
-          {
-            label: "Pleiades Links",
-            value: corpus
-              .filter((i) => i.pleiades_id)
-              .length.toLocaleString(),
-          },
-          {
-            label: "Classified",
-            value: corpus
-              .filter(
-                (i) => i.classification && i.classification !== "unknown"
-              )
-              .length.toLocaleString(),
-          },
+          { label: "Total Inscriptions", value: stats.total.toLocaleString() },
+          { label: "With Coordinates", value: stats.with_coords.toLocaleString() },
+          { label: "Pleiades Links", value: stats.pleiades_linked.toLocaleString() },
+          { label: "Classified", value: stats.classified.toLocaleString() },
         ].map((s) => (
           <div className="card" key={s.label} style={{ textAlign: "center" }}>
             <div
@@ -135,8 +79,8 @@ export default function StatsPage() {
           Classification Distribution
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {classCounts.map(([cls, count]) => {
-            const pct = (count / corpus.length) * 100;
+          {stats.classification_counts.map(([cls, count]) => {
+            const pct = (count / stats.total) * 100;
             const color = CLASS_COLORS[cls] || CLASS_COLORS.unknown;
             return (
               <div
@@ -199,8 +143,8 @@ export default function StatsPage() {
           Top Find Sites
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-          {siteCounts.map(([site, count]) => {
-            const pct = (count / corpus.length) * 100;
+          {stats.top_sites.map(([site, count]) => {
+            const pct = (count / stats.total) * 100;
             return (
               <div
                 key={site}

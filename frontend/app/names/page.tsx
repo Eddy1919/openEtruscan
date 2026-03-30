@@ -1,97 +1,34 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus } from "@/lib/corpus";
+import { useEffect, useState, useRef } from "react";
+import type { NameNode, NameEdge } from "@/lib/corpus";
+import { fetchNamesNetwork, fetchStatsSummary } from "@/lib/corpus";
 import styles from "./page.module.css";
 
-interface NameNode {
-  id: string;
-  count: number;
-  inscriptions: string[];
-}
-
-interface NameEdge {
-  source: string;
-  target: string;
-  weight: number;
-}
-
-// Common Etruscan personal name patterns
-const KNOWN_NAMES = new Set([
-  "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia",
-  "sethre", "marce", "avile", "lavtni", "ramtha", "fasti", "hasti",
-  "tite", "caile", "larθi", "arnth", "thana", "lart", "lars",
-  "arnt", "arn", "arath", "araθ", "veilia",
-  "matunas", "velthur", "velθur", "cainei", "cai", "clan",
-  "puia", "sec", "ati", "papa",
-]);
-
-function extractNames(canonical: string): string[] {
-  const tokens = canonical
-    .toLowerCase()
-    .split(/[\s·.,:;]+/)
-    .filter((t) => t.length >= 2);
-
-  const found: string[] = [];
-  for (const token of tokens) {
-    if (KNOWN_NAMES.has(token)) {
-      found.push(token);
-    }
-  }
-  return [...new Set(found)];
-}
-
 export default function NamesPage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [nodes, setNodes] = useState<NameNode[]>([]);
+  const [edges, setEdges] = useState<NameEdge[]>([]);
   const [minCount, setMinCount] = useState(5);
+  const [loading, setLoading] = useState(true);
+  const [totalInscriptions, setTotalInscriptions] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchStatsSummary()
+      .then((s) => setTotalInscriptions(s.total))
+      .catch(console.error);
   }, []);
 
-  // Extract name co-occurrences
-  const { nodes, edges, nameInscMap } = useMemo(() => {
-    const nameCounts = new Map<string, Set<string>>();
-    const coOccurrences = new Map<string, number>();
-
-    for (const insc of corpus) {
-      const names = extractNames(insc.canonical);
-      for (const name of names) {
-        if (!nameCounts.has(name)) nameCounts.set(name, new Set());
-        nameCounts.get(name)!.add(insc.id);
-      }
-      // Co-occurrences (pairs in same inscription)
-      for (let i = 0; i < names.length; i++) {
-        for (let j = i + 1; j < names.length; j++) {
-          const key = [names[i], names[j]].sort().join("|");
-          coOccurrences.set(key, (coOccurrences.get(key) || 0) + 1);
-        }
-      }
-    }
-
-    const filteredNames = Array.from(nameCounts.entries())
-      .filter(([, inscSet]) => inscSet.size >= minCount)
-      .sort((a, b) => b[1].size - a[1].size);
-
-    const nameSet = new Set(filteredNames.map(([n]) => n));
-    const nodes: NameNode[] = filteredNames.map(([name, inscSet]) => ({
-      id: name,
-      count: inscSet.size,
-      inscriptions: Array.from(inscSet),
-    }));
-
-    const edges: NameEdge[] = [];
-    coOccurrences.forEach((weight, key) => {
-      const [a, b] = key.split("|");
-      if (nameSet.has(a) && nameSet.has(b) && weight >= 2) {
-        edges.push({ source: a, target: b, weight });
-      }
-    });
-
-    return { nodes, edges, nameInscMap: nameCounts };
-  }, [corpus, minCount]);
+  useEffect(() => {
+    setLoading(true);
+    fetchNamesNetwork(minCount)
+      .then((res) => {
+        setNodes(res.nodes);
+        setEdges(res.edges);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [minCount]);
 
   // Simple force-directed layout on canvas
   useEffect(() => {
@@ -216,7 +153,7 @@ export default function NamesPage() {
     simulate();
   }, [nodes, edges]);
 
-  if (!corpus.length) {
+  if (loading && nodes.length === 0) {
     return (
       <div className="page-container">
         <div className="loading-shimmer" style={{ height: 400 }} />
@@ -228,7 +165,7 @@ export default function NamesPage() {
     <div className="page-container" style={{ maxWidth: 1200 }}>
       <h1 className={styles.heading}>Prosopography</h1>
       <p className={styles.subtitle}>
-        Network of personal names extracted from {corpus.length.toLocaleString()} inscriptions.
+        Network of personal names extracted from {totalInscriptions.toLocaleString()} inscriptions.
         Nodes are sized by frequency; edges connect names co-occurring in the
         same inscription text.
       </p>

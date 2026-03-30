@@ -1,25 +1,42 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, toOldItalic, dateDisplay, CLASS_COLORS } from "@/lib/corpus";
+import { fetchInscription, fetchIds, toOldItalic, dateDisplay, CLASS_COLORS } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 export default function ComparePage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [allIds, setAllIds] = useState<string[]>([]);
   const [leftId, setLeftId] = useState("");
   const [rightId, setRightId] = useState("");
+  const [left, setLeft] = useState<Inscription | null>(null);
+  const [right, setRight] = useState<Inscription | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchIds()
+      .then((ids) => setAllIds(ids.sort()))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const suggestions = useMemo(() => {
-    return corpus.map((i) => i.id).sort();
-  }, [corpus]);
+  // Fetch individual inscriptions when IDs change
+  const fetchSide = useCallback(async (id: string) => {
+    if (!id) return null;
+    try {
+      return await fetchInscription(id);
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const left = corpus.find((i) => i.id === leftId);
-  const right = corpus.find((i) => i.id === rightId);
+  useEffect(() => {
+    fetchSide(leftId).then(setLeft);
+  }, [leftId, fetchSide]);
+
+  useEffect(() => {
+    fetchSide(rightId).then(setRight);
+  }, [rightId, fetchSide]);
 
   // Character-level diff
   function charDiff(a: string, b: string) {
@@ -39,7 +56,7 @@ export default function ComparePage() {
     return result;
   }
 
-  if (!corpus.length) {
+  if (loading) {
     return (
       <div className="page-container">
         <div className="loading-shimmer" style={{ height: 200 }} />
@@ -67,7 +84,7 @@ export default function ComparePage() {
             onChange={(e) => setLeftId(e.target.value)}
           />
           <datalist id="ids-left">
-            {suggestions.map((id) => (
+            {allIds.map((id) => (
               <option key={id} value={id} />
             ))}
           </datalist>
@@ -82,7 +99,7 @@ export default function ComparePage() {
             onChange={(e) => setRightId(e.target.value)}
           />
           <datalist id="ids-right">
-            {suggestions.map((id) => (
+            {allIds.map((id) => (
               <option key={id} value={id} />
             ))}
           </datalist>

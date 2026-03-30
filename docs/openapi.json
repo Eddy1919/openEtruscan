@@ -72,7 +72,7 @@
           "Corpus"
         ],
         "summary": "Get Full Corpus",
-        "description": "Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM.",
+        "description": "DEPRECATED \u2014 use /search with pagination instead.",
         "operationId": "get_full_corpus_corpus_get",
         "responses": {
           "200": {
@@ -89,7 +89,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/search": {
@@ -98,7 +99,7 @@
           "Search"
         ],
         "summary": "Search Corpus",
-        "description": "Search by text, location, or metadata.",
+        "description": "Search by text, location, or metadata with pagination.",
         "operationId": "search_corpus_search_get",
         "parameters": [
           {
@@ -190,6 +191,19 @@
               "title": "Limit"
             },
             "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip for pagination"
           }
         ],
         "responses": {
@@ -200,6 +214,230 @@
                 "schema": {
                   "$ref": "#/components/schemas/SearchResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscription/{inscription_id}": {
+      "get": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Get Inscription",
+        "description": "Fetch a single inscription by ID.",
+        "operationId": "get_inscription_inscription__inscription_id__get",
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the inscription to retrieve",
+              "title": "Inscription Id"
+            },
+            "description": "ID of the inscription to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InscriptionModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ids": {
+      "get": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Get All Ids",
+        "description": "Return the list of all inscription IDs (lightweight, ~50KB).",
+        "operationId": "get_all_ids_ids_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/summary": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Stats Summary",
+        "description": "Pre-computed corpus statistics for dashboard display.",
+        "operationId": "stats_summary_stats_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/timeline": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Stats Timeline",
+        "description": "Dated + geolocated inscriptions with minimal fields for timeline map.",
+        "operationId": "stats_timeline_stats_timeline_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/concordance": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Concordance Search",
+        "description": "Server-side KWIC (Key Word In Context) concordance search.",
+        "operationId": "concordance_search_concordance_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 200,
+              "description": "Search term (min 2 chars)",
+              "title": "Q"
+            },
+            "description": "Search term (min 2 chars)"
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 10,
+              "description": "Context characters",
+              "default": 40,
+              "title": "Context"
+            },
+            "description": "Context characters"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "description": "Max occurrences to return",
+              "default": 2000,
+              "title": "Limit"
+            },
+            "description": "Max occurrences to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/names/network": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Names Network",
+        "description": "Name co-occurrence network for prosopographic analysis.",
+        "operationId": "names_network_names_network_get",
+        "parameters": [
+          {
+            "name": "min_count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Minimum attestations to include",
+              "default": 5,
+              "title": "Min Count"
+            },
+            "description": "Minimum attestations to include"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -837,6 +1075,50 @@
           "date_display": {
             "type": "string",
             "title": "Date Display"
+          },
+          "date_approx": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Approx"
+          },
+          "date_uncertainty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Uncertainty"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           },
           "medium": {
             "type": "string",

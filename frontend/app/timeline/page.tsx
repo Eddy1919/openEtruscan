@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, CLASS_COLORS } from "@/lib/corpus";
+import type { TimelineItem } from "@/lib/corpus";
+import { fetchTimeline } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 const MapContainer = dynamic(
@@ -39,39 +39,34 @@ function getPeriodColor(dateApprox: number): string {
 }
 
 export default function TimelinePage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [dated, setDated] = useState<TimelineItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<[number, number]>([-800, -100]);
 
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchTimeline()
+      .then((res) => setDated(res.items))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
-
-  const dated = useMemo(() => {
-    return corpus.filter(
-      (i) =>
-        i.date_approx != null &&
-        i.findspot_lat != null &&
-        i.findspot_lon != null
-    );
-  }, [corpus]);
 
   const filtered = useMemo(() => {
     return dated.filter(
-      (i) => i.date_approx! >= range[0] && i.date_approx! <= range[1]
+      (i) => i.date_approx >= range[0] && i.date_approx <= range[1]
     );
   }, [dated, range]);
 
   // Group by location for clustering
   const clusters = useMemo(() => {
-    const map = new Map<string, { lat: number; lon: number; name: string; count: number; inscriptions: Inscription[] }>();
+    const map = new Map<string, { lat: number; lon: number; name: string; count: number; items: TimelineItem[] }>();
     filtered.forEach((i) => {
-      const key = `${i.findspot_lat!.toFixed(2)}_${i.findspot_lon!.toFixed(2)}`;
+      const key = `${i.findspot_lat.toFixed(2)}_${i.findspot_lon.toFixed(2)}`;
       if (!map.has(key)) {
-        map.set(key, { lat: i.findspot_lat!, lon: i.findspot_lon!, name: i.findspot || "Unknown", count: 0, inscriptions: [] });
+        map.set(key, { lat: i.findspot_lat, lon: i.findspot_lon, name: i.findspot || "Unknown", count: 0, items: [] });
       }
       const cluster = map.get(key)!;
       cluster.count++;
-      cluster.inscriptions.push(i);
+      cluster.items.push(i);
     });
     return Array.from(map.values());
   }, [filtered]);
@@ -80,12 +75,12 @@ export default function TimelinePage() {
     return PERIODS.map((p) => ({
       ...p,
       count: filtered.filter(
-        (i) => i.date_approx! >= p.min && i.date_approx! < p.max
+        (i) => i.date_approx >= p.min && i.date_approx < p.max
       ).length,
     }));
   }, [filtered]);
 
-  if (!corpus.length) {
+  if (loading) {
     return (
       <div className="page-container">
         <div className="loading-shimmer" style={{ height: 400 }} />
@@ -167,8 +162,8 @@ export default function TimelinePage() {
               center={[c.lat, c.lon]}
               radius={Math.min(4 + Math.sqrt(c.count) * 3, 20)}
               pathOptions={{
-                fillColor: c.inscriptions[0]?.date_approx != null
-                  ? getPeriodColor(c.inscriptions[0].date_approx)
+                fillColor: c.items[0]?.date_approx != null
+                  ? getPeriodColor(c.items[0].date_approx)
                   : "#6b6962",
                 fillOpacity: 0.8,
                 color: "rgba(255,255,255,0.3)",
