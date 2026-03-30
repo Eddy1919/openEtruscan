@@ -8,7 +8,6 @@ Run locally:
 
 import asyncio
 import gc
-import json
 import logging
 import re
 import resource
@@ -18,7 +17,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -300,36 +299,36 @@ def get_full_corpus(request: Request):
     """Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM."""
     results = corpus.search(limit=10000)
 
-    def iter_json():
-        yield "["
-        for idx, i in enumerate(results.inscriptions):
-            if idx > 0:
-                yield ","
-            yield json.dumps({
-                "id": i.id,
-                "canonical": i.canonical,
-                "phonetic": i.phonetic,
-                "old_italic": i.old_italic,
-                "raw_text": i.raw_text,
-                "findspot": i.findspot,
-                "findspot_lat": i.findspot_lat,
-                "findspot_lon": i.findspot_lon,
-                "date_display": i.date_display(),
-                "medium": i.medium,
-                "object_type": i.object_type,
-                "language": i.language,
-                "classification": i.classification,
-                "gens": insc_to_gens.get(i.id),
-                "pleiades_id": i.pleiades_id,
-                "geonames_id": i.geonames_id,
-                "trismegistos_id": i.trismegistos_id,
-                "eagle_id": i.eagle_id,
-                "is_codex": i.is_codex,
-                "provenance_status": i.provenance_status,
-            })
-        yield "]"
+    data = []
+    for i in results.inscriptions:
+        data.append({
+            "id": i.id,
+            "canonical": i.canonical,
+            "phonetic": i.phonetic,
+            "old_italic": i.old_italic,
+            "raw_text": i.raw_text,
+            "findspot": i.findspot,
+            "findspot_lat": i.findspot_lat,
+            "findspot_lon": i.findspot_lon,
+            "date_display": i.date_display(),
+            "date_approx": getattr(i, 'date_approx', None),
+            "date_uncertainty": getattr(i, 'date_uncertainty', None),
+            "source": getattr(i, 'source', None),
+            "notes": getattr(i, 'notes', None),
+            "medium": i.medium,
+            "object_type": i.object_type,
+            "language": i.language,
+            "classification": i.classification,
+            "gens": insc_to_gens.get(i.id),
+            "pleiades_id": i.pleiades_id,
+            "geonames_id": i.geonames_id,
+            "trismegistos_id": i.trismegistos_id,
+            "eagle_id": i.eagle_id,
+            "is_codex": i.is_codex,
+            "provenance_status": i.provenance_status,
+        })
 
-    return StreamingResponse(iter_json(), media_type="application/json")
+    return JSONResponse(content=data)
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
