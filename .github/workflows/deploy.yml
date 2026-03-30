@@ -42,6 +42,7 @@ jobs:
             --quiet \
             --ssh-flag="-o ServerAliveInterval=30" \
             --ssh-flag="-o ServerAliveCountMax=120" \
+            --ssh-flag="-n" \
             --command="
               set -e
               REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
@@ -49,7 +50,7 @@ jobs:
               OWNER=\$(sudo stat -c '%U' \"\$REPO_DIR\")
               sudo -u \"\$OWNER\" sh -c \"cd \$REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main\"
               sudo docker rm -f openetruscan_api_1 openetruscan_web_1 || true
-              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker/compose:1.29.2 up -d --build
+              sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -e COMPOSE_DOCKER_CLI_BUILD=1 -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker/compose:1.29.2 up -d --build
               sudo docker image prune -f
             "
 
