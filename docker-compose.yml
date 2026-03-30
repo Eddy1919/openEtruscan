@@ -9,6 +9,7 @@ services:
   api:
     build: .
     restart: unless-stopped
+    mem_limit: 1600m
     env_file:
       - .env
     expose:
