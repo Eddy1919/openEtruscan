@@ -43,14 +43,19 @@ async def _build_graph_background():
 
         def _build():
             from openetruscan.prosopography import FamilyGraph
+            from openetruscan.corpus import Corpus
 
-            fg = FamilyGraph.from_corpus(corpus)
-            itg = {
-                idx: p.gentilicium
-                for p in fg.persons()
-                for idx in p.inscription_ids
-                if p.gentilicium
-            }
+            bg_corpus = Corpus.load()
+            try:
+                fg = FamilyGraph.from_corpus(bg_corpus)
+                itg = {
+                    idx: p.gentilicium
+                    for p in fg.persons()
+                    for idx in p.inscription_ids
+                    if p.gentilicium
+                }
+            finally:
+                bg_corpus.close()
             return fg, itg
 
         fg, itg = await asyncio.to_thread(_build)
