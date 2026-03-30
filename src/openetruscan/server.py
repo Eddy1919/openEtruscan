@@ -292,23 +292,12 @@ async def liveness_check():
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
-@app.get("/corpus", response_model=SearchResponse, tags=["Corpus"])
+@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
 @limiter.limit("10/minute")
-def get_full_corpus(
-    request: Request,
-    limit: Annotated[
-        int,
-        Query(ge=1, le=MAX_LIMIT, description="Page size"),
-    ] = 100,
-    offset: Annotated[
-        int,
-        Query(ge=0, description="Offset for pagination"),
-    ] = 0,
-):
-    """Fetch the corpus with pagination. Use offset/limit to page through results."""
-    results = corpus.search(limit=_clamp_limit(limit), offset=offset)
-    data = [_build_model(i) for i in results.inscriptions]
-    return {"total": results.total, "count": len(data), "results": data}
+def get_full_corpus(request: Request):
+    """Fetch the entire corpus. Returns a flat list for backward compatibility."""
+    results = corpus.search(limit=10000)
+    return [_build_model(i) for i in results.inscriptions]
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
