@@ -6,8 +6,9 @@ import styles from "./page.module.css";
 import CitationExport from "@/components/CitationExport";
 
 export async function generateStaticParams() {
-  const corpus = await loadCorpus();
-  return corpus.map((i) => ({ id: i.id }));
+  // Return empty array to prevent Vercel build output limit (80MB)
+  // Pages will be statically generated on-demand at runtime (ISG)
+  return [];
 }
 
 export async function generateMetadata({
