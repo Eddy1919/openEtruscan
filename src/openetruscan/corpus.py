@@ -405,6 +405,7 @@ class BaseCorpus(ABC):
         classification: str | None = None,
         provenance_status: str | None = None,
         limit: int = 100,
+        offset: int = 0,
     ) -> SearchResults: ...
 
     @abstractmethod
@@ -446,6 +447,14 @@ class BaseCorpus(ABC):
         inscription_id: str,
         limit: int = 5,
     ) -> list[dict]: ...
+
+    def get_by_ids(self, ids: list[str]) -> SearchResults:
+        """Fetch inscriptions by a list of IDs. Override for efficiency."""
+        # Default fallback — subclasses should override with WHERE IN
+        results = self.search(limit=999999)
+        id_set = set(ids)
+        matching = [i for i in results.inscriptions if i.id in id_set]
+        return SearchResults(inscriptions=matching, total=len(matching))
 
     def export_all(self, fmt: str = "csv") -> str:
         """Export the entire corpus."""
@@ -525,6 +534,7 @@ class BaseCorpus(ABC):
         limit: int,
         provenance_status: str | None = None,
         param_style: str = "qmark",
+        offset: int = 0,
     ) -> tuple[str, str, list]:
         """Build WHERE clause. Returns (query, count_query, params)."""
         conditions: list[str] = []
@@ -561,9 +571,11 @@ class BaseCorpus(ABC):
             params.append(provenance_status)
 
         where = " AND ".join(conditions) if conditions else "1=1"
-        query = " ".join(["SELECT * FROM inscriptions WHERE", where, "ORDER BY id LIMIT", ph])
+        query = " ".join(
+            ["SELECT * FROM inscriptions WHERE", where, "ORDER BY id LIMIT", ph, "OFFSET", ph]
+        )
         count_query = " ".join(["SELECT COUNT(*) FROM inscriptions WHERE", where])
-        params_with_limit = params + [limit]
+        params_with_limit = params + [limit, offset]
 
         return query, count_query, params_with_limit
 
@@ -706,6 +718,7 @@ class Corpus(BaseCorpus):
         classification: str | None = None,
         provenance_status: str | None = None,
         limit: int = 100,
+        offset: int = 0,
     ) -> SearchResults:
         """Search the corpus with optional filters."""
         query, count_query, params = self._build_search_query(
@@ -718,12 +731,13 @@ class Corpus(BaseCorpus):
             limit,
             provenance_status=provenance_status,
             param_style="qmark",
+            offset=offset,
         )
         rows = self.conn.execute(query, params).fetchall()
         inscriptions = [_row_to_inscription(row) for row in rows]
         total = self.conn.execute(
             count_query,
-            params[:-1],
+            params[:-2],  # strip limit and offset
         ).fetchone()[0]
         return SearchResults(inscriptions=inscriptions, total=total)
 
@@ -998,6 +1012,19 @@ class Corpus(BaseCorpus):
         self.conn.commit()
         return True
 
+    def get_by_ids(self, ids: list[str]) -> SearchResults:
+        """Fetch inscriptions by a list of IDs (SQLite)."""
+        if not ids:
+            return SearchResults(inscriptions=[], total=0)
+        placeholders = ",".join(["?"] * len(ids))
+        # nosemgrep: placeholders are safe (only ? characters)
+        rows = self.conn.execute(
+            f"SELECT * FROM inscriptions WHERE id IN ({placeholders})",
+            ids,
+        ).fetchall()
+        inscriptions = [_row_to_inscription(row) for row in rows]
+        return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
+
     def close(self) -> None:
         if self._conn:
             self._conn.close()
@@ -1111,6 +1138,7 @@ class PostgresCorpus(BaseCorpus):
         classification: str | None = None,
         provenance_status: str | None = None,
         limit: int = 100,
+        offset: int = 0,
     ) -> SearchResults:
         """Search the corpus."""
         import psycopg2.extras
@@ -1125,6 +1153,7 @@ class PostgresCorpus(BaseCorpus):
             limit,
             provenance_status=provenance_status,
             param_style="format",
+            offset=offset,
         )
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
@@ -1132,7 +1161,7 @@ class PostgresCorpus(BaseCorpus):
             cur.execute(query, params)
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
-            cur.execute(count_query, params[:-1])
+            cur.execute(count_query, params[:-2])  # strip limit and offset
             total = cur.fetchone()["count"]
         return SearchResults(inscriptions=inscriptions, total=total)
 
@@ -1378,6 +1407,24 @@ class PostgresCorpus(BaseCorpus):
                 "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO corpus_reader"
             )
         self._conn.commit()
+
+    def get_by_ids(self, ids: list[str]) -> SearchResults:
+        """Fetch inscriptions by a list of IDs (PostgreSQL)."""
+        import psycopg2.extras
+
+        if not ids:
+            return SearchResults(inscriptions=[], total=0)
+        with self._conn.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor,
+        ) as cur:
+            # Use ANY(%s) with a list parameter for safe IN queries
+            cur.execute(
+                "SELECT * FROM inscriptions WHERE id = ANY(%s)",
+                (ids,),
+            )
+            rows = cur.fetchall()
+        inscriptions = [_dict_to_inscription(row) for row in rows]
+        return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
 
     def close(self) -> None:
         if self._conn:

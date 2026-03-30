@@ -440,24 +440,36 @@ class FamilyGraph:
 
     @classmethod
     def from_corpus(cls, corpus, language: str = "etruscan") -> FamilyGraph:
-        """Build a family graph from a Corpus instance."""
+        """Build a family graph from a Corpus instance (batched to limit memory)."""
+        import gc
+
         graph = cls()
-        results = corpus.search(limit=999999)
         person_id = 0
+        batch_size = 500
+        offset = 0
 
-        for inscription in results:
-            if not inscription.canonical.strip():
-                continue
+        while True:
+            results = corpus.search(limit=batch_size, offset=offset)
+            if not results.inscriptions:
+                break
 
-            formula = parse_name(inscription.canonical, language=language)
-            person = Person(
-                id=f"P{person_id:05d}",
-                name_formula=formula,
-                inscription_ids=[inscription.id],
-                findspots=[inscription.findspot] if inscription.findspot else [],
-            )
-            graph.add_person(person)
-            person_id += 1
+            for inscription in results:
+                if not inscription.canonical.strip():
+                    continue
+
+                formula = parse_name(inscription.canonical, language=language)
+                person = Person(
+                    id=f"P{person_id:05d}",
+                    name_formula=formula,
+                    inscription_ids=[inscription.id],
+                    findspots=[inscription.findspot] if inscription.findspot else [],
+                )
+                graph.add_person(person)
+                person_id += 1
+
+            offset += batch_size
+            # Free intermediate objects between batches
+            gc.collect()
 
         return graph
 

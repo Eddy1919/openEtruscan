@@ -7,8 +7,10 @@ Run locally:
 """
 
 import asyncio
+import gc
 import logging
 import re
+import resource
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
@@ -35,10 +37,19 @@ GRAPH_READY = False
 START_TIME = datetime.utcnow()
 
 
+# Delay before starting graph build (seconds) — lets startup finish first
+_GRAPH_BUILD_DELAY = 30
+
+
 async def _build_graph_background():
-    """Build the prosopographical graph in a background thread."""
+    """Build the prosopographical graph in a background thread after a delay."""
     global family_graph, insc_to_gens, GRAPH_READY
     try:
+        logger.info(
+            "FamilyGraph build deferred %ds to avoid startup memory contention.",
+            _GRAPH_BUILD_DELAY,
+        )
+        await asyncio.sleep(_GRAPH_BUILD_DELAY)
         logger.info("Building FamilyGraph in background...")
 
         def _build():
@@ -56,13 +67,17 @@ async def _build_graph_background():
                 }
             finally:
                 bg_corpus.close()
+            gc.collect()
             return fg, itg
 
         fg, itg = await asyncio.to_thread(_build)
         family_graph = fg
         insc_to_gens = itg
         GRAPH_READY = True
-        logger.info("FamilyGraph generated successfully.")
+        logger.info(
+            "FamilyGraph ready — RSS %.0f MB",
+            resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
+        )
     except Exception:
         logger.exception("Failed to build FamilyGraph")
 
@@ -243,18 +258,20 @@ def _build_model(i) -> InscriptionModel:
 
 
 # ── Health Endpoint ────────────────────────────────────────────────────────
-@app.get("/health", response_model=HealthResponse, tags=["Health"])
+@app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for monitoring and load balancers."""
     uptime = (datetime.utcnow() - START_TIME).total_seconds()
-    return HealthResponse(
-        status="healthy" if corpus else "unhealthy",
-        version=__version__,
-        uptime_seconds=round(uptime, 2),
-        corpus_loaded=corpus is not None,
-        graph_ready=GRAPH_READY,
-        timestamp=datetime.utcnow().isoformat(),
-    )
+    rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return {
+        "status": "healthy" if corpus else "unhealthy",
+        "version": __version__,
+        "uptime_seconds": round(uptime, 2),
+        "corpus_loaded": corpus is not None,
+        "graph_ready": GRAPH_READY,
+        "mem_rss_mb": round(rss_kb / 1024, 1),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
 
 
 @app.get("/ready", tags=["Health"])
@@ -275,12 +292,23 @@ async def liveness_check():
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
-@limiter.limit("5/minute")
-def get_full_corpus(request: Request):
-    """Fetch the entire unified corpus asynchronously. High bandwidth endpoint."""
-    results = corpus.search(limit=99999)
-    return [_build_model(i) for i in results.inscriptions]
+@app.get("/corpus", response_model=SearchResponse, tags=["Corpus"])
+@limiter.limit("10/minute")
+def get_full_corpus(
+    request: Request,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=MAX_LIMIT, description="Page size"),
+    ] = 100,
+    offset: Annotated[
+        int,
+        Query(ge=0, description="Offset for pagination"),
+    ] = 0,
+):
+    """Fetch the corpus with pagination. Use offset/limit to page through results."""
+    results = corpus.search(limit=_clamp_limit(limit), offset=offset)
+    data = [_build_model(i) for i in results.inscriptions]
+    return {"total": results.total, "count": len(data), "results": data}
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
@@ -506,11 +534,10 @@ def search_by_clan(
     for member in clan_info.members:
         member_insc_ids.extend(member.inscription_ids)
 
-    results = corpus.search(limit=99999)
-    id_set = set(member_insc_ids)
-    matching = [i for i in results.inscriptions if i.id in id_set]
+    # Targeted lookup: fetch only the IDs we need (not the entire corpus)
+    results = corpus.get_by_ids(member_insc_ids)
 
-    data = [_build_model(i) for i in matching]
+    data = [_build_model(i) for i in results.inscriptions]
     return {"total": len(data), "count": len(data), "results": data}
 
 
@@ -561,7 +588,7 @@ def frequency_analysis(
         findspot_b = _validate_alphanumeric(findspot_b, "findspot_b")
     language = _validate_alphanumeric(language, "language")
 
-    search_kwargs: dict = {"language": language, "limit": 999999}
+    search_kwargs: dict = {"language": language, "limit": 10000}
     if findspot:
         search_kwargs["findspot"] = findspot
 
@@ -572,7 +599,7 @@ def frequency_analysis(
     response: dict = {"primary": freq_a.to_dict(), "label_a": findspot or "All sites"}
 
     if findspot_b:
-        search_kwargs_b: dict = {"language": language, "limit": 999999, "findspot": findspot_b}
+        search_kwargs_b: dict = {"language": language, "limit": 10000, "findspot": findspot_b}
         results_b = corpus.search(**search_kwargs_b)
         texts_b = [i.canonical for i in results_b.inscriptions if i.canonical]
         freq_b = letter_frequencies(texts_b, language=language)
