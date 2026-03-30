@@ -53,8 +53,8 @@ async def _build_graph_background():
         logger.info("Building FamilyGraph in background...")
 
         def _build():
-            from openetruscan.prosopography import FamilyGraph
             from openetruscan.corpus import Corpus
+            from openetruscan.prosopography import FamilyGraph
 
             bg_corpus = Corpus.load()
             try:

@@ -1017,7 +1017,7 @@ class Corpus(BaseCorpus):
         if not ids:
             return SearchResults(inscriptions=[], total=0)
         placeholders = ",".join(["?"] * len(ids))
-        # nosemgrep: placeholders are safe (only ? characters)
+        # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query  # noqa: E501
         rows = self.conn.execute(
             f"SELECT * FROM inscriptions WHERE id IN ({placeholders})",  # nosec B608
             ids,

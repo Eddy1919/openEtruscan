@@ -49,7 +49,7 @@ jobs:
               if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
               OWNER=\$(sudo stat -c '%U' \"\$REPO_DIR\")
               sudo -u \"\$OWNER\" sh -c \"cd \$REPO_DIR && git fetch --all && git reset --hard origin/main && git pull origin main\"
-              sudo docker rm -f openetruscan_api_1 openetruscan_web_1 || true
+              sudo docker rm -f openetruscan-api-1 openetruscan-web-1 openetruscan-fuseki-1 openetruscan_api_1 openetruscan_web_1 openetruscan_fuseki_1 || true
               sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --build
               sudo docker image prune -f
             "
