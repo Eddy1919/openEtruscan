@@ -1,58 +1,68 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
+import type { Inscription, StatsSummary } from "@/lib/corpus";
+import { searchCorpus, fetchStatsSummary, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
 import styles from "./page.module.css";
 
-// Lazy-load the map to avoid SSR issues with WebGL
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function ExplorerPage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [results, setResults] = useState<Inscription[]>([]);
+  const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [selected, setSelected] = useState<Inscription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<StatsSummary | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Fetch filter options once
   useEffect(() => {
-    loadCorpus().then(setCorpus);
+    fetchStatsSummary().then(setStats).catch(console.error);
   }, []);
 
-  const sites = useMemo(() => {
-    const s = new Set(corpus.map((i) => i.findspot).filter(Boolean));
-    return Array.from(s).sort() as string[];
-  }, [corpus]);
+  const doSearch = useCallback(
+    (text: string, findspot: string, classification: string) => {
+      setLoading(true);
+      searchCorpus({
+        text: text || undefined,
+        findspot: findspot || undefined,
+        classification: classification || undefined,
+        limit: 500,
+      })
+        .then((res) => {
+          setResults(res.results);
+          setTotal(res.total);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    },
+    []
+  );
 
-  const classifications = useMemo(() => {
-    const c = new Set(corpus.map((i) => i.classification).filter(Boolean));
-    return Array.from(c).sort() as string[];
-  }, [corpus]);
+  // Initial load
+  useEffect(() => {
+    doSearch("", "", "");
+  }, [doSearch]);
 
-  const filtered = useMemo(() => {
-    let results = corpus;
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter(
-        (i) =>
-          i.canonical?.toLowerCase().includes(q) ||
-          i.id.toLowerCase().includes(q)
-      );
-    }
-    if (siteFilter) {
-      results = results.filter((i) => i.findspot === siteFilter);
-    }
-    if (classFilter) {
-      results = results.filter((i) => i.classification === classFilter);
-    }
-    return results;
-  }, [corpus, query, siteFilter, classFilter]);
+  // Debounced search on filter change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      doSearch(query, siteFilter, classFilter);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, siteFilter, classFilter, doSearch]);
 
   const geoFiltered = useMemo(
-    () => filtered.filter((i) => i.findspot_lat != null && i.findspot_lon != null),
-    [filtered]
+    () => results.filter((i) => i.findspot_lat != null && i.findspot_lon != null),
+    [results]
   );
 
   const handleMapClick = useCallback(
@@ -85,10 +95,8 @@ export default function ExplorerPage() {
                 onChange={(e) => setSiteFilter(e.target.value)}
               >
                 <option value="">All sites</option>
-                {sites.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                {(stats?.distinct_sites || []).map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
@@ -100,22 +108,20 @@ export default function ExplorerPage() {
                 onChange={(e) => setClassFilter(e.target.value)}
               >
                 <option value="">All types</option>
-                {classifications.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                {(stats?.distinct_classifications || []).map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
           </div>
           <div className={styles.resultCount}>
-            {filtered.length.toLocaleString()} inscriptions
+            {loading ? "Searching..." : `${total.toLocaleString()} inscriptions`}
           </div>
         </div>
 
         {/* Results list */}
         <div className={styles.resultList}>
-          {filtered.slice(0, 200).map((insc) => (
+          {results.slice(0, 200).map((insc) => (
             <div
               key={insc.id}
               className={`${styles.resultCard} ${
@@ -152,9 +158,9 @@ export default function ExplorerPage() {
               </div>
             </div>
           ))}
-          {filtered.length > 200 && (
+          {results.length > 200 && (
             <div className={styles.moreIndicator}>
-              + {(filtered.length - 200).toLocaleString()} more…
+              + {(results.length - 200).toLocaleString()} more…
             </div>
           )}
         </div>
@@ -162,7 +168,7 @@ export default function ExplorerPage() {
 
       {/* Map */}
       <div className="split-main">
-        {corpus.length > 0 && (
+        {results.length > 0 && (
           <MapView
             inscriptions={geoFiltered}
             selected={selected}

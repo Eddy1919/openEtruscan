@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Path, Query, Request, Response, status
+from fastapi import FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -34,44 +34,32 @@ corpus = None
 family_graph = None
 insc_to_gens = {}
 GRAPH_READY = False
+_GRAPH_BUILDING = False
 START_TIME = datetime.utcnow()
-FULL_CORPUS_CACHE: bytes | None = None
 
 
-# Delay before starting graph build (seconds) — lets startup finish first
-_GRAPH_BUILD_DELAY = 30
-
-
-async def _build_graph_background():
-    """Build the prosopographical graph in a background thread after a delay."""
-    global family_graph, insc_to_gens, GRAPH_READY
+def _ensure_graph():
+    """Lazily build the FamilyGraph on first /clan request."""
+    global family_graph, insc_to_gens, GRAPH_READY, _GRAPH_BUILDING
+    if GRAPH_READY or _GRAPH_BUILDING:
+        return
+    _GRAPH_BUILDING = True
     try:
-        logger.info(
-            "FamilyGraph build deferred %ds to avoid startup memory contention.",
-            _GRAPH_BUILD_DELAY,
-        )
-        await asyncio.sleep(_GRAPH_BUILD_DELAY)
-        logger.info("Building FamilyGraph in background...")
+        logger.info("Building FamilyGraph on first request...")
+        from openetruscan.prosopography import FamilyGraph
 
-        def _build():
-            from openetruscan.corpus import Corpus
-            from openetruscan.prosopography import FamilyGraph
-
-            bg_corpus = Corpus.load()
-            try:
-                fg = FamilyGraph.from_corpus(bg_corpus)
-                itg = {
-                    idx: p.gentilicium
-                    for p in fg.persons()
-                    for idx in p.inscription_ids
-                    if p.gentilicium
-                }
-            finally:
-                bg_corpus.close()
-            gc.collect()
-            return fg, itg
-
-        fg, itg = await asyncio.to_thread(_build)
+        bg_corpus = Corpus.load()
+        try:
+            fg = FamilyGraph.from_corpus(bg_corpus)
+            itg = {
+                idx: p.gentilicium
+                for p in fg.persons()
+                for idx in p.inscription_ids
+                if p.gentilicium
+            }
+        finally:
+            bg_corpus.close()
+        gc.collect()
         family_graph = fg
         insc_to_gens = itg
         GRAPH_READY = True
@@ -81,6 +69,7 @@ async def _build_graph_background():
         )
     except Exception:
         logger.exception("Failed to build FamilyGraph")
+        _GRAPH_BUILDING = False
 
 
 @asynccontextmanager
@@ -88,15 +77,7 @@ async def lifespan(app: FastAPI):
     global corpus, START_TIME
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
-
-    # Pre-emptively dump the corpus JSON directly into a byte string before graph startup
-    # This prevents the 1.6GB container limit from crashing when /corpus is requested
-    logger.info("Building full corpus JSON cache...")
-    _build_corpus_cache()
-
-    # Start graph generation in the background so API can accept connections instantly
-    asyncio.create_task(_build_graph_background())
-
+    # FamilyGraph is built lazily on first /clan request to save memory
     yield
     if corpus:
         corpus.close()
@@ -202,6 +183,10 @@ class InscriptionModel(BaseModel):
     findspot_lat: float | None
     findspot_lon: float | None
     date_display: str
+    date_approx: int | None = None
+    date_uncertainty: int | None = None
+    source: str | None = None
+    notes: str | None = None
     medium: str
     object_type: str
     language: str
@@ -249,6 +234,10 @@ def _build_model(i) -> InscriptionModel:
         findspot_lat=i.findspot_lat,
         findspot_lon=i.findspot_lon,
         date_display=i.date_display(),
+        date_approx=i.date_approx,
+        date_uncertainty=i.date_uncertainty,
+        source=i.source,
+        notes=i.notes,
         medium=i.medium,
         object_type=i.object_type,
         language=i.language,
@@ -296,54 +285,41 @@ async def liveness_check():
     """Liveness probe for Kubernetes."""
     return {"status": "alive"}
 
-def _build_corpus_cache():
-    """Builds a cached byte string of the full corpus to completely eliminate OOM spikes."""
-    global FULL_CORPUS_CACHE
-    import json
+# ── Known Etruscan Name Patterns (for /names/network) ──────────────────────
+_KNOWN_NAMES = {
+    "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia",
+    "sethre", "marce", "avile", "lavtni", "ramtha", "fasti", "hasti",
+    "tite", "caile", "larθi", "arnth", "thana", "lart", "lars",
+    "arnt", "arn", "arath", "araθ", "veilia",
+    "matunas", "velthur", "velθur", "cainei", "cai", "clan",
+    "puia", "sec", "ati", "papa",
+}
 
-    results = corpus.search(limit=10000)
-    data = []
-    for i in results.inscriptions:
-        data.append({
-            "id": i.id,
-            "canonical": i.canonical,
-            "phonetic": i.phonetic,
-            "old_italic": i.old_italic,
-            "raw_text": i.raw_text,
-            "findspot": i.findspot,
-            "findspot_lat": i.findspot_lat,
-            "findspot_lon": i.findspot_lon,
-            "date_display": i.date_display(),
-            "date_approx": getattr(i, 'date_approx', None),
-            "date_uncertainty": getattr(i, 'date_uncertainty', None),
-            "source": getattr(i, 'source', None),
-            "notes": getattr(i, 'notes', None),
-            "medium": i.medium,
-            "object_type": i.object_type,
-            "language": i.language,
-            "classification": i.classification,
-            "gens": insc_to_gens.get(i.id),
-            "pleiades_id": i.pleiades_id,
-            "geonames_id": i.geonames_id,
-            "trismegistos_id": i.trismegistos_id,
-            "eagle_id": i.eagle_id,
-            "is_codex": i.is_codex,
-            "provenance_status": i.provenance_status,
-        })
-    FULL_CORPUS_CACHE = json.dumps(data).encode("utf-8")
-    del data
-    del results
+
+def _extract_names(canonical: str) -> list[str]:
+    """Extract known Etruscan names from canonical inscription text."""
+    import re as _re
+    tokens = _re.split(r"[\s·.,:;]+", canonical.lower())
+    found = []
+    seen = set()
+    for t in tokens:
+        if len(t) >= 2 and t in _KNOWN_NAMES and t not in seen:
+            found.append(t)
+            seen.add(t)
+    return found
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
+
+@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"],
+         deprecated=True)
 @limiter.limit("10/minute")
 def get_full_corpus(request: Request):
-    """Fetch the entire corpus. Serves directly from pre-built bytes cache to avoid OOM."""
-    if FULL_CORPUS_CACHE is None:
-        raise HTTPException(status_code=503, detail="Corpus cache building")
-    return Response(content=FULL_CORPUS_CACHE, media_type="application/json")
+    """DEPRECATED — use /search with pagination instead."""
+    results = corpus.search(limit=500)
+    data = [_build_model(i) for i in results.inscriptions]
+    return data
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
@@ -373,9 +349,12 @@ def search_corpus(
         int,
         Query(ge=1, le=MAX_LIMIT, description="Maximum number of results"),
     ] = 100,
+    offset: Annotated[
+        int,
+        Query(ge=0, description="Number of results to skip for pagination"),
+    ] = 0,
 ):
-    """Search by text, location, or metadata."""
-    # Validate and sanitize inputs
+    """Search by text, location, or metadata with pagination."""
     if text:
         text = _validate_alphanumeric(text, "text")
     if findspot:
@@ -391,9 +370,223 @@ def search_corpus(
         language=language,
         classification=classification,
         limit=_clamp_limit(limit),
+        offset=offset,
     )
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
+
+
+@app.get("/inscription/{inscription_id}", response_model=InscriptionModel,
+         tags=["Corpus"])
+@limiter.limit("120/minute")
+def get_inscription(
+    request: Request,
+    inscription_id: Annotated[
+        str,
+        Path(description="ID of the inscription to retrieve"),
+    ],
+):
+    """Fetch a single inscription by ID."""
+    inscription_id = _validate_alphanumeric(inscription_id, "inscription_id")
+    results = corpus.get_by_ids([inscription_id])
+    if not results.inscriptions:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+    return _build_model(results.inscriptions[0])
+
+
+@app.get("/ids", tags=["Corpus"])
+@limiter.limit("10/minute")
+def get_all_ids(request: Request):
+    """Return the list of all inscription IDs (lightweight, ~50KB)."""
+    results = corpus.search(limit=99999)
+    return [i.id for i in results.inscriptions]
+
+
+@app.get("/stats/summary", tags=["Statistics"])
+@limiter.limit("30/minute")
+def stats_summary(request: Request):
+    """Pre-computed corpus statistics for dashboard display."""
+    results = corpus.search(limit=99999)
+    all_insc = results.inscriptions
+    total = len(all_insc)
+
+    # Classification counts
+    class_counts: dict[str, int] = {}
+    site_counts: dict[str, int] = {}
+    text_length_buckets: dict[str, int] = {"1-5": 0, "6-10": 0, "11-20": 0,
+                                            "21-50": 0, "50+": 0}
+    with_coords = 0
+    pleiades_linked = 0
+    classified = 0
+    distinct_sites: set[str] = set()
+    distinct_classifications: set[str] = set()
+
+    for i in all_insc:
+        cls = i.classification or "unknown"
+        class_counts[cls] = class_counts.get(cls, 0) + 1
+        if cls != "unknown":
+            classified += 1
+        distinct_classifications.add(cls)
+
+        site = i.findspot or "Unknown"
+        site_counts[site] = site_counts.get(site, 0) + 1
+        if i.findspot:
+            distinct_sites.add(i.findspot)
+
+        if i.findspot_lat is not None:
+            with_coords += 1
+        if i.pleiades_id:
+            pleiades_linked += 1
+
+        clen = len(i.canonical)
+        if clen <= 5:
+            text_length_buckets["1-5"] += 1
+        elif clen <= 10:
+            text_length_buckets["6-10"] += 1
+        elif clen <= 20:
+            text_length_buckets["11-20"] += 1
+        elif clen <= 50:
+            text_length_buckets["21-50"] += 1
+        else:
+            text_length_buckets["50+"] += 1
+
+    top_sites = sorted(site_counts.items(), key=lambda x: x[1],
+                       reverse=True)[:20]
+
+    return {
+        "total": total,
+        "with_coords": with_coords,
+        "pleiades_linked": pleiades_linked,
+        "classified": classified,
+        "classification_counts": sorted(
+            class_counts.items(), key=lambda x: x[1], reverse=True
+        ),
+        "top_sites": top_sites,
+        "text_length_buckets": list(text_length_buckets.items()),
+        "distinct_sites": sorted(distinct_sites),
+        "distinct_classifications": sorted(distinct_classifications),
+    }
+
+
+@app.get("/stats/timeline", tags=["Statistics"])
+@limiter.limit("30/minute")
+def stats_timeline(request: Request):
+    """Dated + geolocated inscriptions with minimal fields for timeline map."""
+    results = corpus.search(limit=99999)
+    items = []
+    for i in results.inscriptions:
+        if i.date_approx is not None and i.findspot_lat is not None:
+            items.append({
+                "id": i.id,
+                "findspot": i.findspot,
+                "findspot_lat": i.findspot_lat,
+                "findspot_lon": i.findspot_lon,
+                "date_approx": i.date_approx,
+                "classification": i.classification,
+            })
+    return {"total": len(items), "items": items}
+
+
+@app.get("/concordance", tags=["Search"])
+@limiter.limit("30/minute")
+def concordance_search(
+    request: Request,
+    q: Annotated[
+        str,
+        Query(description="Search term (min 2 chars)", min_length=2,
+              max_length=MAX_TEXT_LEN),
+    ],
+    context: Annotated[
+        int,
+        Query(ge=10, le=100, description="Context characters"),
+    ] = 40,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=5000, description="Max occurrences to return"),
+    ] = 2000,
+):
+    """Server-side KWIC (Key Word In Context) concordance search."""
+    q = _validate_alphanumeric(q, "q")
+    q_lower = q.lower().strip()
+    results = corpus.search(limit=99999)
+
+    rows = []
+    for insc in results.inscriptions:
+        text = insc.canonical.lower()
+        start_pos = 0
+        while True:
+            idx = text.find(q_lower, start_pos)
+            if idx == -1:
+                break
+            match_end = idx + len(q_lower)
+            original = insc.canonical
+
+            left_full = original[:idx]
+            left = left_full[-context:] if len(left_full) > context else left_full
+
+            right_full = original[match_end:]
+            right = right_full[:context] if len(right_full) > context else right_full
+
+            rows.append({
+                "inscId": insc.id,
+                "left": left,
+                "keyword": original[idx:match_end],
+                "right": right,
+            })
+            if len(rows) >= limit:
+                break
+            start_pos = match_end
+        if len(rows) >= limit:
+            break
+
+    unique = len({r["inscId"] for r in rows})
+    return {"total": len(rows), "unique_inscriptions": unique, "rows": rows}
+
+
+@app.get("/names/network", tags=["Prosopography"])
+@limiter.limit("15/minute")
+def names_network(
+    request: Request,
+    min_count: Annotated[
+        int,
+        Query(ge=1, le=100, description="Minimum attestations to include"),
+    ] = 5,
+):
+    """Name co-occurrence network for prosopographic analysis."""
+    results = corpus.search(limit=99999)
+
+    name_inscriptions: dict[str, set[str]] = {}
+    co_occurrences: dict[str, int] = {}
+
+    for insc in results.inscriptions:
+        names = _extract_names(insc.canonical)
+        for name in names:
+            if name not in name_inscriptions:
+                name_inscriptions[name] = set()
+            name_inscriptions[name].add(insc.id)
+        for i_idx in range(len(names)):
+            for j_idx in range(i_idx + 1, len(names)):
+                key = "|".join(sorted([names[i_idx], names[j_idx]]))
+                co_occurrences[key] = co_occurrences.get(key, 0) + 1
+
+    filtered = [
+        (name, ids) for name, ids in name_inscriptions.items()
+        if len(ids) >= min_count
+    ]
+    filtered.sort(key=lambda x: len(x[1]), reverse=True)
+    name_set = {n for n, _ in filtered}
+
+    nodes = [
+        {"id": name, "count": len(ids), "inscriptions": sorted(ids)}
+        for name, ids in filtered
+    ]
+    edges = []
+    for key, weight in co_occurrences.items():
+        a, b = key.split("|")
+        if a in name_set and b in name_set and weight >= 2:
+            edges.append({"source": a, "target": b, "weight": weight})
+
+    return {"nodes": nodes, "edges": edges}
 
 
 @app.get("/radius", response_model=SearchResponse, tags=["Search"])
@@ -545,6 +738,7 @@ def search_by_clan(
     ],
 ):
     """Prosopographical network search by clan/gens."""
+    _ensure_graph()
     if not GRAPH_READY:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

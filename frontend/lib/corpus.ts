@@ -3,9 +3,11 @@ export interface Inscription {
   canonical: string;
   phonetic: string | null;
   old_italic: string | null;
+  raw_text: string | null;
   findspot: string | null;
   findspot_lat: number | null;
   findspot_lon: number | null;
+  date_display: string;
   date_approx: number | null;
   date_uncertainty: number | null;
   classification: string | null;
@@ -13,6 +15,8 @@ export interface Inscription {
   object_type: string | null;
   source: string | null;
   notes: string | null;
+  language: string | null;
+  gens: string | null;
   pleiades_id: string | null;
   geonames_id: string | null;
   trismegistos_id: string | null;
@@ -21,25 +25,149 @@ export interface Inscription {
   provenance_status: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
-
-let _cache: Inscription[] | null = null;
-
-export async function loadCorpus(): Promise<Inscription[]> {
-  if (_cache) return _cache;
-  try {
-    const res = await fetch(`${API_URL}/corpus`, { next: { revalidate: 3600 } });
-    if (!res.ok) throw new Error("Failed to fetch corpus");
-    _cache = (await res.json()) as Inscription[];
-    return _cache;
-  } catch (err) {
-    console.error("Corpus load error:", err);
-    return [];
-  }
+export interface SearchResponse {
+  total: number;
+  count: number;
+  results: Inscription[];
 }
 
+export interface KWICRow {
+  inscId: string;
+  left: string;
+  keyword: string;
+  right: string;
+}
+
+export interface ConcordanceResponse {
+  total: number;
+  unique_inscriptions: number;
+  rows: KWICRow[];
+}
+
+export interface NameNode {
+  id: string;
+  count: number;
+  inscriptions: string[];
+}
+
+export interface NameEdge {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+export interface NamesNetworkResponse {
+  nodes: NameNode[];
+  edges: NameEdge[];
+}
+
+export interface TimelineItem {
+  id: string;
+  findspot: string;
+  findspot_lat: number;
+  findspot_lon: number;
+  date_approx: number;
+  classification: string;
+}
+
+export interface StatsSummary {
+  total: number;
+  with_coords: number;
+  pleiades_linked: number;
+  classified: number;
+  classification_counts: [string, number][];
+  top_sites: [string, number][];
+  text_length_buckets: [string, number][];
+  distinct_sites: string[];
+  distinct_classifications: string[];
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
+
+// ── Fetch helpers ──────────────────────────────────────────────────────────
+
+export async function searchCorpus(params: {
+  text?: string;
+  findspot?: string;
+  classification?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<SearchResponse> {
+  const qs = new URLSearchParams();
+  if (params.text) qs.set("text", params.text);
+  if (params.findspot) qs.set("findspot", params.findspot);
+  if (params.classification) qs.set("classification", params.classification);
+  qs.set("limit", String(params.limit ?? 100));
+  qs.set("offset", String(params.offset ?? 0));
+
+  const res = await fetch(`${API_URL}/search?${qs.toString()}`);
+  if (!res.ok) throw new Error("Search failed");
+  return res.json();
+}
+
+export async function fetchInscription(id: string): Promise<Inscription | null> {
+  const res = await fetch(`${API_URL}/inscription/${encodeURIComponent(id)}`, {
+    next: { revalidate: 3600 },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch inscription");
+  return res.json();
+}
+
+export async function fetchIds(): Promise<string[]> {
+  const res = await fetch(`${API_URL}/ids`, { next: { revalidate: 3600 } });
+  if (!res.ok) throw new Error("Failed to fetch IDs");
+  return res.json();
+}
+
+export async function fetchStatsSummary(): Promise<StatsSummary> {
+  const res = await fetch(`${API_URL}/stats/summary`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error("Failed to fetch stats");
+  return res.json();
+}
+
+export async function fetchTimeline(): Promise<{
+  total: number;
+  items: TimelineItem[];
+}> {
+  const res = await fetch(`${API_URL}/stats/timeline`, {
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error("Failed to fetch timeline");
+  return res.json();
+}
+
+export async function fetchConcordance(
+  q: string,
+  context: number = 40,
+  limit: number = 2000
+): Promise<ConcordanceResponse> {
+  const qs = new URLSearchParams({
+    q,
+    context: String(context),
+    limit: String(limit),
+  });
+  const res = await fetch(`${API_URL}/concordance?${qs.toString()}`);
+  if (!res.ok) throw new Error("Concordance search failed");
+  return res.json();
+}
+
+export async function fetchNamesNetwork(
+  minCount: number = 5
+): Promise<NamesNetworkResponse> {
+  const res = await fetch(
+    `${API_URL}/names/network?min_count=${minCount}`
+  );
+  if (!res.ok) throw new Error("Failed to fetch names network");
+  return res.json();
+}
+
+// ── Display helpers ────────────────────────────────────────────────────────
+
 export function dateDisplay(insc: Inscription): string {
-  if (insc.date_approx == null) return "undated";
+  if (insc.date_approx == null) return insc.date_display || "undated";
   const year = Math.abs(insc.date_approx);
   const era = insc.date_approx < 0 ? "BCE" : "CE";
   if (insc.date_uncertainty) {
@@ -92,4 +220,3 @@ export function toOldItalic(canonical: string): string {
   }
   return result;
 }
-

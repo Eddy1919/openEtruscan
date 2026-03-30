@@ -1,71 +1,55 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
-import type { Inscription } from "@/lib/corpus";
-import { loadCorpus } from "@/lib/corpus";
+import type { KWICRow } from "@/lib/corpus";
+import { fetchConcordance } from "@/lib/corpus";
 import styles from "./page.module.css";
-
-interface KWICRow {
-  inscId: string;
-  left: string;
-  keyword: string;
-  right: string;
-}
 
 type SortKey = "left" | "right" | "id";
 
 const CONTEXT_OPTIONS = [20, 40, 60, 80];
 
 export default function ConcordancePage() {
-  const [corpus, setCorpus] = useState<Inscription[]>([]);
+  const [rows, setRows] = useState<KWICRow[]>([]);
+  const [uniqueCount, setUniqueCount] = useState(0);
   const [query, setQuery] = useState("");
   const [contextLen, setContextLen] = useState(40);
   const [sortBy, setSortBy] = useState<SortKey>("left");
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    loadCorpus().then(setCorpus);
-  }, []);
-
-  const queryLower = query.toLowerCase().trim();
-
-  const rows = useMemo((): KWICRow[] => {
-    if (!queryLower || queryLower.length < 2) return [];
-
-    const results: KWICRow[] = [];
-    for (const insc of corpus) {
-      const text = insc.canonical.toLowerCase();
-      let startPos = 0;
-      let idx: number;
-
-      while ((idx = text.indexOf(queryLower, startPos)) !== -1) {
-        const matchStart = idx;
-        const matchEnd = idx + queryLower.length;
-        const original = insc.canonical;
-
-        const leftFull = original.slice(0, matchStart);
-        const left = leftFull.length > contextLen
-          ? leftFull.slice(-contextLen)
-          : leftFull;
-
-        const rightFull = original.slice(matchEnd);
-        const right = rightFull.length > contextLen
-          ? rightFull.slice(0, contextLen)
-          : rightFull;
-
-        results.push({
-          inscId: insc.id,
-          left,
-          keyword: original.slice(matchStart, matchEnd),
-          right,
-        });
-
-        startPos = matchEnd;
+  const doSearch = useCallback(
+    (q: string, ctx: number) => {
+      const trimmed = q.trim();
+      if (trimmed.length < 2) {
+        setRows([]);
+        setUniqueCount(0);
+        setSearched(trimmed.length > 0);
+        return;
       }
-    }
+      setLoading(true);
+      setSearched(true);
+      fetchConcordance(trimmed, ctx)
+        .then((res) => {
+          setRows(res.rows);
+          setUniqueCount(res.unique_inscriptions);
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    },
+    []
+  );
 
-    return results;
-  }, [corpus, queryLower, contextLen]);
+  // Debounced search on query or context change
+  const triggerSearch = useCallback(
+    (q: string, ctx: number) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => doSearch(q, ctx), 400);
+    },
+    [doSearch]
+  );
 
   const sorted = useMemo(() => {
     const arr = [...rows];
@@ -89,24 +73,12 @@ export default function ConcordancePage() {
     }
   }, [rows, sortBy]);
 
-  const uniqueInscriptions = useMemo(() => {
-    return new Set(rows.map((r) => r.inscId)).size;
-  }, [rows]);
-
-  if (!corpus.length) {
-    return (
-      <div className="page-container">
-        <div className="loading-shimmer" style={{ height: 200 }} />
-      </div>
-    );
-  }
-
   return (
     <div className="page-container" style={{ maxWidth: 1100 }}>
       <h1 className={styles.heading}>Concordance</h1>
       <p className={styles.subtitle}>
-        Enter a term to see every occurrence in context across{" "}
-        {corpus.length.toLocaleString()} inscriptions. Minimum 2 characters.
+        Enter a term to see every occurrence in context across the corpus.
+        Minimum 2 characters.
       </p>
 
       {/* Controls */}
@@ -116,7 +88,10 @@ export default function ConcordancePage() {
           className={`input ${styles.searchInput}`}
           placeholder="e.g. turce, avil, laris, mi"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            triggerSearch(e.target.value, contextLen);
+          }}
         />
         <div className={styles.controlRow}>
           <div className={styles.controlGroup}>
@@ -124,7 +99,11 @@ export default function ConcordancePage() {
             <select
               className={`input ${styles.selectSmall}`}
               value={contextLen}
-              onChange={(e) => setContextLen(Number(e.target.value))}
+              onChange={(e) => {
+                const ctx = Number(e.target.value);
+                setContextLen(ctx);
+                triggerSearch(query, ctx);
+              }}
             >
               {CONTEXT_OPTIONS.map((n) => (
                 <option key={n} value={n}>{n} chars</option>
@@ -146,14 +125,18 @@ export default function ConcordancePage() {
           {rows.length > 0 && (
             <span className={styles.resultCount}>
               {rows.length.toLocaleString()} occurrence{rows.length !== 1 ? "s" : ""}{" "}
-              in {uniqueInscriptions.toLocaleString()} inscription{uniqueInscriptions !== 1 ? "s" : ""}
+              in {uniqueCount.toLocaleString()} inscription{uniqueCount !== 1 ? "s" : ""}
             </span>
           )}
         </div>
       </div>
 
+      {loading && (
+        <div className="loading-shimmer" style={{ height: 200 }} />
+      )}
+
       {/* KWIC table */}
-      {queryLower.length >= 2 && sorted.length > 0 && (
+      {!loading && sorted.length > 0 && (
         <div className={styles.tableWrap}>
           <table className={styles.kwicTable}>
             <thead>
@@ -182,13 +165,13 @@ export default function ConcordancePage() {
         </div>
       )}
 
-      {queryLower.length >= 2 && sorted.length === 0 && (
+      {!loading && searched && sorted.length === 0 && query.trim().length >= 2 && (
         <p className={styles.noResults}>
           No occurrences of &quot;{query}&quot; found in the corpus.
         </p>
       )}
 
-      {queryLower.length < 2 && queryLower.length > 0 && (
+      {searched && query.trim().length < 2 && query.trim().length > 0 && (
         <p className={styles.noResults}>
           Enter at least 2 characters to search.
         </p>

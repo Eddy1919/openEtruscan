@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import type { Inscription } from "@/lib/corpus";
-import { dateDisplay, pleiadesUrl, geonamesUrl, trismegistosUrl, eagleUrl, CLASS_COLORS, loadCorpus } from "@/lib/corpus";
+import { dateDisplay, pleiadesUrl, geonamesUrl, trismegistosUrl, eagleUrl, CLASS_COLORS, fetchInscription } from "@/lib/corpus";
 import styles from "./page.module.css";
 import CitationExport from "@/components/CitationExport";
 
@@ -18,8 +17,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
-  const corpus = await loadCorpus();
-  const insc = corpus.find((i) => i.id === decodedId);
+  const insc = await fetchInscription(decodedId);
   if (!insc) return { title: "Not Found" };
   return {
     title: `${insc.id} | OpenEtruscan`,
@@ -34,8 +32,7 @@ export default async function InscriptionPage({
 }) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id);
-  const corpus = await loadCorpus();
-  const insc = corpus.find((i) => i.id === decodedId);
+  const insc = await fetchInscription(decodedId);
   if (!insc) notFound();
 
   const classColor =
