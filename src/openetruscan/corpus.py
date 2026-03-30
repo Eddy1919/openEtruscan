@@ -1019,7 +1019,7 @@ class Corpus(BaseCorpus):
         placeholders = ",".join(["?"] * len(ids))
         # nosemgrep: placeholders are safe (only ? characters)
         rows = self.conn.execute(
-            f"SELECT * FROM inscriptions WHERE id IN ({placeholders})",
+            f"SELECT * FROM inscriptions WHERE id IN ({placeholders})",  # nosec B608
             ids,
         ).fetchall()
         inscriptions = [_row_to_inscription(row) for row in rows]

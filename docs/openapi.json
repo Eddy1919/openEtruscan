@@ -19,9 +19,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
+                "schema": {}
               }
             }
           }
@@ -74,19 +72,54 @@
           "Corpus"
         ],
         "summary": "Get Full Corpus",
-        "description": "Fetch the entire unified corpus asynchronously. High bandwidth endpoint.",
+        "description": "Fetch the corpus with pagination. Use offset/limit to page through results.",
         "operationId": "get_full_corpus_corpus_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Page size",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Page size"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset for pagination",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset for pagination"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/InscriptionModel"
-                  },
-                  "type": "array",
-                  "title": "Response Get Full Corpus Corpus Get"
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -787,44 +820,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "HealthResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "version": {
-            "type": "string",
-            "title": "Version"
-          },
-          "uptime_seconds": {
-            "type": "number",
-            "title": "Uptime Seconds"
-          },
-          "corpus_loaded": {
-            "type": "boolean",
-            "title": "Corpus Loaded"
-          },
-          "graph_ready": {
-            "type": "boolean",
-            "title": "Graph Ready"
-          },
-          "timestamp": {
-            "type": "string",
-            "title": "Timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status",
-          "version",
-          "uptime_seconds",
-          "corpus_loaded",
-          "graph_ready",
-          "timestamp"
-        ],
-        "title": "HealthResponse"
       },
       "InscriptionModel": {
         "properties": {
