@@ -72,7 +72,7 @@
           "Corpus"
         ],
         "summary": "Get Full Corpus",
-        "description": "Fetch the entire corpus. Returns a flat list for backward compatibility.",
+        "description": "Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM.",
         "operationId": "get_full_corpus_corpus_get",
         "responses": {
           "200": {

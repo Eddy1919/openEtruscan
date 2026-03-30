@@ -294,7 +294,7 @@ async def liveness_check():
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
-@app.get("/corpus", tags=["Corpus"])
+@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
 @limiter.limit("10/minute")
 def get_full_corpus(request: Request):
     """Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM."""
