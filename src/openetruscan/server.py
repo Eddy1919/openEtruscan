@@ -8,6 +8,7 @@ Run locally:
 
 import asyncio
 import gc
+import json
 import logging
 import re
 import resource
@@ -17,7 +18,7 @@ from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -292,12 +293,43 @@ async def liveness_check():
 
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
+
+@app.get("/corpus", tags=["Corpus"])
 @limiter.limit("10/minute")
 def get_full_corpus(request: Request):
-    """Fetch the entire corpus. Returns a flat list for backward compatibility."""
+    """Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM."""
     results = corpus.search(limit=10000)
-    return [_build_model(i) for i in results.inscriptions]
+
+    def iter_json():
+        yield "["
+        for idx, i in enumerate(results.inscriptions):
+            if idx > 0:
+                yield ","
+            yield json.dumps({
+                "id": i.id,
+                "canonical": i.canonical,
+                "phonetic": i.phonetic,
+                "old_italic": i.old_italic,
+                "raw_text": i.raw_text,
+                "findspot": i.findspot,
+                "findspot_lat": i.findspot_lat,
+                "findspot_lon": i.findspot_lon,
+                "date_display": i.date_display(),
+                "medium": i.medium,
+                "object_type": i.object_type,
+                "language": i.language,
+                "classification": i.classification,
+                "gens": insc_to_gens.get(i.id),
+                "pleiades_id": i.pleiades_id,
+                "geonames_id": i.geonames_id,
+                "trismegistos_id": i.trismegistos_id,
+                "eagle_id": i.eagle_id,
+                "is_codex": i.is_codex,
+                "provenance_status": i.provenance_status,
+            })
+        yield "]"
+
+    return StreamingResponse(iter_json(), media_type="application/json")
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
