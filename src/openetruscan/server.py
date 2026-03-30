@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Path, Query, Request, status
+from fastapi import FastAPI, HTTPException, Path, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -35,6 +35,7 @@ family_graph = None
 insc_to_gens = {}
 GRAPH_READY = False
 START_TIME = datetime.utcnow()
+FULL_CORPUS_CACHE: bytes | None = None
 
 
 # Delay before starting graph build (seconds) — lets startup finish first
@@ -87,6 +88,11 @@ async def lifespan(app: FastAPI):
     global corpus, START_TIME
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
+
+    # Pre-emptively dump the corpus JSON directly into a byte string before graph startup
+    # This prevents the 1.6GB container limit from crashing when /corpus is requested
+    logger.info("Building full corpus JSON cache...")
+    _build_corpus_cache()
 
     # Start graph generation in the background so API can accept connections instantly
     asyncio.create_task(_build_graph_background())
@@ -290,15 +296,12 @@ async def liveness_check():
     """Liveness probe for Kubernetes."""
     return {"status": "alive"}
 
+def _build_corpus_cache():
+    """Builds a cached byte string of the full corpus to completely eliminate OOM spikes."""
+    global FULL_CORPUS_CACHE
+    import json
 
-# ── API Endpoints ───────────────────────────────────────────────────────────
-
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
-@limiter.limit("10/minute")
-def get_full_corpus(request: Request):
-    """Fetch the entire corpus. Streams a flat list for backward compatibility to avoid OOM."""
     results = corpus.search(limit=10000)
-
     data = []
     for i in results.inscriptions:
         data.append({
@@ -327,8 +330,20 @@ def get_full_corpus(request: Request):
             "is_codex": i.is_codex,
             "provenance_status": i.provenance_status,
         })
+    FULL_CORPUS_CACHE = json.dumps(data).encode("utf-8")
+    del data
+    del results
 
-    return JSONResponse(content=data)
+
+# ── API Endpoints ───────────────────────────────────────────────────────────
+
+@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"])
+@limiter.limit("10/minute")
+def get_full_corpus(request: Request):
+    """Fetch the entire corpus. Serves directly from pre-built bytes cache to avoid OOM."""
+    if FULL_CORPUS_CACHE is None:
+        raise HTTPException(status_code=503, detail="Corpus cache building")
+    return Response(content=FULL_CORPUS_CACHE, media_type="application/json")
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
