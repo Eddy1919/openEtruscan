@@ -40,6 +40,8 @@ jobs:
             --project=long-facet-427508-j2 \
             --tunnel-through-iap \
             --quiet \
+            --ssh-flag="-o ServerAliveInterval=30" \
+            --ssh-flag="-o ServerAliveCountMax=120" \
             --command="
               set -e
               REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
