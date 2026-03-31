@@ -107,6 +107,23 @@ export async function searchCorpus(params: {
   return res.json();
 }
 
+export async function fetchGeoInscriptions(params: {
+  text?: string;
+  findspot?: string;
+  classification?: string;
+  limit?: number;
+}): Promise<SearchResponse> {
+  const qs = new URLSearchParams();
+  if (params.text) qs.set("text", params.text);
+  if (params.findspot) qs.set("findspot", params.findspot);
+  if (params.classification) qs.set("classification", params.classification);
+  qs.set("limit", String(params.limit ?? 2000));
+
+  const res = await fetch(`${API_URL}/search/geo?${qs.toString()}`);
+  if (!res.ok) throw new Error("Geo search failed");
+  return res.json();
+}
+
 export async function fetchInscription(id: string): Promise<Inscription | null> {
   const res = await fetch(`${API_URL}/inscription/${encodeURIComponent(id)}`, {
     next: { revalidate: 3600 },

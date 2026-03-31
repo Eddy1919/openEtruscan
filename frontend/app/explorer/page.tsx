@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { Inscription, StatsSummary } from "@/lib/corpus";
-import { searchCorpus, fetchStatsSummary, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
+import { searchCorpus, fetchGeoInscriptions, fetchStatsSummary, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function ExplorerPage() {
   const [results, setResults] = useState<Inscription[]>([]);
+  const [geoResults, setGeoResults] = useState<Inscription[]>([]);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("");
@@ -28,16 +29,29 @@ export default function ExplorerPage() {
   const doSearch = useCallback(
     (text: string, findspot: string, classification: string) => {
       setLoading(true);
-      searchCorpus({
+
+      // Fetch list results for sidebar
+      const listPromise = searchCorpus({
         text: text || undefined,
         findspot: findspot || undefined,
         classification: classification || undefined,
         limit: 500,
-      })
-        .then((res) => {
-          setResults(res.results);
-          setTotal(res.total);
-        })
+      }).then((res) => {
+        setResults(res.results);
+        setTotal(res.total);
+      });
+
+      // Fetch geotagged results for map
+      const geoPromise = fetchGeoInscriptions({
+        text: text || undefined,
+        findspot: findspot || undefined,
+        classification: classification || undefined,
+        limit: 2500,
+      }).then((res) => {
+        setGeoResults(res.results);
+      });
+
+      Promise.all([listPromise, geoPromise])
         .catch(console.error)
         .finally(() => setLoading(false));
     },
@@ -60,10 +74,7 @@ export default function ExplorerPage() {
     };
   }, [query, siteFilter, classFilter, doSearch]);
 
-  const geoFiltered = useMemo(
-    () => results.filter((i) => i.findspot_lat != null && i.findspot_lon != null),
-    [results]
-  );
+  const geoFiltered = geoResults; // already filtered server-side
 
   const handleMapClick = useCallback(
     (info: { object?: Inscription }) => {
