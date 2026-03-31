@@ -204,6 +204,123 @@
               "title": "Offset"
             },
             "description": "Number of results to skip for pagination"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Sort order (id, date, site, relevance)",
+              "default": "id",
+              "title": "Sort By"
+            },
+            "description": "Sort order (id, date, site, relevance)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/geo": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search Geo",
+        "description": "Return only geotagged inscriptions (with coordinates).",
+        "operationId": "search_geo_search_geo_get",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Text search",
+              "title": "Text"
+            },
+            "description": "Text search"
+          },
+          {
+            "name": "findspot",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Findspot name",
+              "title": "Findspot"
+            },
+            "description": "Findspot name"
+          },
+          {
+            "name": "classification",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 50
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Classification filter",
+              "title": "Classification"
+            },
+            "description": "Classification filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "description": "Max results",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max results"
           }
         ],
         "responses": {
