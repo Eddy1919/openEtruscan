@@ -11,8 +11,10 @@ import gc
 import logging
 import re
 import resource
+import threading
 from contextlib import asynccontextmanager
 from datetime import datetime
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, status
@@ -77,6 +79,18 @@ async def lifespan(app: FastAPI):
     global corpus, START_TIME
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
+
+    def prewarm():
+        logger.info("Pre-warming cached endpoints...")
+        _get_all_ids_cached()
+        _get_stats_summary_cached()
+        _get_stats_timeline_cached()
+        _get_concordance_base_cached()
+        _get_network_base_cached()
+        logger.info("Pre-warming completed.")
+
+    threading.Thread(target=prewarm, daemon=True).start()
+
     # FamilyGraph is built lazily on first /clan request to save memory
     yield
     if corpus:
@@ -394,18 +408,21 @@ def get_inscription(
     return _build_model(results.inscriptions[0])
 
 
-@app.get("/ids", tags=["Corpus"])
-@limiter.limit("10/minute")
-def get_all_ids(request: Request):
-    """Return the list of all inscription IDs (lightweight, ~50KB)."""
+@lru_cache(maxsize=1)
+def _get_all_ids_cached():
     results = corpus.search(limit=99999)
     return [i.id for i in results.inscriptions]
 
 
-@app.get("/stats/summary", tags=["Statistics"])
-@limiter.limit("30/minute")
-def stats_summary(request: Request):
-    """Pre-computed corpus statistics for dashboard display."""
+@app.get("/ids", tags=["Corpus"])
+@limiter.limit("10/minute")
+def get_all_ids(request: Request):
+    """Return the list of all inscription IDs (lightweight, ~50KB)."""
+    return _get_all_ids_cached()
+
+
+@lru_cache(maxsize=1)
+def _get_stats_summary_cached():
     results = corpus.search(limit=99999)
     all_insc = results.inscriptions
     total = len(all_insc)
@@ -468,10 +485,15 @@ def stats_summary(request: Request):
     }
 
 
-@app.get("/stats/timeline", tags=["Statistics"])
+@app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
-def stats_timeline(request: Request):
-    """Dated + geolocated inscriptions with minimal fields for timeline map."""
+def stats_summary(request: Request):
+    """Pre-computed corpus statistics for dashboard display."""
+    return _get_stats_summary_cached()
+
+
+@lru_cache(maxsize=1)
+def _get_stats_timeline_cached():
     results = corpus.search(limit=99999)
     items = []
     for i in results.inscriptions:
@@ -485,6 +507,22 @@ def stats_timeline(request: Request):
                 "classification": i.classification,
             })
     return {"total": len(items), "items": items}
+
+
+@app.get("/stats/timeline", tags=["Statistics"])
+@limiter.limit("30/minute")
+def stats_timeline(request: Request):
+    """Dated + geolocated inscriptions with minimal fields for timeline map."""
+    return _get_stats_timeline_cached()
+
+
+@lru_cache(maxsize=1)
+def _get_concordance_base_cached():
+    results = corpus.search(limit=99999)
+    return [
+        {"id": i.id, "lower": i.canonical.lower(), "original": i.canonical}
+        for i in results.inscriptions
+    ]
 
 
 @app.get("/concordance", tags=["Search"])
@@ -508,18 +546,18 @@ def concordance_search(
     """Server-side KWIC (Key Word In Context) concordance search."""
     q = _validate_alphanumeric(q, "q")
     q_lower = q.lower().strip()
-    results = corpus.search(limit=99999)
+    base_data = _get_concordance_base_cached()
 
     rows = []
-    for insc in results.inscriptions:
-        text = insc.canonical.lower()
+    for insc in base_data:
+        text = insc["lower"]
         start_pos = 0
         while True:
             idx = text.find(q_lower, start_pos)
             if idx == -1:
                 break
             match_end = idx + len(q_lower)
-            original = insc.canonical
+            original = insc["original"]
 
             left_full = original[:idx]
             left = left_full[-context:] if len(left_full) > context else left_full
@@ -528,7 +566,7 @@ def concordance_search(
             right = right_full[:context] if len(right_full) > context else right_full
 
             rows.append({
-                "inscId": insc.id,
+                "inscId": insc["id"],
                 "left": left,
                 "keyword": original[idx:match_end],
                 "right": right,
@@ -543,18 +581,9 @@ def concordance_search(
     return {"total": len(rows), "unique_inscriptions": unique, "rows": rows}
 
 
-@app.get("/names/network", tags=["Prosopography"])
-@limiter.limit("15/minute")
-def names_network(
-    request: Request,
-    min_count: Annotated[
-        int,
-        Query(ge=1, le=100, description="Minimum attestations to include"),
-    ] = 5,
-):
-    """Name co-occurrence network for prosopographic analysis."""
+@lru_cache(maxsize=1)
+def _get_network_base_cached():
     results = corpus.search(limit=99999)
-
     name_inscriptions: dict[str, set[str]] = {}
     co_occurrences: dict[str, int] = {}
 
@@ -568,6 +597,20 @@ def names_network(
             for j_idx in range(i_idx + 1, len(names)):
                 key = "|".join(sorted([names[i_idx], names[j_idx]]))
                 co_occurrences[key] = co_occurrences.get(key, 0) + 1
+    return name_inscriptions, co_occurrences
+
+
+@app.get("/names/network", tags=["Prosopography"])
+@limiter.limit("15/minute")
+def names_network(
+    request: Request,
+    min_count: Annotated[
+        int,
+        Query(ge=1, le=100, description="Minimum attestations to include"),
+    ] = 5,
+):
+    """Name co-occurrence network for prosopographic analysis."""
+    name_inscriptions, co_occurrences = _get_network_base_cached()
 
     filtered = [
         (name, ids) for name, ids in name_inscriptions.items()
