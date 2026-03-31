@@ -537,6 +537,7 @@ class BaseCorpus(ABC):
         param_style: str = "qmark",
         offset: int = 0,
         sort_by: str = "id",
+        geo_only: bool = False,
     ) -> tuple[str, str, list]:
         """Build WHERE clause. Returns (query, count_query, params)."""
         conditions: list[str] = []
@@ -571,6 +572,9 @@ class BaseCorpus(ABC):
         if provenance_status:
             conditions.append(f"provenance_status = {ph}")
             params.append(provenance_status)
+
+        if geo_only:
+            conditions.append("findspot_lat IS NOT NULL")
 
         where = " AND ".join(conditions) if conditions else "1=1"
 
@@ -727,6 +731,7 @@ class Corpus(BaseCorpus):
         limit: int = 100,
         offset: int = 0,
         sort_by: str = "id",
+        geo_only: bool = False,
     ) -> SearchResults:
         """Search the corpus with optional filters."""
         query, count_query, params = self._build_search_query(
@@ -741,6 +746,7 @@ class Corpus(BaseCorpus):
             param_style="qmark",
             offset=offset,
             sort_by=sort_by,
+            geo_only=geo_only,
         )
         rows = self.conn.execute(query, params).fetchall()
         inscriptions = [_row_to_inscription(row) for row in rows]
@@ -1150,6 +1156,7 @@ class PostgresCorpus(BaseCorpus):
         limit: int = 100,
         offset: int = 0,
         sort_by: str = "id",
+        geo_only: bool = False,
     ) -> SearchResults:
         """Search the corpus."""
         import psycopg2.extras
@@ -1166,6 +1173,7 @@ class PostgresCorpus(BaseCorpus):
             param_style="format",
             offset=offset,
             sort_by=sort_by,
+            geo_only=geo_only,
         )
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
