@@ -432,10 +432,10 @@ def search_geo(
         classification=classification,
         limit=min(limit, 5000),
         offset=0,
+        geo_only=True,
     )
-    geo = [i for i in results.inscriptions if i.findspot_lat is not None]
-    data = [_build_model(i) for i in geo]
-    return {"total": len(data), "count": len(data), "results": data}
+    data = [_build_model(i) for i in results.inscriptions]
+    return {"total": results.total, "count": len(data), "results": data}
 
 
 @app.get("/inscription/{inscription_id}", response_model=InscriptionModel,
