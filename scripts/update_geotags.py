@@ -18,15 +18,11 @@ Usage:
 """
 
 import argparse
-import json
 import os
-import re
-import sys
-import time
-from urllib.request import urlopen, Request
 
 import psycopg2
 from dotenv import load_dotenv
+from psycopg2 import sql
 
 load_dotenv()
 DB_URL = os.environ.get(
@@ -305,9 +301,9 @@ def main():
     cur.execute("SELECT COUNT(*) FROM inscriptions WHERE pleiades_id IS NOT NULL")
     pleiades_before = cur.fetchone()[0]
 
-    print(f"{'='*60}")
-    print(f"OpenEtruscan — Geotag Enrichment")
-    print(f"{'='*60}")
+    print("=" * 60)
+    print("OpenEtruscan — Geotag Enrichment")
+    print("=" * 60)
     print(f"Total inscriptions: {total}")
     print(f"With coordinates:   {coords_before}")
     print(f"With Pleiades ID:   {pleiades_before}")
@@ -387,7 +383,10 @@ def main():
         print("\n[DRY RUN] No changes written.")
         # Show sample
         for u in updates[:20]:
-            print(f"  {u[0]:30s} → findspot={u[1] or '(keep)':20s} lat={u[2]} lon={u[3]} pleiades={u[4]}")
+            print(
+                f"  {u[0]:30s} → findspot={u[1] or '(keep)':20s} "
+                f"lat={u[2]} lon={u[3]} pleiades={u[4]}"
+            )
         if len(updates) > 20:
             print(f"  ... and {len(updates) - 20} more")
         conn.close()
@@ -424,8 +423,12 @@ def main():
             continue
 
         params.append(row_id)
-        sql = f"UPDATE inscriptions SET {', '.join(parts)} WHERE id = %s"
-        cur.execute(sql, params)
+
+        # Use psycopg2.sql to safely construct the dynamic update query
+        query = sql.SQL("UPDATE inscriptions SET {} WHERE id = %s").format(
+            sql.SQL(", ").join(map(sql.SQL, parts))
+        )
+        cur.execute(query, params)
         applied += 1
 
     # ── Also sync geom for any records that already have lat/lon but no geom ──
@@ -449,12 +452,18 @@ def main():
     geom_after = cur.fetchone()[0]
 
     print(f"\n{'='*60}")
-    print(f"RESULTS")
+    print("RESULTS")
     print(f"{'='*60}")
     print(f"  Updates applied:    {applied}")
     print(f"  PostGIS geom synced: {geom_synced}")
-    print(f"  Coordinates:  {coords_before} → {coords_after} (+{coords_after - coords_before})")
-    print(f"  Pleiades IDs: {pleiades_before} → {pleiades_after} (+{pleiades_after - pleiades_before})")
+    print(
+        f"  Coordinates:  {coords_before} → {coords_after} "
+        f"(+{coords_after - coords_before})"
+    )
+    print(
+        f"  Pleiades IDs: {pleiades_before} → {pleiades_after} "
+        f"(+{pleiades_after - pleiades_before})"
+    )
     print(f"  PostGIS geom: {geom_after}")
     print(f"\n  Coverage: {coords_after}/{total} ({coords_after/total*100:.1f}%)")
 
@@ -465,7 +474,7 @@ def main():
         WHERE findspot IS NOT NULL AND findspot != ''
         GROUP BY findspot ORDER BY cnt DESC LIMIT 15
     """)
-    print(f"\nTop 15 findspots:")
+    print("\nTop 15 findspots:")
     for fs, cnt in cur.fetchall():
         cur2 = conn.cursor()
         cur2.execute(
