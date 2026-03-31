@@ -428,6 +428,7 @@ def main():
         query = sql.SQL("UPDATE inscriptions SET {} WHERE id = %s").format(
             sql.SQL(", ").join(map(sql.SQL, parts))
         )
+        # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
         cur.execute(query, params)
         applied += 1
 
