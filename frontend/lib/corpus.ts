@@ -92,11 +92,13 @@ export async function searchCorpus(params: {
   classification?: string;
   limit?: number;
   offset?: number;
+  sort_by?: string;
 }): Promise<SearchResponse> {
   const qs = new URLSearchParams();
   if (params.text) qs.set("text", params.text);
   if (params.findspot) qs.set("findspot", params.findspot);
   if (params.classification) qs.set("classification", params.classification);
+  if (params.sort_by) qs.set("sort_by", params.sort_by);
   qs.set("limit", String(params.limit ?? 100));
   qs.set("offset", String(params.offset ?? 0));
 

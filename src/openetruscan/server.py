@@ -367,6 +367,10 @@ def search_corpus(
         int,
         Query(ge=0, description="Number of results to skip for pagination"),
     ] = 0,
+    sort_by: Annotated[
+        str,
+        Query(description="Sort order (id, date, site, relevance)"),
+    ] = "id",
 ):
     """Search by text, location, or metadata with pagination."""
     if text:
@@ -378,6 +382,8 @@ def search_corpus(
     if classification:
         classification = _validate_alphanumeric(classification, "classification")
 
+    actual_sort = sort_by if sort_by in ["date", "site"] else "id"
+
     results = corpus.search(
         text=_clamp_text(text),
         findspot=findspot,
@@ -385,6 +391,7 @@ def search_corpus(
         classification=classification,
         limit=_clamp_limit(limit),
         offset=offset,
+        sort_by=actual_sort,
     )
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}

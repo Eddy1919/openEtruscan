@@ -159,6 +159,7 @@ class GeneticSample:
             "notes": self.notes,
         }
 
+
 @dataclass
 class SearchResults:
     """Container for corpus search results."""
@@ -535,6 +536,7 @@ class BaseCorpus(ABC):
         provenance_status: str | None = None,
         param_style: str = "qmark",
         offset: int = 0,
+        sort_by: str = "id",
     ) -> tuple[str, str, list]:
         """Build WHERE clause. Returns (query, count_query, params)."""
         conditions: list[str] = []
@@ -571,8 +573,15 @@ class BaseCorpus(ABC):
             params.append(provenance_status)
 
         where = " AND ".join(conditions) if conditions else "1=1"
+
+        sort_clause = "ORDER BY id"
+        if sort_by == "date":
+            sort_clause = "ORDER BY date_approx ASC NULLS LAST, id ASC"
+        elif sort_by == "site":
+            sort_clause = "ORDER BY findspot ASC NULLS LAST, id ASC"
+
         query = " ".join(
-            ["SELECT * FROM inscriptions WHERE", where, "ORDER BY id LIMIT", ph, "OFFSET", ph]
+            ["SELECT * FROM inscriptions WHERE", where, sort_clause, "LIMIT", ph, "OFFSET", ph]
         )
         count_query = " ".join(["SELECT COUNT(*) FROM inscriptions WHERE", where])
         params_with_limit = params + [limit, offset]
@@ -662,33 +671,31 @@ class Corpus(BaseCorpus):
         """Add new columns to existing databases."""
         cursor = self.conn.execute("PRAGMA table_info(inscriptions)")
         existing = {row[1] for row in cursor.fetchall()}
-        if 'language' not in existing:
+        if "language" not in existing:
             self.conn.execute(
                 "ALTER TABLE inscriptions ADD COLUMN language TEXT NOT NULL DEFAULT 'etruscan'"
             )
-        if 'classification' not in existing:
+        if "classification" not in existing:
             self.conn.execute(
                 "ALTER TABLE inscriptions ADD COLUMN classification TEXT NOT NULL DEFAULT 'unknown'"
             )
-        if 'script_system' not in existing:
+        if "script_system" not in existing:
             self.conn.execute(
                 "ALTER TABLE inscriptions ADD COLUMN "
                 "script_system TEXT NOT NULL DEFAULT 'old_italic'"
             )
-        if 'completeness' not in existing:
+        if "completeness" not in existing:
             self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN "
-                "completeness TEXT NOT NULL DEFAULT 'complete'"
+                "ALTER TABLE inscriptions ADD COLUMN completeness TEXT NOT NULL DEFAULT 'complete'"
             )
-        if 'provenance_status' not in existing:
+        if "provenance_status" not in existing:
             self.conn.execute(
                 "ALTER TABLE inscriptions ADD COLUMN "
                 "provenance_status TEXT NOT NULL DEFAULT 'verified'"
             )
-        if 'provenance_flags' not in existing:
+        if "provenance_flags" not in existing:
             self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN "
-                "provenance_flags TEXT NOT NULL DEFAULT ''"
+                "ALTER TABLE inscriptions ADD COLUMN provenance_flags TEXT NOT NULL DEFAULT ''"
             )
         self.conn.commit()
 
@@ -719,6 +726,7 @@ class Corpus(BaseCorpus):
         provenance_status: str | None = None,
         limit: int = 100,
         offset: int = 0,
+        sort_by: str = "id",
     ) -> SearchResults:
         """Search the corpus with optional filters."""
         query, count_query, params = self._build_search_query(
@@ -732,6 +740,7 @@ class Corpus(BaseCorpus):
             provenance_status=provenance_status,
             param_style="qmark",
             offset=offset,
+            sort_by=sort_by,
         )
         rows = self.conn.execute(query, params).fetchall()
         inscriptions = [_row_to_inscription(row) for row in rows]
@@ -762,6 +771,7 @@ class Corpus(BaseCorpus):
         lat_delta = radius_km / 111.0
         # Clamp cos to avoid division issues near poles (though Etruscan sites are mid-latitude)
         import math
+
         lon_delta = radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
 
         lat_min, lat_max = lat - lat_delta, lat + lat_delta
@@ -881,7 +891,6 @@ class Corpus(BaseCorpus):
             """,
             (lat_min, lat_max, lon_min, lon_max),
         ).fetchall()
-
 
         results = []
         for g in genes:
@@ -1082,6 +1091,7 @@ class PostgresCorpus(BaseCorpus):
                 )
                 # Vector indexes — only create once data exists
                 import contextlib
+
                 with contextlib.suppress(psycopg2.Error):
                     cur.execute(_PG_VECTOR_INDEXES)
             self._conn.commit()
@@ -1139,6 +1149,7 @@ class PostgresCorpus(BaseCorpus):
         provenance_status: str | None = None,
         limit: int = 100,
         offset: int = 0,
+        sort_by: str = "id",
     ) -> SearchResults:
         """Search the corpus."""
         import psycopg2.extras
@@ -1154,6 +1165,7 @@ class PostgresCorpus(BaseCorpus):
             provenance_status=provenance_status,
             param_style="format",
             offset=offset,
+            sort_by=sort_by,
         )
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
@@ -1335,12 +1347,12 @@ class PostgresCorpus(BaseCorpus):
             results = []
             for row in rows:
                 r = dict(row)
-                r.pop('geom', None)
+                r.pop("geom", None)
                 # Convert datetime types from postgres automatically generated timestamps
-                if 'created_at' in r and r['created_at']:
-                    r['created_at'] = r['created_at'].isoformat()
-                if 'updated_at' in r and r['updated_at']:
-                    r['updated_at'] = r['updated_at'].isoformat()
+                if "created_at" in r and r["created_at"]:
+                    r["created_at"] = r["created_at"].isoformat()
+                if "updated_at" in r and r["updated_at"]:
+                    r["updated_at"] = r["updated_at"].isoformat()
                 results.append(r)
             return results
 
@@ -1498,9 +1510,7 @@ def _dict_to_inscription(row: dict) -> Inscription:
         completeness=row.get("completeness"),
         provenance_status=row.get("provenance_status", "verified"),
         provenance_flags=(
-            []
-            if not row.get("provenance_flags")
-            else row["provenance_flags"].split(",")
+            [] if not row.get("provenance_flags") else row["provenance_flags"].split(",")
         ),
         trismegistos_id=row.get("trismegistos_id"),
         eagle_id=row.get("eagle_id"),

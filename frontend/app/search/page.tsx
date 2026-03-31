@@ -33,13 +33,14 @@ export default function SearchPage() {
 
   // Debounced search
   const doSearch = useCallback(
-    (text: string, classification: string | null, newOffset: number) => {
+    (text: string, classification: string | null, sortKey: SortKey, newOffset: number) => {
       setLoading(true);
       searchCorpus({
         text: text || undefined,
         classification: classification || undefined,
         limit: PAGE_SIZE,
         offset: newOffset,
+        sort_by: sortKey,
       })
         .then((res) => {
           if (newOffset === 0) {
@@ -57,7 +58,7 @@ export default function SearchPage() {
 
   // Initial load
   useEffect(() => {
-    doSearch("", null, 0);
+    doSearch("", null, "relevance", 0);
   }, [doSearch]);
 
   // Trigger search on query or filter change
@@ -65,26 +66,14 @@ export default function SearchPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setOffset(0);
-      doSearch(query, activeClass, 0);
+      doSearch(query, activeClass, sortBy, 0);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, activeClass, doSearch]);
+  }, [query, activeClass, sortBy, doSearch]);
 
-  const sorted = useMemo(() => {
-    const arr = [...results];
-    switch (sortBy) {
-      case "date":
-        return arr.sort((a, b) => (a.date_approx ?? 9999) - (b.date_approx ?? 9999));
-      case "site":
-        return arr.sort((a, b) => (a.findspot || "").localeCompare(b.findspot || ""));
-      case "id":
-        return arr.sort((a, b) => a.id.localeCompare(b.id));
-      default:
-        return arr;
-    }
-  }, [results, sortBy]);
+  const sorted = results; // the backend returns results pre-sorted correctly
 
   const facets = useMemo(() => {
     if (!stats) return [];
@@ -99,7 +88,7 @@ export default function SearchPage() {
   const handleLoadMore = () => {
     const nextOffset = offset + PAGE_SIZE;
     setOffset(nextOffset);
-    doSearch(query, activeClass, nextOffset);
+    doSearch(query, activeClass, sortBy, nextOffset);
   };
 
   if (loading && results.length === 0) {
