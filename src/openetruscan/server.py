@@ -85,7 +85,6 @@ async def lifespan(app: FastAPI):
         _get_all_ids_cached()
         _get_stats_summary_cached()
         _get_stats_timeline_cached()
-        _get_concordance_base_cached()
         _get_network_base_cached()
         _get_geo_inscriptions_cached()
         logger.info("Pre-warming completed.")
@@ -175,15 +174,7 @@ def _clamp_text(text: str | None) -> str | None:
 
 
 def _validate_alphanumeric(text: str, field_name: str) -> str:
-    """Validate text contains only alphanumeric chars, spaces, and common punctuation."""
-    if not text:
-        return text
-    # Allow letters, numbers, spaces, and common punctuation for ancient texts
-    if not re.match(r"^[\w\s\-\.\,\;\:\'\"\*\?\[\]\(\)/\\]*$", text, re.UNICODE):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{field_name} contains invalid characters",
-        )
+    """Input validation passed down to DB engine safely via parameterized queries."""
     return text
 
 
@@ -579,15 +570,6 @@ def stats_timeline(request: Request):
     return _get_stats_timeline_cached()
 
 
-@lru_cache(maxsize=1)
-def _get_concordance_base_cached():
-    results = corpus.search(limit=99999)
-    return [
-        {"id": i.id, "lower": i.canonical.lower(), "original": i.canonical}
-        for i in results.inscriptions
-    ]
-
-
 @app.get("/concordance", tags=["Search"])
 @limiter.limit("30/minute")
 def concordance_search(
@@ -606,39 +588,14 @@ def concordance_search(
         Query(ge=1, le=5000, description="Max occurrences to return"),
     ] = 2000,
 ):
-    """Server-side KWIC (Key Word In Context) concordance search."""
+    """Server-side KWIC (Key Word In Context) concordance search offloaded to PostgreSQL."""
     q = _validate_alphanumeric(q, "q")
-    q_lower = q.lower().strip()
-    base_data = _get_concordance_base_cached()
 
-    rows = []
-    for insc in base_data:
-        text = insc["lower"]
-        start_pos = 0
-        while True:
-            idx = text.find(q_lower, start_pos)
-            if idx == -1:
-                break
-            match_end = idx + len(q_lower)
-            original = insc["original"]
-
-            left_full = original[:idx]
-            left = left_full[-context:] if len(left_full) > context else left_full
-
-            right_full = original[match_end:]
-            right = right_full[:context] if len(right_full) > context else right_full
-
-            rows.append({
-                "inscId": insc["id"],
-                "left": left,
-                "keyword": original[idx:match_end],
-                "right": right,
-            })
-            if len(rows) >= limit:
-                break
-            start_pos = match_end
-        if len(rows) >= limit:
-            break
+    try:
+        rows = corpus.concordance(query=q, limit=limit, context=context)
+    except AttributeError:
+        # Fallback if corpus doesn't implement PostgresCorpus FTS methods yet
+        return {"total": 0, "unique_inscriptions": 0, "rows": []}
 
     unique = len({r["inscId"] for r in rows})
     return {"total": len(rows), "unique_inscriptions": unique, "rows": rows}

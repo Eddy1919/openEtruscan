@@ -315,7 +315,10 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     emb_context vector(768),
     emb_combined vector(768),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    fts_canonical tsvector GENERATED ALWAYS AS (
+        to_tsvector('simple', coalesce(canonical, ''))
+    ) STORED
 );
 
 CREATE INDEX IF NOT EXISTS idx_canonical ON inscriptions(canonical);
@@ -324,6 +327,7 @@ CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
 CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
+CREATE INDEX IF NOT EXISTS idx_fts_canonical ON inscriptions USING GIN (fts_canonical);
 
 CREATE TABLE IF NOT EXISTS genetic_samples (
     id TEXT PRIMARY KEY,
@@ -1100,6 +1104,18 @@ class PostgresCorpus(BaseCorpus):
 
                 with contextlib.suppress(psycopg2.Error):
                     cur.execute(_PG_VECTOR_INDEXES)
+
+                # Schema migrations for existing tables
+                with contextlib.suppress(psycopg2.Error):
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
+                        "tsvector GENERATED ALWAYS AS "
+                        "(to_tsvector('simple', coalesce(canonical, ''))) STORED;"
+                    )
+                    cur.execute(
+                        "CREATE INDEX IF NOT EXISTS idx_fts_canonical "
+                        "ON inscriptions USING GIN (fts_canonical);"
+                    )
             self._conn.commit()
         except psycopg2.Error:
             self._conn.rollback()
@@ -1235,39 +1251,118 @@ class PostgresCorpus(BaseCorpus):
 
     def semantic_search(
         self,
-        query_embedding: list[float],
+        query_embedding: list[float] | None,
+        text_query: str | None = None,
         field: str = "emb_combined",
         limit: int = 20,
     ) -> SearchResults:
-        """Find similar inscriptions using pgvector cosine similarity."""
+        """Find inscriptions using hybrid pgvector dense similarity and DB BM25 sparse logic."""
         import psycopg2.extras
+        from psycopg2 import sql
 
         if field not in ("emb_text", "emb_context", "emb_combined"):
             raise ValueError(f"Invalid embedding field: {field}")
 
-        from psycopg2 import sql
+        query_parts = ["SELECT *"]
+        from_parts = ["FROM inscriptions"]
+        where_parts = []
+        order_parts = []
+        params = []
 
-        query = sql.SQL("""
-            SELECT *,
-                   1 - ({field} <=> %s::vector) AS similarity
-            FROM inscriptions
-            WHERE {field} IS NOT NULL
-            ORDER BY {field} <=> %s::vector
-            LIMIT %s
-        """).format(field=sql.Identifier(field))
+        if query_embedding:
+            # Semantic search component
+            vec_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
+            query_parts.append(f", 1 - ({field} <=> %s::vector) AS semantic_sim")
+            where_parts.append(f"{field} IS NOT NULL")
+            params.append(vec_str)
 
-        # Format the embedding for pgvector
-        vec_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
+        if text_query:
+            # Sparse keyword component (BM25 logic)
+            query_parts.append(
+                ", ts_rank_cd(fts_canonical, websearch_to_tsquery('simple', %s)) AS sparse_rank"
+            )
+            where_parts.append("fts_canonical @@ websearch_to_tsquery('simple', %s)")
+            params.extend([text_query, text_query])
 
-        with self._conn.cursor(
-            cursor_factory=psycopg2.extras.RealDictCursor,
-        ) as cur:
+        if not where_parts:
+            return SearchResults(inscriptions=[], total=0)
+
+        # Reciprocal Rank Fusion or weighted sorting
+        if query_embedding and text_query:
+            query_parts.append(
+                ", (1 - ({field} <=> %s::vector)) * "
+                "ts_rank_cd(fts_canonical, websearch_to_tsquery('simple', %s)) AS hybrid_score"
+            )
+            params.extend([vec_str, text_query])
+            order_parts.append("hybrid_score DESC")
+        elif query_embedding:
+            order_parts.append("semantic_sim DESC")
+        else:
+            order_parts.append("sparse_rank DESC")
+
+        sql_stmt = sql.SQL(" ").join([
+            sql.SQL(", ".join(query_parts).replace("SELECT *, ,", "SELECT *,")),
+            sql.SQL(" ".join(from_parts)),
+            sql.SQL("WHERE " + " AND ".join(where_parts)),
+            sql.SQL("ORDER BY " + ", ".join(order_parts)),
+            sql.SQL("LIMIT %s")
+        ]).format(field=sql.Identifier(field))
+
+        params.append(limit)
+
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             # nosemgrep
-            cur.execute(query, (vec_str, vec_str, limit))
+            cur.execute(sql_stmt, params)
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
 
         return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
+
+    def concordance(
+        self,
+        query: str,
+        limit: int = 2000,
+        context: int = 40,
+    ) -> list[dict]:
+        """Perform a highly optimized PostgreSQL FTS KWIC search on the corpus."""
+        import psycopg2.extras
+
+        # 1. Fetch matching documents instantly using GIN `fts_canonical` index
+        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                "SELECT id, canonical FROM inscriptions "
+                "WHERE fts_canonical @@ websearch_to_tsquery('simple', %s) LIMIT %s",
+                (query, limit)
+            )
+            matching_rows = cur.fetchall()
+
+        # 2. Extract precise KWIC snippets from the small matching subset
+        rows = []
+        q_lower = query.lower().strip()
+        for row in matching_rows:
+            original = row["canonical"]
+            text = original.lower()
+            start_pos = 0
+            while True:
+                idx = text.find(q_lower, start_pos)
+                if idx == -1:
+                    break
+                match_end = idx + len(q_lower)
+
+                left_full = original[:idx]
+                left = left_full[-context:] if len(left_full) > context else left_full
+
+                right_full = original[match_end:]
+                right = right_full[:context] if len(right_full) > context else right_full
+
+                rows.append({
+                    "inscId": row["id"],
+                    "left": left,
+                    "keyword": original[idx:match_end],
+                    "right": right,
+                })
+                start_pos = idx + 1
+        return rows
 
     def add_genetic_sample(
         self,
