@@ -87,6 +87,7 @@ async def lifespan(app: FastAPI):
         _get_stats_timeline_cached()
         _get_concordance_base_cached()
         _get_network_base_cached()
+        _get_geo_inscriptions_cached()
         logger.info("Pre-warming completed.")
 
     threading.Thread(target=prewarm, daemon=True).start()
@@ -397,6 +398,13 @@ def search_corpus(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+@lru_cache(maxsize=1)
+def _get_geo_inscriptions_cached():
+    """Cache all geotagged inscriptions for Explorer map."""
+    results = corpus.search(limit=5000, geo_only=True)
+    return [_build_model(i) for i in results.inscriptions]
+
+
 @app.get("/search/geo", response_model=SearchResponse, tags=["Search"])
 @limiter.limit("30/minute")
 def search_geo(
@@ -419,6 +427,11 @@ def search_geo(
     ] = 2000,
 ):
     """Return only geotagged inscriptions (with coordinates)."""
+    # Use cache for unfiltered requests (Explorer initial load)
+    if not text and not findspot and not classification:
+        data = _get_geo_inscriptions_cached()
+        return {"total": len(data), "count": len(data), "results": data}
+
     if text:
         text = _validate_alphanumeric(text, "text")
     if findspot:
