@@ -424,13 +424,15 @@ def search_geo(
     limit: Annotated[
         int,
         Query(ge=1, le=5000, description="Max results"),
-    ] = 2000,
+    ] = 50,
 ):
     """Return only geotagged inscriptions (with coordinates)."""
     # Use cache for unfiltered requests (Explorer initial load)
     if not text and not findspot and not classification:
         data = _get_geo_inscriptions_cached()
-        return {"total": len(data), "count": len(data), "results": data}
+        # Slicing the cached data to respect the limit parameter
+        data_subset = data[:limit]
+        return {"total": len(data), "count": len(data_subset), "results": data_subset}
 
     if text:
         text = _validate_alphanumeric(text, "text")

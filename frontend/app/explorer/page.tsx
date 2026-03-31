@@ -35,7 +35,7 @@ export default function ExplorerPage() {
         text: text || undefined,
         findspot: findspot || undefined,
         classification: classification || undefined,
-        limit: 500,
+        limit: 50,
       }).then((res) => {
         setResults(res.results);
         setTotal(res.total);
