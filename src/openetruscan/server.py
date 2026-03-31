@@ -397,6 +397,47 @@ def search_corpus(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+@app.get("/search/geo", response_model=SearchResponse, tags=["Search"])
+@limiter.limit("30/minute")
+def search_geo(
+    request: Request,
+    text: Annotated[
+        str | None,
+        Query(description="Text search", max_length=MAX_TEXT_LEN),
+    ] = None,
+    findspot: Annotated[
+        str | None,
+        Query(description="Findspot name", max_length=MAX_TEXT_LEN),
+    ] = None,
+    classification: Annotated[
+        str | None,
+        Query(description="Classification filter", max_length=50),
+    ] = None,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=5000, description="Max results"),
+    ] = 2000,
+):
+    """Return only geotagged inscriptions (with coordinates)."""
+    if text:
+        text = _validate_alphanumeric(text, "text")
+    if findspot:
+        findspot = _validate_alphanumeric(findspot, "findspot")
+    if classification:
+        classification = _validate_alphanumeric(classification, "classification")
+
+    results = corpus.search(
+        text=_clamp_text(text),
+        findspot=findspot,
+        classification=classification,
+        limit=min(limit, 5000),
+        offset=0,
+    )
+    geo = [i for i in results.inscriptions if i.findspot_lat is not None]
+    data = [_build_model(i) for i in geo]
+    return {"total": len(data), "count": len(data), "results": data}
+
+
 @app.get("/inscription/{inscription_id}", response_model=InscriptionModel,
          tags=["Corpus"])
 @limiter.limit("120/minute")
