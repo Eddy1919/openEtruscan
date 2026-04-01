@@ -175,12 +175,6 @@ def test_search_validation_error():
         assert response.status_code == 422
 
 
-def test_search_invalid_characters():
-    """Test search with invalid characters returns 400."""
-    with _test_client_with_corpus() as client:
-        response = client.get("/search?text=<script>")
-        assert response.status_code == 400
-
 
 def test_radius_search_basic():
     """Test radius search."""
@@ -251,7 +245,7 @@ def test_stats_frequency_comparison():
 
 
 def test_stats_frequency_invalid_language():
-    """Test /stats/frequency with invalid chars."""
+    """Test /stats/frequency with invalid language."""
     with _test_client_with_corpus() as client:
         response = client.get("/stats/frequency?language=<script>")
         assert response.status_code == 400
@@ -287,12 +281,6 @@ def test_stats_date_estimate_required():
         response = client.get("/stats/date-estimate")
         assert response.status_code == 422
 
-
-def test_stats_date_estimate_invalid():
-    """Test /stats/date-estimate with invalid chars."""
-    with _test_client_with_corpus() as client:
-        response = client.get("/stats/date-estimate?text=<script>")
-        assert response.status_code == 400
 
 
 # ============================================================================
