@@ -458,7 +458,7 @@
           "Search"
         ],
         "summary": "Concordance Search",
-        "description": "Server-side KWIC (Key Word In Context) concordance search.",
+        "description": "Server-side KWIC (Key Word In Context) concordance search offloaded to PostgreSQL.",
         "operationId": "concordance_search_concordance_get",
         "parameters": [
           {
