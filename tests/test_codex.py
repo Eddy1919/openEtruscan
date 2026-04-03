@@ -65,11 +65,7 @@ class TestCodexSeeding:
     """Test codex import into corpus."""
 
     def setup_method(self):
-        fd, self.db_path = tempfile.mkstemp(suffix=".db")
-        os.close(fd)
-
-    def teardown_method(self):
-        Path(self.db_path).unlink(missing_ok=True)
+        self.db_path = None  # No longer used — PG only
 
     def test_seed_codex_imports_sections(self):
         """Test that seed_codex imports all sections."""

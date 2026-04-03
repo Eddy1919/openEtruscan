@@ -2,6 +2,7 @@
 """
 Exports PostgreSQL records into the static JSON file used by the Next.js frontend.
 """
+
 import json
 import os
 
@@ -10,8 +11,11 @@ from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 
 load_dotenv()
-DB_URL = os.environ.get("DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@127.0.0.1:5432/corpus")
+DB_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@127.0.0.1:5432/corpus"
+)
 OUTPUT_PATH = "frontend/public/data/corpus.json"
+
 
 def main():
     conn = psycopg2.connect(DB_URL)
@@ -37,6 +41,7 @@ def main():
 
     print(f"[SUCCESS] Exported {len(rows)} records to {OUTPUT_PATH}")
     conn.close()
+
 
 if __name__ == "__main__":
     main()

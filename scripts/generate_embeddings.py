@@ -38,8 +38,7 @@ log = logging.getLogger("embed")
 # ── Gemini Embedding API ──────────────────────────────────────
 API_KEY = os.getenv("GEMINI_API_KEY")
 EMBED_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-embedding-001:embedContent"
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent"
 )
 BATCH_EMBED_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -65,7 +64,7 @@ def embed_single(text: str, retries: int = 3) -> list[float] | None:
             if resp.status_code == 200:
                 return resp.json()["embedding"]["values"]
             elif resp.status_code == 429:
-                wait = min(5 * (2 ** attempt), 60)
+                wait = min(5 * (2**attempt), 60)
                 log.warning("Rate limited. Sleeping %ds...", wait)
                 time.sleep(wait)
             else:
@@ -86,10 +85,12 @@ def embed_batch(texts: list[str], retries: int = 3) -> list[list[float] | None]:
     positions = []
     for i, text in enumerate(texts):
         if text and text.strip():
-            requests_list.append({
-                "model": "models/gemini-embedding-001",
-                "content": {"parts": [{"text": text[:2048]}]},
-            })
+            requests_list.append(
+                {
+                    "model": "models/gemini-embedding-001",
+                    "content": {"parts": [{"text": text[:2048]}]},
+                }
+            )
             positions.append(i)
 
     if not requests_list:
@@ -110,7 +111,7 @@ def embed_batch(texts: list[str], retries: int = 3) -> list[list[float] | None]:
                     results[positions[idx]] = emb["values"]
                 return results
             elif resp.status_code == 429:
-                wait = min(5 * (2 ** attempt), 60)
+                wait = min(5 * (2**attempt), 60)
                 log.warning("Rate limited (batch). Sleeping %ds...", wait)
                 time.sleep(wait)
             else:
@@ -181,9 +182,13 @@ def main():
     parser.add_argument("--db-url", required=True, help="PostgreSQL connection URL")
     parser.add_argument("--batch-size", type=int, default=20, help="Embeddings per batch")
     parser.add_argument("--delay", type=float, default=0.5, help="Delay between batches (seconds)")
-    parser.add_argument("--field", type=str, default="all",
-                        choices=["text", "context", "combined", "all"],
-                        help="Which embedding field(s) to generate")
+    parser.add_argument(
+        "--field",
+        type=str,
+        default="all",
+        choices=["text", "context", "combined", "all"],
+        help="Which embedding field(s) to generate",
+    )
     parser.add_argument("--force", action="store_true", help="Re-embed even if already present")
     args = parser.parse_args()
 
@@ -279,7 +284,9 @@ def main():
         embedded += len(batch)
         log.info(
             "  Embedded %d/%d (%.1f%%)",
-            embedded, total, embedded / total * 100,
+            embedded,
+            total,
+            embedded / total * 100,
         )
 
     # Create HNSW indexes if they don't exist

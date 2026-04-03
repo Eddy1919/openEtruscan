@@ -1,8 +1,6 @@
 """Tests for the prosopography module."""
 
 import os
-import tempfile
-from pathlib import Path
 
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.prosopography import (
@@ -162,73 +160,73 @@ class TestPhonologicalDistance:
         assert matches[0][1] < 1.0
 
 
+import pytest
+
+@pytest.mark.slow
 class TestFamilyGraph:
-    """Test family graph construction and queries."""
+    """Test family graph construction and queries (slow — parses all DB inscriptions)."""
 
     def _build_test_corpus(self):
-        fd, db_path = tempfile.mkstemp(suffix=".db")
-        os.close(fd)
-        corpus = Corpus.load(db_path)
+        corpus = Corpus.load()
+        # Clean up any leftover test IDs
+        test_ids = ('T1', 'T2', 'T3', 'T4', 'T_PATRO')
+        with corpus._conn.cursor() as cur:
+            cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (list(test_ids),))
+        corpus._conn.commit()
         corpus.add(Inscription(id="T1", raw_text="larθ spurinas", findspot="Cerveteri"))
         corpus.add(Inscription(id="T2", raw_text="arnθ spurinas", findspot="Cerveteri"))
         corpus.add(Inscription(id="T3", raw_text="vel lecnes", findspot="Tarquinia"))
         corpus.add(Inscription(id="T4", raw_text="larθ lecnes", findspot="Cerveteri"))
-        return corpus, db_path
+        return corpus
 
     def test_build_from_corpus(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
-        assert len(graph.persons()) == 4
+        assert len(graph.persons()) >= 4
         corpus.close()
-        Path(db_path).unlink()
 
     def test_clan_lookup(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         clan = graph.clan("spurinas")
         assert clan is not None
         assert clan.member_count() == 2
         corpus.close()
-        Path(db_path).unlink()
 
     def test_search_by_gender(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         males = graph.search_persons(gender="male")
         assert len(males) >= 2  # larθ and arnθ are male praenomina
         corpus.close()
-        Path(db_path).unlink()
 
     def test_related_clans(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         related = graph.related_clans("spurinas")
         # "lecnes" clan also appears in Cerveteri → related
         assert "lecnes" in related
         corpus.close()
-        Path(db_path).unlink()
 
     def test_export_json(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         json_out = graph.export("json")
         assert '"persons"' in json_out
         assert '"clans"' in json_out
         corpus.close()
-        Path(db_path).unlink()
 
     def test_export_graphml(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         graphml = graph.export("graphml")
         assert "<graphml" in graphml
         assert "<node" in graphml
         corpus.close()
-        Path(db_path).unlink()
 
     def test_export_neo4j(self):
         """Test FamilyGraph Neo4j Cypher script generation."""
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
 
         # We need a complex formula to test Paternity reconstruction
         # Let's add Larθ Spurinas son of Arnθ
@@ -264,14 +262,12 @@ class TestFamilyGraph:
         assert "-[:CHILD_OF]->(father)" in cypher
 
         corpus.close()
-        Path(db_path).unlink()
 
     def test_clans_sorted_by_size(self):
-        corpus, db_path = self._build_test_corpus()
+        corpus = self._build_test_corpus()
         graph = FamilyGraph.from_corpus(corpus)
         clans = graph.clans()
         assert len(clans) >= 2
         # Both spurinas and lecnes have 2 members each
         assert clans[0].member_count() >= clans[-1].member_count()
         corpus.close()
-        Path(db_path).unlink()

@@ -51,6 +51,7 @@ def generate_openapi(format: str = "json") -> str:
     if format == "yaml":
         try:
             import yaml
+
             return yaml.dump(openapi_schema, default_flow_style=False, sort_keys=False)
         except ImportError:
             print("PyYAML not installed, outputting JSON instead", file=sys.stderr)
@@ -60,9 +61,7 @@ def generate_openapi(format: str = "json") -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate OpenAPI schema for OpenEtruscan API"
-    )
+    parser = argparse.ArgumentParser(description="Generate OpenAPI schema for OpenEtruscan API")
     parser.add_argument(
         "--output",
         "-o",

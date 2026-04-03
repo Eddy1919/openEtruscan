@@ -35,5 +35,6 @@ def run_migration():
             cur.execute("CREATE INDEX idx_fts_canonical ON inscriptions USING GIN (fts_canonical)")
             print("Migration successful.")
 
+
 if __name__ == "__main__":
     run_migration()

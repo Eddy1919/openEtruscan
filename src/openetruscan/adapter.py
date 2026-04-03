@@ -158,6 +158,10 @@ def _parse_onomastics(raw: dict[str, Any]) -> OnomasticRules:
     )
 
 
+from functools import lru_cache
+
+
+@lru_cache(maxsize=8)
 def load_adapter(language_id: str) -> LanguageAdapter:
     """
     Load a language adapter by ID.

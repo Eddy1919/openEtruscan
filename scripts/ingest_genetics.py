@@ -15,10 +15,7 @@ from pathlib import Path
 
 from openetruscan.corpus import Corpus, GeneticSample
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ingest_genetics")
 
 
@@ -47,6 +44,7 @@ def parse_date(date_str: str) -> tuple[int | None, int | None]:
     except (ValueError, TypeError):
         return None, None
 
+
 def sniff_columns(headers: list[str]) -> dict[str, str]:
     """Dynamically map known AADR or generic column names to our schema."""
     mapping = {}
@@ -72,7 +70,7 @@ def sniff_columns(headers: list[str]) -> dict[str, str]:
     return mapping
 
 
-def ingest_genetics(file_path: Path, delimiter: str = '\t'):
+def ingest_genetics(file_path: Path, delimiter: str = "\t"):
     """Parse the TSV/CSV and ingest into the corpus."""
     corpus = Corpus.load()
     logger.info(f"Connected to database natively: {type(corpus).__name__}")
@@ -122,7 +120,7 @@ def ingest_genetics(file_path: Path, delimiter: str = '\t'):
                 y_haplogroup=row.get(mapping.get("y_haplo", ""), "").strip(),
                 mt_haplogroup=row.get(mapping.get("mt_haplo", ""), "").strip(),
                 source=source,
-                notes=f"Auto-ingested via scripts/ingest_genetics.py from {file_path.name}"
+                notes=f"Auto-ingested via scripts/ingest_genetics.py from {file_path.name}",
             )
 
             corpus.add_genetic_sample(sample)
@@ -134,6 +132,7 @@ def ingest_genetics(file_path: Path, delimiter: str = '\t'):
     logger.info(f"Successfully ingested {count} genetic samples.")
     corpus.close()
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ingest Archaeogenetic Data")
     parser.add_argument(
@@ -144,5 +143,5 @@ if __name__ == "__main__":
     parser.add_argument("--csv", action="store_true", help="Parse as CSV instead of TSV")
     args = parser.parse_args()
 
-    delim = ',' if args.csv else '\t'
+    delim = "," if args.csv else "\t"
     ingest_genetics(args.file, delimiter=delim)

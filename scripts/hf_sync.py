@@ -57,7 +57,9 @@ def sync_huggingface():
 
     print(f"Authenticating to {repo_id}...")
     try:
-        api.create_repo(repo_id=repo_id, repo_type="model", token=token, exist_ok=True, private=False)
+        api.create_repo(
+            repo_id=repo_id, repo_type="model", token=token, exist_ok=True, private=False
+        )
     except Exception as e:
         print(f"Repository namespace verification: {e}")
 
@@ -70,6 +72,7 @@ def sync_huggingface():
     )
 
     print(f"Deployment to {repo_id} Complete!")
+
 
 if __name__ == "__main__":
     sync_huggingface()
