@@ -31,47 +31,12 @@ from openetruscan.corpus import Corpus
 
 logger = logging.getLogger("openetruscan")
 
-# Global corpus and graph instances
+# Global corpus
 corpus = None
-family_graph = None
-insc_to_gens = {}
-GRAPH_READY = False
-_GRAPH_BUILDING = False
 START_TIME = datetime.utcnow()
 
 
-def _ensure_graph():
-    """Lazily build the FamilyGraph on first /clan request."""
-    global family_graph, insc_to_gens, GRAPH_READY, _GRAPH_BUILDING
-    if GRAPH_READY or _GRAPH_BUILDING:
-        return
-    _GRAPH_BUILDING = True
-    try:
-        logger.info("Building FamilyGraph on first request...")
-        from openetruscan.prosopography import FamilyGraph
 
-        bg_corpus = Corpus.load()
-        try:
-            fg = FamilyGraph.from_corpus(bg_corpus)
-            itg = {
-                idx: p.gentilicium
-                for p in fg.persons()
-                for idx in p.inscription_ids
-                if p.gentilicium
-            }
-        finally:
-            bg_corpus.close()
-        gc.collect()
-        family_graph = fg
-        insc_to_gens = itg
-        GRAPH_READY = True
-        logger.info(
-            "FamilyGraph ready — RSS %.0f MB",
-            resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
-        )
-    except Exception:
-        logger.exception("Failed to build FamilyGraph")
-        _GRAPH_BUILDING = False
 
 
 @asynccontextmanager
@@ -80,18 +45,8 @@ async def lifespan(app: FastAPI):
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
 
-    def prewarm():
-        logger.info("Pre-warming cached endpoints...")
-        _get_all_ids_cached()
-        _get_stats_summary_cached()
-        _get_stats_timeline_cached()
-        _get_network_base_cached()
-        _get_geo_inscriptions_cached()
-        logger.info("Pre-warming completed.")
+    
 
-    threading.Thread(target=prewarm, daemon=True).start()
-
-    # FamilyGraph is built lazily on first /clan request to save memory
     yield
     if corpus:
         corpus.close()
@@ -182,9 +137,6 @@ def _clamp_text(text: str | None) -> str | None:
     return text[:MAX_TEXT_LEN] if text else text
 
 
-def _validate_alphanumeric(text: str, field_name: str) -> str:
-    """Input validation passed down to DB engine safely via parameterized queries."""
-    return text
 
 
 # ── Pydantic Models ────────────────────────────────────────────────────────
@@ -257,7 +209,7 @@ def _build_model(i) -> InscriptionModel:
         object_type=i.object_type,
         language=i.language,
         classification=i.classification,
-        gens=insc_to_gens.get(i.id),
+        gens=None,
         pleiades_id=i.pleiades_id,
         geonames_id=i.geonames_id,
         trismegistos_id=i.trismegistos_id,
@@ -299,30 +251,6 @@ async def readiness_check():
 async def liveness_check():
     """Liveness probe for Kubernetes."""
     return {"status": "alive"}
-
-# ── Known Etruscan Name Patterns (for /names/network) ──────────────────────
-_KNOWN_NAMES = {
-    "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia",
-    "sethre", "marce", "avile", "lavtni", "ramtha", "fasti", "hasti",
-    "tite", "caile", "larθi", "arnth", "thana", "lart", "lars",
-    "arnt", "arn", "arath", "araθ", "veilia",
-    "matunas", "velthur", "velθur", "cainei", "cai", "clan",
-    "puia", "sec", "ati", "papa",
-}
-
-
-def _extract_names(canonical: str) -> list[str]:
-    """Extract known Etruscan names from canonical inscription text."""
-    import re as _re
-    tokens = _re.split(r"[\s·.,:;]+", canonical.lower())
-    found = []
-    seen = set()
-    for t in tokens:
-        if len(t) >= 2 and t in _KNOWN_NAMES and t not in seen:
-            found.append(t)
-            seen.add(t)
-    return found
-
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
@@ -375,13 +303,13 @@ def search_corpus(
 ):
     """Search by text, location, or metadata with pagination."""
     if text:
-        text = _validate_alphanumeric(text, "text")
+        pass
     if findspot:
-        findspot = _validate_alphanumeric(findspot, "findspot")
+        pass
     if language:
-        language = _validate_alphanumeric(language, "language")
+        pass
     if classification:
-        classification = _validate_alphanumeric(classification, "classification")
+        pass
 
     actual_sort = sort_by if sort_by in ["date", "site"] else "id"
 
@@ -394,15 +322,18 @@ def search_corpus(
         offset=offset,
         sort_by=actual_sort,
     )
+
+    accept_header = request.headers.get("accept", "")
+    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+        from openetruscan.epidoc import results_to_epidoc
+        from fastapi.responses import Response
+        xml_data = results_to_epidoc(results)
+        return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
 
-@lru_cache(maxsize=1)
-def _get_geo_inscriptions_cached():
-    """Cache all geotagged inscriptions for Explorer map."""
-    results = corpus.search(limit=5000, geo_only=True)
-    return [_build_model(i) for i in results.inscriptions]
+
 
 
 @app.get("/search/geo", response_model=SearchResponse, tags=["Search"])
@@ -429,17 +360,17 @@ def search_geo(
     """Return only geotagged inscriptions (with coordinates)."""
     # Use cache for unfiltered requests (Explorer initial load)
     if not text and not findspot and not classification:
-        data = _get_geo_inscriptions_cached()
+        data = [_build_model(i) for i in corpus.search(limit=5000, geo_only=True).inscriptions]
         # Slicing the cached data to respect the limit parameter
         data_subset = data[:limit]
         return {"total": len(data), "count": len(data_subset), "results": data_subset}
 
     if text:
-        text = _validate_alphanumeric(text, "text")
+        pass
     if findspot:
-        findspot = _validate_alphanumeric(findspot, "findspot")
+        pass
     if classification:
-        classification = _validate_alphanumeric(classification, "classification")
+        pass
 
     results = corpus.search(
         text=_clamp_text(text),
@@ -449,12 +380,18 @@ def search_geo(
         offset=0,
         geo_only=True,
     )
+
+    accept_header = request.headers.get("accept", "")
+    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+        from openetruscan.epidoc import results_to_epidoc
+        from fastapi.responses import Response
+        xml_data = results_to_epidoc(results)
+        return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
 
-@app.get("/inscription/{inscription_id}", response_model=InscriptionModel,
-         tags=["Corpus"])
+@app.get("/inscription/{inscription_id}", tags=["Corpus"])
 @limiter.limit("120/minute")
 def get_inscription(
     request: Request,
@@ -464,119 +401,99 @@ def get_inscription(
     ],
 ):
     """Fetch a single inscription by ID."""
-    inscription_id = _validate_alphanumeric(inscription_id, "inscription_id")
     results = corpus.get_by_ids([inscription_id])
     if not results.inscriptions:
         raise HTTPException(status_code=404, detail="Inscription not found")
-    return _build_model(results.inscriptions[0])
+        
+    inscription = results.inscriptions[0]
+    
+    # ── Content Negotiation ──
+    accept_header = request.headers.get("accept", "")
+    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+        try:
+            from openetruscan.epidoc import to_epidoc
+            from fastapi.responses import Response
+            xml_data = to_epidoc(inscription)
+            return Response(content=xml_data, media_type="application/tei+xml")
+        except ImportError:
+            raise HTTPException(status_code=501, detail="EpiDoc TEI capability is not installed server-side.")
+            
+    return _build_model(inscription)
 
 
-@lru_cache(maxsize=1)
-def _get_all_ids_cached():
-    results = corpus.search(limit=99999)
-    return [i.id for i in results.inscriptions]
+@app.post("/inscriptions", tags=["Corpus"])
+@limiter.limit("30/minute")
+async def import_inscription(request: Request):
+    """Import an inscription from EpiDoc TEI XML."""
+    if not corpus:
+        raise HTTPException(status_code=503, detail="Corpus not loaded")
+        
+    content_type = request.headers.get("content-type", "")
+    if "xml" not in content_type:
+        raise HTTPException(status_code=400, detail="Content-Type must be application/xml or similar")
+    
+    body = await request.body()
+    try:
+        from openetruscan.epidoc import parse_epidoc
+        inscription = parse_epidoc(body.decode("utf-8"))
+        corpus.add(inscription)
+        return {"status": "success", "id": inscription.id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Import failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during import")
+
+
+
 
 
 @app.get("/ids", tags=["Corpus"])
 @limiter.limit("10/minute")
 def get_all_ids(request: Request):
     """Return the list of all inscription IDs (lightweight, ~50KB)."""
-    return _get_all_ids_cached()
+    return corpus.get_all_ids()
 
 
-@lru_cache(maxsize=1)
-def _get_stats_summary_cached():
-    results = corpus.search(limit=99999)
-    all_insc = results.inscriptions
-    total = len(all_insc)
+def _get_stats_summary_db():
+    return corpus.get_stats_summary()
 
-    # Classification counts
-    class_counts: dict[str, int] = {}
-    site_counts: dict[str, int] = {}
-    text_length_buckets: dict[str, int] = {"1-5": 0, "6-10": 0, "11-20": 0,
-                                            "21-50": 0, "50+": 0}
-    with_coords = 0
-    pleiades_linked = 0
-    classified = 0
-    distinct_sites: set[str] = set()
-    distinct_classifications: set[str] = set()
 
-    for i in all_insc:
-        cls = i.classification or "unknown"
-        class_counts[cls] = class_counts.get(cls, 0) + 1
-        if cls != "unknown":
-            classified += 1
-        distinct_classifications.add(cls)
 
-        site = i.findspot or "Unknown"
-        site_counts[site] = site_counts.get(site, 0) + 1
-        if i.findspot:
-            distinct_sites.add(i.findspot)
+class RestoreRequest(BaseModel):
+    text: str
+    top_k: int = 5
 
-        if i.findspot_lat is not None:
-            with_coords += 1
-        if i.pleiades_id:
-            pleiades_linked += 1
-
-        clen = len(i.canonical)
-        if clen <= 5:
-            text_length_buckets["1-5"] += 1
-        elif clen <= 10:
-            text_length_buckets["6-10"] += 1
-        elif clen <= 20:
-            text_length_buckets["11-20"] += 1
-        elif clen <= 50:
-            text_length_buckets["21-50"] += 1
-        else:
-            text_length_buckets["50+"] += 1
-
-    top_sites = sorted(site_counts.items(), key=lambda x: x[1],
-                       reverse=True)[:20]
-
-    return {
-        "total": total,
-        "with_coords": with_coords,
-        "pleiades_linked": pleiades_linked,
-        "classified": classified,
-        "classification_counts": sorted(
-            class_counts.items(), key=lambda x: x[1], reverse=True
-        ),
-        "top_sites": top_sites,
-        "text_length_buckets": list(text_length_buckets.items()),
-        "distinct_sites": sorted(distinct_sites),
-        "distinct_classifications": sorted(distinct_classifications),
-    }
-
+@app.post("/neural/restore", tags=["Neural"])
+@limiter.limit("60/minute")
+async def restore_lacunae(request: Request, body: RestoreRequest):
+    """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
+    try:
+        from openetruscan.neural import LacunaeRestorer
+        restorer = LacunaeRestorer()
+        results = restorer.predict(body.text, top_k=body.top_k)
+        return {"text": body.text, "predictions": results}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Restore failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during restoration")
 
 @app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
 def stats_summary(request: Request):
     """Pre-computed corpus statistics for dashboard display."""
-    return _get_stats_summary_cached()
+    return corpus.get_stats_summary()
 
 
-@lru_cache(maxsize=1)
-def _get_stats_timeline_cached():
-    results = corpus.search(limit=99999)
-    items = []
-    for i in results.inscriptions:
-        if i.date_approx is not None and i.findspot_lat is not None:
-            items.append({
-                "id": i.id,
-                "findspot": i.findspot,
-                "findspot_lat": i.findspot_lat,
-                "findspot_lon": i.findspot_lon,
-                "date_approx": i.date_approx,
-                "classification": i.classification,
-            })
-    return {"total": len(items), "items": items}
+
 
 
 @app.get("/stats/timeline", tags=["Statistics"])
 @limiter.limit("30/minute")
 def stats_timeline(request: Request):
     """Dated + geolocated inscriptions with minimal fields for timeline map."""
-    return _get_stats_timeline_cached()
+    return corpus.get_stats_timeline()
 
 
 @app.get("/concordance", tags=["Search"])
@@ -598,7 +515,7 @@ def concordance_search(
     ] = 2000,
 ):
     """Server-side KWIC (Key Word In Context) concordance search offloaded to PostgreSQL."""
-    q = _validate_alphanumeric(q, "q")
+    pass
 
     try:
         rows = corpus.concordance(query=q, limit=limit, context=context)
@@ -610,27 +527,13 @@ def concordance_search(
     return {"total": len(rows), "unique_inscriptions": unique, "rows": rows}
 
 
-@lru_cache(maxsize=1)
-def _get_network_base_cached():
-    results = corpus.search(limit=99999)
-    name_inscriptions: dict[str, set[str]] = {}
-    co_occurrences: dict[str, int] = {}
+def _get_network_from_db():
+    return corpus.get_names_network()
 
-    for insc in results.inscriptions:
-        names = _extract_names(insc.canonical)
-        for name in names:
-            if name not in name_inscriptions:
-                name_inscriptions[name] = set()
-            name_inscriptions[name].add(insc.id)
-        for i_idx in range(len(names)):
-            for j_idx in range(i_idx + 1, len(names)):
-                key = "|".join(sorted([names[i_idx], names[j_idx]]))
-                co_occurrences[key] = co_occurrences.get(key, 0) + 1
-    return name_inscriptions, co_occurrences
 
 
 @app.get("/names/network", tags=["Prosopography"])
-@limiter.limit("15/minute")
+@limiter.limit("150/minute")
 def names_network(
     request: Request,
     min_count: Annotated[
@@ -639,7 +542,7 @@ def names_network(
     ] = 5,
 ):
     """Name co-occurrence network for prosopographic analysis."""
-    name_inscriptions, co_occurrences = _get_network_base_cached()
+    name_inscriptions, co_occurrences = corpus.get_names_network()
 
     filtered = [
         (name, ids) for name, ids in name_inscriptions.items()
@@ -721,7 +624,7 @@ async def semantic_search(
     import requests
 
     # Validate query
-    q = _validate_alphanumeric(q, "q")
+    pass
 
     if not settings.gemini_api_key:
         raise HTTPException(
@@ -731,13 +634,15 @@ async def semantic_search(
     url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={settings.gemini_api_key}"
     payload = {"content": {"parts": [{"text": q[:2048]}]}}
 
-    def _fetch_emb():
-        resp = requests.post(url, json=payload, timeout=10)
-        resp.raise_for_status()
-        return resp.json()["embedding"]["values"]
+    async def _fetch_emb():
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json=payload, timeout=10.0)
+            resp.raise_for_status()
+            return resp.json()["embedding"]["values"]
 
     try:
-        query_embedding = await asyncio.to_thread(_fetch_emb)
+        query_embedding = await _fetch_emb()
     except Exception as e:
         logger.error(f"Embedding failed: {e}")
         raise HTTPException(
@@ -782,7 +687,6 @@ def get_genetic_matches(
 ):
     """Spatio-temporal matchmaking between inscriptions and archaeogenetic samples."""
     # Validate ID
-    id = _validate_alphanumeric(id, "id")
 
     try:
         matches = corpus.find_genetic_matches(id, limit=limit)
@@ -884,10 +788,10 @@ def frequency_analysis(
 
     # Validate inputs
     if findspot:
-        findspot = _validate_alphanumeric(findspot, "findspot")
+        pass
     if findspot_b:
-        findspot_b = _validate_alphanumeric(findspot_b, "findspot_b")
-    language = _validate_alphanumeric(language, "language")
+        pass
+    pass
 
     search_kwargs: dict = {"language": language, "limit": 10000}
     if findspot:
@@ -928,7 +832,7 @@ def dialect_clusters(
     """Dialect clustering via Ward's hierarchical method with cosine distance."""
     from openetruscan.statistics import cluster_sites
 
-    language = _validate_alphanumeric(language, "language")
+    pass
 
     result = cluster_sites(corpus, language=language, min_inscriptions=min_inscriptions)
     return result.to_dict()
@@ -950,8 +854,8 @@ def date_estimate(
     """Estimate chronological period from orthographic features."""
     from openetruscan.statistics import estimate_date
 
-    text = _validate_alphanumeric(text, "text")
-    language = _validate_alphanumeric(language, "language")
+    pass
+    pass
 
     result = estimate_date(text, language=language)
     return result.to_dict()

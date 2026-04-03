@@ -5,23 +5,15 @@ import dynamic from "next/dynamic";
 import type { TimelineItem } from "@/lib/corpus";
 import { fetchTimeline } from "@/lib/corpus";
 import styles from "./page.module.css";
+import MapboxMap, { Source, Layer, Popup } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
+import type { MapLayerMouseEvent } from "react-map-gl/mapbox";
+import type { CircleLayer } from "react-map-gl/mapbox";
 
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const CircleMarker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.CircleMarker),
-  { ssr: false }
-);
-const Tooltip = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Tooltip),
-  { ssr: false }
-);
+
+
+
+
 
 const PERIODS = [
   { label: "Pre-700 BCE", min: -1000, max: -700, color: "#c084fc" },
@@ -42,6 +34,7 @@ export default function TimelinePage() {
   const [dated, setDated] = useState<TimelineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<[number, number]>([-800, -100]);
+  const [hoverInfo, setHoverInfo] = useState<any>(null);
 
   useEffect(() => {
     fetchTimeline()
@@ -146,38 +139,76 @@ export default function TimelinePage() {
 
       {/* Map */}
       <div className={styles.mapWrap}>
-        <MapContainer
-          center={[42.8, 12.0]}
-          zoom={6}
-          style={{ height: "100%", width: "100%" }}
-          scrollWheelZoom={true}
+        <MapboxMap
+          initialViewState={{ longitude: 12.0, latitude: 42.8, zoom: 6 }}
+          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+          interactiveLayerIds={["timeline-circles"]}
+          onMouseMove={(e) => {
+            if (e.features && e.features.length > 0) {
+              setHoverInfo({
+                feature: e.features[0],
+                x: e.point.x,
+                y: e.point.y
+              });
+            } else {
+              setHoverInfo(null);
+            }
+          }}
+          onMouseLeave={() => setHoverInfo(null)}
         >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          />
-          {clusters.map((c) => (
-            <CircleMarker
-              key={`${c.lat}_${c.lon}`}
-              center={[c.lat, c.lon]}
-              radius={Math.min(4 + Math.sqrt(c.count) * 3, 20)}
-              pathOptions={{
-                fillColor: c.items[0]?.date_approx != null
-                  ? getPeriodColor(c.items[0].date_approx)
-                  : "#6b6962",
-                fillOpacity: 0.8,
-                color: "rgba(255,255,255,0.3)",
-                weight: 1,
+          <Source
+            id="timeline-clusters"
+            type="geojson"
+            data={{
+              type: "FeatureCollection",
+              features: clusters.map((c) => ({
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [c.lon, c.lat] },
+                properties: {
+                  name: c.name,
+                  count: c.count,
+                  color: c.items[0]?.date_approx != null ? getPeriodColor(c.items[0].date_approx) : "#6b6962",
+                  radius: Math.min(4 + Math.sqrt(c.count) * 3, 20)
+                }
+              }))
+            }}
+          >
+            <Layer
+              id="timeline-circles"
+              type="circle"
+              paint={{
+                "circle-radius": ["get", "radius"],
+                "circle-color": ["get", "color"],
+                "circle-opacity": 0.8,
+                "circle-stroke-width": 1,
+                "circle-stroke-color": "rgba(255,255,255,0.3)"
+              }}
+            />
+          </Source>
+          
+          {hoverInfo && (
+            <div
+              style={{
+                position: "absolute",
+                left: hoverInfo.x,
+                top: hoverInfo.y,
+                background: "rgba(0,0,0,0.8)",
+                color: "white",
+                padding: "4px 8px",
+                borderRadius: "4px",
+                pointerEvents: "none",
+                transform: "translate(-50%, -100%)",
+                marginTop: "-10px",
+                fontSize: "12px",
+                zIndex: 10
               }}
             >
-              <Tooltip>
-                <strong>{c.name}</strong>
-                <br />
-                {c.count} inscription{c.count !== 1 ? "s" : ""} in range
-              </Tooltip>
-            </CircleMarker>
-          ))}
-        </MapContainer>
+              <strong>{hoverInfo.feature.properties.name}</strong><br/>
+              {hoverInfo.feature.properties.count} inscription{hoverInfo.feature.properties.count !== 1 ? "s" : ""} in range
+            </div>
+          )}
+        </MapboxMap>
       </div>
     </div>
   );

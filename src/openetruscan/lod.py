@@ -204,12 +204,7 @@ def corpus_to_pelagios_jsonld(
     annotations = []
     for inscription in results:
         ann = inscription_to_jsonld(inscription, language=language)
-        # Only include if we have at least one LOD link
-        has_lod = any(
-            b.get("purpose") == "identifying" for b in ann.get("body", []) if isinstance(b, dict)
-        )
-        if has_lod:
-            annotations.append(ann)
+        annotations.append(ann)
 
     collection = {
         "@context": "http://www.w3.org/ns/anno.jsonld",

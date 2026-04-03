@@ -4,7 +4,7 @@ Standalone training script — trains CharCNN and MicroTransformer on the corpus
 prints a comparison table, and exports models.
 
 Usage:
-    python scripts/train_neural.py --db data/corpus.db --output data/models/ --epochs 30
+    python scripts/train_neural.py --db-url $DATABASE_URL --output data/models/ --epochs 30
 """
 
 from __future__ import annotations
@@ -15,11 +15,15 @@ from pathlib import Path
 
 
 def main() -> None:
+    import os
+    from dotenv import load_dotenv
+    load_dotenv(".env")
+    
     parser = argparse.ArgumentParser(description="Train neural inscription classifiers.")
     parser.add_argument(
-        "--db",
-        default="data/corpus.db",
-        help="Path to the corpus SQLite database.",
+        "--db-url",
+        default=os.environ.get("DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@34.76.146.115/corpus"),
+        help="Path to PostgreSQL database.",
     )
     parser.add_argument(
         "--output",
@@ -53,7 +57,7 @@ def main() -> None:
 
         clf = NeuralClassifier(arch=arch)
         metrics = clf.train_from_corpus(
-            db_path=args.db,
+            db_url=args.db_url,
             epochs=args.epochs,
             batch_size=args.batch_size,
             lr=args.lr,
