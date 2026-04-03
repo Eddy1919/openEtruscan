@@ -1,16 +1,5 @@
 """
-Corpus module — structured epigraphic dataset with query API.
-
-Dual-backend architecture:
-  - SQLite (default): zero-infrastructure, bundled with the package.
-  - PostgreSQL (optional): Cloud SQL for public access with abuse protection.
-
-Usage:
-    # Local SQLite (default)
-    corpus = Corpus.load()
-
-    # Cloud PostgreSQL
-    corpus = Corpus.connect("postgresql://user:pass@host/db")
+Corpus module — structured epigraphic dataset with PostgreSQL native query API.
 """
 
 from __future__ import annotations
@@ -18,8 +7,6 @@ from __future__ import annotations
 import csv
 import json
 import os
-import sqlite3
-from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -69,6 +56,7 @@ class Inscription:
     findspot: str = ""
     findspot_lat: float | None = None
     findspot_lon: float | None = None
+    findspot_uncertainty_m: int | None = None
     date_approx: int | None = None  # negative = BCE
     date_uncertainty: int | None = None  # +/- years
     medium: str = ""
@@ -109,6 +97,7 @@ class Inscription:
             "findspot": self.findspot,
             "findspot_lat": self.findspot_lat,
             "findspot_lon": self.findspot_lon,
+            "findspot_uncertainty_m": self.findspot_uncertainty_m,
             "date_approx": self.date_approx,
             "date_uncertainty": self.date_uncertainty,
             "medium": self.medium,
@@ -138,6 +127,7 @@ class GeneticSample:
     findspot: str = ""
     findspot_lat: float | None = None
     findspot_lon: float | None = None
+    findspot_uncertainty_m: int | None = None
     date_approx: int | None = None
     date_uncertainty: int | None = None
     y_haplogroup: str | None = None
@@ -151,6 +141,7 @@ class GeneticSample:
             "findspot": self.findspot,
             "findspot_lat": self.findspot_lat,
             "findspot_lon": self.findspot_lon,
+            "findspot_uncertainty_m": self.findspot_uncertainty_m,
             "date_approx": self.date_approx,
             "date_uncertainty": self.date_uncertainty,
             "y_haplogroup": self.y_haplogroup,
@@ -262,6 +253,7 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     findspot TEXT NOT NULL DEFAULT '',
     findspot_lat REAL,
     findspot_lon REAL,
+    findspot_uncertainty_m REAL,
     date_approx INTEGER,
     date_uncertainty INTEGER,
     medium TEXT NOT NULL DEFAULT '',
@@ -297,6 +289,7 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     findspot TEXT DEFAULT '',
     findspot_lat DOUBLE PRECISION,
     findspot_lon DOUBLE PRECISION,
+    findspot_uncertainty_m DOUBLE PRECISION,
     date_approx INTEGER,
     date_uncertainty INTEGER,
     medium TEXT DEFAULT '',
@@ -334,6 +327,7 @@ CREATE TABLE IF NOT EXISTS genetic_samples (
     findspot TEXT DEFAULT '',
     findspot_lat DOUBLE PRECISION,
     findspot_lon DOUBLE PRECISION,
+    findspot_uncertainty_m DOUBLE PRECISION,
     date_approx INTEGER,
     date_uncertainty INTEGER,
     y_haplogroup TEXT,
@@ -368,6 +362,7 @@ _COLUMNS = [
     "findspot",
     "findspot_lat",
     "findspot_lon",
+    "findspot_uncertainty_m",
     "date_approx",
     "date_uncertainty",
     "medium",
@@ -389,673 +384,29 @@ _COLUMNS = [
 # ---------------------------------------------------------------------------
 
 
-class BaseCorpus(ABC):
-    """Abstract corpus backend."""
 
-    @abstractmethod
-    def add(
-        self,
-        inscription: Inscription,
-        language: str = "etruscan",
-    ) -> None: ...
-
-    @abstractmethod
-    def search(
-        self,
-        text: str | None = None,
-        findspot: str | None = None,
-        date_range: tuple[int, int] | None = None,
-        medium: str | None = None,
-        language: str | None = None,
-        classification: str | None = None,
-        provenance_status: str | None = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> SearchResults: ...
-
-    @abstractmethod
-    def search_radius(
-        self,
-        lat: float,
-        lon: float,
-        radius_km: float = 50.0,
-        limit: int = 100,
-    ) -> SearchResults: ...
-
-    @abstractmethod
-    def semantic_search(
-        self,
-        query_embedding: list[float],
-        field: str = "emb_combined",
-        limit: int = 20,
-    ) -> SearchResults: ...
-
-    @abstractmethod
-    def count(self) -> int: ...
-
-    @abstractmethod
-    def import_csv(
-        self,
-        csv_path: str | Path,
-        language: str = "etruscan",
-    ) -> int: ...
-
-    @abstractmethod
-    def add_genetic_sample(
-        self,
-        sample: GeneticSample,
-    ) -> None: ...
-
-    @abstractmethod
-    def find_genetic_matches(
-        self,
-        inscription_id: str,
-        limit: int = 5,
-    ) -> list[dict]: ...
-
-    def get_by_ids(self, ids: list[str]) -> SearchResults:
-        """Fetch inscriptions by a list of IDs. Override for efficiency."""
-        # Default fallback — subclasses should override with WHERE IN
-        results = self.search(limit=999999)
-        id_set = set(ids)
-        matching = [i for i in results.inscriptions if i.id in id_set]
-        return SearchResults(inscriptions=matching, total=len(matching))
-
-    def export_all(self, fmt: str = "csv") -> str:
-        """Export the entire corpus."""
-        results = self.search(limit=999999)
-        return results.export(fmt)
-
-    @abstractmethod
-    def close(self) -> None: ...
-
-    def _prepare_inscription(
-        self,
-        inscription: Inscription,
-        language: str,
-    ) -> Inscription:
-        """Auto-normalize text if canonical is empty."""
-        if not inscription.canonical:
-            result = normalize(inscription.raw_text, language=language)
-            return Inscription(
-                id=inscription.id,
-                raw_text=inscription.raw_text,
-                canonical=result.canonical,
-                phonetic=result.phonetic,
-                old_italic=result.old_italic,
-                findspot=inscription.findspot,
-                findspot_lat=inscription.findspot_lat,
-                findspot_lon=inscription.findspot_lon,
-                date_approx=inscription.date_approx,
-                date_uncertainty=inscription.date_uncertainty,
-                medium=inscription.medium,
-                object_type=inscription.object_type,
-                source=inscription.source,
-                bibliography=inscription.bibliography,
-                notes=inscription.notes,
-                language=inscription.language or language,
-                classification=inscription.classification,
-                script_system=inscription.script_system,
-                completeness=inscription.completeness,
-                provenance_status=inscription.provenance_status,
-                provenance_flags=inscription.provenance_flags,
-            )
-        return inscription
-
-    def _inscription_values(self, insc: Inscription) -> tuple:
-        """Extract ordered values for INSERT."""
-        return (
-            insc.id,
-            insc.raw_text,
-            insc.canonical,
-            insc.phonetic,
-            insc.old_italic,
-            insc.findspot,
-            insc.findspot_lat,
-            insc.findspot_lon,
-            insc.date_approx,
-            insc.date_uncertainty,
-            insc.medium,
-            insc.object_type,
-            insc.source,
-            insc.bibliography,
-            insc.notes,
-            insc.language,
-            insc.classification,
-            insc.script_system,
-            insc.completeness,
-            insc.provenance_status,
-            ",".join(insc.provenance_flags) if insc.provenance_flags else "",
-        )
-
-    def _build_search_query(
-        self,
-        text: str | None,
-        findspot: str | None,
-        date_range: tuple[int, int] | None,
-        medium: str | None,
-        language: str | None,
-        classification: str | None,
-        limit: int,
-        provenance_status: str | None = None,
-        param_style: str = "qmark",
-        offset: int = 0,
-        sort_by: str = "id",
-        geo_only: bool = False,
-    ) -> tuple[str, str, list]:
-        """Build WHERE clause. Returns (query, count_query, params)."""
-        conditions: list[str] = []
-        params: list = []
-        ph = "?" if param_style == "qmark" else "%s"
-
-        if text:
-            sql_pattern = text.replace("*", "%").replace("?", "_")
-            conditions.append(f"canonical LIKE {ph}")
-            params.append(sql_pattern)
-
-        if findspot:
-            conditions.append(f"findspot LIKE {ph}")
-            params.append(f"%{findspot}%")
-
-        if date_range:
-            conditions.append(f"date_approx >= {ph} AND date_approx <= {ph}")
-            params.extend(date_range)
-
-        if medium:
-            conditions.append(f"medium LIKE {ph}")
-            params.append(f"%{medium}%")
-
-        if language:
-            conditions.append(f"language = {ph}")
-            params.append(language)
-
-        if classification:
-            conditions.append(f"classification = {ph}")
-            params.append(classification)
-
-        if provenance_status:
-            conditions.append(f"provenance_status = {ph}")
-            params.append(provenance_status)
-
-        if geo_only:
-            conditions.append("findspot_lat IS NOT NULL")
-
-        where = " AND ".join(conditions) if conditions else "1=1"
-
-        sort_clause = "ORDER BY id"
-        if sort_by == "date":
-            sort_clause = "ORDER BY date_approx ASC NULLS LAST, id ASC"
-        elif sort_by == "site":
-            sort_clause = "ORDER BY findspot ASC NULLS LAST, id ASC"
-
-        query = " ".join(
-            ["SELECT * FROM inscriptions WHERE", where, sort_clause, "LIMIT", ph, "OFFSET", ph]
-        )
-        count_query = " ".join(["SELECT COUNT(*) FROM inscriptions WHERE", where])
-        params_with_limit = params + [limit, offset]
-
-        return query, count_query, params_with_limit
-
-
-# ---------------------------------------------------------------------------
-# SQLite backend
-# ---------------------------------------------------------------------------
-
-
-class Corpus(BaseCorpus):
-    """
-    Queryable corpus backed by SQLite.
-
-    Usage:
-        corpus = Corpus.load()
-        results = corpus.search(text="larth", findspot="Cerveteri")
-        print(results.export("csv"))
-    """
-
-    def __init__(self, db_path: str | Path | None = None) -> None:
-        self.db_path = Path(db_path) if db_path else DB_PATH
-        self._conn: sqlite3.Connection | None = None
-
-    @classmethod
-    def load(cls, db_path: str | Path | None = None) -> BaseCorpus:
-        """
-        Load or create the corpus database.
-
-        If DATABASE_URL is set in the environment, connects to that
-        backend automatically (PostgreSQL or SQLite URL). Otherwise
-        uses the default local SQLite database.
-        """
-        # Auto-detect from environment or .env file
-        env_url = os.environ.get("DATABASE_URL", "")
-        if not env_url:
-            env_path = Path(".env")
-            if env_path.exists():
-                for line in env_path.read_text().splitlines():
-                    line = line.strip()
-                    if line.startswith("DATABASE_URL="):
-                        env_url = line.split("=", 1)[1].strip().strip('"').strip("'")
-                        break
-
-        if env_url and db_path is None:
-            return cls.connect(env_url)
-        corpus = cls(db_path)
-        corpus._ensure_db()
-        return corpus
-
-    @classmethod
-    def connect(cls, url: str) -> BaseCorpus:
-        """
-        Connect to a corpus backend by URL.
-
-        - sqlite:///path or file path -> SQLite
-        - postgresql://user:pass@host/db -> PostgreSQL
-        """
-        if url.startswith(("postgresql://", "postgres://")):
-            return PostgresCorpus.from_url(url)
-        path = url.replace("sqlite:///", "") if "sqlite:///" in url else url
-        return cls.load(path)
-
-    @property
-    def conn(self) -> sqlite3.Connection:
-        if self._conn is None:
-            self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
-            self._conn.row_factory = sqlite3.Row
-        return self._conn
-
-    def _ensure_db(self) -> None:
-        """Create tables if they don't exist and migrate schema."""
-        from openetruscan.artifacts import IMAGES_SQLITE_SCHEMA
-
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        # 1. Create table (old DBs keep their columns, new DBs get all)
-        self.conn.executescript(_SQLITE_SCHEMA_TABLE)
-        # 2. Migrate: add any missing columns to old databases
-        self._migrate_columns()
-        # 3. Create indexes (now safe — all columns exist)
-        self.conn.executescript(_SQLITE_SCHEMA_INDEXES)
-        self.conn.executescript(IMAGES_SQLITE_SCHEMA)
-
-    def _migrate_columns(self) -> None:
-        """Add new columns to existing databases."""
-        cursor = self.conn.execute("PRAGMA table_info(inscriptions)")
-        existing = {row[1] for row in cursor.fetchall()}
-        if "language" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN language TEXT NOT NULL DEFAULT 'etruscan'"
-            )
-        if "classification" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN classification TEXT NOT NULL DEFAULT 'unknown'"
-            )
-        if "script_system" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN "
-                "script_system TEXT NOT NULL DEFAULT 'old_italic'"
-            )
-        if "completeness" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN completeness TEXT NOT NULL DEFAULT 'complete'"
-            )
-        if "provenance_status" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN "
-                "provenance_status TEXT NOT NULL DEFAULT 'verified'"
-            )
-        if "provenance_flags" not in existing:
-            self.conn.execute(
-                "ALTER TABLE inscriptions ADD COLUMN provenance_flags TEXT NOT NULL DEFAULT ''"
-            )
-        self.conn.commit()
-
-    def add(
-        self,
-        inscription: Inscription,
-        language: str = "etruscan",
-    ) -> None:
-        """Add an inscription, auto-normalizing the text."""
-        inscription = self._prepare_inscription(inscription, language)
-        cols = ", ".join(_COLUMNS)
-        placeholders = ", ".join(["?"] * len(_COLUMNS))
-        # nosemgrep
-        self.conn.execute(
-            f"INSERT OR REPLACE INTO inscriptions ({cols}) VALUES ({placeholders})",
-            self._inscription_values(inscription),
-        )
-        self.conn.commit()
-
-    def search(
-        self,
-        text: str | None = None,
-        findspot: str | None = None,
-        date_range: tuple[int, int] | None = None,
-        medium: str | None = None,
-        language: str | None = None,
-        classification: str | None = None,
-        provenance_status: str | None = None,
-        limit: int = 100,
-        offset: int = 0,
-        sort_by: str = "id",
-        geo_only: bool = False,
-    ) -> SearchResults:
-        """Search the corpus with optional filters."""
-        query, count_query, params = self._build_search_query(
-            text,
-            findspot,
-            date_range,
-            medium,
-            language,
-            classification,
-            limit,
-            provenance_status=provenance_status,
-            param_style="qmark",
-            offset=offset,
-            sort_by=sort_by,
-            geo_only=geo_only,
-        )
-        rows = self.conn.execute(query, params).fetchall()
-        inscriptions = [_row_to_inscription(row) for row in rows]
-        total = self.conn.execute(
-            count_query,
-            params[:-2],  # strip limit and offset
-        ).fetchone()[0]
-        return SearchResults(inscriptions=inscriptions, total=total)
-
-    def search_radius(
-        self,
-        lat: float,
-        lon: float,
-        radius_km: float = 50.0,
-        limit: int = 100,
-    ) -> SearchResults:
-        """
-        Haversine fallback for SQLite with bounding box optimization.
-
-        Uses a bounding box pre-filter to avoid calculating Haversine distance
-        for points that are definitely outside the radius.
-        """
-        from openetruscan.geo import haversine
-
-        # Calculate bounding box (approximate)
-        # 1 degree latitude ≈ 111 km
-        # 1 degree longitude ≈ 111 km * cos(latitude)
-        lat_delta = radius_km / 111.0
-        # Clamp cos to avoid division issues near poles (though Etruscan sites are mid-latitude)
-        import math
-
-        lon_delta = radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
-
-        lat_min, lat_max = lat - lat_delta, lat + lat_delta
-        lon_min, lon_max = lon - lon_delta, lon + lon_delta
-
-        # Query only points within bounding box first (much faster)
-        rows = self.conn.execute(
-            """
-            SELECT * FROM inscriptions
-            WHERE findspot_lat IS NOT NULL
-              AND findspot_lon IS NOT NULL
-              AND findspot_lat >= ? AND findspot_lat <= ?
-              AND findspot_lon >= ? AND findspot_lon <= ?
-            """,
-            (lat_min, lat_max, lon_min, lon_max),
-        ).fetchall()
-
-        inscriptions = []
-        for row in rows:
-            dist = haversine(
-                lat,
-                lon,
-                row["findspot_lat"],
-                row["findspot_lon"],
-            )
-            if dist <= radius_km:
-                inscriptions.append((dist, _row_to_inscription(row)))
-
-        inscriptions.sort(key=lambda x: x[0])
-        results = [insc for _, insc in inscriptions[:limit]]
-        return SearchResults(inscriptions=results, total=len(inscriptions))
-
-    def semantic_search(
-        self,
-        query_embedding: list[float],
-        field: str = "emb_combined",
-        limit: int = 20,
-    ) -> SearchResults:
-        raise NotImplementedError(
-            "semantic_search is only supported in PostgresCorpus with pgvector"
-        )
-
-    def count(self) -> int:
-        """Total number of inscriptions."""
-        return self.conn.execute(
-            "SELECT COUNT(*) FROM inscriptions",
-        ).fetchone()[0]
-
-    def add_genetic_sample(
-        self,
-        sample: GeneticSample,
-    ) -> None:
-        """Add a genetic sample to the SQLite fallback DB."""
-        sql = """
-            INSERT OR REPLACE INTO genetic_samples (
-                id, findspot, findspot_lat, findspot_lon,
-                date_approx, date_uncertainty, y_haplogroup, mt_haplogroup,
-                source, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """
-        self.conn.execute(
-            sql,
-            (
-                sample.id,
-                sample.findspot,
-                sample.findspot_lat,
-                sample.findspot_lon,
-                sample.date_approx,
-                sample.date_uncertainty,
-                sample.y_haplogroup,
-                sample.mt_haplogroup,
-                sample.source,
-                sample.notes,
-            ),
-        )
-        self.conn.commit()
-
-    def find_genetic_matches(
-        self,
-        inscription_id: str,
-        limit: int = 5,
-    ) -> list[dict]:
-        """Haversine fallback for genetic matching in SQLite with bounding box optimization."""
-        import math
-
-        from openetruscan.geo import haversine
-
-        # Find the inscription's coordinates and date
-        insc_row = self.conn.execute(
-            "SELECT findspot_lat, findspot_lon, date_approx FROM inscriptions WHERE id = ?",
-            (inscription_id,),
-        ).fetchone()
-
-        if not insc_row or not insc_row["findspot_lat"] or not insc_row["findspot_lon"]:
-            return []
-
-        lat = insc_row["findspot_lat"]
-        lon = insc_row["findspot_lon"]
-        date_approx = insc_row["date_approx"] or 0
-
-        # Use a generous bounding box for genetic matching (500km)
-        max_radius_km = 500.0
-        lat_delta = max_radius_km / 111.0
-        lon_delta = max_radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
-
-        lat_min, lat_max = lat - lat_delta, lat + lat_delta
-        lon_min, lon_max = lon - lon_delta, lon + lon_delta
-
-        # Fetch genetic samples within bounding box
-        genes = self.conn.execute(
-            """
-            SELECT * FROM genetic_samples
-            WHERE findspot_lat IS NOT NULL
-              AND findspot_lon IS NOT NULL
-              AND findspot_lat >= ? AND findspot_lat <= ?
-              AND findspot_lon >= ? AND findspot_lon <= ?
-            """,
-            (lat_min, lat_max, lon_min, lon_max),
-        ).fetchall()
-
-        results = []
-        for g in genes:
-            dist = haversine(
-                lat,
-                lon,
-                g["findspot_lat"],
-                g["findspot_lon"],
-            )
-            g_date = g["date_approx"] or 0
-            date_diff = abs(date_approx - g_date)
-
-            # Score = Distance_Km + (Date_Diff_Yrs * 0.5)
-            score = dist + (date_diff * 0.5)
-
-            row_dict = dict(g)
-            row_dict["distance_km"] = dist
-            row_dict["date_diff_years"] = date_diff
-            row_dict["match_score"] = score
-            results.append((score, row_dict))
-
-        results.sort(key=lambda x: x[0])
-        return [r[1] for r in results[:limit]]
-
-    def import_csv(
-        self,
-        csv_path: str | Path,
-        language: str = "etruscan",
-    ) -> int:
-        """
-        Import inscriptions from a CSV file.
-
-        Returns number of imported inscriptions.
-        """
-        path = Path(csv_path)
-        imported = 0
-        with path.open(encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                text = row.get(
-                    "text",
-                    row.get("raw_text", ""),
-                ).strip()
-                if not text:
-                    continue
-                inscription = Inscription(
-                    id=row.get("id", f"import_{imported}"),
-                    raw_text=text,
-                    findspot=row.get("findspot", ""),
-                    findspot_lat=_safe_float(row.get("findspot_lat")),
-                    findspot_lon=_safe_float(row.get("findspot_lon")),
-                    date_approx=_safe_int(row.get("date_approx")),
-                    date_uncertainty=_safe_int(
-                        row.get("date_uncertainty"),
-                    ),
-                    medium=row.get("medium", ""),
-                    object_type=row.get("object_type", ""),
-                    source=row.get("source", ""),
-                    bibliography=row.get("bibliography", ""),
-                    notes=row.get("notes", ""),
-                    language=row.get("language", language),
-                    classification=row.get("classification", "unknown"),
-                    script_system=row.get(
-                        "script_system",
-                        "old_italic",
-                    ),
-                    completeness=row.get("completeness", "complete"),
-                )
-                self.add(inscription, language=language)
-                imported += 1
-        return imported
-
-    def add_image(
-        self,
-        image_id: str,
-        inscription_id: str,
-        filename: str,
-        mime_type: str = "image/jpeg",
-        description: str = "",
-        file_hash: str = "",
-    ) -> None:
-        """Store image metadata."""
-        self.conn.execute(
-            "INSERT OR REPLACE INTO images "
-            "(id, inscription_id, filename, mime_type, "
-            "description, file_hash) VALUES (?, ?, ?, ?, ?, ?)",
-            (image_id, inscription_id, filename, mime_type, description, file_hash),
-        )
-        self.conn.commit()
-
-    def get_images(self, inscription_id: str) -> list[dict]:
-        """Get all images for an inscription."""
-        rows = self.conn.execute(
-            "SELECT * FROM images WHERE inscription_id = ?",
-            (inscription_id,),
-        ).fetchall()
-        return [{k: row[k] for k in row} for row in rows]
-
-    def review_quarantine(
-        self,
-        inscription_id: str,
-        action: str = "verify",
-    ) -> bool:
-        """
-        Review a quarantined inscription.
-
-        Args:
-            inscription_id: The inscription ID to review.
-            action: "verify" to mark as verified, "reject" to reject.
-
-        Returns:
-            True if the inscription was found and updated.
-        """
-        if action not in ("verify", "reject"):
-            raise ValueError(f"Invalid action: {action}. Use 'verify' or 'reject'.")
-
-        row = self.conn.execute(
-            "SELECT id FROM inscriptions WHERE id = ?", (inscription_id,)
-        ).fetchone()
-        if not row:
-            return False
-
-        new_status = "verified" if action == "verify" else "rejected"
-        self.conn.execute(
-            "UPDATE inscriptions SET provenance_status = ? WHERE id = ?",
-            (new_status, inscription_id),
-        )
-        self.conn.commit()
-        return True
-
-    def get_by_ids(self, ids: list[str]) -> SearchResults:
-        """Fetch inscriptions by a list of IDs (SQLite)."""
-        if not ids:
-            return SearchResults(inscriptions=[], total=0)
-        placeholders = ",".join(["?"] * len(ids))
-        # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query  # noqa: E501
-        rows = self.conn.execute(
-            f"SELECT * FROM inscriptions WHERE id IN ({placeholders})",  # nosec B608
-            ids,
-        ).fetchall()
-        inscriptions = [_row_to_inscription(row) for row in rows]
-        return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
-
-    def close(self) -> None:
-        if self._conn:
-            self._conn.close()
-            self._conn = None
-
-
-# ---------------------------------------------------------------------------
-# PostgreSQL backend
-# ---------------------------------------------------------------------------
-
-
-class PostgresCorpus(BaseCorpus):
+_KNOWN_NAMES = {
+    "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia",
+    "sethre", "marce", "avile", "lavtni", "ramtha", "fasti", "hasti",
+    "tite", "caile", "larθi", "arnth", "thana", "lart", "lars",
+    "arnt", "arn", "arath", "araθ", "veilia",
+    "matunas", "velthur", "velθur", "cainei", "cai", "clan",
+    "puia", "sec", "ati", "papa",
+}
+
+def _extract_names(canonical: str) -> list[str]:
+    import re as _re
+    tokens = _re.split(r"[\s·.,:;]+", canonical.lower())
+    found = []
+    seen = set()
+    for t in tokens:
+        if len(t) >= 2 and t in _KNOWN_NAMES and t not in seen:
+            found.append(t)
+            seen.add(t)
+    return found
+
+class Corpus:
+    """Queryable corpus natively backed by PostgreSQL."""
     """
     Queryable corpus backed by PostgreSQL (Cloud SQL).
 
@@ -1077,11 +428,29 @@ class PostgresCorpus(BaseCorpus):
         self._conn.autocommit = False
 
     @classmethod
-    def from_url(cls, url: str) -> PostgresCorpus:
+    def connect(cls, url: str) -> Corpus:
         """Connect to PostgreSQL and ensure schema exists."""
         corpus = cls(url)
         corpus._ensure_db()
         return corpus
+
+    
+    @classmethod
+    def load(cls, db_path=None) -> "Corpus":
+        env_url = os.environ.get("DATABASE_URL", "")
+        if not env_url:
+            env_path = Path(".env")
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    line = line.strip()
+                    if line.startswith("DATABASE_URL="):
+                        env_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+        if not env_url:
+            raise ValueError("DATABASE_URL environment variable is missing.")
+        # Some legacy scripts pass `db_path` which was the sqlite file. We just ignore it
+        # and forcefully connect to Postgres.
+        return cls.connect(env_url)
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist (ignored for read-only users)."""
@@ -1107,6 +476,9 @@ class PostgresCorpus(BaseCorpus):
 
                 # Schema migrations for existing tables
                 with contextlib.suppress(psycopg2.Error):
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS findspot_uncertainty_m DOUBLE PRECISION;"
+                    )
                     cur.execute(
                         "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
                         "tsvector GENERATED ALWAYS AS "
@@ -1215,7 +587,7 @@ class PostgresCorpus(BaseCorpus):
         query = """
             SELECT *,
                    ST_Distance(
-                       geom::geography,
+                       ST_Buffer(geom::geography, COALESCE(findspot_uncertainty_m, 0)),
                        ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
                    ) as dist
             FROM inscriptions
@@ -1223,7 +595,7 @@ class PostgresCorpus(BaseCorpus):
             AND ST_DWithin(
                 geom::geography,
                 ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-                %s
+                %s + COALESCE(findspot_uncertainty_m, 0)
             )
             ORDER BY dist ASC
             LIMIT %s
@@ -1235,7 +607,7 @@ class PostgresCorpus(BaseCorpus):
             AND ST_DWithin(
                 geom::geography,
                 ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-                %s
+                %s + COALESCE(findspot_uncertainty_m, 0)
             )
         """
         with self._conn.cursor(
@@ -1326,15 +698,19 @@ class PostgresCorpus(BaseCorpus):
     ) -> list[dict]:
         """Perform a highly optimized PostgreSQL FTS KWIC search on the corpus."""
         import psycopg2.extras
-
-        # 1. Fetch matching documents instantly using GIN `fts_canonical` index
-        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(
-                "SELECT id, canonical FROM inscriptions "
-                "WHERE fts_canonical @@ websearch_to_tsquery('simple', %s) LIMIT %s",
-                (query, limit)
-            )
-            matching_rows = cur.fetchall()
+        
+        try:
+            with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    "SELECT id, canonical FROM inscriptions "
+                    "WHERE fts_canonical @@ websearch_to_tsquery('simple', %s) LIMIT %s",
+                    (query, limit)
+                )
+                matching_rows = cur.fetchall()
+                self._conn.commit()
+        except Exception as e:
+            self._conn.rollback()
+            raise e
 
         # 2. Extract precise KWIC snippets from the small matching subset
         rows = []
@@ -1488,9 +864,8 @@ class PostgresCorpus(BaseCorpus):
                     findspot_lat=_safe_float(row.get("findspot_lat")),
                     findspot_lon=_safe_float(row.get("findspot_lon")),
                     date_approx=_safe_int(row.get("date_approx")),
-                    date_uncertainty=_safe_int(
-                        row.get("date_uncertainty"),
-                    ),
+                    findspot_uncertainty_m=_safe_int(row.get("findspot_uncertainty_m")),
+                    date_uncertainty=_safe_int(row.get("date_uncertainty")),
                     medium=row.get("medium", ""),
                     object_type=row.get("object_type", ""),
                     source=row.get("source", ""),
@@ -1540,6 +915,96 @@ class PostgresCorpus(BaseCorpus):
             rows = cur.fetchall()
         inscriptions = [_dict_to_inscription(row) for row in rows]
         return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
+
+    def get_all_ids(self) -> list[str]:
+        """Return a list of all inscription IDs."""
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT id FROM inscriptions ORDER BY id ASC")
+            return [row[0] for row in cur.fetchall()]
+
+
+    def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:
+        from collections import defaultdict
+        
+        # We process canonical strings and run _extract_names logic directly here
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT id, canonical FROM inscriptions WHERE canonical IS NOT NULL")
+            rows = cur.fetchall()
+
+        name_inscriptions = defaultdict(list)
+        co_occurrences = defaultdict(int)
+        
+        for row in rows:
+            insc_id = row[0]
+            canonical = row[1]
+            found_names = _extract_names(canonical)
+            
+            for name in found_names:
+                name_inscriptions[name].append(insc_id)
+                for other in found_names:
+                    if name != other:
+                        pair = f"{min(name, other)}|{max(name, other)}"
+                        co_occurrences[pair] += 1
+                        
+        return dict(name_inscriptions), dict(co_occurrences)
+
+    def get_stats_summary(self) -> dict:
+        import psycopg2.extras
+        from psycopg2.errors import UndefinedTable, InFailedSqlTransaction
+        try:
+            with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT 
+                        COUNT(*) as total,
+                        COUNT(findspot_lat) as with_coords,
+                        COUNT(pleiades_id) as pleiades_linked,
+                        SUM(CASE WHEN classification != 'unknown' THEN 1 ELSE 0 END) as classified
+                    FROM inscriptions;
+                """)
+                summary = dict(cur.fetchone() or {})
+                
+                cur.execute("""
+                    SELECT findspot, COUNT(*) as c 
+                    FROM inscriptions 
+                    WHERE findspot != '' AND findspot IS NOT NULL 
+                    GROUP BY findspot 
+                    ORDER BY c DESC LIMIT 20
+                """)
+                summary["top_sites"] = [(r["findspot"], r["c"]) for r in cur.fetchall()]
+                
+                cur.execute("""
+                    SELECT classification, COUNT(*) as c 
+                    FROM inscriptions 
+                    GROUP BY classification 
+                    ORDER BY c DESC
+                """)
+                summary["classification_counts"] = [(r["classification"], r["c"]) for r in cur.fetchall()]
+                
+                summary["text_length_buckets"] = []
+                summary["distinct_sites"] = []
+                summary["distinct_classifications"] = [x[0] for x in summary.get("classification_counts", [])]
+                
+                self._conn.commit()
+                return summary
+        except Exception as e:
+            self._conn.rollback()
+            raise e
+
+    def get_stats_timeline(self) -> dict:
+        import psycopg2.extras
+        try:
+            with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT id, findspot, findspot_lat, findspot_lon, date_approx, classification
+                    FROM inscriptions 
+                    WHERE date_approx IS NOT NULL AND findspot_lat IS NOT NULL;
+                """)
+                items = [dict(r) for r in cur.fetchall()]
+                self._conn.commit()
+                return {"total": len(items), "items": items}
+        except Exception as e:
+            self._conn.rollback()
+            raise e
 
     def close(self) -> None:
         if self._conn:

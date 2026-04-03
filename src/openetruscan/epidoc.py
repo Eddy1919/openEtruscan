@@ -131,23 +131,18 @@ def inscription_to_epidoc(inscription, language: str = "xet") -> str:
     return _indent_xml(ET.tostring(root, encoding="unicode"))
 
 
-def corpus_to_epidoc(
-    corpus,
+def results_to_epidoc(
+    results: Iterator | list,
     language: str = "xet",
-    limit: int = 0,
 ) -> str:
     """
-    Export an entire corpus as a multi-document EpiDoc collection.
-
-    Args:
-        corpus: A Corpus instance.
-        language: ISO 639-3 language code.
-        limit: Max inscriptions (0 = all).
-
-    Returns:
-        EpiDoc XML string with all inscriptions.
+    Export an iterable of Inscription objects as a multi-document EpiDoc collection.
     """
-    results = corpus.search(limit=limit if limit > 0 else 999999)
+    # handle both SearchResults and simple lists
+    if hasattr(results, 'inscriptions'):
+        inscriptions = results.inscriptions
+    else:
+        inscriptions = results
 
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -170,7 +165,7 @@ def corpus_to_epidoc(
         "<body>",
     ]
 
-    for inscription in results:
+    for inscription in inscriptions:
         parts.append(f'<div type="textpart" n="{inscription.id}">')
         parts.append(f'  <ab xml:lang="{language}">')
         parts.append(f"    {_escape_xml(inscription.canonical)}")
@@ -183,6 +178,26 @@ def corpus_to_epidoc(
 
     parts.extend(["</body>", "</text>", "</TEI>"])
     return "\n".join(parts)
+
+
+def corpus_to_epidoc(
+    corpus,
+    language: str = "xet",
+    limit: int = 0,
+) -> str:
+    """
+    Export an entire corpus as a multi-document EpiDoc collection.
+
+    Args:
+        corpus: A Corpus instance.
+        language: ISO 639-3 language code.
+        limit: Max inscriptions (0 = all).
+
+    Returns:
+        EpiDoc XML string with all inscriptions.
+    """
+    results = corpus.search(limit=limit if limit > 0 else 999999)
+    return results_to_epidoc(results, language=language)
 
 
 def epidoc_iterator(
@@ -213,4 +228,92 @@ def _escape_xml(text: str) -> str:
     """Escape XML special characters."""
     return (
         text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    )
+
+def parse_epidoc(xml_str: str):
+    """
+    Parse an EpiDoc XML string into an Inscription object.
+
+    Args:
+        xml_str: EpiDoc TEI XML string.
+
+    Returns:
+        An Inscription object populated with parsed data.
+    """
+    from openetruscan.corpus import Inscription
+
+    try:
+        root = ET.fromstring(xml_str)  # nosec B314
+    except Exception as e:
+        raise ValueError(f"Invalid XML: {e}")
+
+    ns = {"tei": "http://www.tei-c.org/ns/1.0"}
+
+    def get_text(xpath: str, element=root) -> str | None:
+        el = element.find(xpath, ns)
+        return el.text.strip() if el is not None and el.text else None
+
+    id_val = get_text(".//tei:publicationStmt/tei:idno")
+    if not id_val:
+        import hashlib
+        id_val = f"tei_{hashlib.md5(xml_str.encode()).hexdigest()[:8]}"
+
+    findspot = get_text(".//tei:origin/tei:origPlace") or get_text(".//tei:msIdentifier//tei:settlement") or ""
+
+    date_approx = None
+    date_uncertainty = None
+    orig_date = root.find(".//tei:origin/tei:origDate", ns)
+    if orig_date is not None:
+        when = orig_date.get("when-custom")
+        if when:
+            try:
+                date_approx = int(when)
+            except ValueError:
+                pass
+        else:
+            nb = orig_date.get("notBefore-custom")
+            na = orig_date.get("notAfter-custom")
+            if nb and na:
+                try:
+                    n_b = int(nb)
+                    n_a = int(na)
+                    date_approx = (n_b + n_a) // 2
+                    date_uncertainty = abs(n_a - n_b) // 2
+                except ValueError:
+                    pass
+
+    findspot_lat = None
+    findspot_lon = None
+    geo = get_text(".//tei:origin/tei:origPlace/tei:geo")
+    if geo:
+        parts = geo.split()
+        if len(parts) >= 2:
+            try:
+                findspot_lat = float(parts[0])
+                findspot_lon = float(parts[1])
+            except ValueError:
+                pass
+
+    medium = get_text(".//tei:supportDesc//tei:material") or ""
+    object_type = get_text(".//tei:supportDesc//tei:objectType") or ""
+
+    canonical = get_text(".//tei:body//tei:div[@type='edition']//tei:ab") or ""
+    raw_text = canonical
+
+    notes = get_text(".//tei:body//tei:div[@type='translation']//tei:p") or ""
+    bibliography = get_text(".//tei:body//tei:div[@type='bibliography']//tei:bibl") or ""
+
+    return Inscription(
+        id=id_val,
+        raw_text=raw_text,
+        canonical=canonical,
+        findspot=findspot,
+        findspot_lat=findspot_lat,
+        findspot_lon=findspot_lon,
+        date_approx=date_approx,
+        date_uncertainty=date_uncertainty,
+        medium=medium,
+        object_type=object_type,
+        notes=notes,
+        bibliography=bibliography
     )

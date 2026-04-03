@@ -93,11 +93,13 @@ openEtruscan/
   .github/           CI/CD workflows
 ```
 
-## Linked Open Data
+## Linked Open Data & Pelagios Network
 
-The corpus is published as RDF/Turtle using the LAWD, Dublin Core, and GeoSPARQL ontologies:
+OpenEtruscan is an official member of the **[Pelagios Network](https://pelagios.org/)** (Contributing to the People, Place, and Registry Working Groups). Our robust Linked Open Data integrations guarantee interoperability with primary external ancient-world DH graphs:
 
-- 41 findspots aligned to Pleiades
+- **11,361 total inscriptions** exported natively via our [Pelagios JSON-LD Endpoint](/pelagios.jsonld)
+- 184 dynamic findspots aligned dynamically with [Pleiades](https://pleiades.stoa.org)
+- Robust Web Annotations supporting spatial geometries even beneath uncertainty arrays
 - 17 findspots aligned to GeoNames
 - SPARQL endpoint: Apache Jena Fuseki 5.1 (34,477 triples, SPARQL 1.1)
 
