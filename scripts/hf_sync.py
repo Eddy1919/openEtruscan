@@ -6,12 +6,14 @@ Uploads local Neural Models to the Eddy1919/openetruscan-classifier repository c
 Automatically generates the requisite `config.json` tracking asset.
 """
 
-from pathlib import Path
-from huggingface_hub import HfApi
 import os
 import shutil
 import time
+from pathlib import Path
+
 from dotenv import load_dotenv
+from huggingface_hub import HfApi
+
 
 def sync_huggingface():
     load_dotenv(Path(__file__).resolve().parent.parent / ".env")

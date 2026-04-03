@@ -11,8 +11,6 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from openetruscan.normalizer import normalize
-
 DB_PATH = Path(__file__).parent / "data" / "corpus.db"
 
 # ---------------------------------------------------------------------------
@@ -434,9 +432,9 @@ class Corpus:
         corpus._ensure_db()
         return corpus
 
-    
+
     @classmethod
-    def load(cls, db_path=None) -> "Corpus":
+    def load(cls, db_path=None) -> Corpus:
         env_url = os.environ.get("DATABASE_URL", "")
         if not env_url:
             env_path = Path(".env")
@@ -621,6 +619,34 @@ class Corpus:
 
         return SearchResults(inscriptions=inscriptions, total=total)
 
+    def mvt_tiles(self, z: int, x: int, y: int) -> bytes:
+        """Native PostGIS ST_AsMVT for serving Mapbox Vector Tiles."""
+        import psycopg2.extras
+
+        query = """
+            WITH bounds AS (
+                SELECT ST_TileEnvelope(%s, %s, %s) AS geom
+            ),
+            mvtgeom AS (
+                SELECT ST_AsMVTGeom(ST_Transform(i.geom::geometry, 3857), bounds.geom) AS geom,
+                       i.id,
+                       i.classification,
+                       i.findspot,
+                       i.canonical
+                FROM inscriptions i, bounds
+                WHERE i.geom IS NOT NULL AND ST_Intersects(ST_Transform(i.geom::geometry, 3857), bounds.geom)
+            )
+            SELECT ST_AsMVT(mvtgeom.*, 'inscriptions') AS tile
+            FROM mvtgeom;
+        """
+        with self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(query, (z, x, y))
+            result = cur.fetchone()
+            if result and result["tile"]:
+                return bytes(result["tile"])
+            return b""
+
+
     def semantic_search(
         self,
         query_embedding: list[float] | None,
@@ -698,7 +724,7 @@ class Corpus:
     ) -> list[dict]:
         """Perform a highly optimized PostgreSQL FTS KWIC search on the corpus."""
         import psycopg2.extras
-        
+
         try:
             with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(
@@ -925,7 +951,7 @@ class Corpus:
 
     def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:
         from collections import defaultdict
-        
+
         # We process canonical strings and run _extract_names logic directly here
         with self._conn.cursor() as cur:
             cur.execute("SELECT id, canonical FROM inscriptions WHERE canonical IS NOT NULL")
@@ -933,28 +959,27 @@ class Corpus:
 
         name_inscriptions = defaultdict(list)
         co_occurrences = defaultdict(int)
-        
+
         for row in rows:
             insc_id = row[0]
             canonical = row[1]
             found_names = _extract_names(canonical)
-            
+
             for name in found_names:
                 name_inscriptions[name].append(insc_id)
                 for other in found_names:
                     if name != other:
                         pair = f"{min(name, other)}|{max(name, other)}"
                         co_occurrences[pair] += 1
-                        
+
         return dict(name_inscriptions), dict(co_occurrences)
 
     def get_stats_summary(self) -> dict:
         import psycopg2.extras
-        from psycopg2.errors import UndefinedTable, InFailedSqlTransaction
         try:
             with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT 
+                    SELECT
                         COUNT(*) as total,
                         COUNT(findspot_lat) as with_coords,
                         COUNT(pleiades_id) as pleiades_linked,
@@ -962,28 +987,28 @@ class Corpus:
                     FROM inscriptions;
                 """)
                 summary = dict(cur.fetchone() or {})
-                
+
                 cur.execute("""
-                    SELECT findspot, COUNT(*) as c 
-                    FROM inscriptions 
-                    WHERE findspot != '' AND findspot IS NOT NULL 
-                    GROUP BY findspot 
+                    SELECT findspot, COUNT(*) as c
+                    FROM inscriptions
+                    WHERE findspot != '' AND findspot IS NOT NULL
+                    GROUP BY findspot
                     ORDER BY c DESC LIMIT 20
                 """)
                 summary["top_sites"] = [(r["findspot"], r["c"]) for r in cur.fetchall()]
-                
+
                 cur.execute("""
-                    SELECT classification, COUNT(*) as c 
-                    FROM inscriptions 
-                    GROUP BY classification 
+                    SELECT classification, COUNT(*) as c
+                    FROM inscriptions
+                    GROUP BY classification
                     ORDER BY c DESC
                 """)
                 summary["classification_counts"] = [(r["classification"], r["c"]) for r in cur.fetchall()]
-                
+
                 summary["text_length_buckets"] = []
                 summary["distinct_sites"] = []
                 summary["distinct_classifications"] = [x[0] for x in summary.get("classification_counts", [])]
-                
+
                 self._conn.commit()
                 return summary
         except Exception as e:
@@ -996,7 +1021,7 @@ class Corpus:
             with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
                     SELECT id, findspot, findspot_lat, findspot_lon, date_approx, classification
-                    FROM inscriptions 
+                    FROM inscriptions
                     WHERE date_approx IS NOT NULL AND findspot_lat IS NOT NULL;
                 """)
                 items = [dict(r) for r in cur.fetchall()]

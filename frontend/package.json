@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.5.1",
+    "@types/mapbox__mapbox-gl-draw": "^1.4.9",
     "@types/mapbox-gl": "^3.4.1",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",

@@ -82,7 +82,7 @@ export interface StatsSummary {
   distinct_classifications: string[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
 
 // ── Fetch helpers ──────────────────────────────────────────────────────────
 
@@ -233,11 +233,14 @@ const CANONICAL_TO_OLD_ITALIC: Record<string, string> = {
 
 /** Convert canonical Etruscan text to Old Italic Unicode */
 export function toOldItalic(canonical: string): string {
-  let result = "";
-  for (const char of canonical) {
-    result += CANONICAL_TO_OLD_ITALIC[char] || char;
-  }
-  return result;
+  // Tokenize Leiden bracket notation, punctuation dots/dashes, and individual graphemes.
+  // Preserves exact spacing and punctuation while strictly mapping Etruscan letters.
+  return canonical.replace(/(?:\[.*?\])|[\.•\-]|([a-zθśφχ])/gi, (match, letter) => {
+    if (letter) {
+      return CANONICAL_TO_OLD_ITALIC[letter.toLowerCase()] || letter;
+    }
+    return match;
+  });
 }
 
 // ── ML Helpers ─────────────────────────────────────────────────────────────
@@ -270,5 +273,16 @@ export async function restoreLacunae(text: string, top_k: number = 5): Promise<R
     }
     throw new Error(errMsg);
   }
+  return res.json();
+}
+
+export async function searchRadius(lat: number, lon: number, radiusKm: number): Promise<SearchResponse> {
+  const qs = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    radius_km: String(radiusKm),
+  });
+  const res = await fetch(`${API_URL}/radius?${qs.toString()}`);
+  if (!res.ok) throw new Error("Radius search failed");
   return res.json();
 }

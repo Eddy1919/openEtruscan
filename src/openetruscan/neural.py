@@ -753,11 +753,11 @@ class LacunaeRestorer:
                         mask_indices.append(len(tokens)-1)
                 i += match.end()
                 continue
-            
+
             if len(tokens) < self.max_len:
                 tokens.append(text[i])
             i += 1
-            
+
         return tokens, mask_indices
 
     def predict(self, text_with_lacunae: str, top_k: int = 5) -> list[dict]:
@@ -780,7 +780,7 @@ class LacunaeRestorer:
             return []
 
         x = torch.tensor([self.vocab.encode(tokens, self.max_len)], dtype=torch.long)
-        
+
         self.model.eval()
         with torch.no_grad():
             logits = self.model(x)[0]  # [seq_len, vocab_size]
@@ -792,7 +792,7 @@ class LacunaeRestorer:
             # Get top_k probabilities
             top_probs, top_indices = torch.topk(mask_probs, top_k)
             char_dist = {}
-            for p, i in zip(top_probs, top_indices):
+            for p, i in zip(top_probs, top_indices, strict=False):
                 if i.item() > 2: # exclude PAD, UNK, MASK
                     char = self.vocab.idx_to_char.get(i.item(), "")
                     char_dist[char] = round(p.item(), 4)
