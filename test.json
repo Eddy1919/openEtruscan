@@ -1,1 +1,32 @@
-{"total":2183,"count":1,"results":[{"id":"10425","canonical":"turan","phonetic":"/turan/","old_italic":"𐌕𐌖𐌓𐌀𐌍","raw_text":"turan","findspot":"Campania","findspot_lat":40.85,"findspot_lon":14.25,"date_display":"undated","date_approx":null,"date_uncertainty":null,"source":"Larth (Vico & Spanakis, 2023)","notes":"thegoddessvenus","medium":"","object_type":"","language":"etruscan","classification":"dedicatory","gens":null,"pleiades_id":"432742","geonames_id":null,"trismegistos_id":null,"eagle_id":null,"is_codex":false,"provenance_status":"verified"}]}
+{
+    "total": 2183,
+    "count": 1,
+    "results": [
+        {
+            "id": "10425",
+            "canonical": "turan",
+            "phonetic": "/turan/",
+            "old_italic": "𐌕𐌖𐌓𐌀𐌍",
+            "raw_text": "turan",
+            "findspot": "Campania",
+            "findspot_lat": 40.85,
+            "findspot_lon": 14.25,
+            "date_display": "undated",
+            "date_approx": null,
+            "date_uncertainty": null,
+            "source": "Larth (Vico & Spanakis, 2023)",
+            "notes": "thegoddessvenus",
+            "medium": "",
+            "object_type": "",
+            "language": "etruscan",
+            "classification": "dedicatory",
+            "gens": null,
+            "pleiades_id": "432742",
+            "geonames_id": null,
+            "trismegistos_id": null,
+            "eagle_id": null,
+            "is_codex": false,
+            "provenance_status": "verified"
+        }
+    ]
+}

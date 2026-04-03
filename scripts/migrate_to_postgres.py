@@ -126,8 +126,7 @@ def validate_extracted_record(cie_id: str, canonical: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.5-flash:generateContent"
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 )
 
 VALIDATION_PROMPT = """\
@@ -424,8 +423,7 @@ def migrate(
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             print(
-                "\n⚠️  GEMINI_API_KEY not set. Skipping LLM validation. "
-                "Set it in .env or export it."
+                "\n⚠️  GEMINI_API_KEY not set. Skipping LLM validation. Set it in .env or export it."
             )
         else:
             print(f"\n── Pass 2: LLM validation ({len(candidates)} records, batches of 50) ──")
@@ -456,9 +454,7 @@ def migrate(
                     filtered_candidates.append(row)
 
             candidates = filtered_candidates
-            print(
-                f"  Pass 2 result: {len(candidates)} passed, {rejected_llm} rejected"
-            )
+            print(f"  Pass 2 result: {len(candidates)} passed, {rejected_llm} rejected")
 
     # ── Insert validated records into PostgreSQL ──
     print(f"\n── Inserting {len(candidates)} validated records into PostgreSQL ──")
@@ -501,9 +497,7 @@ def migrate(
         # Insert into PostgreSQL
         cols = ", ".join(_COLUMNS)
         placeholders = ", ".join(["%s"] * len(_COLUMNS))
-        conflict_updates = ", ".join(
-            f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id"
-        )
+        conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
         sql = (
             f"INSERT INTO inscriptions ({cols}) "
             f"VALUES ({placeholders}) "
@@ -544,9 +538,7 @@ def migrate(
 
     # Create read-only user
     print("\nCreating read-only user 'corpus_reader'...")
-    reader_pass = os.environ.get(
-        "POSTGRES_READER_PASSWORD", "openetruscan_readonly_user_pass"
-    )
+    reader_pass = os.environ.get("POSTGRES_READER_PASSWORD", "openetruscan_readonly_user_pass")
     pg.create_readonly_user(reader_pass)
     print("Done. Public read-only access configured.")
 

@@ -168,13 +168,13 @@ def main():
     missing_after = sum(1 for d in data if not d.get("findspot"))
     filled = missing_before - missing_after
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("RESULTS")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     for k, v in sorted(stats.items()):
         print(f"  {k}: {v}")
-    print(f"\n  Filled: {filled} ({filled/missing_before*100:.1f}% of missing)")
-    print(f"  Still missing: {missing_after} ({missing_after/total*100:.1f}% of total)")
+    print(f"\n  Filled: {filled} ({filled / missing_before * 100:.1f}% of missing)")
+    print(f"  Still missing: {missing_after} ({missing_after / total * 100:.1f}% of total)")
 
     # Show new findspot distribution
     fs_dist = Counter(d.get("findspot") or "UNKNOWN" for d in data)

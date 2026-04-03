@@ -32,16 +32,11 @@ corpus = None
 START_TIME = datetime.utcnow()
 
 
-
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global corpus, START_TIME
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
-
-
 
     yield
     if corpus:
@@ -85,8 +80,9 @@ app.add_middleware(
     max_age=600,
 )
 
+
 # ── Security Headers ───────────────────────────────────────────────────────
-@ app.middleware("http")
+@app.middleware("http")
 async def _add_security_headers(request: Request, call_next):
     """Add security headers to all responses."""
     response = await call_next(request)
@@ -131,8 +127,6 @@ def _clamp_limit(limit: int) -> int:
 
 def _clamp_text(text: str | None) -> str | None:
     return text[:MAX_TEXT_LEN] if text else text
-
-
 
 
 # ── Pydantic Models ────────────────────────────────────────────────────────
@@ -247,11 +241,11 @@ async def liveness_check():
     """Liveness probe for Kubernetes."""
     return {"status": "alive"}
 
+
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
 
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"],
-         deprecated=True)
+@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"], deprecated=True)
 @limiter.limit("10/minute")
 def get_full_corpus(request: Request):
     """DEPRECATED — use /search with pagination instead."""
@@ -319,17 +313,19 @@ def search_corpus(
     )
 
     accept_header = request.headers.get("accept", "")
-    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+    if (
+        "application/xml" in accept_header
+        or "application/tei+xml" in accept_header
+        or "text/xml" in accept_header
+    ):
         from fastapi.responses import Response
 
         from openetruscan.epidoc import results_to_epidoc
+
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
-
-
-
 
 
 @app.get("/search/geo", response_model=SearchResponse, tags=["Search"])
@@ -378,10 +374,15 @@ def search_geo(
     )
 
     accept_header = request.headers.get("accept", "")
-    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+    if (
+        "application/xml" in accept_header
+        or "application/tei+xml" in accept_header
+        or "text/xml" in accept_header
+    ):
         from fastapi.responses import Response
 
         from openetruscan.epidoc import results_to_epidoc
+
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
@@ -406,15 +407,22 @@ def get_inscription(
 
     # ── Content Negotiation ──
     accept_header = request.headers.get("accept", "")
-    if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
+    if (
+        "application/xml" in accept_header
+        or "application/tei+xml" in accept_header
+        or "text/xml" in accept_header
+    ):
         try:
             from fastapi.responses import Response
 
             from openetruscan.epidoc import to_epidoc
+
             xml_data = to_epidoc(inscription)
             return Response(content=xml_data, media_type="application/tei+xml")
         except ImportError:
-            raise HTTPException(status_code=501, detail="EpiDoc TEI capability is not installed server-side.")
+            raise HTTPException(
+                status_code=501, detail="EpiDoc TEI capability is not installed server-side."
+            )
 
     return _build_model(inscription)
 
@@ -428,11 +436,14 @@ async def import_inscription(request: Request):
 
     content_type = request.headers.get("content-type", "")
     if "xml" not in content_type:
-        raise HTTPException(status_code=400, detail="Content-Type must be application/xml or similar")
+        raise HTTPException(
+            status_code=400, detail="Content-Type must be application/xml or similar"
+        )
 
     body = await request.body()
     try:
         from openetruscan.epidoc import parse_epidoc
+
         inscription = parse_epidoc(body.decode("utf-8"))
         corpus.add(inscription)
         return {"status": "success", "id": inscription.id}
@@ -441,9 +452,6 @@ async def import_inscription(request: Request):
     except Exception as e:
         logger.error(f"Import failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during import")
-
-
-
 
 
 @app.get("/ids", tags=["Corpus"])
@@ -457,10 +465,10 @@ def _get_stats_summary_db():
     return corpus.get_stats_summary()
 
 
-
 class RestoreRequest(BaseModel):
     text: str
     top_k: int = 5
+
 
 @app.post("/neural/restore", tags=["Neural"])
 @limiter.limit("60/minute")
@@ -468,6 +476,7 @@ async def restore_lacunae(request: Request, body: RestoreRequest):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
     try:
         from openetruscan.neural import LacunaeRestorer
+
         restorer = LacunaeRestorer()
         results = restorer.predict(body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
@@ -477,14 +486,12 @@ async def restore_lacunae(request: Request, body: RestoreRequest):
         logger.error(f"Restore failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during restoration")
 
+
 @app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
 def stats_summary(request: Request):
     """Pre-computed corpus statistics for dashboard display."""
     return corpus.get_stats_summary()
-
-
-
 
 
 @app.get("/stats/timeline", tags=["Statistics"])
@@ -500,8 +507,7 @@ def concordance_search(
     request: Request,
     q: Annotated[
         str,
-        Query(description="Search term (min 2 chars)", min_length=2,
-              max_length=MAX_TEXT_LEN),
+        Query(description="Search term (min 2 chars)", min_length=2, max_length=MAX_TEXT_LEN),
     ],
     context: Annotated[
         int,
@@ -529,7 +535,6 @@ def _get_network_from_db():
     return corpus.get_names_network()
 
 
-
 @app.get("/names/network", tags=["Prosopography"])
 @limiter.limit("150/minute")
 def names_network(
@@ -542,17 +547,11 @@ def names_network(
     """Name co-occurrence network for prosopographic analysis."""
     name_inscriptions, co_occurrences = corpus.get_names_network()
 
-    filtered = [
-        (name, ids) for name, ids in name_inscriptions.items()
-        if len(ids) >= min_count
-    ]
+    filtered = [(name, ids) for name, ids in name_inscriptions.items() if len(ids) >= min_count]
     filtered.sort(key=lambda x: len(x[1]), reverse=True)
     name_set = {n for n, _ in filtered}
 
-    nodes = [
-        {"id": name, "count": len(ids), "inscriptions": sorted(ids)}
-        for name, ids in filtered
-    ]
+    nodes = [{"id": name, "count": len(ids), "inscriptions": sorted(ids)} for name, ids in filtered]
     edges = []
     for key, weight in co_occurrences.items():
         a, b = key.split("|")
@@ -603,11 +602,16 @@ def search_by_radius(
 def get_vector_tiles(request: Request, z: int, x: int, y: int):
     """Serve PostGIS dynamic vector tiles bounding the dataset."""
     from fastapi.responses import Response
+
     try:
         mvt_bytes = corpus.mvt_tiles(z, x, y)
         if not mvt_bytes:
             return Response(status_code=204)
-        return Response(content=mvt_bytes, media_type="application/x-protobuf", headers={"Access-Control-Allow-Origin": "*"})
+        return Response(
+            content=mvt_bytes,
+            media_type="application/x-protobuf",
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
     except Exception as e:
         logger.error(f"Vector tile error: {e}")
         raise HTTPException(status_code=500, detail="MVT tile generation failed") from e
@@ -648,6 +652,7 @@ async def semantic_search(
 
     async def _fetch_emb():
         import httpx
+
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, json=payload, timeout=10.0)
             resp.raise_for_status()
@@ -727,7 +732,6 @@ def search_by_clan(
 ):
     """Prosopographical network search by clan/gens."""
 
-
     # Validate gens - allow letters, spaces, and hyphens
     if not re.match(r"^[\w\s\-]+$", gens, re.UNICODE):
         raise HTTPException(
@@ -753,12 +757,13 @@ def search_by_clan(
     }}
     """
     import httpx
+
     try:
         resp = httpx.post(
             "http://fuseki:3030/openetruscan/query",
             data={"query": sparql_query},
             headers={"Accept": "application/sparql-results+json"},
-            timeout=10.0
+            timeout=10.0,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -766,7 +771,9 @@ def search_by_clan(
         member_insc_ids = [b["inscription_id"]["value"] for b in bindings if "inscription_id" in b]
     except Exception as e:
         logger.error(f"Fuseki SPARQL query failed: {e}")
-        raise HTTPException(status_code=500, detail="Prosopographical graph database unavailable") from e
+        raise HTTPException(
+            status_code=500, detail="Prosopographical graph database unavailable"
+        ) from e
 
     if not member_insc_ids:
         return {"total": 0, "count": 0, "results": []}

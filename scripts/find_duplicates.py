@@ -8,15 +8,17 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "corpus.db"
 OUTPUT_REPORT = REPO_ROOT / "data" / "cie_larth_duplicates.md"
 
+
 def normalize_text(text):
     if not text:
         return ""
     # Lowercase, remove spaces, and strip punctuation
     text = text.lower()
-    text = re.sub(r'[\s\.\:\,\;\|\-\[\]\(\)]', '', text)
+    text = re.sub(r"[\s\.\:\,\;\|\-\[\]\(\)]", "", text)
     # the Etruscan texts might have specific characters like θ (theta), χ (chi), σ (sigma), φ (phi)
     # and unicode variants. We leave them as is, just removing non-alphanumeric separators.
     return text
+
 
 def find_duplicates(similarity_threshold=0.85):
     if not DB_PATH.exists():
@@ -56,7 +58,7 @@ def find_duplicates(similarity_threshold=0.85):
             continue
 
         cie_norm = normalize_text(text_to_compare)
-        if len(cie_norm) < 3: # Skip very short inscriptions to avoid false positives
+        if len(cie_norm) < 3:  # Skip very short inscriptions to avoid false positives
             continue
 
         best_match = None
@@ -66,7 +68,7 @@ def find_duplicates(similarity_threshold=0.85):
             # Exact match check
             if cie_norm == larth_norm:
                 exact_matches.append((cie_id, cie_canon, larth_id, larth_canon))
-                best_match = None # Reset so we don't also add to fuzzy
+                best_match = None  # Reset so we don't also add to fuzzy
                 break
 
             # Fuzzy match check
@@ -79,7 +81,9 @@ def find_duplicates(similarity_threshold=0.85):
             fuzzy_matches.append((cie_id, cie_canon, best_match[0], best_match[1], highest_ratio))
 
     print(f"\nFound {len(exact_matches)} exact matches.")
-    print(f"Found {len(fuzzy_matches)} fuzzy matches (>= {similarity_threshold*100}% similarity).")
+    print(
+        f"Found {len(fuzzy_matches)} fuzzy matches (>= {similarity_threshold * 100}% similarity)."
+    )
 
     # Generate Report
     with open(OUTPUT_REPORT, "w", encoding="utf-8") as f:
@@ -98,14 +102,14 @@ def find_duplicates(similarity_threshold=0.85):
         f.write("|--------|----------|----------|------------|\n")
         for cie_id, cie_txt, larth_id, larth_txt in exact_matches:
             # simple escaping for markdown pipe
-            c_t = str(cie_txt).replace('|', '\\|').replace('\n', ' ')
-            l_t = str(larth_txt).replace('|', '\\|').replace('\n', ' ')
+            c_t = str(cie_txt).replace("|", "\\|").replace("\n", " ")
+            l_t = str(larth_txt).replace("|", "\\|").replace("\n", " ")
             f.write(f"| {cie_id} | {c_t} | {larth_id} | {l_t} |\n")
 
         f.write("\n## Fuzzy Matches\n")
         f.write(
             f"Documents whose normalized text is at least "
-            f"{similarity_threshold*100}% similar.\n\n"
+            f"{similarity_threshold * 100}% similar.\n\n"
         )
         f.write("| CIE ID | CIE Text | Larth ID | Larth Text | Similarity |\n")
         f.write("|--------|----------|----------|------------|------------|\n")
@@ -113,11 +117,12 @@ def find_duplicates(similarity_threshold=0.85):
         # Sort fuzzy matches by ratio (highest first)
         fuzzy_matches.sort(key=lambda x: x[4], reverse=True)
         for cie_id, cie_txt, larth_id, larth_txt, ratio in fuzzy_matches:
-            c_t = str(cie_txt).replace('|', '\\|').replace('\n', ' ')
-            l_t = str(larth_txt).replace('|', '\\|').replace('\n', ' ')
+            c_t = str(cie_txt).replace("|", "\\|").replace("\n", " ")
+            l_t = str(larth_txt).replace("|", "\\|").replace("\n", " ")
             f.write(f"| {cie_id} | {c_t} | {larth_id} | {l_t} | {ratio:.2f} |\n")
 
     print(f"\nReport written to: {OUTPUT_REPORT}")
+
 
 if __name__ == "__main__":
     find_duplicates()

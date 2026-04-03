@@ -9,6 +9,7 @@ Usage:
     python scripts/ingest_cie_all.py                  # Process all PDFs
     python scripts/ingest_cie_all.py --pdf CIE-I_Clusium-cum-agro-Clusino-tit.-475-1742.pdf
 """
+
 import argparse
 import base64
 import json
@@ -100,7 +101,7 @@ PROMPT = (
     "Etruscarum (1893).\n"
     "The page contains entries for Etruscan inscriptions. "
     "Each entry typically starts with a large number (the CIE ID).\n"
-    'Under the number is the findspot in Latin '
+    "Under the number is the findspot in Latin "
     '(e.g., "Clusii in agro", "Perusiae", "Volaterris").\n'
     "Following that is a description, bibliography, and the actual "
     "Etruscan text (often written both in Etruscan script "
@@ -111,10 +112,7 @@ PROMPT = (
     "if possible."
 )
 
-URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.5-flash:generateContent"
-)
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 
 def setup_logging(pdf_name: str) -> logging.Logger:
@@ -174,9 +172,7 @@ def call_gemini(pil_image, log, retries=5):
     backoff = 5
     for attempt in range(retries):
         try:
-            resp = requests.post(
-                URL, params={"key": API_KEY}, json=payload, timeout=(10, 180)
-            )
+            resp = requests.post(URL, params={"key": API_KEY}, json=payload, timeout=(10, 180))
             if resp.status_code == 200:
                 data = resp.json()
                 text_out = data["candidates"][0]["content"]["parts"][0]["text"]
@@ -199,6 +195,7 @@ def call_gemini(pil_image, log, retries=5):
 
 def ingest_into_db(entries: list[dict], source_label: str) -> int:
     import sqlite3
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     inserted = 0

@@ -333,6 +333,7 @@ def load_training_data(
     if str(db_path).startswith("postgres"):
         import psycopg2
         from psycopg2.extras import DictCursor
+
         conn = psycopg2.connect(str(db_path))
         with conn.cursor(cursor_factory=DictCursor) as cur:
             cur.execute(
@@ -344,6 +345,7 @@ def load_training_data(
         conn.close()
     else:
         import sqlite3
+
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
@@ -737,20 +739,23 @@ class LacunaeRestorer:
 
     def _tokenize_lacunae(self, text: str) -> tuple[list[str], list[int]]:
         import re
+
         if "[...]" in text:
-            raise ValueError("Cannot predict unbounded lacunae `[...]` with MLM. Use explicit widths like `[..]`.")
+            raise ValueError(
+                "Cannot predict unbounded lacunae `[...]` with MLM. Use explicit widths like `[..]`."
+            )
 
         tokens = []
         mask_indices = []
         i = 0
         while i < len(text):
-            match = re.match(r'\[(\.+)\]', text[i:])
+            match = re.match(r"\[(\.+)\]", text[i:])
             if match:
                 dots = match.group(1)
                 for _ in dots:
                     if len(tokens) < self.max_len:
-                        tokens.append('[MASK]')
-                        mask_indices.append(len(tokens)-1)
+                        tokens.append("[MASK]")
+                        mask_indices.append(len(tokens) - 1)
                 i += match.end()
                 continue
 
@@ -793,12 +798,9 @@ class LacunaeRestorer:
             top_probs, top_indices = torch.topk(mask_probs, top_k)
             char_dist = {}
             for p, i in zip(top_probs, top_indices, strict=False):
-                if i.item() > 2: # exclude PAD, UNK, MASK
+                if i.item() > 2:  # exclude PAD, UNK, MASK
                     char = self.vocab.idx_to_char.get(i.item(), "")
                     char_dist[char] = round(p.item(), 4)
-            results.append({
-                "position": idx,
-                "predictions": char_dist
-            })
+            results.append({"position": idx, "predictions": char_dist})
 
         return results

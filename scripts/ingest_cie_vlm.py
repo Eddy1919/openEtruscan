@@ -9,6 +9,7 @@ Features:
   - File logging + stdout for monitoring via nohup
   - Exponential backoff on rate limits
 """
+
 import base64
 import json
 import logging
@@ -50,8 +51,7 @@ log = logging.getLogger("cie-ingest")
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise ValueError(
-        "GEMINI_API_KEY environment variable is not set. "
-        "Please set it securely in .env"
+        "GEMINI_API_KEY environment variable is not set. Please set it securely in .env"
     )
 
 # ── Gemini structured-output schema ───────────────────────────
@@ -65,30 +65,20 @@ SCHEMA = {
                 "properties": {
                     "cie_id": {
                         "type": "STRING",
-                        "description": (
-                            "The CIE number (e.g., '192', 'CIE 192')"
-                        ),
+                        "description": ("The CIE number (e.g., '192', 'CIE 192')"),
                     },
                     "etruscan_text_transliterated": {
                         "type": "STRING",
-                        "description": (
-                            "Transliterated Etruscan text "
-                            "in Latin characters"
-                        ),
+                        "description": ("Transliterated Etruscan text in Latin characters"),
                     },
                     "etruscan_text_original": {
                         "type": "STRING",
                         "nullable": True,
-                        "description": (
-                            "Original Etruscan characters if possible"
-                        ),
+                        "description": ("Original Etruscan characters if possible"),
                     },
                     "latin_findspot": {
                         "type": "STRING",
-                        "description": (
-                            "Findspot in Latin "
-                            "(e.g., 'Clusii in agro', 'Perusiae')"
-                        ),
+                        "description": ("Findspot in Latin (e.g., 'Clusii in agro', 'Perusiae')"),
                     },
                     "latin_commentary": {
                         "type": "STRING",
@@ -146,7 +136,7 @@ PROMPT = (
     "Etruscarum (1893).\n"
     "The page contains entries for Etruscan inscriptions. "
     "Each entry typically starts with a large number (the CIE ID).\n"
-    'Under the number is the findspot in Latin '
+    "Under the number is the findspot in Latin "
     '(e.g., "Clusii in agro", "Perusiae", "Volaterris").\n'
     "Following that is a description, bibliography, and the actual "
     "Etruscan text (often written both in Etruscan script "
@@ -157,10 +147,7 @@ PROMPT = (
     "if possible."
 )
 
-URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.5-flash:generateContent"
-)
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 
 def call_gemini(pil_image, retries=5):
@@ -201,16 +188,15 @@ def call_gemini(pil_image, retries=5):
             )
             if resp.status_code == 200:
                 data = resp.json()
-                text_out = (
-                    data["candidates"][0]["content"]["parts"][0]["text"]
-                )
+                text_out = data["candidates"][0]["content"]["parts"][0]["text"]
                 return json.loads(text_out)
             elif resp.status_code == 429:
-                wait = min(backoff * (2 ** attempt), 120)
+                wait = min(backoff * (2**attempt), 120)
                 log.warning(
-                    "  [%d/%d] Rate limited (429). "
-                    "Sleeping %ds...",
-                    attempt + 1, retries, wait,
+                    "  [%d/%d] Rate limited (429). Sleeping %ds...",
+                    attempt + 1,
+                    retries,
+                    wait,
                 )
                 time.sleep(wait)
             else:
@@ -218,14 +204,18 @@ def call_gemini(pil_image, retries=5):
                 safe_body = resp.text[:300].replace(API_KEY, "<REDACTED>")
                 log.error(
                     "  [%d/%d] API Error %d: %s",
-                    attempt + 1, retries,
-                    resp.status_code, safe_body,
+                    attempt + 1,
+                    retries,
+                    resp.status_code,
+                    safe_body,
                 )
                 time.sleep(backoff)
         except Exception as e:
             log.error(
                 "  [%d/%d] Network Exception: %s",
-                attempt + 1, retries, e,
+                attempt + 1,
+                retries,
+                e,
             )
             time.sleep(backoff)
 
@@ -240,12 +230,7 @@ def ingest_into_db(entries: list[dict]) -> int:
     cursor = conn.cursor()
     inserted = 0
     for entry in entries:
-        canonical_id = (
-            entry.get("cie_id", "")
-            .replace("CIE ", "")
-            .replace("CIE", "")
-            .strip()
-        )
+        canonical_id = entry.get("cie_id", "").replace("CIE ", "").replace("CIE", "").strip()
         formatted_id = f"CIE {canonical_id}"
 
         cursor.execute(
@@ -263,13 +248,9 @@ def ingest_into_db(entries: list[dict]) -> int:
             """,
                 (
                     formatted_id,
-                    entry.get(
-                        "etruscan_text_transliterated", ""
-                    ),
+                    entry.get("etruscan_text_transliterated", ""),
                     entry.get("etruscan_text_original")
-                    or entry.get(
-                        "etruscan_text_transliterated", ""
-                    ),
+                    or entry.get("etruscan_text_transliterated", ""),
                     entry.get("latin_findspot", ""),
                     entry.get("latin_commentary", ""),
                     entry.get("bibliography") or "",
@@ -299,7 +280,8 @@ def main():
     done = set(progress["completed_pages"])
     log.info(
         "Resume: %d pages already completed, %d entries so far",
-        len(done), progress["total_entries"],
+        len(done),
+        progress["total_entries"],
     )
 
     total_new_entries = 0
@@ -313,7 +295,8 @@ def main():
 
         log.info(
             "── Page %d / %d ──────────────────────────",
-            page_idx, total_pages - 1,
+            page_idx,
+            total_pages - 1,
         )
 
         pil_image = render_page(pdf, page_idx)
@@ -326,31 +309,21 @@ def main():
 
             # Save per-page JSON for safety
             page_file = PAGES_DIR / f"page_{page_idx:04d}.json"
-            page_file.write_text(
-                json.dumps(entries, indent=2, ensure_ascii=False)
-            )
+            page_file.write_text(json.dumps(entries, indent=2, ensure_ascii=False))
 
             # Ingest into DB
             inserted = ingest_into_db(entries)
-            log.info(
-                "  💾 Inserted %d new records (DB)", inserted
-            )
+            log.info("  💾 Inserted %d new records (DB)", inserted)
 
             total_new_entries += count
             total_inserted += inserted
         else:
-            log.warning(
-                "  ⚠️  No entries / error on page %d", page_idx
-            )
+            log.warning("  ⚠️  No entries / error on page %d", page_idx)
 
         # Mark page done & persist progress
         done.add(page_idx)
         progress["completed_pages"] = sorted(done)
-        progress["total_entries"] += (
-            len(result.get("entries", []))
-            if result
-            else 0
-        )
+        progress["total_entries"] += len(result.get("entries", [])) if result else 0
         save_progress(progress)
 
         # Polite delay between API calls
@@ -369,12 +342,8 @@ def main():
     for p in sorted(PAGES_DIR.glob("page_*.json")):
         all_entries.extend(json.loads(p.read_text()))
     merged = REPO_ROOT / "data/cie/full_extraction.json"
-    merged.write_text(
-        json.dumps(all_entries, indent=2, ensure_ascii=False)
-    )
-    log.info(
-        "Merged %d entries → %s", len(all_entries), merged
-    )
+    merged.write_text(json.dumps(all_entries, indent=2, ensure_ascii=False))
+    log.info("Merged %d entries → %s", len(all_entries), merged)
 
 
 if __name__ == "__main__":

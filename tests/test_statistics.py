@@ -1,8 +1,6 @@
 """Tests for the statistical analysis engine."""
 
 import os
-import tempfile
-from pathlib import Path
 
 from openetruscan.adapter import load_adapter
 from openetruscan.corpus import Corpus, Inscription
@@ -104,9 +102,12 @@ class TestClusterSites:
     """Test dialect clustering."""
 
     def _build_corpus(self):
-        fd, db_path = tempfile.mkstemp(suffix=".db")
-        os.close(fd)
-        corpus = Corpus.load(db_path)
+        corpus = Corpus.load()
+        # Clean up test data
+        test_ids = [f"A{i}" for i in range(10)] + [f"B{i}" for i in range(10)]
+        with corpus._conn.cursor() as cur:
+            cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (test_ids,))
+        corpus._conn.commit()
         # Two distinct "dialect" groups
         for i in range(10):
             corpus.add(
@@ -125,43 +126,39 @@ class TestClusterSites:
                     language="etruscan",
                 )
             )
-        return corpus, db_path
+        return corpus
 
     def test_returns_clusters(self):
-        corpus, db_path = self._build_corpus()
+        corpus = self._build_corpus()
         result = cluster_sites(corpus, min_inscriptions=5)
         assert isinstance(result, ClusterResult)
         assert result.n_clusters >= 2
         assert len(result.sites) == 2
         corpus.close()
-        Path(db_path).unlink()
 
     def test_pca_coordinates(self):
-        corpus, db_path = self._build_corpus()
+        corpus = self._build_corpus()
         result = cluster_sites(corpus, min_inscriptions=5)
         for site in result.sites:
             assert isinstance(site.pca_x, float)
             assert isinstance(site.pca_y, float)
         corpus.close()
-        Path(db_path).unlink()
 
     def test_to_dict(self):
-        corpus, db_path = self._build_corpus()
+        corpus = self._build_corpus()
         result = cluster_sites(corpus, min_inscriptions=5)
         d = result.to_dict()
         assert "n_clusters" in d
         assert "clusters" in d
         assert "dendrogram" in d
         corpus.close()
-        Path(db_path).unlink()
 
     def test_min_inscriptions_filter(self):
-        corpus, db_path = self._build_corpus()
+        corpus = self._build_corpus()
         result = cluster_sites(corpus, min_inscriptions=20)
         # Both sites have only 10 inscriptions, so nothing should pass
         assert len(result.sites) == 0
         corpus.close()
-        Path(db_path).unlink()
 
 
 class TestDateEstimate:

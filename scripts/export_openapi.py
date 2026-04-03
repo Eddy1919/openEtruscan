@@ -7,6 +7,7 @@ from pathlib import Path
 # Add src to path if needed
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+
 def export_openapi():
     # Force ENABLE_DOCS to True for export
     os.environ["ENABLE_DOCS"] = "1"
@@ -25,6 +26,7 @@ def export_openapi():
         json.dump(openapi_schema, f, indent=2)
 
     print(f"✅ OpenAPI schema exported to {output_path}")
+
 
 if __name__ == "__main__":
     export_openapi()

@@ -18,12 +18,15 @@ def main() -> None:
     import os
 
     from dotenv import load_dotenv
+
     load_dotenv(".env")
 
     parser = argparse.ArgumentParser(description="Train neural inscription classifiers.")
     parser.add_argument(
         "--db-url",
-        default=os.environ.get("DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@34.76.146.115/corpus"),
+        default=os.environ.get(
+            "DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@34.76.146.115/corpus"
+        ),
         help="Path to PostgreSQL database.",
     )
     parser.add_argument(

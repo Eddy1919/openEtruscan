@@ -42,11 +42,11 @@ jobs:
         run: ruff check .
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short -m "not slow"
 
       - name: Run tests with coverage
         if: matrix.python-version == '3.12'
-        run: pytest tests/ --cov=openetruscan --cov-report=term-missing
+        run: pytest tests/ -m "not slow" --cov=openetruscan --cov-report=term-missing
 
   typecheck-mypy:
     name: Type Check (mypy)

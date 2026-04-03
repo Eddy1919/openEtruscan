@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "data" / "corpus.db"
+
 
 # ---------------------------------------------------------------------------
 # Classification constants
@@ -65,8 +65,8 @@ class Inscription:
     # Classification fields
     language: str = "etruscan"
     classification: str = "unknown"
-    script_system: str | None = None
-    completeness: str | None = None
+    script_system: str = "old_italic"
+    completeness: str = "complete"
     provenance_status: str | None = "verified"
     provenance_flags: list[str] = field(default_factory=list)
     trismegistos_id: str | None = None
@@ -241,41 +241,6 @@ class SearchResults:
 # Schema SQL
 # ---------------------------------------------------------------------------
 
-_SQLITE_SCHEMA_TABLE = """
-CREATE TABLE IF NOT EXISTS inscriptions (
-    id TEXT PRIMARY KEY,
-    raw_text TEXT NOT NULL,
-    canonical TEXT NOT NULL DEFAULT '',
-    phonetic TEXT NOT NULL DEFAULT '',
-    old_italic TEXT NOT NULL DEFAULT '',
-    findspot TEXT NOT NULL DEFAULT '',
-    findspot_lat REAL,
-    findspot_lon REAL,
-    findspot_uncertainty_m REAL,
-    date_approx INTEGER,
-    date_uncertainty INTEGER,
-    medium TEXT NOT NULL DEFAULT '',
-    object_type TEXT NOT NULL DEFAULT '',
-    source TEXT NOT NULL DEFAULT '',
-    bibliography TEXT NOT NULL DEFAULT '',
-    notes TEXT NOT NULL DEFAULT '',
-    language TEXT NOT NULL DEFAULT 'etruscan',
-    classification TEXT NOT NULL DEFAULT 'unknown',
-    script_system TEXT NOT NULL DEFAULT 'old_italic',
-    completeness TEXT NOT NULL DEFAULT 'complete',
-    provenance_status TEXT NOT NULL DEFAULT 'verified',
-    provenance_flags TEXT NOT NULL DEFAULT ''
-);
-"""
-
-_SQLITE_SCHEMA_INDEXES = """
-CREATE INDEX IF NOT EXISTS idx_canonical ON inscriptions(canonical);
-CREATE INDEX IF NOT EXISTS idx_findspot ON inscriptions(findspot);
-CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
-CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
-CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
-CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
-"""
 
 _PG_SCHEMA = """
 CREATE TABLE IF NOT EXISTS inscriptions (
@@ -382,18 +347,50 @@ _COLUMNS = [
 # ---------------------------------------------------------------------------
 
 
-
 _KNOWN_NAMES = {
-    "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia",
-    "sethre", "marce", "avile", "lavtni", "ramtha", "fasti", "hasti",
-    "tite", "caile", "larθi", "arnth", "thana", "lart", "lars",
-    "arnt", "arn", "arath", "araθ", "veilia",
-    "matunas", "velthur", "velθur", "cainei", "cai", "clan",
-    "puia", "sec", "ati", "papa",
+    "larθ",
+    "laris",
+    "aule",
+    "vel",
+    "arnθ",
+    "θana",
+    "larthi",
+    "velia",
+    "sethre",
+    "marce",
+    "avile",
+    "lavtni",
+    "ramtha",
+    "fasti",
+    "hasti",
+    "tite",
+    "caile",
+    "larθi",
+    "arnth",
+    "thana",
+    "lart",
+    "lars",
+    "arnt",
+    "arn",
+    "arath",
+    "araθ",
+    "veilia",
+    "matunas",
+    "velthur",
+    "velθur",
+    "cainei",
+    "cai",
+    "clan",
+    "puia",
+    "sec",
+    "ati",
+    "papa",
 }
+
 
 def _extract_names(canonical: str) -> list[str]:
     import re as _re
+
     tokens = _re.split(r"[\s·.,:;]+", canonical.lower())
     found = []
     seen = set()
@@ -403,8 +400,11 @@ def _extract_names(canonical: str) -> list[str]:
             seen.add(t)
     return found
 
+
+
 class Corpus:
     """Queryable corpus natively backed by PostgreSQL."""
+
     """
     Queryable corpus backed by PostgreSQL (Cloud SQL).
 
@@ -432,9 +432,19 @@ class Corpus:
         corpus._ensure_db()
         return corpus
 
+    def _prepare_inscription(self, inscription: "Inscription", language: str) -> "Inscription":
+        # DH Normalizer bypass: return as is if normalizer not strictly required here
+        return inscription
+
+    def _inscription_values(self, inscription: "Inscription"):
+        return (
+            tuple(getattr(inscription, col) for col in _COLUMNS if col != "id") + (inscription.id,)
+            if "id" not in _COLUMNS
+            else tuple(getattr(inscription, col) for col in _COLUMNS)
+        )
 
     @classmethod
-    def load(cls, db_path=None) -> Corpus:
+    def load(cls, db_path=None) -> "Corpus":
         env_url = os.environ.get("DATABASE_URL", "")
         if not env_url:
             env_path = Path(".env")
@@ -446,8 +456,6 @@ class Corpus:
                         break
         if not env_url:
             raise ValueError("DATABASE_URL environment variable is missing.")
-        # Some legacy scripts pass `db_path` which was the sqlite file. We just ignore it
-        # and forcefully connect to Postgres.
         return cls.connect(env_url)
 
     def _ensure_db(self) -> None:
@@ -530,6 +538,70 @@ class Corpus:
             cur.execute(query, tuple(vals))
         self._conn.commit()
 
+    def _build_search_query(
+        self,
+        text=None,
+        findspot=None,
+        date_range=None,
+        medium=None,
+        language=None,
+        classification=None,
+        limit=100,
+        provenance_status=None,
+        param_style="format",
+        offset=0,
+        sort_by="id",
+        geo_only=False,
+    ):
+        conditions = []
+        params = []
+        
+        ph = "%s" if param_style == "format" else "?"
+
+        if text:
+            # PostgreSQL FTS Search
+            conditions.append(f"fts_canonical @@ plainto_tsquery('simple', {ph})")
+            params.append(text)
+
+        if findspot:
+            conditions.append(f"findspot ILIKE {ph}")
+            params.append(f"%{findspot}%")
+
+        if date_range:
+            conditions.append(f"date_approx >= {ph} AND date_approx <= {ph}")
+            params.extend(date_range)
+
+        if medium:
+            conditions.append(f"medium ILIKE {ph}")
+            params.append(f"%{medium}%")
+
+        if language:
+            conditions.append(f"language = {ph}")
+            params.append(language)
+
+        if classification:
+            conditions.append(f"classification = {ph}")
+            params.append(classification)
+
+        if provenance_status:
+            conditions.append(f"provenance_status = {ph}")
+            params.append(provenance_status)
+            
+        if geo_only:
+            conditions.append("findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL")
+
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
+        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"
+        
+        # Valid sort columns mapping
+        valid_sorts = {"id": "id ASC", "-id": "id DESC", "date": "date_approx ASC", "-date": "date_approx DESC"}
+        order_by = valid_sorts.get(sort_by, "id ASC")
+        
+        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"
+        filter_params = list(params)
+        query_params = list(params) + [limit, offset]
+        return query, count_query, query_params, filter_params
+
     def search(
         self,
         text: str | None = None,
@@ -547,7 +619,7 @@ class Corpus:
         """Search the corpus."""
         import psycopg2.extras
 
-        query, count_query, params = self._build_search_query(
+        query, count_query, query_params, filter_params = self._build_search_query(
             text,
             findspot,
             date_range,
@@ -564,12 +636,29 @@ class Corpus:
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, params)
+            cur.execute(query, query_params)
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
-            cur.execute(count_query, params[:-2])  # strip limit and offset
+            cur.execute(count_query, filter_params)
             total = cur.fetchone()["count"]
         return SearchResults(inscriptions=inscriptions, total=total)
+
+    def review_quarantine(
+        self,
+        inscription_id: str,
+        action: str = "verify",
+    ) -> bool:
+        """Review a quarantined inscription. Actions: 'verify', 'reject', 'quarantine'."""
+        valid_actions = {"verify": "verified", "reject": "rejected", "quarantine": "quarantined"}
+        new_status = valid_actions.get(action, "quarantined")
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "UPDATE inscriptions SET provenance_status = %s WHERE id = %s",
+                (new_status, inscription_id),
+            )
+            updated = cur.rowcount > 0
+        self._conn.commit()
+        return updated
 
     def search_radius(
         self,
@@ -646,7 +735,6 @@ class Corpus:
                 return bytes(result["tile"])
             return b""
 
-
     def semantic_search(
         self,
         query_embedding: list[float] | None,
@@ -698,13 +786,19 @@ class Corpus:
         else:
             order_parts.append("sparse_rank DESC")
 
-        sql_stmt = sql.SQL(" ").join([
-            sql.SQL(", ".join(query_parts).replace("SELECT *, ,", "SELECT *,")),
-            sql.SQL(" ".join(from_parts)),
-            sql.SQL("WHERE " + " AND ".join(where_parts)),
-            sql.SQL("ORDER BY " + ", ".join(order_parts)),
-            sql.SQL("LIMIT %s")
-        ]).format(field=sql.Identifier(field))
+        sql_stmt = (
+            sql.SQL(" ")
+            .join(
+                [
+                    sql.SQL(", ".join(query_parts).replace("SELECT *, ,", "SELECT *,")),
+                    sql.SQL(" ".join(from_parts)),
+                    sql.SQL("WHERE " + " AND ".join(where_parts)),
+                    sql.SQL("ORDER BY " + ", ".join(order_parts)),
+                    sql.SQL("LIMIT %s"),
+                ]
+            )
+            .format(field=sql.Identifier(field))
+        )
 
         params.append(limit)
 
@@ -730,7 +824,7 @@ class Corpus:
                 cur.execute(
                     "SELECT id, canonical FROM inscriptions "
                     "WHERE fts_canonical @@ websearch_to_tsquery('simple', %s) LIMIT %s",
-                    (query, limit)
+                    (query, limit),
                 )
                 matching_rows = cur.fetchall()
                 self._conn.commit()
@@ -757,12 +851,14 @@ class Corpus:
                 right_full = original[match_end:]
                 right = right_full[:context] if len(right_full) > context else right_full
 
-                rows.append({
-                    "inscId": row["id"],
-                    "left": left,
-                    "keyword": original[idx:match_end],
-                    "right": right,
-                })
+                rows.append(
+                    {
+                        "inscId": row["id"],
+                        "left": left,
+                        "keyword": original[idx:match_end],
+                        "right": right,
+                    }
+                )
                 start_pos = idx + 1
         return rows
 
@@ -948,7 +1044,6 @@ class Corpus:
             cur.execute("SELECT id FROM inscriptions ORDER BY id ASC")
             return [row[0] for row in cur.fetchall()]
 
-
     def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:
         from collections import defaultdict
 
@@ -976,6 +1071,7 @@ class Corpus:
 
     def get_stats_summary(self) -> dict:
         import psycopg2.extras
+
         try:
             with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
@@ -1003,11 +1099,15 @@ class Corpus:
                     GROUP BY classification
                     ORDER BY c DESC
                 """)
-                summary["classification_counts"] = [(r["classification"], r["c"]) for r in cur.fetchall()]
+                summary["classification_counts"] = [
+                    (r["classification"], r["c"]) for r in cur.fetchall()
+                ]
 
                 summary["text_length_buckets"] = []
                 summary["distinct_sites"] = []
-                summary["distinct_classifications"] = [x[0] for x in summary.get("classification_counts", [])]
+                summary["distinct_classifications"] = [
+                    x[0] for x in summary.get("classification_counts", [])
+                ]
 
                 self._conn.commit()
                 return summary
@@ -1017,6 +1117,7 @@ class Corpus:
 
     def get_stats_timeline(self) -> dict:
         import psycopg2.extras
+
         try:
             with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute("""
@@ -1042,41 +1143,6 @@ class Corpus:
 # ---------------------------------------------------------------------------
 
 
-def _row_to_inscription(row: sqlite3.Row) -> Inscription:
-    """Convert a SQLite Row to Inscription."""
-    keys = row.keys()
-    return Inscription(
-        id=row["id"],
-        raw_text=row["raw_text"],
-        canonical=row["canonical"],
-        phonetic=row["phonetic"],
-        old_italic=row["old_italic"],
-        findspot=row["findspot"],
-        findspot_lat=row["findspot_lat"],
-        findspot_lon=row["findspot_lon"],
-        date_approx=row["date_approx"],
-        date_uncertainty=row["date_uncertainty"],
-        medium=row["medium"],
-        object_type=row["object_type"],
-        source=row["source"],
-        bibliography=row["bibliography"],
-        notes=row["notes"],
-        language=row["language"] if "language" in keys else "etruscan",
-        classification=(row["classification"] if "classification" in keys else "unknown"),
-        script_system=(row["script_system"] if "script_system" in keys else None),
-        completeness=(row["completeness"] if "completeness" in keys else None),
-        provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
-        provenance_flags=(
-            []
-            if not ("provenance_flags" in keys and row["provenance_flags"])
-            else row["provenance_flags"].split(",")
-        ),
-        trismegistos_id=(row["trismegistos_id"] if "trismegistos_id" in keys else None),
-        eagle_id=(row["eagle_id"] if "eagle_id" in keys else None),
-        pleiades_id=(row["pleiades_id"] if "pleiades_id" in keys else None),
-        geonames_id=(row["geonames_id"] if "geonames_id" in keys else None),
-        is_codex=(row["is_codex"] if "is_codex" in keys else False),
-    )
 
 
 def _dict_to_inscription(row: dict) -> Inscription:

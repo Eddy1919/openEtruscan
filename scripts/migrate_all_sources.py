@@ -14,11 +14,14 @@ from dotenv import load_dotenv
 from scripts.migrate_to_postgres import validate_extracted_record
 
 load_dotenv()
-DB_URL = os.environ.get("DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@127.0.0.1:5432/corpus")
+DB_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://corpus_reader:etruscan_secret@127.0.0.1:5432/corpus"
+)
 
 
 def connect_pg():
     return psycopg2.connect(DB_URL)
+
 
 def run_migrations():
     conn = connect_pg()
@@ -63,8 +66,7 @@ def run_migrations():
         cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")
         cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;")
         cur.execute(
-            "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS"
-            " is_codex BOOLEAN DEFAULT FALSE;"
+            "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS is_codex BOOLEAN DEFAULT FALSE;"
         )
 
         print("[MIGRATION] Wiping previous inscriptions state for clean unification...")
@@ -72,6 +74,7 @@ def run_migrations():
 
     conn.commit()
     conn.close()
+
 
 def load_yaml_mappings():
     base = "data/"
@@ -90,6 +93,7 @@ def load_yaml_mappings():
                 codex_ids.add(text["source"])  # Matches TLE or CIE
 
     return trism or {}, eagle or {}, pleiades or {}, codex_ids
+
 
 def ingest_larth(trism, eagle, pleiades, codex_ids):
     sqlite_db = "data/corpus.db"
@@ -134,12 +138,12 @@ def ingest_larth(trism, eagle, pleiades, codex_ids):
             d.get("classification", "unknown"),
             d.get("script_system", "old_italic"),
             d.get("completeness", "complete"),
-            "verified", # Golden Larth is perfectly clean!
+            "verified",  # Golden Larth is perfectly clean!
             "",
             t_id,
             e_id,
             p_id,
-            is_codex
+            is_codex,
         )
         rows.append(pg_row)
 
@@ -170,9 +174,7 @@ def ingest_larth(trism, eagle, pleiades, codex_ids):
     )"""
 
     # We must append the lat/lon explicitly twice at the end for the geom CASE statement binding
-    values_with_geom = [
-        (*r, r[7], r[6], r[7], r[6]) for r in rows
-    ]
+    values_with_geom = [(*r, r[7], r[6], r[7], r[6]) for r in rows]
 
     execute_values(cur_pg, insert_query, values_with_geom, template=template)
     conn_pg.commit()
@@ -233,7 +235,7 @@ def ingest_cie(trism, eagle, pleiades, codex_ids):
             t_id,
             e_id,
             p_id,
-            is_codex
+            is_codex,
         )
         rows.append(pg_row)
 
@@ -262,9 +264,7 @@ def ingest_cie(trism, eagle, pleiades, codex_ids):
              ELSE NULL END
     )"""
 
-    values_with_geom = [
-        (*r, r[7], r[6], r[7], r[6]) for r in rows
-    ]
+    values_with_geom = [(*r, r[7], r[6], r[7], r[6]) for r in rows]
 
     execute_values(cur_pg, insert_query, values_with_geom, template=template)
     conn_pg.commit()

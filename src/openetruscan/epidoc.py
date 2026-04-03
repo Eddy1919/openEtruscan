@@ -140,7 +140,7 @@ def results_to_epidoc(
     Export an iterable of Inscription objects as a multi-document EpiDoc collection.
     """
     # handle both SearchResults and simple lists
-    inscriptions = results.inscriptions if hasattr(results, 'inscriptions') else results
+    inscriptions = results.inscriptions if hasattr(results, "inscriptions") else results
 
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -228,6 +228,7 @@ def _escape_xml(text: str) -> str:
         text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
     )
 
+
 def parse_epidoc(xml_str: str):
     """
     Parse an EpiDoc XML string into an Inscription object.
@@ -254,9 +255,14 @@ def parse_epidoc(xml_str: str):
     id_val = get_text(".//tei:publicationStmt/tei:idno")
     if not id_val:
         import hashlib
+
         id_val = f"tei_{hashlib.md5(xml_str.encode(), usedforsecurity=False).hexdigest()[:8]}"
 
-    findspot = get_text(".//tei:origin/tei:origPlace") or get_text(".//tei:msIdentifier//tei:settlement") or ""
+    findspot = (
+        get_text(".//tei:origin/tei:origPlace")
+        or get_text(".//tei:msIdentifier//tei:settlement")
+        or ""
+    )
 
     date_approx = None
     date_uncertainty = None
@@ -311,5 +317,5 @@ def parse_epidoc(xml_str: str):
         medium=medium,
         object_type=object_type,
         notes=notes,
-        bibliography=bibliography
+        bibliography=bibliography,
     )

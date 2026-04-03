@@ -39,69 +39,66 @@ DB_URL = os.environ.get(
 
 PLACES: dict[str, tuple[float, float, str, str | None]] = {
     # ── Major Etruscan cities ──
-    "Arretium":       (43.4633, 11.8817, "413032", "20301"),   # Arezzo
-    "Caere":          (42.0009, 12.1067, "422859", "19984"),   # Cerveteri
-    "Clusium":        (43.0174, 11.9492, "413096", "20137"),   # Chiusi
-    "Cortona":        (43.2754, 11.9858, "413106", "19837"),   # Cortona
-    "Faesulae":       (43.8059, 11.2944, "413124", "20241"),   # Fiesole
-    "Narce":          (42.2333, 12.4000, "413248", None),      # Narce
-    "Perusia":        (43.1107, 12.3908, "413248", "19879"),   # Perugia
-    "Piacenza":       (45.0522,  9.6930, "383741", "20445"),   # Placentia
-    "Pisae":          (43.7228, 10.4017, "403253", "20218"),   # Pisa
-    "Populonia":      (42.9883, 10.4936, "413169", "20274"),   # Populonia
-    "Pyrgi":          (42.0098, 11.9676, "413182", None),      # S. Severa
-    "Roma":           (41.8933, 12.4833, "423025", "562"),      # Rome
-    "Rusellae":       (42.8240, 11.1595, "413288", "20271"),   # Roselle
-    "Saturnia":       (42.6625, 11.5064, "413044", "20177"),   # Saturnia
-    "Spina":          (44.6750, 12.1833, "393498", "20368"),   # Comacchio
-    "Tarquinia":      (42.2488, 11.7553, "413332", "20002"),   # Tarquinia
-    "Veii":           (42.0273, 12.3979, "423116", "19977"),   # Veio
-    "Vetulonia":      (42.8524, 10.9746, "413381", "20270"),   # Vetulonia
-    "Volaterrae":     (43.4015, 10.8619, "403292", "20287"),   # Volterra
-    "Volsinii":       (42.6464, 11.9867, "413389", "20067"),   # Bolsena / Orvieto
-    "Vulci":          (42.4212, 11.6323, "413393", "20069"),   # Vulci
-    "Falerii":        (42.2981, 12.4219, "413125", "19949"),   # Civita Castellana
-
+    "Arretium": (43.4633, 11.8817, "413032", "20301"),  # Arezzo
+    "Caere": (42.0009, 12.1067, "422859", "19984"),  # Cerveteri
+    "Clusium": (43.0174, 11.9492, "413096", "20137"),  # Chiusi
+    "Cortona": (43.2754, 11.9858, "413106", "19837"),  # Cortona
+    "Faesulae": (43.8059, 11.2944, "413124", "20241"),  # Fiesole
+    "Narce": (42.2333, 12.4000, "413248", None),  # Narce
+    "Perusia": (43.1107, 12.3908, "413248", "19879"),  # Perugia
+    "Piacenza": (45.0522, 9.6930, "383741", "20445"),  # Placentia
+    "Pisae": (43.7228, 10.4017, "403253", "20218"),  # Pisa
+    "Populonia": (42.9883, 10.4936, "413169", "20274"),  # Populonia
+    "Pyrgi": (42.0098, 11.9676, "413182", None),  # S. Severa
+    "Roma": (41.8933, 12.4833, "423025", "562"),  # Rome
+    "Rusellae": (42.8240, 11.1595, "413288", "20271"),  # Roselle
+    "Saturnia": (42.6625, 11.5064, "413044", "20177"),  # Saturnia
+    "Spina": (44.6750, 12.1833, "393498", "20368"),  # Comacchio
+    "Tarquinia": (42.2488, 11.7553, "413332", "20002"),  # Tarquinia
+    "Veii": (42.0273, 12.3979, "423116", "19977"),  # Veio
+    "Vetulonia": (42.8524, 10.9746, "413381", "20270"),  # Vetulonia
+    "Volaterrae": (43.4015, 10.8619, "403292", "20287"),  # Volterra
+    "Volsinii": (42.6464, 11.9867, "413389", "20067"),  # Bolsena / Orvieto
+    "Vulci": (42.4212, 11.6323, "413393", "20069"),  # Vulci
+    "Falerii": (42.2981, 12.4219, "413125", "19949"),  # Civita Castellana
     # ── Ager (territory) entries — linked to parent city coords ──
-    "Ager Caeretanus":      (42.0009, 12.1067, "422859", "19984"),
-    "Ager Tarquiniensis":   (42.2488, 11.7553, "413332", "20002"),
-    "Ager Veientanus":      (42.0273, 12.3979, "423116", "19977"),
-    "Ager Clusinus":        (43.0174, 11.9492, "413096", "20137"),
-    "Ager Faesulanus":      (43.8059, 11.2944, "413124", "20241"),
-    "Ager Pisanus":         (43.7228, 10.4017, "403253", "20218"),
-    "Ager Volaterranus":    (43.4015, 10.8619, "403292", "20287"),
-    "Ager Volsiniensis":    (42.6464, 11.9867, "413389", "20067"),
-    "Ager Volcentanus":     (42.4212, 11.6323, "413393", "20069"),
-    "Ager Saenensis":       (43.3178, 11.3307, "413282", "20304"),  # Siena
-    "Ager Capenas":         (42.1350, 12.5458, "413062", "19952"),  # Capena
+    "Ager Caeretanus": (42.0009, 12.1067, "422859", "19984"),
+    "Ager Tarquiniensis": (42.2488, 11.7553, "413332", "20002"),
+    "Ager Veientanus": (42.0273, 12.3979, "423116", "19977"),
+    "Ager Clusinus": (43.0174, 11.9492, "413096", "20137"),
+    "Ager Faesulanus": (43.8059, 11.2944, "413124", "20241"),
+    "Ager Pisanus": (43.7228, 10.4017, "403253", "20218"),
+    "Ager Volaterranus": (43.4015, 10.8619, "403292", "20287"),
+    "Ager Volsiniensis": (42.6464, 11.9867, "413389", "20067"),
+    "Ager Volcentanus": (42.4212, 11.6323, "413393", "20069"),
+    "Ager Saenensis": (43.3178, 11.3307, "413282", "20304"),  # Siena
+    "Ager Capenas": (42.1350, 12.5458, "413062", "19952"),  # Capena
     "Falerii et Ager Faliscus": (42.2981, 12.4219, "413125", "19949"),
-
     # ── Regions ──
-    "Campania":  (40.8500, 14.2500, "442733", None),
-    "Latium":    (41.8000, 12.7000, "422932", None),
-    "Umbria":    (42.8000, 12.6000, "413356", None),
-    "Liguria":   (44.3167, 8.3500,  "383627", None),
-    "Lucania":   (40.3500, 15.8500, "442683", None),
-    "Aemilia":   (44.5000, 11.3500, "383596", None),
-    "Padana":    (45.0000, 10.5000, "393471", None),
-
+    "Campania": (40.8500, 14.2500, "442733", None),
+    "Latium": (41.8000, 12.7000, "422932", None),
+    "Umbria": (42.8000, 12.6000, "413356", None),
+    "Liguria": (44.3167, 8.3500, "383627", None),
+    "Lucania": (40.3500, 15.8500, "442683", None),
+    "Aemilia": (44.5000, 11.3500, "383596", None),
+    "Padana": (45.0000, 10.5000, "393471", None),
     # ── Additional specific places from CIE data ──
-    "Saena":                  (43.3178, 11.3307, "413282", "20304"),  # Siena
-    "Florentia":              (43.7696, 11.2558, "413126", "20252"),  # Florence
-    "Perugia":                (43.1107, 12.3908, "413248", "19879"),
-    "Bettolle":               (43.2167, 11.8000, "413096", "20137"),  # near Clusium
-    "Marciano":               (43.3000, 11.7833, "413032", "20301"),  # near Arretium
-    "Lucignano":              (43.2833, 11.7500, "413096", "20137"),  # near Clusium
-    "Poggio alle Mura":       (42.9167, 11.3333, "413381", "20270"),  # near Vetulonia
-    "Isola d'Elba":           (42.7794, 10.2478, "413143", None),     # Elba
-    "Bolsena":                (42.6464, 11.9867, "413389", "20067"),
-    "Chianciano":             (43.0611, 11.8306, "413096", "20137"),  # near Clusium
-    "Montepulciano":          (43.0939, 11.7828, "413096", "20137"),  # near Clusium
-    "Orvieto":                (42.7185, 12.1117, "413389", "20067"),  # alt. for Volsinii
-    "Siena":                  (43.3178, 11.3307, "413282", "20304"),
-    "Arezzo":                 (43.4633, 11.8817, "413032", "20301"),
-    "Volterra":               (43.4015, 10.8619, "403292", "20287"),
-    "Chiusi":                 (43.0174, 11.9492, "413096", "20137"),
+    "Saena": (43.3178, 11.3307, "413282", "20304"),  # Siena
+    "Florentia": (43.7696, 11.2558, "413126", "20252"),  # Florence
+    "Perugia": (43.1107, 12.3908, "413248", "19879"),
+    "Bettolle": (43.2167, 11.8000, "413096", "20137"),  # near Clusium
+    "Marciano": (43.3000, 11.7833, "413032", "20301"),  # near Arretium
+    "Lucignano": (43.2833, 11.7500, "413096", "20137"),  # near Clusium
+    "Poggio alle Mura": (42.9167, 11.3333, "413381", "20270"),  # near Vetulonia
+    "Isola d'Elba": (42.7794, 10.2478, "413143", None),  # Elba
+    "Bolsena": (42.6464, 11.9867, "413389", "20067"),
+    "Chianciano": (43.0611, 11.8306, "413096", "20137"),  # near Clusium
+    "Montepulciano": (43.0939, 11.7828, "413096", "20137"),  # near Clusium
+    "Orvieto": (42.7185, 12.1117, "413389", "20067"),  # alt. for Volsinii
+    "Siena": (43.3178, 11.3307, "413282", "20304"),
+    "Arezzo": (43.4633, 11.8817, "413032", "20301"),
+    "Volterra": (43.4015, 10.8619, "403292", "20287"),
+    "Chiusi": (43.0174, 11.9492, "413096", "20137"),
 }
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -115,109 +112,86 @@ PLACES: dict[str, tuple[float, float, str, str | None]] = {
 
 LATIN_PATTERNS: list[tuple[str, str]] = [
     # Clusium / Chiusi variations (the biggest gap — ~900 records)
-    ("Clusii",    "Clusium"),
-    ("Clusino",   "Clusium"),
-    ("Clusium",   "Clusium"),
-    ("Chiusi",    "Clusium"),
-
+    ("Clusii", "Clusium"),
+    ("Clusino", "Clusium"),
+    ("Clusium", "Clusium"),
+    ("Chiusi", "Clusium"),
     # Volaterrae / Volterra
-    ("Volaterr",  "Volaterrae"),
-    ("Volterra",  "Volaterrae"),
-
+    ("Volaterr", "Volaterrae"),
+    ("Volterra", "Volaterrae"),
     # Tarquinia
-    ("Tarquini",  "Tarquinia"),
-
+    ("Tarquini", "Tarquinia"),
     # Cortona
-    ("Corton",    "Cortona"),
-
+    ("Corton", "Cortona"),
     # Perusia / Perugia
-    ("Perusi",    "Perusia"),
-    ("Perugia",   "Perusia"),
-
+    ("Perusi", "Perusia"),
+    ("Perugia", "Perusia"),
     # Vulci
-    ("Vulci",     "Vulci"),
-    ("Vulcent",   "Vulci"),
-
+    ("Vulci", "Vulci"),
+    ("Vulcent", "Vulci"),
     # Caere / Cerveteri
-    ("Caeret",    "Caere"),
-    ("Caere",     "Caere"),
+    ("Caeret", "Caere"),
+    ("Caere", "Caere"),
     ("Cerveteri", "Caere"),
-
     # Veii / Veio
-    ("Veient",    "Veii"),
-    ("Veii",      "Veii"),
-    ("Veio",      "Veii"),
-
+    ("Veient", "Veii"),
+    ("Veii", "Veii"),
+    ("Veio", "Veii"),
     # Arretium / Arezzo
-    ("Arreti",    "Arretium"),
-    ("Arezzo",    "Arretium"),
-
+    ("Arreti", "Arretium"),
+    ("Arezzo", "Arretium"),
     # Faesulae / Fiesole
-    ("Faesul",    "Faesulae"),
-    ("Fiesole",   "Faesulae"),
-
+    ("Faesul", "Faesulae"),
+    ("Fiesole", "Faesulae"),
     # Populonia
-    ("Populoni",  "Populonia"),
-
+    ("Populoni", "Populonia"),
     # Rusellae / Roselle
-    ("Rusell",    "Rusellae"),
-    ("Roselle",   "Rusellae"),
-
+    ("Rusell", "Rusellae"),
+    ("Roselle", "Rusellae"),
     # Vetulonia
-    ("Vetulon",   "Vetulonia"),
-
+    ("Vetulon", "Vetulonia"),
     # Volsinii / Bolsena / Orvieto
-    ("Volumni",   "Volsinii"),
-    ("Volsini",   "Volsinii"),
-    ("Bolsena",   "Volsinii"),
-    ("Orvieto",   "Volsinii"),
-
+    ("Volumni", "Volsinii"),
+    ("Volsini", "Volsinii"),
+    ("Bolsena", "Volsinii"),
+    ("Orvieto", "Volsinii"),
     # Saturnia
-    ("Saturni",   "Saturnia"),
-
+    ("Saturni", "Saturnia"),
     # Spina
-    ("Spina",     "Spina"),
-
+    ("Spina", "Spina"),
     # Narce
-    ("Narce",     "Narce"),
-
+    ("Narce", "Narce"),
     # Falerii
-    ("Falisc",    "Falerii"),
-    ("Faleri",    "Falerii"),
-
+    ("Falisc", "Falerii"),
+    ("Faleri", "Falerii"),
     # Roma
-    ("Roma",      "Roma"),
-
+    ("Roma", "Roma"),
     # Pyrgi / S. Severa
-    ("Pyrgi",     "Pyrgi"),
-
+    ("Pyrgi", "Pyrgi"),
     # Florence
     ("Florentin", "Florentia"),
-    ("Firenze",   "Florentia"),
-
+    ("Firenze", "Florentia"),
     # Saena / Siena
-    ("SAENA",     "Saena"),
-    ("Saena",     "Saena"),
-    ("Siena",     "Saena"),
-
+    ("SAENA", "Saena"),
+    ("Saena", "Saena"),
+    ("Siena", "Saena"),
     # Specific archaeological sites
-    ("Bettolle",          "Bettolle"),
-    ("Marciano",          "Marciano"),
-    ("Lucignano",         "Lucignano"),
-    ("Poggio alle Mura",  "Poggio alle Mura"),
-    ("Chianciano",        "Chianciano"),
-    ("Montepulciano",     "Montepulciano"),
-    ("Piacenza",          "Piacenza"),
-
+    ("Bettolle", "Bettolle"),
+    ("Marciano", "Marciano"),
+    ("Lucignano", "Lucignano"),
+    ("Poggio alle Mura", "Poggio alle Mura"),
+    ("Chianciano", "Chianciano"),
+    ("Montepulciano", "Montepulciano"),
+    ("Piacenza", "Piacenza"),
     # Broader regional matches (last resort)
-    ("Campania",  "Campania"),
-    ("Lati",      "Latium"),
-    ("Umbri",     "Umbria"),
-    ("Liguri",    "Liguria"),
-    ("Lucani",    "Lucania"),
-    ("Padana",    "Padana"),
-    ("Aemilia",   "Aemilia"),
-    ("Elba",      "Isola d'Elba"),
+    ("Campania", "Campania"),
+    ("Lati", "Latium"),
+    ("Umbri", "Umbria"),
+    ("Liguri", "Liguria"),
+    ("Lucani", "Lucania"),
+    ("Padana", "Padana"),
+    ("Aemilia", "Aemilia"),
+    ("Elba", "Isola d'Elba"),
 ]
 
 
@@ -233,7 +207,7 @@ CIE_PREFIX_MAP: dict[str, str] = {
     "AS": "Ager Saenensis",
     "AT": "Ager Tarquiniensis",
     "AV": "Ager Volcentanus",
-    "Af": "Campania",         # Africa records — minimal
+    "Af": "Campania",  # Africa records — minimal
     "Ar": "Arretium",
     "At": "Ager Tarquiniensis",
     "Cl": "Clusium",
@@ -407,9 +381,7 @@ def main():
             params.append(lat)
             parts.append("findspot_lon = %s")
             params.append(lon)
-            parts.append(
-                "geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)"
-            )
+            parts.append("geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)")
             params.extend([lon, lat])
         if pleiades_id is not None:
             parts.append("pleiades_id = %s")
@@ -452,21 +424,18 @@ def main():
     cur.execute("SELECT COUNT(*) FROM inscriptions WHERE geom IS NOT NULL")
     geom_after = cur.fetchone()[0]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("RESULTS")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Updates applied:    {applied}")
     print(f"  PostGIS geom synced: {geom_synced}")
-    print(
-        f"  Coordinates:  {coords_before} → {coords_after} "
-        f"(+{coords_after - coords_before})"
-    )
+    print(f"  Coordinates:  {coords_before} → {coords_after} (+{coords_after - coords_before})")
     print(
         f"  Pleiades IDs: {pleiades_before} → {pleiades_after} "
         f"(+{pleiades_after - pleiades_before})"
     )
     print(f"  PostGIS geom: {geom_after}")
-    print(f"\n  Coverage: {coords_after}/{total} ({coords_after/total*100:.1f}%)")
+    print(f"\n  Coverage: {coords_after}/{total} ({coords_after / total * 100:.1f}%)")
 
     # Show top findspot distribution
     cur.execute("""
@@ -480,7 +449,7 @@ def main():
         cur2 = conn.cursor()
         cur2.execute(
             "SELECT COUNT(*) FROM inscriptions WHERE findspot = %s AND findspot_lat IS NOT NULL",
-            (fs,)
+            (fs,),
         )
         has = cur2.fetchone()[0]
         status = "✅" if has == cnt else f"⚠️ {has}/{cnt}"
