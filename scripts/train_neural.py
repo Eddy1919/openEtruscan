@@ -16,9 +16,10 @@ from pathlib import Path
 
 def main() -> None:
     import os
+
     from dotenv import load_dotenv
     load_dotenv(".env")
-    
+
     parser = argparse.ArgumentParser(description="Train neural inscription classifiers.")
     parser.add_argument(
         "--db-url",

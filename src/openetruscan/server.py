@@ -6,15 +6,11 @@ Run locally:
     uvicorn openetruscan.server:app --reload
 """
 
-import asyncio
-import gc
 import logging
 import re
 import resource
-import threading
 from contextlib import asynccontextmanager
 from datetime import datetime
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, status
@@ -45,7 +41,7 @@ async def lifespan(app: FastAPI):
     START_TIME = datetime.utcnow()
     corpus = Corpus.load()
 
-    
+
 
     yield
     if corpus:
@@ -230,7 +226,6 @@ async def health_check():
         "version": __version__,
         "uptime_seconds": round(uptime, 2),
         "corpus_loaded": corpus is not None,
-        "graph_ready": GRAPH_READY,
         "mem_rss_mb": round(rss_kb / 1024, 1),
         "timestamp": datetime.utcnow().isoformat(),
     }
@@ -325,8 +320,9 @@ def search_corpus(
 
     accept_header = request.headers.get("accept", "")
     if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
-        from openetruscan.epidoc import results_to_epidoc
         from fastapi.responses import Response
+
+        from openetruscan.epidoc import results_to_epidoc
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
@@ -383,8 +379,9 @@ def search_geo(
 
     accept_header = request.headers.get("accept", "")
     if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
-        from openetruscan.epidoc import results_to_epidoc
         from fastapi.responses import Response
+
+        from openetruscan.epidoc import results_to_epidoc
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
     data = [_build_model(i) for i in results.inscriptions]
@@ -404,20 +401,21 @@ def get_inscription(
     results = corpus.get_by_ids([inscription_id])
     if not results.inscriptions:
         raise HTTPException(status_code=404, detail="Inscription not found")
-        
+
     inscription = results.inscriptions[0]
-    
+
     # ── Content Negotiation ──
     accept_header = request.headers.get("accept", "")
     if "application/xml" in accept_header or "application/tei+xml" in accept_header or "text/xml" in accept_header:
         try:
-            from openetruscan.epidoc import to_epidoc
             from fastapi.responses import Response
+
+            from openetruscan.epidoc import to_epidoc
             xml_data = to_epidoc(inscription)
             return Response(content=xml_data, media_type="application/tei+xml")
         except ImportError:
             raise HTTPException(status_code=501, detail="EpiDoc TEI capability is not installed server-side.")
-            
+
     return _build_model(inscription)
 
 
@@ -427,11 +425,11 @@ async def import_inscription(request: Request):
     """Import an inscription from EpiDoc TEI XML."""
     if not corpus:
         raise HTTPException(status_code=503, detail="Corpus not loaded")
-        
+
     content_type = request.headers.get("content-type", "")
     if "xml" not in content_type:
         raise HTTPException(status_code=400, detail="Content-Type must be application/xml or similar")
-    
+
     body = await request.body()
     try:
         from openetruscan.epidoc import parse_epidoc
@@ -600,6 +598,21 @@ def search_by_radius(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+@app.get("/tiles/{z}/{x}/{y}.pbf", tags=["Search"])
+@limiter.limit("500/minute")
+def get_vector_tiles(request: Request, z: int, x: int, y: int):
+    """Serve PostGIS dynamic vector tiles bounding the dataset."""
+    from fastapi.responses import Response
+    try:
+        mvt_bytes = corpus.mvt_tiles(z, x, y)
+        if not mvt_bytes:
+            return Response(status_code=204)
+        return Response(content=mvt_bytes, media_type="application/x-protobuf", headers={"Access-Control-Allow-Origin": "*"})
+    except Exception as e:
+        logger.error(f"Vector tile error: {e}")
+        raise HTTPException(status_code=500, detail="MVT tile generation failed") from e
+
+
 @app.get("/semantic-search", response_model=SearchResponse, tags=["Search"])
 @limiter.limit("30/minute")
 async def semantic_search(
@@ -621,7 +634,6 @@ async def semantic_search(
     ] = 20,
 ):
     """Semantic pgvector search using Gemini text-embedding-004."""
-    import requests
 
     # Validate query
     pass
@@ -714,12 +726,7 @@ def search_by_clan(
     ],
 ):
     """Prosopographical network search by clan/gens."""
-    _ensure_graph()
-    if not GRAPH_READY:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Prosopographical engine is initializing. Please try again in a minute.",
-        )
+
 
     # Validate gens - allow letters, spaces, and hyphens
     if not re.match(r"^[\w\s\-]+$", gens, re.UNICODE):
@@ -731,15 +738,40 @@ def search_by_clan(
     if len(gens) > MAX_GENS_LEN:
         return {"total": 0, "count": 0, "results": []}
 
-    clan_info = family_graph.clan(gens)
-    if not clan_info:
+    sparql_query = f"""
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX oe: <https://openetruscan.com/vocabulary/>
+    PREFIX lawd: <http://lawd.info/ontology/>
+    PREFIX dc: <http://purl.org/dc/elements/1.1/>
+
+    SELECT DISTINCT ?inscription_id WHERE {{
+        ?p a foaf:Person ;
+           oe:gentilicium "{gens}" .
+        ?p ?link ?insc_uri .
+        ?insc_uri a lawd:WrittenWork ;
+                  dc:identifier ?inscription_id .
+    }}
+    """
+    import httpx
+    try:
+        resp = httpx.post(
+            "http://fuseki:3030/openetruscan/query",
+            data={"query": sparql_query},
+            headers={"Accept": "application/sparql-results+json"},
+            timeout=10.0
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        bindings = data.get("results", {}).get("bindings", [])
+        member_insc_ids = [b["inscription_id"]["value"] for b in bindings if "inscription_id" in b]
+    except Exception as e:
+        logger.error(f"Fuseki SPARQL query failed: {e}")
+        raise HTTPException(status_code=500, detail="Prosopographical graph database unavailable") from e
+
+    if not member_insc_ids:
         return {"total": 0, "count": 0, "results": []}
 
-    member_insc_ids = []
-    for member in clan_info.members:
-        member_insc_ids.extend(member.inscription_ids)
-
-    # Targeted lookup: fetch only the IDs we need (not the entire corpus)
+    # Targeted lookup: fetch only the IDs we found in the graph
     results = corpus.get_by_ids(member_insc_ids)
 
     data = [_build_model(i) for i in results.inscriptions]

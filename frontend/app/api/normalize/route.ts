@@ -14,10 +14,10 @@ interface LanguageData {
 }
 
 let _lang: LanguageData | null = null;
-let _variantToCanonical: Record<string, string> = {};
-let _canonicalToUnicode: Record<string, string> = {};
-let _canonicalToIPA: Record<string, string> = {};
-let _unicodeToCanonical: Record<string, string> = {};
+const _variantToCanonical: Record<string, string> = {};
+const _canonicalToUnicode: Record<string, string> = {};
+const _canonicalToIPA: Record<string, string> = {};
+const _unicodeToCanonical: Record<string, string> = {};
 
 function ensureLoaded() {
   if (_lang) return;

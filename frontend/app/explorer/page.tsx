@@ -4,14 +4,13 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { Inscription, StatsSummary } from "@/lib/corpus";
-import { searchCorpus, fetchGeoInscriptions, fetchStatsSummary, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
+import { searchCorpus, fetchStatsSummary, dateDisplay, CLASS_COLORS, toOldItalic } from "@/lib/corpus";
 import styles from "./page.module.css";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function ExplorerPage() {
   const [results, setResults] = useState<Inscription[]>([]);
-  const [geoResults, setGeoResults] = useState<Inscription[]>([]);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("");
@@ -31,7 +30,7 @@ export default function ExplorerPage() {
       setLoading(true);
 
       // Fetch list results for sidebar
-      const listPromise = searchCorpus({
+      searchCorpus({
         text: text || undefined,
         findspot: findspot || undefined,
         classification: classification || undefined,
@@ -39,21 +38,9 @@ export default function ExplorerPage() {
       }).then((res) => {
         setResults(res.results);
         setTotal(res.total);
-      });
-
-      // Fetch geotagged results for map
-      const geoPromise = fetchGeoInscriptions({
-        text: text || undefined,
-        findspot: findspot || undefined,
-        classification: classification || undefined,
-        limit: 2500,
-      }).then((res) => {
-        setGeoResults(res.results);
-      });
-
-      Promise.all([listPromise, geoPromise])
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
     },
     []
   );
@@ -73,8 +60,6 @@ export default function ExplorerPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [query, siteFilter, classFilter, doSearch]);
-
-  const geoFiltered = geoResults; // already filtered server-side
 
   const handleMapClick = useCallback(
     (info: { object?: Inscription }) => {
@@ -180,11 +165,13 @@ export default function ExplorerPage() {
       {/* Map */}
       <div className="split-main">
         {results.length > 0 && (
-          <MapView
-            inscriptions={geoFiltered}
-            selected={selected}
-            onInscriptionClick={handleMapClick}
-          />
+        <MapView
+          selected={selected}
+          onInscriptionClick={handleMapClick}
+          filterText={query}
+          filterSite={siteFilter}
+          filterClass={classFilter}
+        />
         )}
       </div>
     </div>

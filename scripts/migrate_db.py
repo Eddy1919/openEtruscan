@@ -1,6 +1,8 @@
 import os
+
 import psycopg2
 from dotenv import load_dotenv
+
 
 def run_migration():
     load_dotenv()
@@ -9,15 +11,15 @@ def run_migration():
         print("Required DATABASE_URL not set.")
         return
 
-    print(f"Connecting to database...")
+    print("Connecting to database...")
     conn = psycopg2.connect(db_url)
     conn.autocommit = True
-    
+
     with conn.cursor() as cur:
         # Check if fts_canonical exists
         cur.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
+            SELECT column_name
+            FROM information_schema.columns
             WHERE table_name='inscriptions' AND column_name='fts_canonical'
         """)
         if cur.fetchone():
@@ -26,7 +28,7 @@ def run_migration():
             print("Adding fts_canonical column...")
             cur.execute("SET statement_timeout = 5000")
             cur.execute("""
-                ALTER TABLE inscriptions ADD COLUMN fts_canonical tsvector 
+                ALTER TABLE inscriptions ADD COLUMN fts_canonical tsvector
                 GENERATED ALWAYS AS (to_tsvector('simple', coalesce(canonical, ''))) STORED
             """)
             print("Adding GIN index...")

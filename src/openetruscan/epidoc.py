@@ -12,6 +12,7 @@ Requires: lxml (optional dependency, install with `pip install openetruscan[epid
 
 from __future__ import annotations
 
+import contextlib
 import xml.etree.ElementTree as ET  # nosec B405
 from collections.abc import Iterator
 
@@ -139,10 +140,7 @@ def results_to_epidoc(
     Export an iterable of Inscription objects as a multi-document EpiDoc collection.
     """
     # handle both SearchResults and simple lists
-    if hasattr(results, 'inscriptions'):
-        inscriptions = results.inscriptions
-    else:
-        inscriptions = results
+    inscriptions = results.inscriptions if hasattr(results, 'inscriptions') else results
 
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -256,7 +254,7 @@ def parse_epidoc(xml_str: str):
     id_val = get_text(".//tei:publicationStmt/tei:idno")
     if not id_val:
         import hashlib
-        id_val = f"tei_{hashlib.md5(xml_str.encode()).hexdigest()[:8]}"
+        id_val = f"tei_{hashlib.md5(xml_str.encode(), usedforsecurity=False).hexdigest()[:8]}"
 
     findspot = get_text(".//tei:origin/tei:origPlace") or get_text(".//tei:msIdentifier//tei:settlement") or ""
 
@@ -266,10 +264,8 @@ def parse_epidoc(xml_str: str):
     if orig_date is not None:
         when = orig_date.get("when-custom")
         if when:
-            try:
+            with contextlib.suppress(ValueError):
                 date_approx = int(when)
-            except ValueError:
-                pass
         else:
             nb = orig_date.get("notBefore-custom")
             na = orig_date.get("notAfter-custom")
