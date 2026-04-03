@@ -13,6 +13,7 @@ const PRIMARY = [
 
 const TOOLS = [
   { href: "/normalizer", label: "Normalizer" },
+  { href: "/lacunae", label: "Restore Lacunae" },
   { href: "/compare", label: "Compare" },
   { href: "/timeline", label: "Timeline" },
   { href: "/names", label: "Names" },
