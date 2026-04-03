@@ -239,3 +239,36 @@ export function toOldItalic(canonical: string): string {
   }
   return result;
 }
+
+// ── ML Helpers ─────────────────────────────────────────────────────────────
+
+export interface LacunaePrediction {
+  position: number;
+  predictions: Record<string, number>;
+}
+
+export interface RestoreResponse {
+  text: string;
+  predictions: LacunaePrediction[];
+}
+
+export async function restoreLacunae(text: string, top_k: number = 5): Promise<RestoreResponse> {
+  const res = await fetch(`${API_URL}/neural/restore`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, top_k }),
+  });
+  if (!res.ok) {
+    let errMsg = "Failed to restore lacunae";
+    try {
+      const errorData = await res.json();
+      if (errorData.detail) errMsg = errorData.detail;
+    } catch (e) {
+      // Ignore JSON parse error if response is not JSON
+    }
+    throw new Error(errMsg);
+  }
+  return res.json();
+}
