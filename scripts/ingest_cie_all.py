@@ -204,7 +204,6 @@ def ingest_into_db(entries: list[dict], source_label: str) -> int:
         
         # Check if already exists using search or get
         try:
-            existing = corpus.search(text=formatted_id, limit=1)
             # Not a precise ID check, but good enough for now. We will just try to add and handle exceptions
             # Actually, `corpus.add` upserts natively in Postgres! 
             # Wait, no, Corpus.add(upsert=True)? The PG version upserts.
@@ -224,7 +223,7 @@ def ingest_into_db(entries: list[dict], source_label: str) -> int:
         try:
             corpus.add(insc)
             inserted += 1
-        except Exception as e:
+        except Exception:
             # If it already exists it might fail depending on how add() is implemented
             pass
             
