@@ -271,10 +271,6 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     pleiades_id TEXT,
     geonames_id TEXT,
     is_codex BOOLEAN NOT NULL DEFAULT FALSE,
-    geom geometry(Point, 4326),
-    emb_text vector(768),
-    emb_context vector(768),
-    emb_combined vector(768),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     fts_canonical tsvector GENERATED ALWAYS AS (
@@ -302,12 +298,10 @@ CREATE TABLE IF NOT EXISTS genetic_samples (
     mt_haplogroup TEXT,
     source TEXT DEFAULT '',
     notes TEXT DEFAULT '',
-    geom geometry(Point, 4326),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_genetic_geom ON genetic_samples USING GIST (geom);
 CREATE INDEX IF NOT EXISTS idx_genetic_date ON genetic_samples(date_approx);
 """
 
@@ -473,52 +467,69 @@ class Corpus:
 
         from openetruscan.artifacts import IMAGES_PG_SCHEMA
 
-        try:
-            with self._conn.cursor() as cur:
-                cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-                cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        import contextlib
+
+        with self._conn.cursor() as cur:
+            # 1. Base Schema (always required)
+            try:
                 cur.execute(_PG_SCHEMA)
                 cur.execute(IMAGES_PG_SCHEMA)
+                self._conn.commit()
+            except psycopg2.Error:
+                self._conn.rollback()
+                raise  # If base schema fails, the database is broken
+
+            # 2. Spatial types mapping (optional)
+            try:
+                cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);")
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_inscriptions_geom ON inscriptions USING GIST (geom);")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_genetic_geom ON genetic_samples USING GIST (geom);")
+                self._conn.commit()
+            except psycopg2.Error:
+                self._conn.rollback()
+
+            # 3. Vector Embeddings schemas mapping (optional)
+            try:
+                cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_text vector(768);")
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_context vector(768);")
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_combined vector(768);")
+                cur.execute(_PG_VECTOR_INDEXES)
+                self._conn.commit()
+            except psycopg2.Error:
+                self._conn.rollback()
+
+            # 4. General Table Migrations schema options
+            # Schema migrations for existing tables
+            with contextlib.suppress(psycopg2.Error):
                 cur.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom "
-                    "ON inscriptions USING GIST (geom);"
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS findspot_uncertainty_m DOUBLE PRECISION;"
                 )
-                # Vector indexes — only create once data exists
-                import contextlib
-
-                with contextlib.suppress(psycopg2.Error):
-                    cur.execute(_PG_VECTOR_INDEXES)
-
-                # Schema migrations for existing tables
-                with contextlib.suppress(psycopg2.Error):
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS findspot_uncertainty_m DOUBLE PRECISION;"
-                    )
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;"
-                    )
-                    cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;"
-                    )
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geonames_id TEXT;"
-                    )
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS is_codex BOOLEAN NOT NULL DEFAULT FALSE;"
-                    )
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
-                        "tsvector GENERATED ALWAYS AS "
-                        "(to_tsvector('simple', coalesce(canonical, ''))) STORED;"
-                    )
-                    cur.execute(
-                        "CREATE INDEX IF NOT EXISTS idx_fts_canonical "
-                        "ON inscriptions USING GIN (fts_canonical);"
-                    )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;"
+                )
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;"
+                )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geonames_id TEXT;"
+                )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS is_codex BOOLEAN NOT NULL DEFAULT FALSE;"
+                )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
+                    "tsvector GENERATED ALWAYS AS "
+                    "(to_tsvector('simple', coalesce(canonical, ''))) STORED;"
+                )
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_fts_canonical "
+                    "ON inscriptions USING GIN (fts_canonical);"
+                )
             self._conn.commit()
-        except psycopg2.Error:
-            self._conn.rollback()
 
     def add(
         self,
