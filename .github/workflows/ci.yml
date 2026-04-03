@@ -14,6 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
@@ -42,10 +58,14 @@ jobs:
         run: ruff check .
 
       - name: Run tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         run: pytest tests/ -v --tb=short -m "not slow"
 
       - name: Run tests with coverage
         if: matrix.python-version == '3.12'
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         run: pytest tests/ -m "not slow" --cov=openetruscan --cov-report=term-missing
 
   typecheck-mypy:

@@ -242,7 +242,8 @@ def parse_epidoc(xml_str: str):
     from openetruscan.corpus import Inscription
 
     try:
-        root = ET.fromstring(xml_str)  # nosec B314
+        from defusedxml.ElementTree import fromstring as safe_fromstring
+        root = safe_fromstring(xml_str)
     except Exception as e:
         raise ValueError(f"Invalid XML: {e}")
 

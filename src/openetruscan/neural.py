@@ -40,7 +40,11 @@ try:
 
     _TORCH_AVAILABLE = True
 except ImportError:
-    pass
+    class _DummyModule:
+        pass
+    class _DummyNN:
+        Module = _DummyModule
+    nn = _DummyNN()  # type: ignore
 
 
 def _require_torch() -> None:

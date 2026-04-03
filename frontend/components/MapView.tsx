@@ -10,7 +10,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import type { Inscription } from "@/lib/corpus";
 import { searchRadius, API_URL } from "@/lib/corpus";
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || process.env.NEXT_PUBLIC_MAPBOX;
 
 // Custom hook to integrate MapboxDraw into react-map-gl
 function DrawControl(props: any) {
