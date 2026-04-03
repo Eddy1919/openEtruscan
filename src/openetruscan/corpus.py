@@ -267,6 +267,11 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     completeness TEXT NOT NULL DEFAULT 'complete',
     provenance_status TEXT NOT NULL DEFAULT 'verified',
     provenance_flags TEXT NOT NULL DEFAULT '',
+    trismegistos_id TEXT,
+    eagle_id TEXT,
+    pleiades_id TEXT,
+    geonames_id TEXT,
+    is_codex BOOLEAN NOT NULL DEFAULT FALSE,
     geom geometry(Point, 4326),
     emb_text vector(768),
     emb_context vector(768),
@@ -340,6 +345,11 @@ _COLUMNS = [
     "completeness",
     "provenance_status",
     "provenance_flags",
+    "trismegistos_id",
+    "eagle_id",
+    "pleiades_id",
+    "geonames_id",
+    "is_codex",
 ]
 
 
@@ -482,6 +492,21 @@ class Corpus:
                 with contextlib.suppress(psycopg2.Error):
                     cur.execute(
                         "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS findspot_uncertainty_m DOUBLE PRECISION;"
+                    )
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;"
+                    )
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;"
+                    )
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;"
+                    )
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geonames_id TEXT;"
+                    )
+                    cur.execute(
+                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS is_codex BOOLEAN NOT NULL DEFAULT FALSE;"
                     )
                     cur.execute(
                         "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
