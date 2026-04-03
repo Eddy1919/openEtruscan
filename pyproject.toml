@@ -39,6 +39,7 @@ dependencies = [
     "click>=8.0",
     "pyyaml>=6.0",
     "psycopg2-binary>=2.9",
+    "defusedxml>=0.7.1",
 ]
 
 [project.optional-dependencies]

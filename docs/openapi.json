@@ -373,9 +373,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InscriptionModel"
-                }
+                "schema": {}
               }
             }
           },
@@ -386,6 +384,26 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscriptions": {
+      "post": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Import Inscription",
+        "description": "Import an inscription from EpiDoc TEI XML.",
+        "operationId": "import_inscription_inscriptions_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -406,6 +424,46 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/neural/restore": {
+      "post": {
+        "tags": [
+          "Neural"
+        ],
+        "summary": "Restore Lacunae",
+        "description": "Predict missing characters in text with Leiden conventions (e.g. lar[..]i).",
+        "operationId": "restore_lacunae_neural_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -641,6 +699,65 @@
                 "schema": {
                   "$ref": "#/components/schemas/SearchResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tiles/{z}/{x}/{y}.pbf": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Get Vector Tiles",
+        "description": "Serve PostGIS dynamic vector tiles bounding the dataset.",
+        "operationId": "get_vector_tiles_tiles__z___x___y__pbf_get",
+        "parameters": [
+          {
+            "name": "z",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Z"
+            }
+          },
+          {
+            "name": "x",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "X"
+            }
+          },
+          {
+            "name": "y",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Y"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -1344,6 +1461,24 @@
         ],
         "title": "InscriptionModel"
       },
+      "RestoreRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "top_k": {
+            "type": "integer",
+            "title": "Top K",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "RestoreRequest"
+      },
       "SearchResponse": {
         "properties": {
           "total": {
@@ -1406,13 +1541,6 @@
           "type": {
             "type": "string",
             "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
           }
         },
         "type": "object",
