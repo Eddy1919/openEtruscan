@@ -485,6 +485,8 @@ async def restore_lacunae(request: Request, body: RestoreRequest):
         restorer = LacunaeRestorer()
         results = restorer.predict(body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
