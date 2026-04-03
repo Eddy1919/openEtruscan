@@ -17,7 +17,6 @@ os.environ["ENABLE_DOCS"] = "1"
 
 
 from contextlib import contextmanager
-from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -38,7 +37,7 @@ def _test_client_with_corpus():
     from openetruscan.prosopography import FamilyGraph
 
     corpus = Corpus.load()
-    
+
     # Cleanup any leftovers
     test_ids = ["ETR_001", "ETR_002", "ETR_003"]
     with corpus._conn.cursor() as cur:

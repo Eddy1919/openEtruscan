@@ -1,7 +1,5 @@
 """Tests for Etruscan codex texts data and seeding."""
 
-import os
-import tempfile
 from pathlib import Path
 
 import yaml

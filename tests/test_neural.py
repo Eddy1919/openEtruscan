@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -135,10 +134,10 @@ class TestNeuralClassifier:
             + ["boundary"] * len(boundary_texts)
             + ["ownership"] * len(ownership_texts)
         )
-        
+
         def _mock_load(db_path):
             return texts, labels
-        
+
         # Patch load_training_data in the neural module
         monkeypatch.setattr("openetruscan.neural.load_training_data", _mock_load)
 

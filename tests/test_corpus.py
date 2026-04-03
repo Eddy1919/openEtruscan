@@ -1,9 +1,6 @@
 """Tests for the corpus module."""
 
-import os
-
 from openetruscan.corpus import Corpus, Inscription, auto_flag_inscription
-
 
 _TEST_INSCRIPTIONS_TABLE = "test_inscriptions"
 
@@ -16,7 +13,10 @@ class TestCorpus:
         self.corpus = Corpus.load()
         # Clear only test data at start (idempotent)
         with self.corpus._conn.cursor() as cur:
-            cur.execute("DELETE FROM inscriptions WHERE id LIKE 'TEST_%' OR id LIKE 'T_' OR id LIKE 'T%' AND length(id) <= 3")
+            cur.execute(
+                "DELETE FROM inscriptions WHERE id LIKE 'TEST_%'"
+                " OR id LIKE 'T_' OR id LIKE 'T%' AND length(id) <= 3"
+            )
         self.corpus._conn.commit()
 
     def teardown_method(self):
@@ -29,7 +29,12 @@ class TestCorpus:
         self.corpus._conn.commit()
 
     def test_add_inscription(self):
-        insc = Inscription(id="TEST_001", raw_text="LARTHAL LECNES", canonical="larthal lecnes", findspot="Cerveteri")
+        insc = Inscription(
+            id="TEST_001",
+            raw_text="LARTHAL LECNES",
+            canonical="larthal lecnes",
+            findspot="Cerveteri",
+        )
         self.corpus.add(insc)
         results = self.corpus.search(text="larthal")
         found = [i for i in results if i.id == "TEST_001"]
@@ -43,14 +48,20 @@ class TestCorpus:
         assert len(found) >= 1
 
     def test_search_by_findspot(self):
-        self.corpus.add(Inscription(id="T1", raw_text="Larθal", canonical="larθal", findspot="Cerveteri"))
-        self.corpus.add(Inscription(id="T2", raw_text="Arnθ", canonical="arnθ", findspot="Tarquinia"))
+        self.corpus.add(
+            Inscription(id="T1", raw_text="Larθal", canonical="larθal", findspot="Cerveteri")
+        )
+        self.corpus.add(
+            Inscription(id="T2", raw_text="Arnθ", canonical="arnθ", findspot="Tarquinia")
+        )
         results = self.corpus.search(findspot="Cerveteri")
         found = [i for i in results if i.id == "T1"]
         assert len(found) >= 1
 
     def test_search_by_date_range(self):
-        self.corpus.add(Inscription(id="T1", raw_text="Larθal", canonical="larθal", date_approx=-400))
+        self.corpus.add(
+            Inscription(id="T1", raw_text="Larθal", canonical="larθal", date_approx=-400)
+        )
         self.corpus.add(Inscription(id="T2", raw_text="Arnθ", canonical="arnθ", date_approx=-200))
         results = self.corpus.search(date_range=(-500, -300))
         found = [i for i in results if i.id == "T1"]

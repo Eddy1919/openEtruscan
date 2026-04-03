@@ -1,6 +1,6 @@
 """Tests for the prosopography module."""
 
-import os
+import pytest
 
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.prosopography import (
@@ -160,7 +160,7 @@ class TestPhonologicalDistance:
         assert matches[0][1] < 1.0
 
 
-import pytest
+
 
 @pytest.mark.slow
 class TestFamilyGraph:
@@ -169,7 +169,7 @@ class TestFamilyGraph:
     def _build_test_corpus(self):
         corpus = Corpus.load()
         # Clean up any leftover test IDs
-        test_ids = ('T1', 'T2', 'T3', 'T4', 'T_PATRO')
+        test_ids = ("T1", "T2", "T3", "T4", "T_PATRO")
         with corpus._conn.cursor() as cur:
             cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (list(test_ids),))
         corpus._conn.commit()

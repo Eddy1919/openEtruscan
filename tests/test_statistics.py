@@ -1,7 +1,5 @@
 """Tests for the statistical analysis engine."""
 
-import os
-
 from openetruscan.adapter import load_adapter
 from openetruscan.corpus import Corpus, Inscription
 from openetruscan.statistics import (
