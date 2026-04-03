@@ -475,7 +475,12 @@ class RestoreRequest(BaseModel):
 async def restore_lacunae(request: Request, body: RestoreRequest):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
     try:
-        from openetruscan.neural import LacunaeRestorer
+        from openetruscan.neural import LacunaeRestorer, _TORCH_AVAILABLE
+
+        if not _TORCH_AVAILABLE:
+            raise HTTPException(
+                status_code=501, detail="Lacunae restoration requires PyTorch, which is not installed in the lightweight API container."
+            )
 
         restorer = LacunaeRestorer()
         results = restorer.predict(body.text, top_k=body.top_k)
