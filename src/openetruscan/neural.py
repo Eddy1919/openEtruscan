@@ -40,10 +40,13 @@ try:
 
     _TORCH_AVAILABLE = True
 except ImportError:
+
     class _DummyModule:
         pass
+
     class _DummyNN:
         Module = _DummyModule
+
     nn = _DummyNN()  # type: ignore
 
 

@@ -160,8 +160,6 @@ class TestPhonologicalDistance:
         assert matches[0][1] < 1.0
 
 
-
-
 @pytest.mark.slow
 class TestFamilyGraph:
     """Test family graph construction and queries (slow — parses all DB inscriptions)."""

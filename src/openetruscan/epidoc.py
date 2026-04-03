@@ -243,6 +243,7 @@ def parse_epidoc(xml_str: str):
 
     try:
         from defusedxml.ElementTree import fromstring as safe_fromstring
+
         root = safe_fromstring(xml_str)
     except Exception as e:
         raise ValueError(f"Invalid XML: {e}")

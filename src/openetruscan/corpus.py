@@ -242,7 +242,6 @@ class SearchResults:
 # ---------------------------------------------------------------------------
 
 
-
 _PG_SCHEMA = """
 CREATE TABLE IF NOT EXISTS inscriptions (
     id TEXT PRIMARY KEY,
@@ -410,6 +409,8 @@ def _extract_names(canonical: str) -> list[str]:
             found.append(t)
             seen.add(t)
     return found
+
+
 class Corpus:
     """Queryable corpus natively backed by PostgreSQL."""
 
@@ -440,11 +441,11 @@ class Corpus:
         corpus._ensure_db()
         return corpus
 
-    def _prepare_inscription(self, inscription: "Inscription", language: str) -> "Inscription":
+    def _prepare_inscription(self, inscription: Inscription, language: str) -> Inscription:
         # DH Normalizer bypass: return as is if normalizer not strictly required here
         return inscription
 
-    def _inscription_values(self, inscription: "Inscription"):
+    def _inscription_values(self, inscription: Inscription):
         return (
             tuple(getattr(inscription, col) for col in _COLUMNS if col != "id") + (inscription.id,)
             if "id" not in _COLUMNS
@@ -452,7 +453,7 @@ class Corpus:
         )
 
     @classmethod
-    def load(cls, db_path=None) -> "Corpus":
+    def load(cls, db_path=None) -> Corpus:
         env_url = os.environ.get("DATABASE_URL", "")
         if not env_url:
             env_path = Path(".env")
@@ -496,9 +497,7 @@ class Corpus:
                     cur.execute(
                         "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;"
                     )
-                    cur.execute(
-                        "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;"
-                    )
+                    cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")
                     cur.execute(
                         "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;"
                     )
@@ -578,7 +577,7 @@ class Corpus:
     ):
         conditions = []
         params = []
-        
+
         ph = "%s" if param_style == "format" else "?"
 
         if text:
@@ -609,17 +608,22 @@ class Corpus:
         if provenance_status:
             conditions.append(f"provenance_status = {ph}")
             params.append(provenance_status)
-            
+
         if geo_only:
             conditions.append("findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL")
 
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"
-        
+
         # Valid sort columns mapping
-        valid_sorts = {"id": "id ASC", "-id": "id DESC", "date": "date_approx ASC", "-date": "date_approx DESC"}
+        valid_sorts = {
+            "id": "id ASC",
+            "-id": "id DESC",
+            "date": "date_approx ASC",
+            "-date": "date_approx DESC",
+        }
         order_by = valid_sorts.get(sort_by, "id ASC")
-        
+
         query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"
         filter_params = list(params)
         query_params = list(params) + [limit, offset]

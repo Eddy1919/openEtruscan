@@ -72,7 +72,11 @@ class NameFormula:
         }
 
 
-def parse_name(text: str, language: str = "etruscan", adapter: "openetruscan.adapter.LanguageAdapter | None" = None) -> NameFormula:
+def parse_name(
+    text: str,
+    language: str = "etruscan",
+    adapter: openetruscan.adapter.LanguageAdapter | None = None,
+) -> NameFormula:
     """
     Parse a name string into a structured NameFormula.
 
@@ -81,12 +85,12 @@ def parse_name(text: str, language: str = "etruscan", adapter: "openetruscan.ada
     """
     if adapter is None:
         adapter = load_adapter(language)
-    
+
     # We still need to pass adapter to normalize if it takes it, but currently normalize
-    # also loads adapter. For now we use the existing normalize (which is cached) or 
-    # we can just use the provided adapter. normalize itself uses load_adapter which is fine 
-    # if load_adapter is fast, but normalize isn't modifying the disk I/O if load_adapter is 
-    # slow. Wait, normalize uses load_adapter. I will update load_adapter to be memoized 
+    # also loads adapter. For now we use the existing normalize (which is cached) or
+    # we can just use the provided adapter. normalize itself uses load_adapter which is fine
+    # if load_adapter is fast, but normalize isn't modifying the disk I/O if load_adapter is
+    # slow. Wait, normalize uses load_adapter. I will update load_adapter to be memoized
     # in adapter.py if it isn't, but here I'll pass adapter to the rest of the logic.
     result = normalize(text, language=language)
     tokens = result.tokens
