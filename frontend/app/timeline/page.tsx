@@ -7,8 +7,8 @@ import { fetchTimeline } from "@/lib/corpus";
 import styles from "./page.module.css";
 import MapboxMap, { Source, Layer, Popup } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type { MapLayerMouseEvent } from "react-map-gl/mapbox";
-import type { CircleLayer } from "react-map-gl/mapbox";
+import type { MapMouseEvent } from "react-map-gl/mapbox";
+import type { CircleLayer } from "mapbox-gl";
 
 
 

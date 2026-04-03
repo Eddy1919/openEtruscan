@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Map, { Source, Layer, Popup, useControl } from "react-map-gl/mapbox";
-import type { MapRef, CircleLayer, MapLayerMouseEvent } from "react-map-gl/mapbox";
+import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
+import type { CircleLayer } from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -107,7 +108,7 @@ export default function MapView({
   }, [selected]);
 
   const onClick = useCallback(
-    (event: MapLayerMouseEvent) => {
+    (event: MapMouseEvent) => {
       const feature = event.features?.[0];
       if (feature && feature.properties) {
         onInscriptionClick({ object: feature.properties as Inscription });
@@ -118,7 +119,7 @@ export default function MapView({
     [onInscriptionClick]
   );
 
-  const onMouseEnter = useCallback((e: MapLayerMouseEvent) => {
+  const onMouseEnter = useCallback((e: MapMouseEvent) => {
     const feature = e.features?.[0];
     if (feature && feature.id !== undefined && mapRef.current) {
       document.body.style.cursor = "pointer";

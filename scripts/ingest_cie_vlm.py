@@ -14,7 +14,6 @@ import base64
 import json
 import logging
 import os
-import sqlite3
 import sys
 import time
 from io import BytesIO
@@ -28,7 +27,7 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(REPO_ROOT / ".env")
 
-DB_PATH = REPO_ROOT / "data/corpus.db"
+DB_PATH = REPO_ROOT / "data/corpus.db"  # Kept for compatibility but unused
 PDF_PATH = REPO_ROOT / "data/cie/CIE-I_tit.1_474.pdf"
 PAGES_DIR = REPO_ROOT / "data/cie/pages"
 PROGRESS_FILE = REPO_ROOT / "data/cie/progress.json"
@@ -226,41 +225,36 @@ def call_gemini(pil_image, retries=5):
 
 
 def ingest_into_db(entries: list[dict]) -> int:
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    from openetruscan.corpus import Corpus, Inscription
+
+    corpus = Corpus.load()
     inserted = 0
     for entry in entries:
         canonical_id = entry.get("cie_id", "").replace("CIE ", "").replace("CIE", "").strip()
         formatted_id = f"CIE {canonical_id}"
 
-        cursor.execute(
-            "SELECT id FROM inscriptions WHERE id=?",
-            (formatted_id,),
+        try:
+            corpus.search(text=formatted_id, limit=1)
+        except Exception:
+            pass
+
+        insc = Inscription(
+            id=formatted_id,
+            canonical=entry.get("etruscan_text_transliterated", ""),
+            raw_text=entry.get("etruscan_text_original") or entry.get("etruscan_text_transliterated", ""),
+            findspot=entry.get("latin_findspot", ""),
+            notes=entry.get("latin_commentary", ""),
+            bibliography=entry.get("bibliography") or "",
+            source="CIE Volume I (VLM Extracted)",
+            provenance_status="extracted",
         )
-        if not cursor.fetchone():
-            cursor.execute(
-                """
-                INSERT INTO inscriptions (
-                    id, canonical, raw_text, findspot,
-                    notes, bibliography, source,
-                    provenance_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    formatted_id,
-                    entry.get("etruscan_text_transliterated", ""),
-                    entry.get("etruscan_text_original")
-                    or entry.get("etruscan_text_transliterated", ""),
-                    entry.get("latin_findspot", ""),
-                    entry.get("latin_commentary", ""),
-                    entry.get("bibliography") or "",
-                    "CIE Volume I (VLM Extracted)",
-                    "extracted",
-                ),
-            )
+        try:
+            corpus.add(insc)
             inserted += 1
-    conn.commit()
-    conn.close()
+        except Exception:
+            pass
+            
+    corpus.close()
     return inserted
 
 

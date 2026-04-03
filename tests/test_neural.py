@@ -116,41 +116,8 @@ class TestMicroTransformer:
 class TestNeuralClassifier:
     """Trains on tiny synthetic data to test the full pipeline."""
 
-    @staticmethod
-    def _make_db(tmp_dir: Path) -> Path:
-        """Create a minimal SQLite corpus for testing."""
-        import sqlite3
-
-        db_path = tmp_dir / "test_corpus.db"
-        conn = sqlite3.connect(str(db_path))
-        conn.execute(
-            """
-            CREATE TABLE inscriptions (
-                id TEXT PRIMARY KEY,
-                raw_text TEXT NOT NULL,
-                canonical TEXT NOT NULL DEFAULT '',
-                phonetic TEXT NOT NULL DEFAULT '',
-                old_italic TEXT NOT NULL DEFAULT '',
-                findspot TEXT NOT NULL DEFAULT '',
-                findspot_lat REAL,
-                findspot_lon REAL,
-                date_approx INTEGER,
-                date_uncertainty INTEGER,
-                medium TEXT NOT NULL DEFAULT '',
-                object_type TEXT NOT NULL DEFAULT '',
-                source TEXT NOT NULL DEFAULT '',
-                bibliography TEXT NOT NULL DEFAULT '',
-                notes TEXT NOT NULL DEFAULT '',
-                language TEXT NOT NULL DEFAULT 'etruscan',
-                classification TEXT NOT NULL DEFAULT 'unknown',
-                script_system TEXT NOT NULL DEFAULT 'old_italic',
-                completeness TEXT NOT NULL DEFAULT 'complete',
-                provenance_status TEXT NOT NULL DEFAULT 'verified',
-                provenance_flags TEXT NOT NULL DEFAULT ''
-            )
-            """
-        )
-
+    @pytest.fixture
+    def mock_training_data(self, monkeypatch):
         # Insert enough labeled samples for training (need ≥20)
         funerary_texts = [f"suθi larθal lecnes {i}" for i in range(10)] + [
             f"avils lupuce ceχa {i}" for i in range(5)
@@ -161,32 +128,28 @@ class TestNeuralClassifier:
         boundary_texts = [f"tular rasna spura {i}" for i in range(10)]
         ownership_texts = [f"mi mulu minipi {i}" for i in range(10)]
 
-        all_texts = (
-            [(t, "funerary") for t in funerary_texts]
-            + [(t, "votive") for t in votive_texts]
-            + [(t, "boundary") for t in boundary_texts]
-            + [(t, "ownership") for t in ownership_texts]
+        texts = funerary_texts + votive_texts + boundary_texts + ownership_texts
+        labels = (
+            ["funerary"] * len(funerary_texts)
+            + ["votive"] * len(votive_texts)
+            + ["boundary"] * len(boundary_texts)
+            + ["ownership"] * len(ownership_texts)
         )
-
-        for idx, (text, cls) in enumerate(all_texts):
-            conn.execute(
-                "INSERT INTO inscriptions (id, raw_text, canonical, classification) "
-                "VALUES (?, ?, ?, ?)",
-                (f"TEST_{idx}", text, text, cls),
-            )
-        conn.commit()
-        conn.close()
-        return db_path
+        
+        def _mock_load(db_path):
+            return texts, labels
+        
+        # Patch load_training_data in the neural module
+        monkeypatch.setattr("openetruscan.neural.load_training_data", _mock_load)
 
     @pytest.fixture()
     def tmp_dir(self, tmp_path):
         return tmp_path
 
-    def test_cnn_train_predict(self, tmp_dir):
-        db_path = self._make_db(tmp_dir)
+    def test_cnn_train_predict(self, mock_training_data):
         clf = NeuralClassifier(arch="cnn")
         metrics = clf.train_from_corpus(
-            db_path,
+            "dummy_path",
             epochs=5,
             patience=10,
             verbose=False,
@@ -199,11 +162,10 @@ class TestNeuralClassifier:
         assert result.method == "neural_cnn"
         assert result.label in clf.labels
 
-    def test_transformer_train_predict(self, tmp_dir):
-        db_path = self._make_db(tmp_dir)
+    def test_transformer_train_predict(self, mock_training_data):
         clf = NeuralClassifier(arch="transformer")
         metrics = clf.train_from_corpus(
-            db_path,
+            "dummy_path",
             epochs=5,
             patience=10,
             verbose=False,
@@ -214,10 +176,9 @@ class TestNeuralClassifier:
         assert isinstance(result, ClassificationResult)
         assert result.method == "neural_transformer"
 
-    def test_save_load_roundtrip(self, tmp_dir):
-        db_path = self._make_db(tmp_dir)
+    def test_save_load_roundtrip(self, mock_training_data, tmp_dir):
         clf = NeuralClassifier(arch="cnn")
-        clf.train_from_corpus(db_path, epochs=3, patience=10, verbose=False)
+        clf.train_from_corpus("dummy_path", epochs=3, patience=10, verbose=False)
 
         # Save
         model_dir = tmp_dir / "models"
@@ -230,10 +191,9 @@ class TestNeuralClassifier:
         result = clf2.predict("suθi larθal")
         assert isinstance(result, ClassificationResult)
 
-    def test_onnx_export(self, tmp_dir):
-        db_path = self._make_db(tmp_dir)
+    def test_onnx_export(self, mock_training_data, tmp_dir):
         clf = NeuralClassifier(arch="cnn")
-        clf.train_from_corpus(db_path, epochs=3, patience=10, verbose=False)
+        clf.train_from_corpus("dummy_path", epochs=3, patience=10, verbose=False)
 
         onnx_path = tmp_dir / "test.onnx"
         clf.export_onnx(onnx_path)
@@ -247,14 +207,13 @@ class TestNeuralClassifier:
         assert meta["arch"] == "cnn"
         assert "labels" in meta
 
-    def test_onnx_inference(self, tmp_dir):
+    def test_onnx_inference(self, mock_training_data, tmp_dir):
         """Test ONNX inference with onnxruntime (if available)."""
         ort = pytest.importorskip("onnxruntime", reason="onnxruntime not installed")
         import numpy as np
 
-        db_path = self._make_db(tmp_dir)
         clf = NeuralClassifier(arch="cnn")
-        clf.train_from_corpus(db_path, epochs=3, patience=10, verbose=False)
+        clf.train_from_corpus("dummy_path", epochs=3, patience=10, verbose=False)
 
         onnx_path = tmp_dir / "test_inference.onnx"
         clf.export_onnx(onnx_path)

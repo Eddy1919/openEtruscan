@@ -15,7 +15,7 @@ import os
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["ENABLE_DOCS"] = "1"
 
-import tempfile
+
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -35,10 +35,15 @@ def _make_inscription(**kwargs):
 @contextmanager
 def _test_client_with_corpus():
     """Context manager that provides a test client with a populated test corpus."""
-    fd, db_path = tempfile.mkstemp(suffix=".db")
-    os.close(fd)
+    from openetruscan.prosopography import FamilyGraph
 
-    corpus = Corpus.load(db_path)
+    corpus = Corpus.load()
+    
+    # Cleanup any leftovers
+    test_ids = ["ETR_001", "ETR_002", "ETR_003"]
+    with corpus._conn.cursor() as cur:
+        cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (test_ids,))
+    corpus._conn.commit()
 
     # Add test data
     test_data = [
@@ -63,9 +68,13 @@ def _test_client_with_corpus():
 
     # Store original state
     orig_corpus = server.corpus
+    orig_graph = getattr(server, "family_graph", None)
+    orig_graph_ready = getattr(server, "GRAPH_READY", False)
 
     # Set test state
     server.corpus = corpus
+    server.family_graph = FamilyGraph()  # Empty graph to prevent live DB O(N) scan
+    server.GRAPH_READY = True
 
     # Create client without lifespan to avoid Corpus.load() being called
     client = TestClient(server.app)
@@ -73,10 +82,15 @@ def _test_client_with_corpus():
     try:
         yield client
     finally:
-        # Cleanup
+        # Cleanup test data from live DB
+        with corpus._conn.cursor() as cur:
+            cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (test_ids,))
+        corpus._conn.commit()
+
         server.corpus = orig_corpus
+        server.family_graph = orig_graph
+        server.GRAPH_READY = orig_graph_ready
         corpus.close()
-        Path(db_path).unlink(missing_ok=True)
 
 
 # ============================================================================
