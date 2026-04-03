@@ -72,14 +72,22 @@ class NameFormula:
         }
 
 
-def parse_name(text: str, language: str = "etruscan") -> NameFormula:
+def parse_name(text: str, language: str = "etruscan", adapter: "openetruscan.adapter.LanguageAdapter | None" = None) -> NameFormula:
     """
     Parse a name string into a structured NameFormula.
 
     Uses the language adapter's onomastic rules to identify
     praenomina, gentilicia, patronymics, and metronymics.
     """
-    adapter = load_adapter(language)
+    if adapter is None:
+        adapter = load_adapter(language)
+    
+    # We still need to pass adapter to normalize if it takes it, but currently normalize
+    # also loads adapter. For now we use the existing normalize (which is cached) or 
+    # we can just use the provided adapter. normalize itself uses load_adapter which is fine 
+    # if load_adapter is fast, but normalize isn't modifying the disk I/O if load_adapter is 
+    # slow. Wait, normalize uses load_adapter. I will update load_adapter to be memoized 
+    # in adapter.py if it isn't, but here I'll pass adapter to the rest of the logic.
     result = normalize(text, language=language)
     tokens = result.tokens
 
@@ -448,6 +456,7 @@ class FamilyGraph:
         batch_size = 500
         offset = 0
 
+        adapter = load_adapter(language)
         while True:
             results = corpus.search(limit=batch_size, offset=offset)
             if not results.inscriptions:
@@ -457,7 +466,7 @@ class FamilyGraph:
                 if not inscription.canonical.strip():
                     continue
 
-                formula = parse_name(inscription.canonical, language=language)
+                formula = parse_name(inscription.canonical, language=language, adapter=adapter)
                 person = Person(
                     id=f"P{person_id:05d}",
                     name_formula=formula,

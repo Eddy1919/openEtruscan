@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
+DB_PATH = Path(__file__).parent / "data" / "corpus.db"
 
 # ---------------------------------------------------------------------------
 # Classification constants
@@ -242,6 +242,7 @@ class SearchResults:
 # ---------------------------------------------------------------------------
 
 
+
 _PG_SCHEMA = """
 CREATE TABLE IF NOT EXISTS inscriptions (
     id TEXT PRIMARY KEY,
@@ -399,9 +400,6 @@ def _extract_names(canonical: str) -> list[str]:
             found.append(t)
             seen.add(t)
     return found
-
-
-
 class Corpus:
     """Queryable corpus natively backed by PostgreSQL."""
 
@@ -1143,6 +1141,41 @@ class Corpus:
 # ---------------------------------------------------------------------------
 
 
+def _row_to_inscription(row: sqlite3.Row) -> Inscription:
+    """Convert a SQLite Row to Inscription."""
+    keys = row.keys()
+    return Inscription(
+        id=row["id"],
+        raw_text=row["raw_text"],
+        canonical=row["canonical"],
+        phonetic=row["phonetic"],
+        old_italic=row["old_italic"],
+        findspot=row["findspot"],
+        findspot_lat=row["findspot_lat"],
+        findspot_lon=row["findspot_lon"],
+        date_approx=row["date_approx"],
+        date_uncertainty=row["date_uncertainty"],
+        medium=row["medium"],
+        object_type=row["object_type"],
+        source=row["source"],
+        bibliography=row["bibliography"],
+        notes=row["notes"],
+        language=row["language"] if "language" in keys else "etruscan",
+        classification=(row["classification"] if "classification" in keys else "unknown"),
+        script_system=(row["script_system"] if "script_system" in keys else None),
+        completeness=(row["completeness"] if "completeness" in keys else None),
+        provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
+        provenance_flags=(
+            []
+            if not ("provenance_flags" in keys and row["provenance_flags"])
+            else row["provenance_flags"].split(",")
+        ),
+        trismegistos_id=(row["trismegistos_id"] if "trismegistos_id" in keys else None),
+        eagle_id=(row["eagle_id"] if "eagle_id" in keys else None),
+        pleiades_id=(row["pleiades_id"] if "pleiades_id" in keys else None),
+        geonames_id=(row["geonames_id"] if "geonames_id" in keys else None),
+        is_codex=(row["is_codex"] if "is_codex" in keys else False),
+    )
 
 
 def _dict_to_inscription(row: dict) -> Inscription:
