@@ -17,10 +17,10 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: 'pip'
@@ -36,14 +36,15 @@ jobs:
         id: git-check
         run: |
           if [ -n "$(git status --porcelain docs/openapi.json)" ]; then
-            echo "❌ OpenAPI schema is out of sync! Please run 'python scripts/export_openapi.py' locally and commit the changes."
+            echo "❌ OpenAPI schema is out of sync!"
+            git diff docs/openapi.json
             exit 1
           else
             echo "✅ OpenAPI schema is up to date."
           fi
 
       - name: Upload OpenAPI Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: openapi-schema
           path: docs/openapi.json
