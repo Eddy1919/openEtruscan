@@ -10,7 +10,7 @@ import logging
 import re
 import resource
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path, Query, Request, status
@@ -29,13 +29,13 @@ logger = logging.getLogger("openetruscan")
 
 # Global corpus
 corpus = None
-START_TIME = datetime.utcnow()
+START_TIME = datetime.now(timezone.utc)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global corpus, START_TIME
-    START_TIME = datetime.utcnow()
+    START_TIME = datetime.now(timezone.utc)
     corpus = Corpus.load()
 
     yield
@@ -213,7 +213,7 @@ def _build_model(i) -> InscriptionModel:
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for monitoring and load balancers."""
-    uptime = (datetime.utcnow() - START_TIME).total_seconds()
+    uptime = (datetime.now(timezone.utc) - START_TIME).total_seconds()
     rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return {
         "status": "healthy" if corpus else "unhealthy",
@@ -221,7 +221,7 @@ async def health_check():
         "uptime_seconds": round(uptime, 2),
         "corpus_loaded": corpus is not None,
         "mem_rss_mb": round(rss_kb / 1024, 1),
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

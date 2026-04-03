@@ -24,8 +24,8 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="sqlite:///data/corpus.db",
-        description="Database connection URL",
+        default="",
+        description="PostgreSQL connection URL (required)",
     )
 
     # API Keys

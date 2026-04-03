@@ -183,7 +183,7 @@ def _get_corpus(db: str | None = None):
 @click.option(
     "--db",
     default=None,
-    help="Database URL or path (default: DATABASE_URL env or local SQLite).",
+    help="Database URL or path (default: DATABASE_URL env).",
 )
 @click.option("--json-output", "-j", is_flag=True, help="JSON output.")
 def search(
@@ -229,7 +229,7 @@ def search(
 @click.option(
     "--db",
     default=None,
-    help="Database URL or path (default: DATABASE_URL env or local SQLite).",
+    help="Database URL or path (default: DATABASE_URL env).",
 )
 @click.option("--language", "-l", default="etruscan", help="Language.")
 def import_csv(csv_file: str, db: str | None, language: str) -> None:
@@ -252,7 +252,7 @@ def import_csv(csv_file: str, db: str | None, language: str) -> None:
 @click.option(
     "--db",
     default=None,
-    help="Database URL or path (default: DATABASE_URL env or local SQLite).",
+    help="Database URL or path (default: DATABASE_URL env).",
 )
 @click.option("--limit", "-n", default=0, help="Max inscriptions (0=all).")
 def export_corpus(
@@ -459,8 +459,8 @@ def classify(
 @main.command(name="train-neural")
 @click.option(
     "--db",
-    default="data/corpus.db",
-    help="Database path (default: data/corpus.db).",
+    default=None,
+    help="Database URL (default: DATABASE_URL env).",
 )
 @click.option("--output", "-o", default="data/models/", help="Output directory for models.")
 @click.option("--epochs", default=30, type=int, help="Training epochs.")
