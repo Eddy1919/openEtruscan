@@ -1,14 +1,29 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import styles from "./Nav.module.css";
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
+  DropdownItem,
+  DropdownTrigger,
+  Dropdown,
+  DropdownMenu,
+  Button
+} from "@nextui-org/react";
 
 const PRIMARY = [
   { href: "/search", label: "Search" },
   { href: "/concordance", label: "Concordance" },
   { href: "/explorer", label: "Explorer" },
+  { href: "/classifier", label: "Classifier" },
+  { href: "/genetics", label: "Genetics" }
 ];
 
 const TOOLS = [
@@ -25,111 +40,139 @@ const REFERENCE = [
   { href: "/docs", label: "Docs" },
 ];
 
-function Dropdown({
-  label,
-  items,
-  pathname,
-}: {
-  label: string;
-  items: { href: string; label: string }[];
-  pathname: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const isActive = items.some((i) => i.href === pathname);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div ref={ref} className={styles.dropdown}>
-      <button
-        className={`nav-pill${isActive ? " active" : ""} ${styles.dropBtn}`}
-        onClick={() => setOpen(!open)}
-      >
-        {label}
-        <span className={styles.caret}>&#9662;</span>
-      </button>
-      {open && (
-        <div className={styles.dropMenu}>
-          {items.map(({ href, label: itemLabel }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`${styles.dropItem} ${pathname === href ? styles.dropItemActive : ""}`}
-              onClick={() => setOpen(false)}
-            >
-              {itemLabel}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Nav() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="nav-bar">
-      <Link href="/" className="nav-brand" style={{ textDecoration: "none" }}>
-        <span style={{ color: "var(--text-primary)" }}>𐌏𐌐𐌄𐌍</span>
-        <span style={{ color: "var(--accent)" }}>Etruscan</span>
-      </Link>
+    <Navbar 
+      isBordered 
+      isMenuOpen={isMenuOpen} 
+      onMenuOpenChange={setIsMenuOpen}
+      classNames={{
+        base: "bg-background",
+        wrapper: "px-4 sm:px-6 max-w-[1200px]",
+        item: [
+          "flex",
+          "relative",
+          "h-full",
+          "items-center",
+          "data-[active=true]:after:content-['']",
+          "data-[active=true]:after:absolute",
+          "data-[active=true]:after:bottom-0",
+          "data-[active=true]:after:left-0",
+          "data-[active=true]:after:right-0",
+          "data-[active=true]:after:h-[2px]",
+          "data-[active=true]:after:rounded-[2px]",
+          "data-[active=true]:after:bg-primary",
+        ]
+      }}
+    >
+      <NavbarContent className="sm:hidden" justify="start">
+        <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} />
+      </NavbarContent>
 
-      <button
-        className={styles.hamburger}
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        aria-label="Toggle mobile menu"
-      >
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
-          {mobileMenuOpen ? (
-            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-          ) : (
-            <path d="M4 12h16M4 6h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
-          )}
-        </svg>
-      </button>
+      <NavbarContent className="sm:hidden lg:flex" justify="start">
+        <NavbarBrand>
+          <Link href="/" className="font-display font-bold text-xl flex items-center gap-1 group">
+            <span className="text-foreground transition-colors group-hover:text-primary">𐌏𐌐𐌄𐌍</span>
+            <span className="text-primary">Etruscan</span>
+          </Link>
+        </NavbarBrand>
+      </NavbarContent>
 
-      <ul className={`nav-pills ${mobileMenuOpen ? styles.mobileOpen : styles.mobileClosed}`}>
-        {[...PRIMARY, { href: "/classifier", label: "Classifier" }, { href: "/genetics", label: "Genetics" }].map(({ href, label }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              className={`nav-pill${pathname === href ? " active" : ""}`}
-            >
-              {label}
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        {PRIMARY.map((item) => (
+          <NavbarItem key={item.href} isActive={pathname === item.href}>
+            <Link color="foreground" href={item.href} className={`text-sm font-medium transition-colors ${pathname === item.href ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
+              {item.label}
             </Link>
-          </li>
+          </NavbarItem>
         ))}
-        <li>
-          <Dropdown label="Tools" items={TOOLS} pathname={pathname} />
-        </li>
-        <li>
-          <Dropdown label="Reference" items={REFERENCE} pathname={pathname} />
-        </li>
-        <li>
-          <Link
-            href="/manifesto"
-            className={`nav-pill${pathname === "/manifesto" ? " active" : ""}`}
+
+        <Dropdown>
+          <NavbarItem>
+            <DropdownTrigger>
+              <Button
+                disableRipple
+                className={`p-0 bg-transparent data-[hover=true]:bg-transparent text-sm font-medium transition-colors ${TOOLS.some(t => t.href === pathname) ? 'text-primary' : 'text-foreground hover:text-primary'}`}
+                radius="sm"
+                variant="light"
+              >
+                Tools
+              </Button>
+            </DropdownTrigger>
+          </NavbarItem>
+          <DropdownMenu
+            aria-label="Tools features"
+            className="w-[200px]"
+            itemClasses={{
+              base: "gap-4",
+            }}
           >
+            {TOOLS.map((item) => (
+              <DropdownItem key={item.href} as={Link} href={item.href}>
+                <span className={pathname === item.href ? 'text-primary' : ''}>
+                  {item.label}
+                </span>
+              </DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+
+        <Dropdown>
+          <NavbarItem>
+            <DropdownTrigger>
+              <Button
+                disableRipple
+                className={`p-0 bg-transparent data-[hover=true]:bg-transparent text-sm font-medium transition-colors ${REFERENCE.some(t => t.href === pathname) ? 'text-primary' : 'text-foreground hover:text-primary'}`}
+                radius="sm"
+                variant="light"
+              >
+                Reference
+              </Button>
+            </DropdownTrigger>
+          </NavbarItem>
+          <DropdownMenu
+            aria-label="Reference features"
+            className="w-[200px]"
+          >
+            {REFERENCE.map((item) => (
+              <DropdownItem key={item.href} as={Link} href={item.href}>
+                <span className={pathname === item.href ? 'text-primary' : ''}>
+                  {item.label}
+                </span>
+              </DropdownItem>
+            ))}
+          </DropdownMenu>
+        </Dropdown>
+
+        <NavbarItem isActive={pathname === "/manifesto"}>
+          <Link color="foreground" href="/manifesto" className={`text-sm font-medium transition-colors ${pathname === "/manifesto" ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
             Manifesto
           </Link>
-        </li>
-      </ul>
-    </nav>
+        </NavbarItem>
+      </NavbarContent>
+
+      {/* Mobile Menu */}
+      <NavbarMenu className="bg-background/80 backdrop-blur-md pt-6">
+        {[
+          ...PRIMARY,
+          ...TOOLS,
+          ...REFERENCE,
+          { href: "/manifesto", label: "Manifesto" }
+        ].map((item, index) => (
+          <NavbarMenuItem key={`${item.href}-${index}`} isActive={pathname === item.href}>
+            <Link
+              className={`w-full ${pathname === item.href ? 'text-primary font-bold' : 'text-foreground'}`}
+              href={item.href}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          </NavbarMenuItem>
+        ))}
+      </NavbarMenu>
+    </Navbar>
   );
 }

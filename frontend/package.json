@@ -10,27 +10,36 @@
   },
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.5.1",
+    "@nextui-org/react": "^2.6.11",
     "@types/mapbox__mapbox-gl-draw": "^1.4.9",
     "@types/mapbox-gl": "^3.4.1",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "chart.js": "^4.5.1",
+    "framer-motion": "^12.38.0",
     "mapbox-gl": "^3.21.0",
     "next": "^16.2.2",
     "onnxruntime-web": "^1.24.3",
     "react": "19.2.4",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.4",
-    "react-map-gl": "^8.1.0",
-    "sass": "^1.99.0"
+    "react-map-gl": "^8.1.0"
   },
   "devDependencies": {
+    "@types/estree": "^1.0.8",
+    "@types/geojson": "^7946.0.16",
+    "@types/geojson-vt": "^3.2.5",
+    "@types/json-schema": "^7.0.15",
+    "@types/json5": "^0.0.30",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.27",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.2.2",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
 }

@@ -4,7 +4,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import "./globals.scss";
+import { Providers } from "./providers";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const cormorant = Cormorant_Garamond({
@@ -61,12 +62,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${cormorant.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${cormorant.variable} ${jetbrains.variable} dark`}
     >
       <body>
-        <Nav />
-        {children}
-        <Footer />
+        <Providers>
+          <Nav />
+          {children}
+          <Footer />
+        </Providers>
         <SpeedInsights />
         <Analytics />
       </body>
