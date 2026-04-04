@@ -16,9 +16,8 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+from openetruscan.db.models import Base
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -39,6 +38,19 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    import os
+    env_url = os.environ.get("DATABASE_URL")
+    if not env_url:
+        from pathlib import Path
+        env_path = Path(".env")
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                if line.strip().startswith("DATABASE_URL="):
+                    env_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    break
+    if env_url:
+        url = env_url
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -57,6 +69,19 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    import os
+    env_url = os.environ.get("DATABASE_URL")
+    if not env_url:
+        from pathlib import Path
+        env_path = Path(".env")
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                if line.strip().startswith("DATABASE_URL="):
+                    env_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    break
+    if env_url:
+        config.set_main_option("sqlalchemy.url", env_url)
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

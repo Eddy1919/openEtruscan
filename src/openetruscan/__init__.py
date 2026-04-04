@@ -6,8 +6,8 @@ Built for Etruscan, designed to be copied.
 
 from importlib.metadata import version as _get_version
 
-from openetruscan.converter import to_latin, to_old_italic, to_phonetic
-from openetruscan.normalizer import NormResult, normalize
+from openetruscan.core.converter import to_latin, to_old_italic, to_phonetic
+from openetruscan.core.normalizer import NormResult, normalize
 
 try:
     __version__ = _get_version("openetruscan")

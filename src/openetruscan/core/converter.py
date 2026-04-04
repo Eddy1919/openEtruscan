@@ -4,7 +4,7 @@ Converter — convenience functions for direct format conversion.
 
 from __future__ import annotations
 
-from openetruscan.normalizer import normalize
+from openetruscan.core.normalizer import normalize
 
 
 def to_old_italic(text: str, language: str = "etruscan") -> str:

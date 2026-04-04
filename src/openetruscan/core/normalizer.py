@@ -11,7 +11,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 
-from openetruscan.adapter import LanguageAdapter, load_adapter
+from openetruscan.core.adapter import LanguageAdapter, load_adapter
 
 
 @dataclass(frozen=True)
