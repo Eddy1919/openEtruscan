@@ -303,6 +303,39 @@ CREATE TABLE IF NOT EXISTS genetic_samples (
 );
 
 CREATE INDEX IF NOT EXISTS idx_genetic_date ON genetic_samples(date_approx);
+
+CREATE TABLE IF NOT EXISTS clans (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS entities (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    inscription_id TEXT REFERENCES inscriptions(id) ON DELETE CASCADE,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS relationships (
+    id SERIAL PRIMARY KEY,
+    person_id TEXT REFERENCES entities(id) ON DELETE CASCADE,
+    related_person_id TEXT REFERENCES entities(id) ON DELETE CASCADE,
+    clan_id TEXT REFERENCES clans(id) ON DELETE CASCADE,
+    relationship_type TEXT NOT NULL,
+    CHECK (
+        (related_person_id IS NOT NULL AND clan_id IS NULL) OR
+        (clan_id IS NOT NULL AND related_person_id IS NULL)
+    ),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_rel_person ON relationships(person_id);
+CREATE INDEX IF NOT EXISTS idx_rel_related ON relationships(related_person_id);
+CREATE INDEX IF NOT EXISTS idx_rel_clan ON relationships(clan_id);
+CREATE INDEX IF NOT EXISTS idx_ent_inscription ON entities(inscription_id);
 """
 
 _PG_VECTOR_INDEXES = """
@@ -482,10 +515,18 @@ class Corpus:
             # 2. Spatial types mapping (optional)
             try:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);")
-                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);")
-                cur.execute("CREATE INDEX IF NOT EXISTS idx_inscriptions_geom ON inscriptions USING GIST (geom);")
-                cur.execute("CREATE INDEX IF NOT EXISTS idx_genetic_geom ON genetic_samples USING GIST (geom);")
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);"
+                )
+                cur.execute(
+                    "ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);"
+                )
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_inscriptions_geom ON inscriptions USING GIST (geom);"
+                )
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_genetic_geom ON genetic_samples USING GIST (geom);"
+                )
                 self._conn.commit()
             except psycopg2.Error:
                 self._conn.rollback()
@@ -493,9 +534,15 @@ class Corpus:
             # 3. Vector Embeddings schemas mapping (optional)
             try:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_text vector(768);")
-                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_context vector(768);")
-                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_combined vector(768);")
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_text vector(768);"
+                )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_context vector(768);"
+                )
+                cur.execute(
+                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS emb_combined vector(768);"
+                )
                 cur.execute(_PG_VECTOR_INDEXES)
                 self._conn.commit()
             except psycopg2.Error:
@@ -511,12 +558,8 @@ class Corpus:
                     "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS trismegistos_id TEXT;"
                 )
                 cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS eagle_id TEXT;")
-                cur.execute(
-                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;"
-                )
-                cur.execute(
-                    "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geonames_id TEXT;"
-                )
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS pleiades_id TEXT;")
+                cur.execute("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS geonames_id TEXT;")
                 cur.execute(
                     "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS is_codex BOOLEAN NOT NULL DEFAULT FALSE;"
                 )
@@ -1080,6 +1123,40 @@ class Corpus:
         """Return a list of all inscription IDs."""
         with self._conn.cursor() as cur:
             cur.execute("SELECT id FROM inscriptions ORDER BY id ASC")
+            return [row[0] for row in cur.fetchall()]
+
+    def get_clan_inscriptions(self, gens: str) -> list[str]:
+        """
+        Fetch all inscription IDs for a given clan/gens recursively.
+        Searches the relational graph schema using a Recursive CTE.
+        """
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                WITH RECURSIVE clan_members AS (
+                    -- Base: people directly belonging to the clan
+                    SELECT p.id, p.inscription_id
+                    FROM entities p
+                    JOIN relationships r ON r.person_id = p.id
+                    JOIN clans c ON r.clan_id = c.id
+                    WHERE c.name = %s
+                    
+                    UNION
+                    
+                    -- Recursive: people who are CHILD_OF someone already in the clan_members
+                    SELECT p.id, p.inscription_id
+                    FROM entities p
+                    JOIN relationships r ON r.person_id = p.id
+                    JOIN clan_members cm ON r.related_person_id = cm.id
+                    WHERE r.relationship_type = 'CHILD_OF'
+                )
+                SELECT DISTINCT inscription_id
+                FROM clan_members
+                WHERE inscription_id IS NOT NULL;
+            """,
+                (gens,),
+            )
+
             return [row[0] for row in cur.fetchall()]
 
     def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:

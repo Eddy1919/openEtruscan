@@ -82,7 +82,10 @@ export interface StatsSummary {
   distinct_classifications: string[];
 }
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.openetruscan.com";
+const isServer = typeof window === "undefined";
+export const API_URL = isServer 
+  ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") 
+  : "/api";
 
 // ── Fetch helpers ──────────────────────────────────────────────────────────
 
@@ -177,7 +180,8 @@ export async function fetchNamesNetwork(
   minCount: number = 5
 ): Promise<NamesNetworkResponse> {
   const res = await fetch(
-    `${API_URL}/names/network?min_count=${minCount}`
+    `${API_URL}/names/network?min_count=${minCount}`,
+    { next: { revalidate: 3600 } }
   );
   if (!res.ok) throw new Error("Failed to fetch names network");
   return res.json();

@@ -750,35 +750,10 @@ def search_by_clan(
     if len(gens) > MAX_GENS_LEN:
         return {"total": 0, "count": 0, "results": []}
 
-    sparql_query = f"""
-    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-    PREFIX oe: <https://openetruscan.com/vocabulary/>
-    PREFIX lawd: <http://lawd.info/ontology/>
-    PREFIX dc: <http://purl.org/dc/elements/1.1/>
-
-    SELECT DISTINCT ?inscription_id WHERE {{
-        ?p a foaf:Person ;
-           oe:gentilicium "{gens}" .
-        ?p ?link ?insc_uri .
-        ?insc_uri a lawd:WrittenWork ;
-                  dc:identifier ?inscription_id .
-    }}
-    """
-    import httpx
-
     try:
-        resp = httpx.post(
-            "http://fuseki:3030/openetruscan/query",
-            data={"query": sparql_query},
-            headers={"Accept": "application/sparql-results+json"},
-            timeout=10.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        bindings = data.get("results", {}).get("bindings", [])
-        member_insc_ids = [b["inscription_id"]["value"] for b in bindings if "inscription_id" in b]
+        member_insc_ids = corpus.get_clan_inscriptions(gens)
     except Exception as e:
-        logger.error(f"Fuseki SPARQL query failed: {e}")
+        logger.error(f"PostgreSQL CTE query failed: {e}")
         raise HTTPException(
             status_code=500, detail="Prosopographical graph database unavailable"
         ) from e
