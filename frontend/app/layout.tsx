@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
+import { Inter, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import Nav from "@/components/Nav";
@@ -7,10 +7,10 @@ import Footer from "@/components/Footer";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const dmSerif = DM_Serif_Display({
-  weight: "400",
+const cormorant = Cormorant_Garamond({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-dm-serif",
+  variable: "--font-display",
 });
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -61,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${dmSerif.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${cormorant.variable} ${jetbrains.variable}`}
     >
       <body>
         <Nav />

@@ -9,24 +9,39 @@
 
 /* ── Design Tokens ─────────────────────────────────────── */
 :root {
-  --bg-primary: #0f0f12;
-  --bg-secondary: #1a1a22;
-  --bg-card: #1e1e28;
-  --bg-hover: #24242e;
-  --text-primary: #e8e6e3;
-  --text-secondary: #9a9890;
-  --text-muted: #6b6962;
-  --accent: #c4704b;
-  --accent-light: #d4855f;
-  --accent-dim: #8b4f35;
-  --accent-glow: rgba(196, 112, 75, 0.15);
-  --border: #2a2a36;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --font-body: "Inter", -apple-system, sans-serif;
-  --font-display: "DM Serif Display", Georgia, serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --bg-primary: #F5F5F0;
+  --bg-secondary: #EAE6CA;
+  --bg-card: #EAE6CA;
+  --bg-hover: #D3CABC;
+  --text-primary: #1C1517;
+  --text-secondary: #5C5248;
+  --text-muted: #5C5248;
+  --accent: #E34234;
+  --accent-pressed: #9E2A2B;
+  --gold: #D4AF37;
+  --accent-glow: rgba(212, 175, 55, 0.15);
+  --border: #D3CABC;
+  --success: #2C5545;
+  --warning: #D4AF37;
+  --danger: #9E2A2B;
+  --font-body: var(--font-inter), -apple-system, sans-serif;
+  --font-display: var(--font-display), Georgia, serif;
+  --font-mono: var(--font-jetbrains), "Fira Code", monospace;
+  --shadow-sharp: 4px 4px 0px #1C1517;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #120E0F;
+    --bg-secondary: #241C1E;
+    --bg-card: #241C1E;
+    --bg-hover: #3A2E32;
+    --text-primary: #F5F5F0;
+    --text-secondary: #A69E93;
+    --text-muted: #A69E93;
+    --border: #3A2E32;
+    --shadow-sharp: none;
+  }
 }
 
 /* ── Reset ─────────────────────────────────────────────── */
@@ -48,11 +63,15 @@ body {
 }
 
 a {
-  color: var(--accent-light);
+  color: var(--accent);
   text-decoration: none;
 }
 a:hover {
   text-decoration: underline;
+}
+
+img, figure, video {
+  filter: sepia(0.3) contrast(1.1) brightness(0.9);
 }
 
 /* ── Scrollbar ─────────────────────────────────────────── */
@@ -154,12 +173,16 @@ a:hover {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 2px;
   padding: 1.25rem;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sharp);
+}
+@media (prefers-color-scheme: dark) {
+  .card { border: 1px solid var(--gold); }
 }
 .card:hover {
-  border-color: var(--accent-dim);
+  border-color: var(--gold);
 }
 
 /* ── Buttons ───────────────────────────────────────────── */
@@ -168,29 +191,46 @@ a:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.4rem;
-  border-radius: 8px;
+  border-radius: 2px;
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: none;
+  border: 2px solid transparent;
 }
+.btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.btn:disabled {
+  opacity: 0.5;
+  background: var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: #F5F5F0;
+  box-shadow: var(--shadow-sharp);
 }
-.btn-primary:hover {
-  background: var(--accent-light);
-  box-shadow: 0 4px 16px rgba(196, 112, 75, 0.3);
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  border-color: var(--gold);
 }
+.btn-primary:active:not(:disabled) {
+  background: var(--accent-pressed);
+}
+
 .btn-secondary {
   background: var(--bg-hover);
   color: var(--text-primary);
-  border: 1px solid var(--border);
+  border: 2px solid var(--gold);
 }
-.btn-secondary:hover {
-  border-color: var(--accent-dim);
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gold);
+  color: #120E0F;
 }
 
 /* ── Inputs ────────────────────────────────────────────── */
@@ -234,7 +274,7 @@ a:hover {
 .inscription-text {
   font-family: var(--font-mono);
   font-size: 0.95rem;
-  color: var(--accent-light);
+  color: var(--accent);
   letter-spacing: 0.5px;
 }
 
