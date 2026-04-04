@@ -4,7 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import "./globals.css";
+import "./globals.scss";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const cormorant = Cormorant_Garamond({

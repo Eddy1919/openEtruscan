@@ -22,8 +22,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from openetruscan import __version__
-from openetruscan.config import settings
-from openetruscan.corpus import Corpus
+from openetruscan.core.config import settings
+from openetruscan.core.corpus import Corpus
 
 logger = logging.getLogger("openetruscan")
 
@@ -320,7 +320,7 @@ def search_corpus(
     ):
         from fastapi.responses import Response
 
-        from openetruscan.epidoc import results_to_epidoc
+        from openetruscan.core.epidoc import results_to_epidoc
 
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
@@ -381,7 +381,7 @@ def search_geo(
     ):
         from fastapi.responses import Response
 
-        from openetruscan.epidoc import results_to_epidoc
+        from openetruscan.core.epidoc import results_to_epidoc
 
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
@@ -415,7 +415,7 @@ def get_inscription(
         try:
             from fastapi.responses import Response
 
-            from openetruscan.epidoc import to_epidoc
+            from openetruscan.core.epidoc import to_epidoc
 
             xml_data = to_epidoc(inscription)
             return Response(content=xml_data, media_type="application/tei+xml")
@@ -442,7 +442,7 @@ async def import_inscription(request: Request):
 
     body = await request.body()
     try:
-        from openetruscan.epidoc import parse_epidoc
+        from openetruscan.core.epidoc import parse_epidoc
 
         inscription = parse_epidoc(body.decode("utf-8"))
         corpus.add(inscription)
@@ -475,7 +475,7 @@ class RestoreRequest(BaseModel):
 async def restore_lacunae(request: Request, body: RestoreRequest):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
     try:
-        from openetruscan.neural import _TORCH_AVAILABLE, LacunaeRestorer
+        from openetruscan.ml.neural import _TORCH_AVAILABLE, LacunaeRestorer
 
         if not _TORCH_AVAILABLE:
             raise HTTPException(
