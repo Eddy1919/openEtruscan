@@ -97,10 +97,10 @@ img, figure, video {
   align-items: center;
   gap: 1.5rem;
   padding: 0.6rem 2rem;
-  background: rgba(15, 15, 18, 0.85);
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 50;
