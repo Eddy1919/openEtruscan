@@ -1,6 +1,6 @@
 """Tests for the adapter loader."""
 
-from openetruscan.adapter import LanguageAdapter, list_available_adapters, load_adapter
+from openetruscan.core.adapter import LanguageAdapter, list_available_adapters, load_adapter
 
 
 class TestLoadAdapter:

@@ -2,8 +2,8 @@
 
 import pytest
 
-from openetruscan.cltk_module import ETRUSCAN_LANGUAGE, EtruscanPipeline
-from openetruscan.cltk_module.pipeline import EtruscanDoc, EtruscanWord
+from openetruscan.ml.cltk_module import ETRUSCAN_LANGUAGE, EtruscanPipeline
+from openetruscan.ml.cltk_module.pipeline import EtruscanDoc, EtruscanWord
 
 
 class TestLanguageDefinition:

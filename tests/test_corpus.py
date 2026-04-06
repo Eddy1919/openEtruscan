@@ -47,6 +47,7 @@ async def test_add_and_get_inscription(session: AsyncSession):
     assert model.canonical == "larthal lecnes"
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="Requires PostgreSQL FTS")
 async def test_search_by_text(session: AsyncSession):
     repo = InscriptionRepository(session)
     await repo.add(InscriptionData(id="T1", raw_text="Larθal", canonical="larθal"))

@@ -2,8 +2,8 @@
 
 import pytest
 
-from openetruscan.corpus import Corpus, Inscription
-from openetruscan.prosopography import (
+from openetruscan.core.corpus import Corpus, Inscription
+from openetruscan.core.prosopography import (
     FamilyGraph,
     fuzzy_match,
     levenshtein_distance,

@@ -13,8 +13,8 @@ import pytest
 torch = pytest.importorskip("torch", reason="PyTorch not installed")
 
 
-from openetruscan.classifier import ClassificationResult  # noqa: E402
-from openetruscan.neural import (  # noqa: E402
+from openetruscan.ml.classifier import ClassificationResult  # noqa: E402
+from openetruscan.ml.neural import (  # noqa: E402
     CharCNN,
     CharVocab,
     MicroTransformer,
@@ -237,7 +237,7 @@ class TestImportError:
     def test_require_torch_message(self):
         """Verify the error message when torch is imported but we simulate absence."""
         # We can't easily un-import torch, so just verify the function exists
-        from openetruscan.neural import _require_torch
+        from openetruscan.ml.neural import _require_torch
 
         # Since torch IS installed in test env, this should not raise
         _require_torch()  # should succeed without error

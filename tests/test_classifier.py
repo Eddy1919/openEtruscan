@@ -1,6 +1,6 @@
 """Tests for the inscription classifier."""
 
-from openetruscan.classifier import ClassificationResult, InscriptionClassifier
+from openetruscan.ml.classifier import ClassificationResult, InscriptionClassifier
 
 
 class TestKeywordFallback:

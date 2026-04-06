@@ -1,7 +1,7 @@
 """Tests for the normalizer engine."""
 
-from openetruscan.adapter import load_adapter
-from openetruscan.normalizer import NormResult, detect_source_system, normalize
+from openetruscan.core.adapter import load_adapter
+from openetruscan.core.normalizer import NormResult, detect_source_system, normalize
 
 
 class TestDetectSourceSystem:

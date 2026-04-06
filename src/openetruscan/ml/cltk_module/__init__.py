@@ -22,7 +22,7 @@ Standalone usage (without CLTK installed)::
     print(result)
 """
 
-from openetruscan.cltk_module.language import ETRUSCAN_LANGUAGE
-from openetruscan.cltk_module.pipeline import EtruscanPipeline
+from openetruscan.ml.cltk_module.language import ETRUSCAN_LANGUAGE
+from openetruscan.ml.cltk_module.pipeline import EtruscanPipeline
 
 __all__ = ["EtruscanPipeline", "ETRUSCAN_LANGUAGE"]

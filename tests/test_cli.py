@@ -2,7 +2,7 @@
 
 from click.testing import CliRunner
 
-from openetruscan.cli import __version__, main
+from openetruscan.core.cli import __version__, main
 
 
 class TestCLI:

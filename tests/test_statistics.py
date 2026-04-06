@@ -1,14 +1,14 @@
 """Tests for the statistical analysis engine."""
 
-from openetruscan.adapter import load_adapter
-from openetruscan.corpus import Corpus, Inscription
-from openetruscan.statistics import (
+from openetruscan.core.adapter import load_adapter
+from openetruscan.core.corpus import Corpus, Inscription
+from openetruscan.core.statistics import (
     BayesianDatingResult,
     ClusterResult,
     ComparisonResult,
     FrequencyResult,
     bayesian_date,
-    cluster_sites,
+    cluster_sites_from_texts,
     compare_frequencies,
     estimate_date,
     letter_frequencies,
