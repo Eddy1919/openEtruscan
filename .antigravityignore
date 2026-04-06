@@ -1,0 +1,77 @@
+# Project vision (internal, not shipped)
+goal.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Distribution
+*.tar.gz
+*.whl
+
+# SQLite databases (generated, not tracked)
+*.db
+
+# Linter caches
+.ruff_cache/
+
+# Environment / Secrets
+.env
+.env.local
+.env.production
+
+# Generated web assets (rebuild with: python scripts/build_web_languages.py)
+# NOTE: corpus_data.js and languages.js are tracked because
+# production deploys via git pull and needs them to serve the web UI.
+
+# Nginx configs (environment-specific)
+nginx.conf
+nginx.dev.conf
+
+# ML model artifacts
+data/models/
+*.pkl
+*.joblibdata/cie/*.pdf
+data/cie/*.pdf
+data/cie/pages/
+data/cie/progress.json
+data/cie/ingest.log
+data/cie/full_extraction.json
+.vercel
+.env*.local
+
+# Local security audit (contains grep patterns for secrets — keep local)
+scripts/security_check.sh
+/data
+
+# Antigravity Specific Exclusions
+node_modules/
+*.dat
+.git/

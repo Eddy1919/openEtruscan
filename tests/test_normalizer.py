@@ -1,7 +1,7 @@
 """Tests for the normalizer engine."""
 
-from openetruscan.normalizer import NormResult, detect_source_system, normalize
 from openetruscan.adapter import load_adapter
+from openetruscan.normalizer import NormResult, detect_source_system, normalize
 
 
 class TestDetectSourceSystem:
@@ -39,7 +39,7 @@ class TestNormalize:
 
     def test_philological_input(self):
         result = normalize("Larθal")
-        assert "larθal" == result.canonical
+        assert result.canonical == "larθal"
 
     def test_preserves_spaces(self):
         result = normalize("LARTH LECNES")

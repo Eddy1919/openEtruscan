@@ -1,0 +1,50 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  openapi-sync:
+    name: Verify OpenAPI Schema
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[server,postgres,prosopography]"
+
+      - name: Export OpenAPI schema
+        run: python scripts/export_openapi.py
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          if [ -n "$(git status --porcelain docs/openapi.json)" ]; then
+            echo "❌ OpenAPI schema is out of sync!"
+            git diff docs/openapi.json
+            exit 1
+          else
+            echo "✅ OpenAPI schema is up to date."
+          fi
+
+      - name: Upload OpenAPI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-schema
+          path: docs/openapi.json

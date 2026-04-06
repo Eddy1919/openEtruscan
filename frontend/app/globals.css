@@ -1,0 +1,778 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Aldine DESIGN SYSTEM (FDS)
+ * Comprehensive Typography & Layout Grammar
+ */
+
+:root {
+  /* Colors */
+  --aldine-canvas: #fafaf9;
+  /* stone-50 */
+  --aldine-bone: #f5f5f4;
+  /* stone-100 */
+  --aldine-ink: #1c1917;
+  /* stone-900 */
+  --aldine-ink-muted: #57534e;
+  /* stone-600 */
+  --aldine-terracotta: #A2574B;
+  --aldine-hairline: #e7e5e4;
+  /* stone-200 */
+
+  /* Layout */
+  --aldine-z-nav: 100;
+  --aldine-z-overlay: 1000;
+  --aldine-z-base: 1;
+  --aldine-z-hide: -1;
+  --aldine-measure: 1200px;
+  --aldine-h-nav: 5rem;
+}
+
+[dataldine-theme="dark"] {
+  --aldine-canvas: #1c1917;
+  --aldine-bone: #292524;
+  --aldine-ink: #fafaf9;
+  --aldine-ink-muted: #a8a29e;
+  --aldine-hairline: #44403c;
+}
+
+body {
+  background-color: var(--aldine-canvas);
+  color: var(--aldine-ink);
+  font-family: 'Inter', -apple-system, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Display ── */
+.aldine-block {
+  display: block;
+}
+
+.aldine-inline-block {
+  display: inline-block;
+}
+
+.aldine-flex {
+  display: flex;
+}
+
+.aldine-grid {
+  display: grid;
+}
+
+.aldine-hidden {
+  display: none;
+}
+
+.aldine-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.aldine-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.aldine-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Flex Box ── */
+.aldine-flex-col,
+.aldine-col {
+  flex-direction: column;
+}
+
+.aldine-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.aldine-grow {
+  flex-grow: 1;
+}
+
+.aldine-items-center {
+  align-items: center;
+}
+
+.aldine-items-start {
+  align-items: flex-start;
+}
+
+.aldine-justify-center {
+  justify-content: center;
+}
+
+.aldine-justify-between {
+  justify-content: space-between;
+}
+
+/* ── Positioning ── */
+.aldine-relative {
+  position: relative;
+}
+
+.aldine-absolute {
+  position: absolute;
+}
+
+.aldine-sticky {
+  position: sticky;
+}
+
+.aldine-fixed {
+  position: fixed;
+}
+
+.aldine-top-0 {
+  top: 0;
+}
+
+.aldine-left-0 {
+  left: 0;
+}
+
+.aldine-inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.aldine-top-full {
+  top: 100%;
+}
+
+/* ── Z-Index ── */
+.aldine-z-nav {
+  z-index: var(--aldine-z-nav);
+}
+
+.aldine-z-overlay {
+  z-index: var(--aldine-z-overlay);
+}
+
+.aldine-z-base {
+  z-index: var(--aldine-z-base);
+}
+
+.aldine-z-hide {
+  z-index: var(--aldine-z-hide);
+}
+
+/* ── Sizing ── */
+.aldine-w-full {
+  width: 100%;
+}
+
+.aldine-screen {
+  min-height: 100vh;
+}
+
+.aldine-h-nav {
+  height: var(--aldine-h-nav);
+}
+
+.aldine-h-full {
+  height: 100%;
+}
+
+.aldine-h-content {
+  height: max-content;
+}
+
+.aldine-w-content {
+  width: max-content;
+}
+
+.aldine-measure {
+  max-width: var(--aldine-measure);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.aldine-measure-text {
+  max-width: 65ch;
+}
+
+.aldine-min-w-\[220px\] {
+  min-width: 220px;
+}
+
+.aldine-min-w-\[260px\] {
+  min-width: 260px;
+}
+
+/* ── Spacing - Margins ── */
+.aldine-mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.aldine-mt-auto {
+  margin-top: auto;
+}
+
+.aldine-mt-4 {
+  margin-top: 1rem;
+}
+
+.aldine-mt-12 {
+  margin-top: 3rem;
+}
+
+.aldine-mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.aldine-mb-4 {
+  margin-bottom: 1rem;
+}
+
+.aldine-mb-16 {
+  margin-bottom: 4rem;
+}
+
+/* ── Spacing - Padding ── */
+.aldine-p-6 {
+  padding: 1.5rem;
+}
+
+.aldine-px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.aldine-px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.aldine-py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.aldine-py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.aldine-pb-1 {
+  padding-bottom: 0.25rem;
+}
+
+/* ── Spacing - Gap ── */
+.aldine-gap-0 {
+  gap: 0;
+}
+
+.aldine-gap-1 {
+  gap: 0.25rem;
+}
+
+.aldine-gap-2 {
+  gap: 0.5rem;
+}
+
+.aldine-gap-4 {
+  gap: 1rem;
+}
+
+.aldine-gap-6 {
+  gap: 1.5rem;
+}
+
+.aldine-gap-8 {
+  gap: 2rem;
+}
+
+/* ── Typography - Size ── */
+.aldine-text-\[10px\] {
+  font-size: 10px;
+}
+
+.aldine-text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.aldine-text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.aldine-text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.aldine-text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.aldine-text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.aldine-text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.aldine-text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+.aldine-text-4xl {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+.aldine-text-5xl {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.aldine-text-6xl {
+  font-size: 3.75rem;
+  line-height: 1;
+}
+
+.aldine-text-7xl {
+  font-size: 4.5rem;
+  line-height: 1;
+}
+
+/* ── Typography - Weight ── */
+.aldine-font-light {
+  font-weight: 300;
+}
+
+.aldine-font-normal {
+  font-weight: 400;
+}
+
+.aldine-font-bold,
+.aldine-bold {
+  font-weight: 700;
+}
+
+.aldine-font-black,
+.aldine-black {
+  font-weight: 900;
+}
+
+/* ── Typography - Family ── */
+.aldine-font-display {
+  font-family: var(--font-cinzel), serif;
+}
+
+.aldine-font-editorial {
+  font-family: var(--font-eb-garamond), serif;
+}
+
+.aldine-font-interface {
+  font-family: var(--font-inter), sans-serif;
+}
+
+.aldine-font-mono {
+  font-family: var(--font-inter), monospace;
+}
+
+/* ── Typography - Styling ── */
+.aldine-italic {
+  font-style: italic;
+}
+
+.aldine-uppercase {
+  text-transform: uppercase;
+}
+
+.aldine-text-center {
+  text-align: center;
+}
+
+.aldine-tracking-tight {
+  letter-spacing: -0.025em;
+}
+
+.aldine-tracking-normal {
+  letter-spacing: 0em;
+}
+
+.aldine-tracking-wider {
+  letter-spacing: 0.05em;
+}
+
+.aldine-tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+.aldine-leading-snug {
+  line-height: 1.375;
+}
+
+.aldine-leading-relaxed {
+  line-height: 1.625;
+}
+
+/* ── Colors - Background ── */
+.aldine-bg-canvas {
+  background-color: var(--aldine-canvas);
+}
+
+.aldine-bg-bone {
+  background-color: var(--aldine-bone);
+}
+
+/* ── Colors - Text ── */
+.aldine-ink-base {
+  color: var(--aldine-ink);
+}
+
+.aldine-ink-muted {
+  color: var(--aldine-ink-muted);
+}
+
+.aldine-accent {
+  color: var(--aldine-terracotta);
+}
+
+/* ── Colors - Border ── */
+.aldine-border {
+  border-style: solid;
+  border-width: 0;
+}
+
+.aldine-border-a {
+  border-width: 1px;
+  border-color: var(--aldine-hairline);
+}
+
+.aldine-border-b {
+  border-bottom-width: 1px;
+  border-color: var(--aldine-hairline);
+}
+
+.aldine-border-accent {
+  border-color: var(--aldine-terracotta);
+}
+
+/* ── Opacity ── */
+.aldine-opacity-0 {
+  opacity: 0;
+}
+
+.aldine-opacity-20 {
+  opacity: 0.2;
+}
+
+.aldine-opacity-40 {
+  opacity: 0.4;
+}
+
+.aldine-opacity-50 {
+  opacity: 0.5;
+}
+
+.aldine-opacity-60 {
+  opacity: 0.6;
+}
+
+.aldine-opacity-90 {
+  opacity: 0.9;
+}
+
+.aldine-opacity-100 {
+  opacity: 1;
+}
+
+/* ── Effects & Interaction ── */
+.aldine-transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.aldine-duration-200 {
+  transition-duration: 200ms;
+}
+
+.aldine-pointer-events-none {
+  pointer-events: none;
+}
+
+.aldine-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+.aldine-overflow-hidden {
+  overflow: hidden;
+}
+
+.aldine-overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* aldine-glass */
+.aldine-glass {
+  background-color: rgba(250, 250, 249, 0.85);
+  /* canvas color but transparent */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--aldine-hairline);
+}
+
+[dataldine-theme="dark"] .aldine-glass {
+  background-color: rgba(28, 25, 23, 0.85);
+}
+
+/* Animations */
+.aldine-animate-in {
+  animation: aldine-fade-in 200ms ease-out forwards;
+}
+
+@keyframes aldine-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aldine-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes aldine-scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.aldine-animate-scale {
+  animation: aldine-scale-up 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.aldine-stagger-1 { animation-delay: 50ms; }
+.aldine-stagger-2 { animation-delay: 100ms; }
+.aldine-stagger-3 { animation-delay: 150ms; }
+.aldine-stagger-4 { animation-delay: 200ms; }
+.aldine-stagger-5 { animation-delay: 250ms; }
+
+/* Micro-interactions */
+.aldine-hover-expand {
+  transition: letter-spacing 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aldine-hover-expand:hover {
+  letter-spacing: 0.15em;
+}
+
+.aldine-hover-reveal-child .aldine-child {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aldine-hover-reveal-child:hover .aldine-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* aldine-nav-link specialized */
+.aldine-nav-link {
+  position: relative;
+  font-family: var(--font-inter);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--aldine-ink-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+  transition: color 200ms;
+}
+
+.aldine-nav-link:hover {
+  color: var(--aldine-terracotta);
+}
+
+.aldine-nav-link.aldine-active {
+  color: var(--aldine-ink);
+}
+
+.aldine-nav-link.aldine-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--aldine-terracotta);
+}
+
+/* aldine-group logic */
+.aldine-group:hover .group-hover\:aldine-opacity-100 {
+  opacity: 1;
+}
+
+.aldine-group:hover .group-hover\:aldine-pointer-events-auto {
+  pointer-events: auto;
+}
+
+.aldine-group:hover .group-hover\:aldine-accent {
+  color: var(--aldine-terracotta);
+}
+
+.aldine-group:hover .group-hover\:aldine-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+/* hover classes */
+.hover\:aldine-accent:hover {
+  color: var(--aldine-terracotta);
+}
+
+.hover\:aldine-bg-bone:hover {
+  background-color: var(--aldine-bone);
+}
+
+/* Masonry Layout */
+.aldine-masonry {
+  column-count: 1;
+  column-gap: 2rem;
+  width: 100%;
+}
+
+.aldine-masonry-item {
+  break-inside: avoid;
+  margin-bottom: 2rem;
+  width: 100%;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+/* ── RESPONSIVE MODIFIERS ── */
+@media (min-width: 768px) {
+  .md\:aldine-text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .md\:aldine-text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .md\:aldine-text-6xl {
+    font-size: 3.75rem;
+    line-height: 1;
+  }
+
+  .md\:aldine-text-7xl {
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+
+  .aldine-masonry {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:aldine-flex {
+    display: flex;
+  }
+
+  .lg\:aldine-flex-row {
+    flex-direction: row;
+  }
+
+  .lg\:aldine-hidden {
+    display: none;
+  }
+
+  .lg\:aldine-text-right {
+    text-align: right;
+  }
+
+  .aldine-masonry {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .aldine-masonry {
+    column-count: 4;
+  }
+}
+
+/* ── Legacy Specifics ── */
+.etruscan-chars {
+  font-size: 1.1em;
+  margin-right: 0.3rem;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+@keyframes brandGlow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(227, 66, 52, 0.2));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 12px rgba(227, 66, 52, 0.4));
+  }
+}
+
+.brand-glow {
+  animation: brandGlow 4s ease-in-out infinite;
+}
+
+img,
+figure,
+video {
+  filter: sepia(0.3) contrast(1.1) brightness(0.9);
+}
+
+.maplibregl-map {
+  font-family: var(--font-inter), sans-serif;
+}
+
+

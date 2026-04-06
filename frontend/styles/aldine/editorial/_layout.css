@@ -1,0 +1,65 @@
+/**
+ * Aldine DESIGN SYSTEM: Layout Core
+ * Macro structural components mapped to semantic HTML.
+ */
+
+.aldine-canvas {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--aldine-canvas);
+}
+
+.aldine-manuscript {
+  width: 100%;
+  max-width: var(--aldine-measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.aldine-split-pane {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .aldine-split-pane {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.aldine-apparatus-criticus {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+  border-top: 1px solid var(--aldine-hairline);
+  background-color: var(--aldine-bone);
+  padding: 1.5rem;
+}
+
+.aldine-masonry {
+  column-count: 1;
+  column-gap: 2rem;
+  width: 100%;
+}
+
+.aldine-masonry-item {
+  break-inside: avoid;
+  margin-bottom: 2rem;
+  width: 100%;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .aldine-masonry { column-count: 2; }
+}
+
+@media (min-width: 1024px) {
+  .aldine-masonry { column-count: 3; }
+}
+
+@media (min-width: 1280px) {
+  .aldine-masonry { column-count: 4; }
+}

@@ -1,0 +1,56 @@
+# ── Git metadata ────────────────────────────────────────────────────
+.git/
+.github/
+.gitignore
+
+# ── Python caches ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ────────────────────────────────────────────
+.venv/
+venv/
+
+# ── IDE ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ── Testing / Lint (Allowed for container tests) ─────────────────
+# No tests/ here anymore!
+.coverage
+htmlcov/
+.tox/
+.nox/
+.ruff_cache/
+
+# ── Scripts (Allowed for container tests) ───────────────────────
+# No scripts/ here anymore!
+
+# ── Data (Allowed for container tests) ─────────────────────────
+# No data/ here anymore!
+
+# ── Docker (avoid recursive context) ───────────────────────────────
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# ── Docs (not needed in the image; keep README.md for pyproject.toml)
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+goal.md
+
+# ── Secrets ─────────────────────────────────────────────────────────
+.env
+.env.*
+.env.example
+
+# ── Frontend (Next.js / Vercel) ──────────────────────────────────────
+frontend/
+node_modules/

@@ -1,0 +1,55 @@
+name: Deploy Backend to GCE
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'nginx.conf'
+      - 'pyproject.toml'
+      - 'data/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/19927826393/locations/global/workloadIdentityPools/github-actions/providers/github-provider'
+          service_account: 'gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com'
+
+      - name: 'Set up Cloud SDK'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: 'Execute Remote SSH Commands via IAP'
+        run: |
+          gcloud compute ssh openetruscan-eu \
+            --zone=europe-west4-a \
+            --project=long-facet-427508-j2 \
+            --tunnel-through-iap \
+            --quiet \
+            --ssh-flag="-o ServerAliveInterval=30" \
+            --ssh-flag="-o ServerAliveCountMax=120" \
+            --ssh-flag="-n" \
+            --command="
+              set -e
+              REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
+              if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
+              sudo bash -c \"cd \$REPO_DIR && git -c safe.directory='*' fetch --all && git -c safe.directory='*' reset --hard origin/main\"
+              sudo docker rm -f openetruscan-api-1 openetruscan-web-1 openetruscan-fuseki-1 openetruscan_api_1 openetruscan_web_1 openetruscan_fuseki_1 || true
+              sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --build
+              sudo docker image prune -f
+            "
+

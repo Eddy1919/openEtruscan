@@ -1,0 +1,208 @@
+# =============================================================================
+# OpenEtruscan — Oscan Alphabet Adapter
+# =============================================================================
+# Oscan: a Sabellic Italic language spoken in central-southern Italy.
+# ~400+ inscriptions known (Pompeii, Capua, Bantia, Pietrabbondante).
+# Uses Old Italic script with a distinct alphabet variant.
+# =============================================================================
+
+language_id: oscan
+display_name: Oscan
+iso_639_3: osc
+script: old_italic
+unicode_range: [0x10300, 0x1032F]
+direction: rtl
+
+# =============================================================================
+# ALPHABET
+# Oscan uses a variant of the Old Italic script.
+# Like Faliscan, it retains /o/, /b/, /d/, /g/.
+# Additionally has /í/ (long i) and /ú/ (long u) distinctions.
+# =============================================================================
+alphabet:
+  a:
+    unicode: "\U00010300"
+    ipa: "a"
+    variants: ["A", "a"]
+
+  b:
+    unicode: "\U00010301"
+    ipa: "b"
+    variants: ["B", "b"]
+    notes: "Voiced bilabial stop"
+
+  d:
+    unicode: "\U00010303"
+    ipa: "d"
+    variants: ["D", "d"]
+    notes: "Voiced dental stop"
+
+  e:
+    unicode: "\U00010304"
+    ipa: "e"
+    variants: ["E", "e"]
+
+  v:
+    unicode: "\U00010305"
+    ipa: "w"
+    variants: ["V", "v", "W", "w"]
+
+  z:
+    unicode: "\U00010306"
+    ipa: "ts"
+    variants: ["Z", "z"]
+    notes: "Voiceless affricate /ts/"
+
+  h:
+    unicode: "\U00010307"
+    ipa: "h"
+    variants: ["H", "h"]
+
+  i:
+    unicode: "\U00010309"
+    ipa: "i"
+    variants: ["I", "i"]
+
+  í:
+    unicode: "\U00010309"
+    ipa: "iː"
+    variants: ["Í", "í", "ii"]
+    notes: "Long /iː/ — sometimes written with double letter"
+
+  k:
+    unicode: "\U0001030A"
+    ipa: "k"
+    variants: ["K", "k", "C", "c"]
+    notes: "Oscan uses K predominantly (unlike Latin C)"
+
+  l:
+    unicode: "\U0001030B"
+    ipa: "l"
+    variants: ["L", "l"]
+
+  m:
+    unicode: "\U0001030C"
+    ipa: "m"
+    variants: ["M", "m"]
+
+  n:
+    unicode: "\U0001030D"
+    ipa: "n"
+    variants: ["N", "n"]
+
+  o:
+    unicode: "\U0001030F"
+    ipa: "o"
+    variants: ["O", "o"]
+    notes: "/o/ vowel"
+
+  p:
+    unicode: "\U00010310"
+    ipa: "p"
+    variants: ["P", "p"]
+
+  r:
+    unicode: "\U00010313"
+    ipa: "r"
+    variants: ["R", "r"]
+
+  s:
+    unicode: "\U00010314"
+    ipa: "s"
+    variants: ["S", "s"]
+
+  t:
+    unicode: "\U00010315"
+    ipa: "t"
+    variants: ["T", "t"]
+
+  u:
+    unicode: "\U00010316"
+    ipa: "u"
+    variants: ["U", "u"]
+
+  ú:
+    unicode: "\U00010316"
+    ipa: "uː"
+    variants: ["Ú", "ú", "uu"]
+    notes: "Long /uː/"
+
+  f:
+    unicode: "\U0001031A"
+    ipa: "f"
+    variants: ["F", "f"]
+
+  g:
+    unicode: "\U0001031B"
+    ipa: "g"
+    variants: ["G", "g"]
+    notes: "Voiced velar stop"
+
+# =============================================================================
+# EQUIVALENCE CLASSES
+# =============================================================================
+equivalence_classes:
+  long_i:
+    canonical: "í"
+    members: ["ii", "II", "Ii", "í", "Í"]
+  long_u:
+    canonical: "ú"
+    members: ["uu", "UU", "Uu", "ú", "Ú"]
+
+# =============================================================================
+# PHONOTACTICS
+# =============================================================================
+phonotactics:
+  forbidden_word_final: []
+  forbidden_clusters: []
+  max_consonant_cluster: 3
+  vowels: ["a", "e", "i", "o", "u", "í", "ú"]
+  notes: "Oscan has 7 vowel phonemes (5 short + 2 long). Has voiced stops."
+
+# =============================================================================
+# ONOMASTICS
+# Oscan naming: praenomen + gentilicium + patronymic (genitive)
+# =============================================================================
+onomastics:
+  formula_order:
+    - praenomen
+    - gentilicium
+    - patronymic
+
+  genitive_markers:
+    male: ["-eis", "-úís", "-uiis", "-is"]    # -uiis = pre-normalization form of -úís
+    female: ["-as", "-aís", "-ais"]            # -ais = pre-normalization form of -aís
+
+  gender_markers:
+    male_endings: ["-is", "-us"]
+    female_endings: ["-a", "-ia"]
+    female_gentilicium_suffix: ["-a", "-ia"]
+
+  known_praenomina:
+    male:
+      - vibis
+      - gavís
+      - stenis
+      - mais
+      - pakís
+      - niumsis
+      - bantins
+      - trebís
+      - heírennis
+      - dekis
+    female:
+      - kerría
+      - míínatia
+      - bíítia
+
+  known_gentilicia:
+    - tanginud
+    - vaamunim
+    - magiis
+    - trebatiis
+    - pomptiis
+    - stienis
+    - dekkiis
+    - bantins
+    - núvlanis
+    - aftiim

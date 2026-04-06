@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+# Copy specifically the needed files to be absolutely sure
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir hatchling pyyaml && \
+    pip install --no-cache-dir .[server] pytest pytest-asyncio httpx aiosqlite
+
+ENV PYTHONPATH=/app/src
+# Debug: list the app directory to confirm placement
+RUN ls -R /app
+
+CMD ["bash", "-c", "pytest tests/test_server.py tests/test_corpus.py && python scripts/ops/align_pleiades.py"]
