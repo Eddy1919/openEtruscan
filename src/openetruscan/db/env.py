@@ -2,9 +2,12 @@
 Alembic migration environment — handles schema synchronization for PostgreSQL.
 """
 from logging.config import fileConfig
+import asyncio
+import os
 
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
+from openetruscan.db.models import Base
 
 from alembic import context
 
@@ -19,7 +22,6 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from openetruscan.db.models import Base
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -28,9 +30,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 
-import asyncio
-import os
-from sqlalchemy.ext.asyncio import create_async_engine
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

@@ -1,4 +1,3 @@
-import os
 import glob
 mapping = {
     'adapter': 'core.adapter',
@@ -18,7 +17,7 @@ mapping = {
     'neural': 'ml.neural'
 }
 for f in glob.glob('tests/*.py'):
-    with open(f, 'r', encoding='utf-8') as file:
+    with open(f, encoding='utf-8') as file:
         content = file.read()
     for old, new in mapping.items():
         content = content.replace(f'from openetruscan.{old}', f'from openetruscan.{new}')

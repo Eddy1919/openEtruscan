@@ -30,7 +30,7 @@ jobs:
           pip install -e ".[server,postgres,prosopography]"
 
       - name: Export OpenAPI schema
-        run: python scripts/export_openapi.py
+        run: python scripts/data_pipeline/export_openapi.py
 
       - name: Check for changes
         id: git-check

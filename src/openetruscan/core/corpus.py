@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -633,7 +632,7 @@ class Corpus:
             f"ELSE NULL END)"
         )
         query = (
-            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "
+            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "  # nosec B608
             f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}, "
             f"geom = EXCLUDED.geom, updated_at = NOW()"
         )
@@ -664,9 +663,6 @@ class Corpus:
         """Explicitly commit the current transaction."""
         self._conn.commit()
 
-    def close(self) -> None:
-        """Close the database connection."""
-        self._conn.close()
 
     def _build_search_query(
         self,
@@ -722,7 +718,7 @@ class Corpus:
             conditions.append("findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL")
 
         where_clause = " AND ".join(conditions) if conditions else "1=1"
-        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"
+        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"  # nosec B608
 
         # Valid sort columns mapping
         valid_sorts = {
@@ -733,7 +729,7 @@ class Corpus:
         }
         order_by = valid_sorts.get(sort_by, "id ASC")
 
-        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"
+        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"  # nosec B608
         filter_params = list(params)
         query_params = list(params) + [limit, offset]
         return query, count_query, query_params, filter_params
@@ -796,38 +792,6 @@ class Corpus:
         self._conn.commit()
         return updated
 
-    def semantic_search(
-        self,
-        query_embedding: list[float],
-        field: str = "emb_text",
-        limit: int = 20,
-    ) -> SearchResults:
-        """Search the corpus semantically using a query vector."""
-        if field not in ("emb_text", "emb_context", "emb_combined"):
-            raise ValueError("Invalid target column for semantic search")
-            
-        import psycopg2.extras
-        
-        # We query the distance to the halfvec casted column so the index is hit.
-        query = f"""
-            SELECT *, ({field} <=> %s::vector) AS distance 
-            FROM inscriptions 
-            WHERE {field} IS NOT NULL 
-            ORDER BY ({field}::halfvec(3072)) <=> %s::halfvec(3072)
-            LIMIT %s
-        """
-        
-        vector_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
-        
-        with self._conn.cursor(
-            cursor_factory=psycopg2.extras.RealDictCursor,
-        ) as cur:
-            cur.execute(query, (vector_str, vector_str, limit))
-            rows = cur.fetchall()
-            inscriptions = [_dict_to_inscription(row) for row in rows]
-            # Since this is a k-NN search, 'total' doesn't exactly mean total corpus count, 
-            # we just return the limit matching features.
-        return SearchResults(inscriptions=inscriptions, total=len(inscriptions))
 
     def search_radius(
         self,

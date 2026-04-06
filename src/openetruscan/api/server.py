@@ -8,10 +8,9 @@ Run locally:
 
 import logging
 import re
-import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -777,7 +776,7 @@ async def get_genetic_matches(
         Query(ge=1, le=20),
     ] = 5,
     session: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Spatio-temporal matchmaking between inscriptions and archaeogenetic samples."""
     repo = InscriptionRepository(session)
     matches = await repo.get_genetic_matches(inscription_id=id, limit=limit)
@@ -793,7 +792,7 @@ async def search_by_clan(
         Path(description="Gentilicium (clan name) to search for"),
     ],
     session: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Prosopographical network search by clan/gens."""
 
     # Validate gens - allow letters, spaces, and hyphens
@@ -814,7 +813,7 @@ async def search_by_clan(
 
 
 @app.get("/stats", response_model=StatsResponse, tags=["Statistics"])
-async def corpus_stats(session: AsyncSession = Depends(get_session)):
+async def corpus_stats(session: AsyncSession = Depends(get_session)) -> Any:
     """Get corpus counts."""
     repo = InscriptionRepository(session)
     count = await repo.count()
@@ -849,7 +848,7 @@ async def frequency_analysis(
         Query(description="Language adapter to use", max_length=50),
     ] = "etruscan",
     session: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Letter frequency analysis, optionally comparing two sites (chi² test)."""
     from openetruscan.core.statistics import (
         compare_frequencies,
@@ -861,7 +860,7 @@ async def frequency_analysis(
     texts_a = [r["canonical"] for r in rows_a if r["canonical"]]
     freq_a = letter_frequencies(texts_a, language=language)
 
-    response: dict = {"primary": freq_a.to_dict(), "label_a": findspot or "All sites"}
+    response: dict[str, Any] = {"primary": freq_a.to_dict(), "label_a": findspot or "All sites"}
 
     if findspot_b:
         rows_b = await repo.get_all_canonical_texts(findspot=findspot_b)
@@ -888,7 +887,7 @@ async def dialect_clusters(
         Query(description="Language adapter", max_length=50),
     ] = "etruscan",
     session: AsyncSession = Depends(get_session),
-):
+) -> Any:
     """Dialect clustering via Ward's hierarchical method with cosine distance."""
     from openetruscan.core.statistics import cluster_sites_from_texts
 
@@ -910,7 +909,7 @@ async def date_estimate(
         str,
         Query(description="Language adapter", max_length=50),
     ] = "etruscan",
-):
+) -> Any:
     """Estimate chronological period from orthographic features."""
     from openetruscan.core.statistics import estimate_date
 
@@ -919,7 +918,7 @@ async def date_estimate(
 
 
 @app.get("/pelagios.jsonld", tags=["Linked Data"])
-async def pelagios_feed(session: AsyncSession = Depends(get_session)):
+async def pelagios_feed(session: AsyncSession = Depends(get_session)) -> Any:
     """Pelagios-compatible JSON-LD feed for Linked Open Data."""
     from fastapi.responses import Response
     from openetruscan.api.lod import corpus_to_pelagios_jsonld
@@ -934,7 +933,7 @@ async def pelagios_feed(session: AsyncSession = Depends(get_session)):
 
 
 @app.get("/pleiades-stats", tags=["Linked Data"])
-async def pleiades_coverage(session: AsyncSession = Depends(get_session)):
+async def pleiades_coverage(session: AsyncSession = Depends(get_session)) -> Any:
     """Pleiades coverage statistics."""
     repo = InscriptionRepository(session)
     summary = await repo.get_stats_summary()

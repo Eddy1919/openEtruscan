@@ -8,7 +8,6 @@ from openetruscan.core.statistics import (
     ComparisonResult,
     FrequencyResult,
     bayesian_date,
-    cluster_sites_from_texts,
     compare_frequencies,
     estimate_date,
     letter_frequencies,

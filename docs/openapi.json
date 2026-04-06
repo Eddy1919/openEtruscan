@@ -390,6 +390,88 @@
         }
       }
     },
+    "/inscription/{inscription_id}/concordance": {
+      "get": {
+        "tags": [
+          "Research"
+        ],
+        "summary": "Get Inscription Concordance",
+        "description": "Fetch all related inscriptions that share identifiers (TM, EDR, Pleiades) \nwith the target record. Defines the physical concordance cluster.",
+        "operationId": "get_inscription_concordance_inscription__inscription_id__concordance_get",
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscription/{inscription_id}/names-network": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Get Inscription Names Network",
+        "description": "Fetch a graph representation (nodes/edges) of entities and relationships \nassociated with this inscription.",
+        "operationId": "get_inscription_names_network_inscription__inscription_id__names_network_get",
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inscriptions": {
       "post": {
         "tags": [
@@ -476,7 +558,7 @@
           "Statistics"
         ],
         "summary": "Stats Summary",
-        "description": "Pre-computed corpus statistics for dashboard display.",
+        "description": "Full corpus statistics for dashboard display.",
         "operationId": "stats_summary_stats_summary_get",
         "responses": {
           "200": {
@@ -516,7 +598,7 @@
           "Search"
         ],
         "summary": "Concordance Search",
-        "description": "Server-side KWIC (Key Word In Context) concordance search offloaded to PostgreSQL.",
+        "description": "Server-side KWIC (Key Word In Context) concordance search.",
         "operationId": "concordance_search_concordance_get",
         "parameters": [
           {
@@ -589,7 +671,7 @@
           "Prosopography"
         ],
         "summary": "Names Network",
-        "description": "Name co-occurrence network for prosopographic analysis.",
+        "description": "Prosopographic co-occurrence network endpoint.\nFetches frequent name relationships from the database and returns a node/edge graph.",
         "operationId": "names_network_names_network_get",
         "parameters": [
           {
@@ -721,7 +803,7 @@
           "Search"
         ],
         "summary": "Get Vector Tiles",
-        "description": "Serve PostGIS dynamic vector tiles bounding the dataset.",
+        "description": "Serve PostGIS dynamic vector tiles (MVT).\nDelegates tile generation to the database repository.",
         "operationId": "get_vector_tiles_tiles__z___x___y__pbf_get",
         "parameters": [
           {
@@ -780,7 +862,7 @@
           "Search"
         ],
         "summary": "Semantic Search",
-        "description": "Semantic pgvector search using Gemini text-embedding-004.",
+        "description": "Perform semantic vector search using Gemini text-embedding-004.\nMatches embeddings in pgvector against the provided query string.",
         "operationId": "semantic_search_semantic_search_get",
         "parameters": [
           {
@@ -1459,7 +1541,8 @@
           "language",
           "classification"
         ],
-        "title": "InscriptionModel"
+        "title": "InscriptionModel",
+        "description": "Data model representing a single Etruscan inscription for API output."
       },
       "RestoreRequest": {
         "properties": {
@@ -1477,7 +1560,8 @@
         "required": [
           "text"
         ],
-        "title": "RestoreRequest"
+        "title": "RestoreRequest",
+        "description": "Pydantic model for neural lacunae restoration requests."
       },
       "SearchResponse": {
         "properties": {
@@ -1503,7 +1587,8 @@
           "count",
           "results"
         ],
-        "title": "SearchResponse"
+        "title": "SearchResponse",
+        "description": "Response model for paginated search results."
       },
       "StatsResponse": {
         "properties": {
@@ -1516,7 +1601,8 @@
         "required": [
           "total_inscriptions"
         ],
-        "title": "StatsResponse"
+        "title": "StatsResponse",
+        "description": "Response model for corpus-wide statistical aggregations."
       },
       "ValidationError": {
         "properties": {

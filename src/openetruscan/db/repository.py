@@ -5,12 +5,12 @@ Encapsulates all PostgreSQL queries for inscriptions, entities, spatial search,
 and prosopographical network analysis via AsyncSession.
 """
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any
 from sqlalchemy import select, func, and_, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from openetruscan.db.models import Inscription, Entity, Clan, Relationship, GeneticSample
+from openetruscan.db.models import Inscription, Entity, Clan, Relationship
 from openetruscan.core.corpus import Inscription as InscriptionData, SearchResults
 
 class InscriptionRepository:
@@ -22,7 +22,7 @@ class InscriptionRepository:
         """Initialize the repository with an active asynchronous database session."""
         self.session = session
 
-    async def get_by_id(self, inscription_id: str) -> Optional[Inscription]:
+    async def get_by_id(self, inscription_id: str) -> Inscription | None:
         """Fetch a single inscription by its unique primary key ID."""
         stmt = select(Inscription).where(Inscription.id == inscription_id)
         result = await self.session.execute(stmt)
@@ -48,10 +48,10 @@ class InscriptionRepository:
 
     async def search(
         self,
-        text_query: Optional[str] = None,
-        findspot: Optional[str] = None,
-        language: Optional[str] = None,
-        classification: Optional[str] = None,
+        text_query: str | None = None,
+        findspot: str | None = None,
+        language: str | None = None,
+        classification: str | None = None,
         limit: int = 100,
         offset: int = 0,
         sort_by: str = "id",
@@ -83,7 +83,7 @@ class InscriptionRepository:
             conditions.append(and_(Inscription.findspot_lat.is_not(None), Inscription.findspot_lon.is_not(None)))
 
         # Ordering
-        order_col = Inscription.id
+        order_col: Any = Inscription.id
         if sort_by == "date":
             order_col = Inscription.date_approx
         elif sort_by == "-date":
@@ -168,7 +168,7 @@ class InscriptionRepository:
             SELECT id FROM inscriptions 
             ORDER BY ({field}::halfvec(3072)) <=> (:emb::halfvec(3072))
             LIMIT :limit
-        """).bindparams(emb=query_embedding, limit=limit)
+        """).bindparams(emb=query_embedding, limit=limit)  # nosec B608
 
         result = await self.session.execute(query)
         ids = [row[0] for row in result.fetchall()]
@@ -282,10 +282,14 @@ class InscriptionRepository:
 
         # Extract non-null external identifiers
         shared_ids = []
-        if source.trismegistos_id: shared_ids.append(source.trismegistos_id)
-        if source.eagle_id: shared_ids.append(source.eagle_id)
-        if source.pleiades_id: shared_ids.append(source.pleiades_id)
-        if source.geonames_id: shared_ids.append(source.geonames_id)
+        if source.trismegistos_id: 
+            shared_ids.append(source.trismegistos_id)
+        if source.eagle_id: 
+            shared_ids.append(source.eagle_id)
+        if source.pleiades_id: 
+            shared_ids.append(source.pleiades_id)
+        if source.geonames_id: 
+            shared_ids.append(source.geonames_id)
         
         if not shared_ids:
             return [source]
@@ -349,7 +353,7 @@ class InscriptionRepository:
                     nodes[person.id] = {"id": person.id, "label": person.name, "type": "person"}
             
             if rel.clan:
-                if rel.clan_id not in nodes:
+                if rel.clan_id and rel.clan_id not in nodes:
                     nodes[rel.clan_id] = {"id": rel.clan_id, "label": rel.clan.name, "type": "clan"}
                 
                 if rel.person_id:
@@ -456,7 +460,7 @@ class InscriptionRepository:
         # 2. Identify Edges (People belong to clans via relationships)
         # For simplicity, we just return the clan-person connections mapped to nodes
         # In a real graph, we'd iterate over entities too.
-        edges = []
+        edges: list[dict[str, str]] = []
         
         return {
             "nodes": list(nodes.values()),
@@ -507,7 +511,7 @@ class InscriptionRepository:
 
     async def get_all_canonical_texts(
         self,
-        findspot: Optional[str] = None,
+        findspot: str | None = None,
         limit: int = 10000,
     ) -> list[dict[str, str]]:
         """Fetch canonical texts for statistical analysis (frequency, clustering)."""
@@ -523,7 +527,7 @@ class InscriptionRepository:
         result = await self.session.execute(stmt)
         return [{"id": r[0], "canonical": r[1], "findspot": r[2]} for r in result.fetchall()]
 
-    async def get_mvt_tiles(self, z: int, x: int, y: int) -> Optional[bytes]:
+    async def get_mvt_tiles(self, z: int, x: int, y: int) -> bytes | None:
         """
         Produce a Mapbox Vector Tile (MVT) for the given tile coordinates using PostGIS.
         """
