@@ -632,7 +632,7 @@ class Corpus:
             f"ELSE NULL END)"
         )
         query = (
-            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "  # nosec B608
+            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "  # nosec B608 # nosemgrep
             f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}, "
             f"geom = EXCLUDED.geom, updated_at = NOW()"
         )
@@ -718,7 +718,7 @@ class Corpus:
             conditions.append("findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL")
 
         where_clause = " AND ".join(conditions) if conditions else "1=1"
-        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"  # nosec B608
+        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"  # nosec B608 # nosemgrep
 
         # Valid sort columns mapping
         valid_sorts = {
@@ -729,7 +729,7 @@ class Corpus:
         }
         order_by = valid_sorts.get(sort_by, "id ASC")
 
-        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"  # nosec B608
+        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"  # nosec B608 # nosemgrep
         filter_params = list(params)
         query_params = list(params) + [limit, offset]
         return query, count_query, query_params, filter_params

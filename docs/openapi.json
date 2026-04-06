@@ -965,7 +965,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Genetic Matches Inscriptions  Id  Genetics Get"
+                }
               }
             }
           },
@@ -1151,7 +1153,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Frequency Analysis Stats Frequency Get"
+                }
               }
             }
           },
@@ -1210,7 +1214,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Dialect Clusters Stats Clusters Get"
+                }
               }
             }
           },
@@ -1267,7 +1273,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Date Estimate Stats Date Estimate Get"
+                }
               }
             }
           },
@@ -1297,7 +1305,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Pelagios Feed Pelagios Jsonld Get"
+                }
               }
             }
           }
@@ -1317,7 +1327,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Pleiades Coverage Pleiades Stats Get"
+                }
               }
             }
           }

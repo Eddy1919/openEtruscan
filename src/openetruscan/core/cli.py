@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -150,7 +151,7 @@ def list_adapters() -> None:
 # =========================================================================
 
 
-from typing import Any
+
 
 def _get_corpus(db: str | None = None) -> Any:
     """Get a corpus connection using DATABASE_URL or --db flag."""

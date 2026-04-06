@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[server,postgres,prosopography]"
+          pip install -e ".[server,prosopography]"
 
       - name: Export OpenAPI schema
         run: python scripts/data_pipeline/export_openapi.py

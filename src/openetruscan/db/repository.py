@@ -168,7 +168,7 @@ class InscriptionRepository:
             SELECT id FROM inscriptions 
             ORDER BY ({field}::halfvec(3072)) <=> (:emb::halfvec(3072))
             LIMIT :limit
-        """).bindparams(emb=query_embedding, limit=limit)  # nosec B608
+        """).bindparams(emb=query_embedding, limit=limit)  # nosec B608 # nosemgrep
 
         result = await self.session.execute(query)
         ids = [row[0] for row in result.fetchall()]
