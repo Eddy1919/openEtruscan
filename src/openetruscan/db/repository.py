@@ -157,18 +157,30 @@ class InscriptionRepository:
         Vector search using pgvector halfvec_cosine_ops.
         """
         # Field validation
-        valid_fields = ["emb_text", "emb_context", "emb_combined"]
-        if field not in valid_fields:
+        queries = {
+            "emb_text": """
+            SELECT id FROM inscriptions 
+            ORDER BY (emb_text::halfvec(3072)) <=> (:emb::halfvec(3072))
+            LIMIT :limit
+        """,
+            "emb_context": """
+            SELECT id FROM inscriptions 
+            ORDER BY (emb_context::halfvec(3072)) <=> (:emb::halfvec(3072))
+            LIMIT :limit
+        """,
+            "emb_combined": """
+            SELECT id FROM inscriptions 
+            ORDER BY (emb_combined::halfvec(3072)) <=> (:emb::halfvec(3072))
+            LIMIT :limit
+        """
+        }
+        if field not in queries:
             raise ValueError(f"Invalid vector field: {field}")
 
         # Construct raw SQL for pgvector because SQLAlchemy pgvector extension might not be 
         # fully setup for 'halfvec' shorthand in this env.
         # halfvec is a performance optimization for text-embedding-004
-        query = text(f"""
-            SELECT id FROM inscriptions 
-            ORDER BY ({field}::halfvec(3072)) <=> (:emb::halfvec(3072))
-            LIMIT :limit
-        """).bindparams(emb=query_embedding, limit=limit)  # nosec B608 # nosemgrep
+        query = text(queries[field]).bindparams(emb=query_embedding, limit=limit)
 
         result = await self.session.execute(query)
         ids = [row[0] for row in result.fetchall()]
