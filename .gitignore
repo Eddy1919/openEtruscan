@@ -58,7 +58,7 @@ nginx.dev.conf
 # ML model artifacts
 data/models/
 *.pkl
-*.joblibdata/cie/*.pdf
+*.joblib
 data/cie/*.pdf
 data/cie/pages/
 data/cie/progress.json

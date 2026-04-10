@@ -946,5 +946,214 @@ async def pleiades_coverage(session: AsyncSession = Depends(get_session)) -> Any
     }
 
 
-# Static file serving removed — frontend is deployed on GitHub Pages.
-# API-only server: all routes are under /search, /radius, /stats, etc.
+    # Static file serving removed — frontend is deployed on GitHub Pages.
+    # API-only server: all routes are under /search, /radius, /stats, etc.
+
+
+# ── Newly Exponentiated Endpoints ──────────────────────────────────────────
+
+@app.get("/export/epidoc", tags=["Export"])
+@limiter.limit("5/minute")
+async def export_epidoc_bulk(request: Request, session: AsyncSession = Depends(get_session)):
+    """Stream the entire corpus as a multi-document EpiDoc XML response."""
+    from fastapi.responses import StreamingResponse
+    from openetruscan.core.epidoc import inscription_to_epidoc
+    
+    repo = InscriptionRepository(session)
+    
+    async def _xml_generator():
+        yield '<?xml version="1.0" encoding="UTF-8"?>\n'
+        yield '<TEI xmlns="http://www.tei-c.org/ns/1.0">\n'
+        yield "<text><body>\n"
+        
+        offset = 0
+        batch_size = 200
+        while True:
+            # We must use await since repo.search is async
+            results = await repo.search(limit=batch_size, offset=offset)
+            if not results.inscriptions:
+                break
+            for insc in results.inscriptions:
+                # We yield the inner <TEI> as part of a collection, but simplified.
+                fragment = inscription_to_epidoc(insc)
+                # Strip XML decl and TEI wrap for the bulk stream (simplified wrapping)
+                fragment = fragment.replace('<?xml version="1.0" encoding="UTF-8"?>\n', "")
+                yield fragment + "\n"
+            offset += batch_size
+            
+        yield "</body></text></TEI>\n"
+
+    return StreamingResponse(_xml_generator(), media_type="application/tei+xml")
+
+
+@app.get("/inscriptions/{inscription_id}/validate", tags=["Corpus"])
+@limiter.limit("30/minute")
+async def validate_inscription_flags(
+    request: Request,
+    inscription_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Auto-detect potential issues (OCR, out-of-range, etc) in an inscription."""
+    from openetruscan.core.corpus import auto_flag_inscription
+    repo = InscriptionRepository(session)
+    
+    model = await repo.get_by_id(inscription_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+        
+    insc_data = repo._to_dataclass(model)
+    flags = auto_flag_inscription(insc_data)
+    
+    return {"id": inscription_id, "flags": flags, "is_valid": len(flags) == 0}
+
+
+@app.get("/stats/bayesian-date", tags=["Statistics"])
+@limiter.limit("30/minute")
+async def bayesian_date_estimate(
+    request: Request,
+    text: Annotated[
+        str,
+        Query(description="Inscription text to date probabilistically", max_length=MAX_TEXT_LEN),
+    ],
+    language: Annotated[
+        str,
+        Query(description="Language adapter", max_length=50),
+    ] = "etruscan",
+):
+    """Estimate inscription date using Bayesian inference over time bins."""
+    from openetruscan.core.statistics import bayesian_date
+    result = bayesian_date(text, language=language)
+    return result.to_dict()
+
+
+_FAMILY_GRAPH_CACHE = None
+
+async def _get_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
+    """Returns a cached FamilyGraph, building it once upon first request."""
+    global _FAMILY_GRAPH_CACHE
+    if _FAMILY_GRAPH_CACHE is None:
+        _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
+    return _FAMILY_GRAPH_CACHE
+
+
+async def _build_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
+    """Async wrapper to build the FamilyGraph from the Async InscriptionRepository."""
+    from openetruscan.core.prosopography import FamilyGraph, Person, parse_name
+    from openetruscan.core.adapter import load_adapter
+
+    graph = FamilyGraph()
+    person_id = 0
+    batch_size = 500
+    offset = 0
+    adapter = load_adapter(language)
+
+    while True:
+        results = await repo.search(limit=batch_size, offset=offset)
+        if not results.inscriptions:
+            break
+
+        for inscription in results.inscriptions:
+            if not inscription.canonical.strip():
+                continue
+
+            formula = parse_name(inscription.canonical, language=language, adapter=adapter)
+            person = Person(
+                id=f"P{person_id:05d}",
+                name_formula=formula,
+                inscription_ids=[inscription.id],
+                findspots=[inscription.findspot] if inscription.findspot else [],
+            )
+            graph.add_person(person)
+            person_id += 1
+
+        offset += batch_size
+
+    return graph
+
+
+@app.get("/prosopography/export", tags=["Prosopography"])
+@limiter.limit("5/minute")
+async def export_prosopography(
+    request: Request,
+    fmt: Annotated[
+        str,
+        Query(description="Export format: json, graphml, csv, neo4j"),
+    ] = "json",
+    session: AsyncSession = Depends(get_session)
+):
+    """Export the entire prosopographical FamilyGraph."""
+    from fastapi.responses import Response
+    
+    repo = InscriptionRepository(session)
+    graph = await _get_family_graph(repo)
+    
+    try:
+        content = graph.export(fmt=fmt)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    media_types = {
+        "json": "application/json",
+        "csv": "text/csv",
+        "graphml": "application/xml",
+        "neo4j": "text/plain"
+    }
+    
+    return Response(content=content, media_type=media_types.get(fmt, "text/plain"))
+
+
+@app.get("/prosopography/persons/search", tags=["Prosopography"])
+@limiter.limit("30/minute")
+async def search_prosopography_persons(
+    request: Request,
+    gens: str | None = None,
+    praenomen: str | None = None,
+    gender: str | None = None,
+    session: AsyncSession = Depends(get_session)
+):
+    """Search for specific named persons in the prosopographical network."""
+    repo = InscriptionRepository(session)
+    graph = await _get_family_graph(repo)
+    
+    persons = graph.search_persons(gens=gens, praenomen=praenomen, gender=gender)
+    
+    # Manually serialize persons since the method returns Person objects directly
+    return [
+        {
+            "id": p.id,
+            "name": p.name_formula.canonical,
+            "gender": p.gender,
+            "praenomen": p.praenomen,
+            "gentilicium": p.gentilicium,
+            "patronymic": p.name_formula.patronymic(),
+            "findspots": p.findspots,
+            "inscription_ids": p.inscription_ids
+        }
+        for p in persons
+    ]
+
+
+@app.get("/prosopography/clans/{gens}/related", tags=["Prosopography"])
+@limiter.limit("30/minute")
+async def related_clans(
+    request: Request,
+    gens: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """Find clans strictly related to the target clan via co-occurrence."""
+    repo = InscriptionRepository(session)
+    graph = await _get_family_graph(repo)
+    
+    related = graph.related_clans(gens)
+    return {"clan": gens, "related_clans": related}
+
+
+@app.get("/admin/validate-pleiades", tags=["Admin"])
+@limiter.limit("10/minute")
+async def admin_validate_pleiades(
+    request: Request,
+    session: AsyncSession = Depends(get_session)
+):
+    """Administrative audit endpoint for Pleiades identifier alignments."""
+    repo = InscriptionRepository(session)
+    return await repo.validate_pleiades_ids()

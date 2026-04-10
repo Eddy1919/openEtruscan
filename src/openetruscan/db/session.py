@@ -17,6 +17,8 @@ def get_engine():
     if _engine is None:
         # We use the DATABASE_URL from settings, but replace postgresql with postgresql+asyncpg
         db_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
+        if db_url.startswith("sqlite://"):
+            db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://")
         
         _engine = create_async_engine(
             db_url,
