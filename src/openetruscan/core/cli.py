@@ -151,8 +151,6 @@ def list_adapters() -> None:
 # =========================================================================
 
 
-
-
 def _get_corpus(db: str | None = None) -> Any:
     """Get a corpus connection using DATABASE_URL or --db flag."""
     from openetruscan.core.corpus import Corpus

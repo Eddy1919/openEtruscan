@@ -28,6 +28,7 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 engine = create_async_engine(TEST_DATABASE_URL)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
+
 @pytest.fixture(scope="session", autouse=True)
 async def setup_test_db():
     async with engine.begin() as conn:
@@ -36,10 +37,12 @@ async def setup_test_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+
 @pytest.fixture
 async def db_session():
     async with async_session() as session:
         yield session
+
 
 @pytest.fixture
 async def client(db_session: AsyncSession):
@@ -51,13 +54,41 @@ async def client(db_session: AsyncSession):
         yield ac
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
 async def sample_data(db_session: AsyncSession):
     repo = InscriptionRepository(db_session)
     test_data = [
-        InscriptionData(id="ETR_001", raw_text="LARTHAL", canonical="larθal", findspot="Cerveteri", findspot_lat=42.0, findspot_lon=12.0, language="etruscan", classification="funerary"),
-        InscriptionData(id="ETR_002", raw_text="ARNTH", canonical="arnθ", findspot="Tarquinia", findspot_lat=42.5, findspot_lon=11.5, language="etruscan", classification="funerary"),
-        InscriptionData(id="ETR_003", raw_text="TEST", canonical="test", findspot="Rome", findspot_lat=41.9, findspot_lon=12.5, language="latin", classification="legal"),
+        InscriptionData(
+            id="ETR_001",
+            raw_text="LARTHAL",
+            canonical="larθal",
+            findspot="Cerveteri",
+            findspot_lat=42.0,
+            findspot_lon=12.0,
+            language="etruscan",
+            classification="funerary",
+        ),
+        InscriptionData(
+            id="ETR_002",
+            raw_text="ARNTH",
+            canonical="arnθ",
+            findspot="Tarquinia",
+            findspot_lat=42.5,
+            findspot_lon=11.5,
+            language="etruscan",
+            classification="funerary",
+        ),
+        InscriptionData(
+            id="ETR_003",
+            raw_text="TEST",
+            canonical="test",
+            findspot="Rome",
+            findspot_lat=41.9,
+            findspot_lon=12.5,
+            language="latin",
+            classification="legal",
+        ),
     ]
     for item in test_data:
         await repo.add(item)
@@ -69,10 +100,12 @@ async def sample_data(db_session: AsyncSession):
 # Health Endpoints
 # ============================================================================
 
+
 async def test_health_status_code(client: AsyncClient, sample_data):
     """Test /health returns 200."""
     response = await client.get("/health")
     assert response.status_code == 200
+
 
 async def test_health_response_structure(client: AsyncClient, sample_data):
     """Test /health returns correct structure."""
@@ -80,6 +113,7 @@ async def test_health_response_structure(client: AsyncClient, sample_data):
     data = response.json()
     required = ["status", "version", "uptime_seconds", "corpus_loaded", "timestamp"]
     assert all(k in data for k in required)
+
 
 async def test_health_status_healthy(client: AsyncClient, sample_data):
     """Test /health returns healthy with loaded corpus."""
@@ -93,6 +127,7 @@ async def test_health_status_healthy(client: AsyncClient, sample_data):
 # Search Endpoints
 # ============================================================================
 
+
 async def test_search_basic(client: AsyncClient, sample_data):
     """Test basic search without parameters."""
     response = await client.get("/search")
@@ -101,11 +136,13 @@ async def test_search_basic(client: AsyncClient, sample_data):
     assert data["total"] >= 3
     assert data["count"] >= 3
 
+
 async def test_search_with_findspot_filter(client: AsyncClient, sample_data):
     """Test search with findspot filter."""
     response = await client.get("/search?findspot=Cerveteri")
     assert response.status_code == 200
     assert response.json()["count"] >= 1
+
 
 async def test_search_with_language_filter(client: AsyncClient, sample_data):
     """Test search with language filter."""
@@ -113,11 +150,13 @@ async def test_search_with_language_filter(client: AsyncClient, sample_data):
     assert response.status_code == 200
     assert response.json()["count"] >= 1
 
+
 async def test_search_with_classification_filter(client: AsyncClient, sample_data):
     """Test search with classification filter."""
     response = await client.get("/search?classification=funerary")
     assert response.status_code == 200
     assert response.json()["count"] >= 2
+
 
 async def test_search_pagination_limit(client: AsyncClient, sample_data):
     """Test search with limit parameter."""
@@ -125,10 +164,12 @@ async def test_search_pagination_limit(client: AsyncClient, sample_data):
     assert response.status_code == 200
     assert response.json()["count"] == 2
 
+
 async def test_search_validation_error(client: AsyncClient, sample_data):
     """Test search with invalid limit returns 422."""
     response = await client.get("/search?limit=invalid")
     assert response.status_code == 422
+
 
 @pytest.mark.skip(reason="Requires PostgreSQL and PostGIS")
 async def test_radius_search_basic(client: AsyncClient, sample_data):
@@ -144,21 +185,25 @@ async def test_radius_search_basic(client: AsyncClient, sample_data):
 # Stats Endpoints
 # ============================================================================
 
+
 async def test_stats_basic(client: AsyncClient, sample_data):
     """Test /stats returns count."""
     response = await client.get("/stats")
     assert response.status_code == 200
     assert response.json()["total_inscriptions"] >= 3
 
+
 async def test_stats_frequency_basic(client: AsyncClient, sample_data):
     """Test /stats/frequency (placeholder in current repo)."""
     response = await client.get("/stats/frequency")
     assert response.status_code == 200
 
+
 async def test_stats_clusters_validation(client: AsyncClient, sample_data):
     """Test /stats/clusters validation."""
     response = await client.get("/stats/clusters?min_inscriptions=1")
     assert response.status_code == 422
+
 
 async def test_stats_date_estimate_basic(client: AsyncClient, sample_data):
     """Test /stats/date-estimate."""
@@ -171,6 +216,7 @@ async def test_stats_date_estimate_basic(client: AsyncClient, sample_data):
 # CORS and Security Headers
 # ============================================================================
 
+
 async def test_security_headers_present(client: AsyncClient, sample_data):
     """Test security headers present."""
     response = await client.get("/health")
@@ -178,10 +224,12 @@ async def test_security_headers_present(client: AsyncClient, sample_data):
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["X-XSS-Protection"] == "1; mode=block"
 
+
 async def test_cors_headers(client: AsyncClient, sample_data):
     """Test CORS headers present."""
     response = await client.get("/health", headers={"Origin": "http://localhost:3000"})
     assert "access-control-allow-origin" in response.headers
+
 
 async def test_cors_preflight(client: AsyncClient, sample_data):
     """Test CORS preflight request."""
@@ -199,10 +247,12 @@ async def test_cors_preflight(client: AsyncClient, sample_data):
 # Error Handling
 # ============================================================================
 
+
 async def test_404_not_found(client: AsyncClient, sample_data):
     """Test 404 for non-existent endpoints."""
     response = await client.get("/nonexistent")
     assert response.status_code == 404
+
 
 async def test_method_not_allowed(client: AsyncClient, sample_data):
     """Test POST to GET-only endpoint."""

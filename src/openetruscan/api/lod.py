@@ -198,7 +198,7 @@ def corpus_to_pelagios_jsonld(
     Returns:
         JSON-LD string with all annotations.
     """
-    inscriptions = getattr(search_results, 'inscriptions', search_results)
+    inscriptions = getattr(search_results, "inscriptions", search_results)
 
     annotations = []
     for inscription in inscriptions:
@@ -226,7 +226,7 @@ def pleiades_stats(search_results) -> dict[str, int]:
 
     Returns a dict of {pleiades_uri: count}.
     """
-    inscriptions = getattr(search_results, 'inscriptions', search_results)
+    inscriptions = getattr(search_results, "inscriptions", search_results)
     stats: dict[str, int] = {}
     for inscription in inscriptions:
         if inscription.findspot:
@@ -244,7 +244,7 @@ def lod_stats(search_results) -> dict:
         dict with keys "pleiades", "trismegistos", "eagle",
         each containing {"mapped": int, "total": int, "coverage": float}.
     """
-    inscriptions = getattr(search_results, 'inscriptions', search_results)
+    inscriptions = getattr(search_results, "inscriptions", search_results)
     total = len(inscriptions)
 
     pleiades_count = 0
@@ -354,7 +354,7 @@ def reconcile_trismegistos(
                 if tm_id:
                     return tm_id
 
-    except Exception as e: # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         # Network errors or API timeouts are handled gracefully to prevent
         # blocking the ingestion pipeline during bulk reconciliation.
         logger.warning(f"TM reconciliation failed for {inscription_id}: {e}")

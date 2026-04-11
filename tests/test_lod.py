@@ -36,7 +36,7 @@ class TestPleiadesURI:
 class TestTrismegistosURI:
     """Test Trismegistos URI generation."""
 
-    @patch('openetruscan.api.lod._load_trismegistos_mapping', return_value={"ET_Cr_1.1": "828901"})
+    @patch("openetruscan.api.lod._load_trismegistos_mapping", return_value={"ET_Cr_1.1": "828901"})
     def test_mapped_inscription(self, mock_map):
         uri = get_trismegistos_uri("ET_Cr_1.1")
         assert uri is not None
@@ -51,7 +51,7 @@ class TestTrismegistosURI:
 class TestEagleURI:
     """Test EAGLE URI generation."""
 
-    @patch('openetruscan.api.lod._load_eagle_mapping', return_value={"ET_Cr_1.1": "EDR000001"})
+    @patch("openetruscan.api.lod._load_eagle_mapping", return_value={"ET_Cr_1.1": "EDR000001"})
     def test_mapped_inscription(self, mock_map):
         uri = get_eagle_uri("ET_Cr_1.1")
         assert uri is not None
@@ -66,7 +66,7 @@ class TestEagleURI:
 class TestEnrichedJsonLD:
     """Test JSON-LD output with all three LOD systems."""
 
-    @patch('openetruscan.api.lod._load_trismegistos_mapping', return_value={"ET_Cr_1.1": "828901"})
+    @patch("openetruscan.api.lod._load_trismegistos_mapping", return_value={"ET_Cr_1.1": "828901"})
     def test_jsonld_includes_tm_uri(self, mock_map):
         insc = Inscription(
             id="ET_Cr_1.1",
@@ -82,7 +82,7 @@ class TestEnrichedJsonLD:
         ]
         assert any(urlparse(s).hostname == "www.trismegistos.org" for s in sources)
 
-    @patch('openetruscan.api.lod._load_eagle_mapping', return_value={"ET_Cr_1.1": "EDR000001"})
+    @patch("openetruscan.api.lod._load_eagle_mapping", return_value={"ET_Cr_1.1": "EDR000001"})
     def test_jsonld_includes_eagle_uri(self, mock_map):
         insc = Inscription(
             id="ET_Cr_1.1",
@@ -115,7 +115,9 @@ class TestEnrichedJsonLD:
 class TestLodStats:
     """Test LOD coverage statistics."""
 
-    @pytest.mark.skip(reason="Corpus.load() sync connection deadlocks with async sqlite test runner")
+    @pytest.mark.skip(
+        reason="Corpus.load() sync connection deadlocks with async sqlite test runner"
+    )
     def test_lod_stats_structure(self):
         corpus = Corpus.load()
         # Ensure test data exists
@@ -142,7 +144,7 @@ class TestLodStats:
 class TestReconciliation:
     """Test live API reconciliation functions (offline-safe)."""
 
-    @patch('openetruscan.api.lod._load_trismegistos_mapping', return_value={"ET_Cr_1.1": "828901"})
+    @patch("openetruscan.api.lod._load_trismegistos_mapping", return_value={"ET_Cr_1.1": "828901"})
     def test_reconcile_tm_uses_static_first(self, mock_map):
         # ET_Cr_1.1 is in the static mapping — should return without API call
         result = reconcile_trismegistos("ET_Cr_1.1")

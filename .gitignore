@@ -24,6 +24,11 @@ ENV/
 *.swo
 *~
 .DS_Store
+Thumbs.db
+
+# Standard Build Artifacts
+**/target/
+**/node_modules/
 
 # Testing
 .pytest_cache/

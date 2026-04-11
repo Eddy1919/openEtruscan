@@ -62,7 +62,10 @@ def embed_single(text: str, retries: int = 3) -> list[float] | None:
                 timeout=30,
             )
             if resp.status_code == 200:
-                return resp.json()["embedding"]["values"]
+                emb_val = resp.json()["embedding"]["values"][:EMBED_DIM]
+                if len(emb_val) < EMBED_DIM:
+                    emb_val.extend([0.0] * (EMBED_DIM - len(emb_val)))
+                return emb_val
             elif resp.status_code == 429:
                 wait = min(5 * (2**attempt), 60)
                 log.warning("Rate limited. Sleeping %ds...", wait)
@@ -108,7 +111,10 @@ def embed_batch(texts: list[str], retries: int = 3) -> list[list[float] | None]:
                 data = resp.json()
                 embeddings = data.get("embeddings", [])
                 for idx, emb in enumerate(embeddings):
-                    results[positions[idx]] = emb["values"]
+                    emb_val = emb["values"][:EMBED_DIM]
+                    if len(emb_val) < EMBED_DIM:
+                        emb_val.extend([0.0] * (EMBED_DIM - len(emb_val)))
+                    results[positions[idx]] = emb_val
                 return results
             elif resp.status_code == 429:
                 wait = min(5 * (2**attempt), 60)
@@ -189,6 +195,7 @@ def main():
         choices=["text", "context", "combined", "all"],
         help="Which embedding field(s) to generate",
     )
+    parser.add_argument("--limit", type=int, default=0, help="Limit number of rows to process")
     parser.add_argument("--force", action="store_true", help="Re-embed even if already present")
     args = parser.parse_args()
 
@@ -221,6 +228,9 @@ def main():
                     "ORDER BY id"
                 )
         rows = cur.fetchall()
+
+    if args.limit > 0:
+        rows = rows[:args.limit]
 
     total = len(rows)
     log.info("Found %d inscriptions to embed", total)

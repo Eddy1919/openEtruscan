@@ -25,7 +25,7 @@ import requests
 from dotenv import load_dotenv
 
 # ── Paths ──────────────────────────────────────────────────────
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(REPO_ROOT / ".env")
 
 DB_PATH = REPO_ROOT / "data/corpus.db"  # Kept for compatibility but unused
@@ -112,7 +112,7 @@ PROMPT = (
     "if possible."
 )
 
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 
 def setup_logging(pdf_name: str) -> logging.Logger:
@@ -166,17 +166,23 @@ def call_gemini(pil_image, log, retries=5):
             "temperature": 0.1,
             "response_mime_type": "application/json",
             "response_schema": SCHEMA,
+            "max_output_tokens": 8192,
         },
     }
 
     backoff = 5
     for attempt in range(retries):
         try:
-            resp = requests.post(URL, params={"key": API_KEY}, json=payload, timeout=(10, 180))
+            resp = requests.post(URL, params={"key": API_KEY}, json=payload, timeout=(15, 300))
             if resp.status_code == 200:
                 data = resp.json()
                 text_out = data["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(text_out)
+                try:
+                    return json.loads(text_out)
+                except json.JSONDecodeError as je:
+                    log.error("  [%d/%d] JSON Parse Error: %s. Text starts with: %s...", 
+                             attempt + 1, retries, je, text_out[:200])
+                    raise je
             elif resp.status_code == 429:
                 wait = min(backoff * (2**attempt), 120)
                 log.warning("  [%d/%d] Rate limited. Sleeping %ds...", attempt + 1, retries, wait)
@@ -186,49 +192,17 @@ def call_gemini(pil_image, log, retries=5):
                 log.error(
                     "  [%d/%d] API Error %d: %s", attempt + 1, retries, resp.status_code, safe_body
                 )
-                time.sleep(backoff)
+                time.sleep(backoff * (attempt + 1))
         except Exception as e:
-            log.error("  [%d/%d] Network Exception: %s", attempt + 1, retries, e)
-            time.sleep(backoff)
+            wait = backoff * (attempt + 1)
+            log.error("  [%d/%d] Network Exception: %s. Retrying in %ds...", attempt + 1, retries, e, wait)
+            time.sleep(wait)
     return None
 
 
 def ingest_into_db(entries: list[dict], source_label: str) -> int:
-    from openetruscan.corpus import Corpus, Inscription
-
-    corpus = Corpus.load()
-    inserted = 0
-    for entry in entries:
-        canonical_id = entry.get("cie_id", "").replace("CIE ", "").replace("CIE", "").strip()
-        formatted_id = f"CIE {canonical_id}"
-        
-        # Check if already exists using search or get
-        try:
-            # Not a precise ID check, but good enough for now. We will just try to add and handle exceptions
-            # Actually, `corpus.add` upserts natively in Postgres! 
-            # Wait, no, Corpus.add(upsert=True)? The PG version upserts.
-        except Exception:
-            pass
-
-        insc = Inscription(
-            id=formatted_id,
-            canonical=entry.get("etruscan_text_transliterated", ""),
-            raw_text=entry.get("etruscan_text_original") or entry.get("etruscan_text_transliterated", ""),
-            findspot=entry.get("latin_findspot", ""),
-            notes=entry.get("latin_commentary", ""),
-            bibliography=entry.get("bibliography") or "",
-            source=source_label,
-            provenance_status="extracted",
-        )
-        try:
-            corpus.add(insc)
-            inserted += 1
-        except Exception:
-            # If it already exists it might fail depending on how add() is implemented
-            pass
-            
-    corpus.close()
-    return inserted
+    # Function deprecated: All VLM pipeline yields are now strictly human-reviewed
+    pass
 
 
 def process_pdf(pdf_name: str, skip_pages: int = 4):
@@ -278,8 +252,8 @@ def process_pdf(pdf_name: str, skip_pages: int = 4):
             page_file = pages_dir / f"page_{page_idx:04d}.json"
             page_file.write_text(json.dumps(entries, indent=2, ensure_ascii=False))
 
-            inserted = ingest_into_db(entries, source_label)
-            log.info("  💾 Inserted %d new records", inserted)
+            # Staging: Directly bypass DB insertion to require HITL review
+            log.info("  💾 Staged %d new records in pages block", len(entries))
             total_new += len(entries)
         else:
             log.warning("  ⚠️  No entries / error on page %d", page_idx)

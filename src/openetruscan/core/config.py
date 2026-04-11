@@ -66,6 +66,12 @@ class Settings(BaseSettings):
         description="Enable FastAPI documentation endpoints (/docs, /openapi.json)",
     )
 
+    # Security
+    admin_token: str | None = Field(
+        default=None,
+        description="Master API Bearer Token required for mutating database endpoints",
+    )
+
     @field_validator("database_url", "images_dir")
     @classmethod
     def validate_not_empty(cls, v: str) -> str:

@@ -73,6 +73,9 @@ class Inscription:
     pleiades_id: str | None = None
     geonames_id: str | None = None
     is_codex: bool = False
+    source_code: str = "unknown"
+    source_detail: str | None = None
+    original_script_entry: str | None = None
 
     def date_display(self) -> str:
         """Human-readable date string."""
@@ -391,11 +394,43 @@ _COLUMNS = [
 # Pre-defined list of common Etruscan names and relationship markers
 # for extracting entities from canonical transcriptions.
 _KNOWN_NAMES = {
-    "larθ", "laris", "aule", "vel", "arnθ", "θana", "larthi", "velia", "sethre",
-    "marce", "avile", "lavtni", "ramtha", "fasti", "hasti", "tite", "caile",
-    "larθi", "arnth", "thana", "lart", "lars", "arnt", "arn", "arath", "araθ",
-    "veilia", "matunas", "velthur", "velθur", "cainei", "cai", "clan", "puia",
-    "sec", "ati", "papa",
+    "larθ",
+    "laris",
+    "aule",
+    "vel",
+    "arnθ",
+    "θana",
+    "larthi",
+    "velia",
+    "sethre",
+    "marce",
+    "avile",
+    "lavtni",
+    "ramtha",
+    "fasti",
+    "hasti",
+    "tite",
+    "caile",
+    "larθi",
+    "arnth",
+    "thana",
+    "lart",
+    "lars",
+    "arnt",
+    "arn",
+    "arath",
+    "araθ",
+    "veilia",
+    "matunas",
+    "velthur",
+    "velθur",
+    "cainei",
+    "cai",
+    "clan",
+    "puia",
+    "sec",
+    "ati",
+    "papa",
 }
 
 
@@ -410,7 +445,7 @@ def _extract_names(canonical: str) -> list[str]:
     tokens = _re.split(r"[\s·.,:;]+", canonical.lower())
     found = []
     seen = set()
-    
+
     # Iterate over tokens and match against the known name dictionary
     for t in tokens:
         if len(t) >= 2 and t in _KNOWN_NAMES and t not in seen:
@@ -456,16 +491,16 @@ class Corpus:
         Uses the internal normalizer engine to populate canonical and phonetic fields.
         """
         from openetruscan.core.normalizer import normalize
-        
+
         # 1. Trigger the normalization engine
         # This handles script conversion (e.g. CIE to Philological) and IPA generation
         res = normalize(inscription.raw_text, language=language)
-        
+
         # 2. Update the inscription fields with standardized values
         inscription.canonical = res.canonical
         inscription.phonetic = res.phonetic
         inscription.old_italic = res.old_italic
-        
+
         return inscription
 
     def _inscription_values(self, inscription: Inscription):
@@ -480,6 +515,7 @@ class Corpus:
     def load(cls, db_path=None) -> Corpus:
         """Factory method to load the corpus using the default database URL from settings."""
         from openetruscan.core.config import settings
+
         env_url = settings.database_url
         if not env_url:
             raise ValueError("DATABASE_URL environment variable is missing.")
@@ -663,7 +699,6 @@ class Corpus:
         """Explicitly commit the current transaction."""
         self._conn.commit()
 
-
     def _build_search_query(
         self,
         text=None,
@@ -791,7 +826,6 @@ class Corpus:
             updated = cur.rowcount > 0
         self._conn.commit()
         return updated
-
 
     def search_radius(
         self,

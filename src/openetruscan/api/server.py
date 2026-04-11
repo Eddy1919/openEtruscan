@@ -13,8 +13,10 @@ from datetime import datetime, timezone
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import secrets
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -32,19 +34,34 @@ logger = logging.getLogger("openetruscan")
 START_TIME = datetime.now(timezone.utc)
 
 
+security_scheme = HTTPBearer()
+
+
+def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
+    """Verifies that mutational operations are using the core ADMIN_TOKEN"""
+    if not settings.admin_token:
+        raise HTTPException(
+            status_code=500, detail="Server backend lacks configured admin_token in .env"
+        )
+    if not secrets.compare_digest(credentials.credentials, settings.admin_token):
+        raise HTTPException(status_code=403, detail="Invalid or missing admin credentials")
+    return credentials
+
+
 def _configure_logging():
     """Setup structured JSON logging for production."""
     log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
-    
+
     if settings.is_production:
         logging.basicConfig(
             level=log_level,
-            format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             # In a real SOTA implementation, we'd use structlog or python-json-logger
             # e.g. using pythonjsonlogger.jsonlogger.JsonFormatter
         )
     else:
         logging.basicConfig(level=log_level)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,8 +93,8 @@ app = FastAPI(
     description="REST API for querying the OpenEtruscan dataset.",
     version=__version__,
     lifespan=lifespan,
-    docs_url="/docs" if settings.enable_docs else None, # Interactive Swagger UI
-    redoc_url=None, # ReDoc disabled for simplicity
+    docs_url="/docs" if settings.enable_docs else None,  # Interactive Swagger UI
+    redoc_url=None,  # ReDoc disabled for simplicity
     openapi_url="/openapi.json" if settings.enable_docs else None,
 )
 
@@ -90,11 +107,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Essential for the Next.js frontend running on a different domain/port.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins, # Controlled via .env
+    allow_origins=settings.cors_origins,  # Controlled via .env
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
-    max_age=600, # Cache preflight responses for 10 minutes
+    max_age=600,  # Cache preflight responses for 10 minutes
 )
 
 
@@ -104,9 +121,9 @@ app.add_middleware(
 async def _add_security_headers(request: Request, call_next):
     """Add production-grade security headers to every response."""
     response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff" # Prevent MIME type sniffing
-    response.headers["X-Frame-Options"] = "DENY" # Prevent clickjacking
-    response.headers["X-XSS-Protection"] = "1; mode=block" # Enable browser XSS filtering
+    response.headers["X-Content-Type-Options"] = "nosniff"  # Prevent MIME type sniffing
+    response.headers["X-Frame-Options"] = "DENY"  # Prevent clickjacking
+    response.headers["X-XSS-Protection"] = "1; mode=block"  # Enable browser XSS filtering
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["Content-Security-Policy"] = "default-src 'self'"
     return response
@@ -154,6 +171,7 @@ def _clamp_text(text: str | None) -> str | None:
 # ── Pydantic Models ────────────────────────────────────────────────────────
 class InscriptionModel(BaseModel):
     """Data model representing a single Etruscan inscription for API output."""
+
     id: str
     canonical: str
     phonetic: str
@@ -178,10 +196,14 @@ class InscriptionModel(BaseModel):
     eagle_id: str | None = None
     is_codex: bool = False
     provenance_status: str | None = "verified"
+    source_code: str = "unknown"
+    source_detail: str | None = None
+    original_script_entry: str | None = None
 
 
 class SearchResponse(BaseModel):
     """Response model for paginated search results."""
+
     total: int
     count: int
     results: list[InscriptionModel]
@@ -189,6 +211,7 @@ class SearchResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Response model for the system health and diagnostics endpoint."""
+
     status: str
     version: str
     uptime_seconds: float
@@ -199,11 +222,13 @@ class HealthResponse(BaseModel):
 
 class StatsResponse(BaseModel):
     """Response model for corpus-wide statistical aggregations."""
+
     total_inscriptions: int
 
 
 class ErrorResponse(BaseModel):
     """Standardized error response model."""
+
     detail: str
 
 
@@ -234,6 +259,9 @@ def _build_model(i) -> InscriptionModel:
         eagle_id=i.eagle_id,
         is_codex=i.is_codex,
         provenance_status=i.provenance_status,
+        source_code=i.source_code,
+        source_detail=i.source_detail,
+        original_script_entry=i.original_script_entry,
     )
 
 
@@ -245,6 +273,7 @@ async def health_check(session: AsyncSession = Depends(get_session)):
     rss_mb = 0.0
     try:
         import resource
+
         rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         rss_mb = round(rss_kb / 1024, 1)
     except ImportError:
@@ -355,6 +384,7 @@ async def search_corpus(
     ):
         from fastapi.responses import Response
         from openetruscan.core.epidoc import results_to_epidoc
+
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
 
@@ -403,6 +433,7 @@ async def search_geo(
     ):
         from fastapi.responses import Response
         from openetruscan.core.epidoc import results_to_epidoc
+
         xml_data = results_to_epidoc(results)
         return Response(content=xml_data, media_type="application/tei+xml")
 
@@ -438,6 +469,7 @@ async def get_inscription(
         try:
             from fastapi.responses import Response
             from openetruscan.core.epidoc import inscription_to_epidoc
+
             xml_data = inscription_to_epidoc(inscription)
             return Response(content=xml_data, media_type="application/tei+xml")
         except ImportError:
@@ -451,46 +483,46 @@ async def get_inscription(
 @app.get("/inscription/{inscription_id}/concordance", tags=["Research"])
 @limiter.limit("60/minute")
 async def get_inscription_concordance(
-    request: Request,
-    inscription_id: str,
-    session: AsyncSession = Depends(get_session)
+    request: Request, inscription_id: str, session: AsyncSession = Depends(get_session)
 ):
     """
-    Fetch all related inscriptions that share identifiers (TM, EDR, Pleiades) 
+    Fetch all related inscriptions that share identifiers (TM, EDR, Pleiades)
     with the target record. Defines the physical concordance cluster.
     """
     repo = InscriptionRepository(session)
     results = await repo.get_concordance_network(inscription_id)
     if not results:
         raise HTTPException(status_code=404, detail="Inscription not found or has no concordance")
-    
+
     return [_build_model(i) for i in results]
 
 
 @app.get("/inscription/{inscription_id}/names-network", tags=["Prosopography"])
 @limiter.limit("60/minute")
 async def get_inscription_names_network(
-    request: Request,
-    inscription_id: str,
-    session: AsyncSession = Depends(get_session)
+    request: Request, inscription_id: str, session: AsyncSession = Depends(get_session)
 ):
     """
-    Fetch a graph representation (nodes/edges) of entities and relationships 
+    Fetch a graph representation (nodes/edges) of entities and relationships
     associated with this inscription.
     """
     repo = InscriptionRepository(session)
     graph = await repo.get_names_network(inscription_id)
     if not graph or not graph.get("nodes"):
-        # We still return the empty graph structure if no entities are found, 
+        # We still return the empty graph structure if no entities are found,
         # but 404 if the inscription itself is missing would be handled by common logic.
         return {"nodes": [], "edges": []}
-        
+
     return graph
 
 
 @app.post("/inscriptions", tags=["Corpus"])
 @limiter.limit("30/minute")
-async def import_inscription(request: Request, session: AsyncSession = Depends(get_session)):
+async def import_inscription(
+    request: Request,
+    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
+    session: AsyncSession = Depends(get_session),
+):
     """Import an inscription from EpiDoc TEI XML."""
     content_type = request.headers.get("content-type", "")
     if "xml" not in content_type:
@@ -501,6 +533,7 @@ async def import_inscription(request: Request, session: AsyncSession = Depends(g
     body = await request.body()
     try:
         from openetruscan.core.epidoc import parse_epidoc
+
         inscription = parse_epidoc(body.decode("utf-8"))
         repo = InscriptionRepository(session)
         await repo.add(inscription)
@@ -522,13 +555,18 @@ async def get_all_ids(request: Request, session: AsyncSession = Depends(get_sess
 
 class RestoreRequest(BaseModel):
     """Pydantic model for neural lacunae restoration requests."""
+
     text: str
     top_k: int = 5
 
 
 @app.post("/neural/restore", tags=["Neural"])
 @limiter.limit("60/minute")
-async def restore_lacunae(request: Request, body: RestoreRequest):
+async def restore_lacunae(
+    request: Request,
+    body: RestoreRequest,
+    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
+):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
     try:
         from openetruscan.ml.neural import _TORCH_AVAILABLE, LacunaeRestorer
@@ -564,7 +602,7 @@ async def stats_summary(request: Request, session: AsyncSession = Depends(get_se
 async def stats_timeline(request: Request, session: AsyncSession = Depends(get_session)):
     """Dated + geolocated inscriptions with minimal fields for timeline map."""
     repo = InscriptionRepository(session)
-    return await repo.get_timeline_stats() 
+    return await repo.get_timeline_stats()
 
 
 @app.get("/concordance", tags=["Search"])
@@ -590,9 +628,6 @@ async def concordance_search(
     rows = await repo.concordance(query=q, limit=limit, context=context)
     unique = len({r["inscId"] for r in rows})
     return {"total": len(rows), "unique_inscriptions": unique, "rows": rows}
-
-
-
 
 
 @app.get("/names/network", tags=["Prosopography"])
@@ -656,25 +691,24 @@ async def search_by_radius(
 @app.get("/tiles/{z}/{x}/{y}.pbf", tags=["Search"])
 @limiter.limit("500/minute")
 async def get_vector_tiles(
-    request: Request, 
-    z: int, x: int, y: int,
-    session: AsyncSession = Depends(get_session)
+    request: Request, z: int, x: int, y: int, session: AsyncSession = Depends(get_session)
 ):
     """
     Serve PostGIS dynamic vector tiles (MVT).
     Delegates tile generation to the database repository.
     """
     from fastapi.responses import Response
+
     repo = InscriptionRepository(session)
-    
+
     try:
         # Fetch the binary MVT data from the database
         mvt_bytes = await repo.get_mvt_tiles(z, x, y)
-        
+
         # If no geometries intersect the tile, return 204 No Content
         if not mvt_bytes:
             return Response(status_code=204)
-            
+
         # Return the binary protobuf data
         return Response(
             content=mvt_bytes,
@@ -684,8 +718,7 @@ async def get_vector_tiles(
     except Exception as e:
         logger.error(f"Vector tile error for {z}/{x}/{y}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="MVT tile generation failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MVT tile generation failed"
         ) from e
 
 
@@ -720,7 +753,7 @@ async def semantic_search(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="GEMINI_API_KEY not configured on server",
         )
-        
+
     # 2. Build Gemini Embedding URL
     url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={settings.gemini_api_key}"
     payload = {"content": {"parts": [{"text": q[:2048]}]}}
@@ -728,6 +761,7 @@ async def semantic_search(
     # local helper to fetch the embedding from Google
     async def _fetch_emb():
         import httpx
+
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, json=payload, timeout=10.0)
             resp.raise_for_status()
@@ -807,7 +841,7 @@ async def search_by_clan(
 
     repo = InscriptionRepository(session)
     results = await repo.search_clan_members(gens)
-    
+
     data = [_build_model(i) for i in results.inscriptions]
     return {"total": results.total, "count": len(data), "results": data}
 
@@ -945,12 +979,12 @@ async def pleiades_coverage(session: AsyncSession = Depends(get_session)) -> Any
         "coverage_pct": round(linked / total * 100, 1) if total else 0,
     }
 
-
     # Static file serving removed — frontend is deployed on GitHub Pages.
     # API-only server: all routes are under /search, /radius, /stats, etc.
 
 
 # ── Newly Exponentiated Endpoints ──────────────────────────────────────────
+
 
 @app.get("/export/epidoc", tags=["Export"])
 @limiter.limit("5/minute")
@@ -958,14 +992,14 @@ async def export_epidoc_bulk(request: Request, session: AsyncSession = Depends(g
     """Stream the entire corpus as a multi-document EpiDoc XML response."""
     from fastapi.responses import StreamingResponse
     from openetruscan.core.epidoc import inscription_to_epidoc
-    
+
     repo = InscriptionRepository(session)
-    
+
     async def _xml_generator():
         yield '<?xml version="1.0" encoding="UTF-8"?>\n'
         yield '<TEI xmlns="http://www.tei-c.org/ns/1.0">\n'
         yield "<text><body>\n"
-        
+
         offset = 0
         batch_size = 200
         while True:
@@ -980,7 +1014,7 @@ async def export_epidoc_bulk(request: Request, session: AsyncSession = Depends(g
                 fragment = fragment.replace('<?xml version="1.0" encoding="UTF-8"?>\n', "")
                 yield fragment + "\n"
             offset += batch_size
-            
+
         yield "</body></text></TEI>\n"
 
     return StreamingResponse(_xml_generator(), media_type="application/tei+xml")
@@ -989,21 +1023,20 @@ async def export_epidoc_bulk(request: Request, session: AsyncSession = Depends(g
 @app.get("/inscriptions/{inscription_id}/validate", tags=["Corpus"])
 @limiter.limit("30/minute")
 async def validate_inscription_flags(
-    request: Request,
-    inscription_id: str,
-    session: AsyncSession = Depends(get_session)
+    request: Request, inscription_id: str, session: AsyncSession = Depends(get_session)
 ):
     """Auto-detect potential issues (OCR, out-of-range, etc) in an inscription."""
     from openetruscan.core.corpus import auto_flag_inscription
+
     repo = InscriptionRepository(session)
-    
+
     model = await repo.get_by_id(inscription_id)
     if not model:
         raise HTTPException(status_code=404, detail="Inscription not found")
-        
+
     insc_data = repo._to_dataclass(model)
     flags = auto_flag_inscription(insc_data)
-    
+
     return {"id": inscription_id, "flags": flags, "is_valid": len(flags) == 0}
 
 
@@ -1022,11 +1055,13 @@ async def bayesian_date_estimate(
 ):
     """Estimate inscription date using Bayesian inference over time bins."""
     from openetruscan.core.statistics import bayesian_date
+
     result = bayesian_date(text, language=language)
     return result.to_dict()
 
 
 _FAMILY_GRAPH_CACHE = None
+
 
 async def _get_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
     """Returns a cached FamilyGraph, building it once upon first request."""
@@ -1079,26 +1114,26 @@ async def export_prosopography(
         str,
         Query(description="Export format: json, graphml, csv, neo4j"),
     ] = "json",
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """Export the entire prosopographical FamilyGraph."""
     from fastapi.responses import Response
-    
+
     repo = InscriptionRepository(session)
     graph = await _get_family_graph(repo)
-    
+
     try:
         content = graph.export(fmt=fmt)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
+
     media_types = {
         "json": "application/json",
         "csv": "text/csv",
         "graphml": "application/xml",
-        "neo4j": "text/plain"
+        "neo4j": "text/plain",
     }
-    
+
     return Response(content=content, media_type=media_types.get(fmt, "text/plain"))
 
 
@@ -1109,14 +1144,14 @@ async def search_prosopography_persons(
     gens: str | None = None,
     praenomen: str | None = None,
     gender: str | None = None,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """Search for specific named persons in the prosopographical network."""
     repo = InscriptionRepository(session)
     graph = await _get_family_graph(repo)
-    
+
     persons = graph.search_persons(gens=gens, praenomen=praenomen, gender=gender)
-    
+
     # Manually serialize persons since the method returns Person objects directly
     return [
         {
@@ -1127,7 +1162,7 @@ async def search_prosopography_persons(
             "gentilicium": p.gentilicium,
             "patronymic": p.name_formula.patronymic(),
             "findspots": p.findspots,
-            "inscription_ids": p.inscription_ids
+            "inscription_ids": p.inscription_ids,
         }
         for p in persons
     ]
@@ -1135,25 +1170,18 @@ async def search_prosopography_persons(
 
 @app.get("/prosopography/clans/{gens}/related", tags=["Prosopography"])
 @limiter.limit("30/minute")
-async def related_clans(
-    request: Request,
-    gens: str,
-    session: AsyncSession = Depends(get_session)
-):
+async def related_clans(request: Request, gens: str, session: AsyncSession = Depends(get_session)):
     """Find clans strictly related to the target clan via co-occurrence."""
     repo = InscriptionRepository(session)
     graph = await _get_family_graph(repo)
-    
+
     related = graph.related_clans(gens)
     return {"clan": gens, "related_clans": related}
 
 
 @app.get("/admin/validate-pleiades", tags=["Admin"])
 @limiter.limit("10/minute")
-async def admin_validate_pleiades(
-    request: Request,
-    session: AsyncSession = Depends(get_session)
-):
+async def admin_validate_pleiades(request: Request, session: AsyncSession = Depends(get_session)):
     """Administrative audit endpoint for Pleiades identifier alignments."""
     repo = InscriptionRepository(session)
     return await repo.validate_pleiades_ids()

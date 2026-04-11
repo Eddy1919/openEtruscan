@@ -1,6 +1,7 @@
 """
 Alembic migration environment — handles schema synchronization for PostgreSQL.
 """
+
 from logging.config import fileConfig
 import asyncio
 import os
@@ -28,8 +29,6 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-
 
 
 def run_migrations_offline() -> None:

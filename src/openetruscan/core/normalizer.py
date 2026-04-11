@@ -251,7 +251,7 @@ def normalize(
         NormResult with canonical, phonetic, old_italic, and metadata.
     """
     # --- NORMALIZATION PIPELINE ---
-    
+
     # 1. Load the language-specific conversion rules
     adapter = load_adapter(language)
 

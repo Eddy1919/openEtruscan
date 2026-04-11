@@ -23,6 +23,7 @@ from typing import Any
 @dataclass
 class Identifier:
     """Represents a unique identifier for a language (e.g. Glottolog code)."""
+
     scheme: str
     value: str
 
@@ -30,6 +31,7 @@ class Identifier:
 @dataclass
 class GeoPoint:
     """Represents a geographic coordinate (latitude, longitude)."""
+
     lat: float
     lon: float
 
@@ -37,6 +39,7 @@ class GeoPoint:
 @dataclass
 class GeoArea:
     """Represents a geographic region defined by countries and centroids."""
+
     centroid: GeoPoint | None = None
     macroareas: list[str] = field(default_factory=list)
     countries: list[str] = field(default_factory=list)
@@ -45,6 +48,7 @@ class GeoArea:
 @dataclass
 class Timespan:
     """Represents the historical temporal bounds of a language's usage."""
+
     start: str | None = None
     end: str | None = None
     note: str = ""
@@ -53,6 +57,7 @@ class Timespan:
 @dataclass
 class Classification:
     """Represents the genealogical classification of a language in Glottolog."""
+
     level: str = "language"
     parent_glottocode: str = ""
     lineage: list[str] = field(default_factory=list)
@@ -62,6 +67,7 @@ class Classification:
 @dataclass
 class NameVariant:
     """Represents an alternative name for a language from a specific source."""
+
     value: str
     source: str
     script: str | None = None
@@ -71,6 +77,7 @@ class NameVariant:
 @dataclass
 class Dialect:
     """Represents a specific sub-variety or dialect of a language."""
+
     glottolog_id: str
     language_code: str
     name: str
@@ -88,6 +95,7 @@ class Dialect:
 @dataclass
 class Language:
     """The central data model for a language, following the CLTK standard."""
+
     name: str
     glottolog_id: str
     identifiers: list[Identifier] = field(default_factory=list)

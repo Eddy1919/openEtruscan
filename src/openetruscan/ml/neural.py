@@ -43,10 +43,12 @@ except ImportError:
 
     class _DummyModule:
         """Fallback for nn.Module when PyTorch is not installed."""
+
         pass
 
     class _DummyNN:
         """Fallback for torch.nn when PyTorch is not installed."""
+
         Module = _DummyModule
 
     nn = _DummyNN()  # type: ignore
@@ -269,6 +271,78 @@ class MicroTransformer(nn.Module):
         return self.fc(pooled)
 
 
+class IthacaMicroTransformer(nn.Module):
+    """
+    Ithaca-style Multi-Modal Transformer.
+    Injects [lat, lon, date_approx] directly into the character embeddings
+    to contextualize learning using geographical and temporal dialect cues.
+    """
+
+    def __init__(
+        self,
+        vocab_size: int,
+        num_classes: int = 7,
+        d_model: int = 128,
+        nhead: int = 4,
+        num_layers: int = 2,
+        dim_feedforward: int = 256,
+        dropout: float = 0.1,
+        max_len: int = 256,
+    ) -> None:
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model, padding_idx=0)
+        self.pos_enc = _PositionalEncoding(d_model, max_len)
+
+        # Spatial/Temporal projection: [1, 3] -> [1, d_model]
+        self.context_proj = nn.Linear(3, d_model)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
+            batch_first=True,
+        )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.dropout = nn.Dropout(dropout)
+        self.fc = nn.Linear(d_model, num_classes)
+
+    def forward(self, x: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
+        """
+        x: [batch, seq_len]
+        context: [batch, 3] -> (lat, lon, date_approx)
+        logits: [batch, num_classes]
+        """
+        padding_mask = x == 0
+
+        # Character Embedding Space
+        emb = self.embedding(x)  # [batch, seq_len, d_model]
+        emb = self.pos_enc(emb)
+
+        # Context Space
+        ctx_emb = self.context_proj(context).unsqueeze(1)  # [batch, 1, d_model]
+
+        # Concatenate Context as a prefix token (like a CLS token but dense)
+        # Sequence becomes [Context, Char1, Char2, ...]
+        combined_emb = torch.cat([ctx_emb, emb], dim=1)  # [batch, seq_len + 1, d_model]
+
+        # Update padding mask to account for the new context token (never padded)
+        ctx_mask = torch.zeros((x.size(0), 1), dtype=torch.bool, device=x.device)
+        combined_mask = torch.cat([ctx_mask, padding_mask], dim=1)
+
+        out = self.transformer(
+            combined_emb,
+            src_key_padding_mask=combined_mask,
+        )
+
+        # Use only the Context token representation for classification pooling
+        # (Alternatively, mean-pool across the entire sequence)
+        pooled = out[:, 0, :]
+
+        pooled = self.dropout(pooled)
+        return self.fc(pooled)
+
+
 # ---------------------------------------------------------------------------
 # Masked Language Model (CharMLM)
 # ---------------------------------------------------------------------------
@@ -403,7 +477,10 @@ class NeuralClassifier:
         arch: str = "cnn",
         max_len: int = 128,
     ) -> None:
-        """Initialize the neural classifier interface for training and inference."""
+        """
+        Initialize the neural classifier interface for training and inference.
+        Allowed archs: cnn, transformer, ithaca.
+        """
         _require_torch()
         self.arch = arch
         self.max_len = max_len
@@ -433,16 +510,46 @@ class NeuralClassifier:
         from sklearn.metrics import classification_report, f1_score
         from sklearn.model_selection import train_test_split
 
-        texts, labels = load_training_data(db_path)
+        texts_full, labels_full = load_training_data(db_path)
+
+        # We also need context for Ithaca. Let's fetch context for all texts.
+        import psycopg2
+        from psycopg2.extras import DictCursor
+
+        conn = psycopg2.connect(str(db_path))
+        with conn.cursor(cursor_factory=DictCursor) as cur:
+            cur.execute(
+                "SELECT canonical, findspot_lat, findspot_lon, date_approx FROM inscriptions"
+            )
+            context_map = {
+                r["canonical"]: [
+                    float(r["findspot_lat"] or 0),
+                    float(r["findspot_lon"] or 0),
+                    float(r["date_approx"] or 0),
+                ]
+                for r in cur.fetchall()
+            }
+        conn.close()
+
+        texts = []
+        labels = []
+        contexts = []
+        for t, lbl in zip(texts_full, labels_full, strict=False):
+            if t in context_map:
+                texts.append(t)
+                labels.append(lbl)
+                contexts.append(context_map[t])
+
         if len(texts) < 20:
             raise ValueError(
                 f"Only {len(texts)} labeled samples found. Need at least 20 for training."
             )
 
         # Stratified split
-        x_train, x_val, y_train, y_val = train_test_split(
+        x_train, x_val, y_train, y_val, c_train, c_val = train_test_split(
             texts,
             labels,
+            contexts,
             test_size=val_split,
             stratify=labels,
             random_state=42,
@@ -465,8 +572,8 @@ class NeuralClassifier:
         label_to_idx = {lbl: i for i, lbl in enumerate(self.labels)}
 
         # Encode data
-        def _encode_batch(txts: list[str], lbls: list[str]):
-            """Encode a batch of texts and labels into torch Tensors."""
+        def _encode_batch(txts: list[str], lbls: list[str], ctxs: list[list[float]]):
+            """Encode a batch of texts, labels, and context into torch Tensors."""
             x = torch.tensor(
                 [self.vocab.encode(t, self.max_len) for t in txts],
                 dtype=torch.long,
@@ -475,10 +582,11 @@ class NeuralClassifier:
                 [label_to_idx[lbl] for lbl in lbls],
                 dtype=torch.long,
             )
-            return x, y
+            c = torch.tensor(ctxs, dtype=torch.float)
+            return x, y, c
 
-        x_train_t, y_train_t = _encode_batch(x_train, y_train)
-        x_val_t, y_val_t = _encode_batch(x_val, y_val)
+        x_train_t, y_train_t, c_train_t = _encode_batch(x_train, y_train, c_train)
+        x_val_t, y_val_t, c_val_t = _encode_batch(x_val, y_val, c_val)
 
         # Build model
         num_classes = len(self.labels)
@@ -493,8 +601,14 @@ class NeuralClassifier:
                 num_classes=num_classes,
                 max_len=self.max_len,
             )
+        elif self.arch == "ithaca":
+            self.model = IthacaMicroTransformer(
+                vocab_size=len(self.vocab),
+                num_classes=num_classes,
+                max_len=self.max_len,
+            )
         else:
-            raise ValueError(f"Unknown arch: {self.arch}. Use 'cnn' or 'transformer'.")
+            raise ValueError(f"Unknown arch: {self.arch}. Use 'cnn', 'transformer', or 'ithaca'.")
 
         param_count = sum(p.numel() for p in self.model.parameters())
         if verbose:
@@ -527,9 +641,14 @@ class NeuralClassifier:
                 batch_idx = indices[start : start + batch_size]
                 xb = x_train_t[batch_idx]
                 yb = y_train_t[batch_idx]
+                cb = c_train_t[batch_idx]
 
                 optimizer.zero_grad()
-                logits = self.model(xb)
+                if self.arch == "ithaca":
+                    logits = self.model(xb, cb)
+                else:
+                    logits = self.model(xb)
+
                 loss = criterion(logits, yb)
                 loss.backward()
                 optimizer.step()
@@ -539,7 +658,11 @@ class NeuralClassifier:
             # --- Validate ---
             self.model.eval()
             with torch.no_grad():
-                val_logits = self.model(x_val_t)
+                if self.arch == "ithaca":
+                    val_logits = self.model(x_val_t, c_val_t)
+                else:
+                    val_logits = self.model(x_val_t)
+
                 val_preds = val_logits.argmax(dim=1).cpu().numpy()
                 val_true = y_val_t.cpu().numpy()
                 val_f1 = f1_score(val_true, val_preds, average="macro", zero_division=0)
@@ -569,7 +692,10 @@ class NeuralClassifier:
         # Final evaluation
         self.model.eval()
         with torch.no_grad():
-            val_logits = self.model(x_val_t)
+            if self.arch == "ithaca":
+                val_logits = self.model(x_val_t, c_val_t)
+            else:
+                val_logits = self.model(x_val_t)
             val_preds = val_logits.argmax(dim=1).cpu().numpy()
             val_true = y_val_t.cpu().numpy()
 

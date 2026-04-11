@@ -1,6 +1,7 @@
 """
 Geographic utilities — deprecated in favor of PostGIS spatial operations.
 """
+
 import math
 import warnings
 

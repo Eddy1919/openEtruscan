@@ -3,6 +3,7 @@ Async database session factory — provides AsyncSession instances via dependenc
 
 Uses SQLAlchemy 2.0 async engine with asyncpg driver and connection pooling.
 """
+
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from openetruscan.core.config import settings
@@ -19,7 +20,7 @@ def get_engine():
         db_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
         if db_url.startswith("sqlite://"):
             db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://")
-        
+
         _engine = create_async_engine(
             db_url,
             echo=False,
@@ -28,8 +29,8 @@ def get_engine():
             max_overflow=10,
         )
         _session_maker = async_sessionmaker(
-            _engine, 
-            class_=AsyncSession, 
+            _engine,
+            class_=AsyncSession,
             expire_on_commit=False,
             autocommit=False,
             autoflush=False,

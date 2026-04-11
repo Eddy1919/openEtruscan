@@ -8,7 +8,18 @@ from .corpus import Corpus, Inscription, SearchResults
 from .epidoc import corpus_to_epidoc, inscription_to_epidoc
 from .geo import haversine
 from .normalizer import normalize, NormResult
-from .statistics import cluster_sites_from_texts, compare_frequencies, estimate_date, letter_frequencies
+
+try:
+    from .statistics import (
+        cluster_sites_from_texts,
+        compare_frequencies,
+        estimate_date,
+        letter_frequencies,
+    )
+
+    _has_stats = True
+except ImportError:
+    _has_stats = False
 from .validator import ValidationReport, validate_file
 
 __all__ = [
