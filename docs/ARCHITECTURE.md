@@ -56,7 +56,7 @@ sequenceDiagram
 ### 2. Database Layer (`db/repository.py`)
 A strictly decoupled repository pattern using `SQLAlchemy 2.0` and `pgvector`.
 - **Spatial**: Native PostGIS integration for proximity searches (`genetic_samples` x `inscriptions`).
-- **Semantic**: Uses `halfvec(3072)` embeddings for cosine similarity across 11,361 records.
+- **Semantic**: Uses `halfvec(3072)` embeddings generated via `text-embedding-004` for high-precision similarity search across **8,091 verified records**.
 - **Tiles**: Direct `ST_AsMVT` generation for high-performance mapping of tens of thousands of points.
 
 ### 3. API Middleware (`api/server.py`)

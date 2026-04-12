@@ -19,10 +19,10 @@
 
 OpenEtruscan provides computationally accessible tools for the Etruscan epigraphic record. The platform normalises transcriptions across notation systems, classifies inscriptions using neural models, and publishes the full corpus as Linked Open Data.
 
-The corpus currently contains a unified, verified dataset of **11,361 inscriptions** georeferenced to 184 archaeological sites, with high-fidelity semantic links to Trismegistos, EAGLE, and Pleiades.
+The corpus currently contains a unified, verified dataset of **8,091 inscriptions** georeferenced to 191 archaeological sites (including the recent CIE Rescue Integration), with high-fidelity semantic links to Trismegistos, EAGLE, and Pleiades.
 
 The platform follows a decoupled, cloud-native architecture:
-- **Data Layer:** PostgreSQL (PostGIS + pgvector) hosted on Google Cloud SQL, featuring 3,072-dimensional semantic embeddings for high-precision epigraphic similarity search.
+- **Data Layer:** PostgreSQL (PostGIS + pgvector) hosted on Google Cloud SQL, featuring 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision epigraphic similarity search.
 - **Backend Layer:** FastAPI service on GCE (App VM) serving structured data and neural inference proxies.
 - **Frontend Layer:** Next.js 15 (App Router) deployed on Vercel, fetching dynamically from the live production API.
 
@@ -113,12 +113,23 @@ OpenEtruscan is an official member of the **[Pelagios Network](https://pelagios.
 
 Two character-level models classify inscriptions into 7 epigraphic types:
 
-| Model | Parameters | Size | Architecture |
-|---|---|---|---|
-| CharCNN | ~28K | 111 KB | 1D convolution, max-pool, dense |
-| Transformer | ~300K | 1.2 MB | 2-layer Transformer encoder, classifier head |
+### 🧠 Intelligence Suite (V2)
 
-Both models are exported as ONNX and run client-side via WebAssembly. Available on [Hugging Face](https://huggingface.co/Eddy1919/openetruscan-classifier).
+The OpenEtruscan Intelligence Suite provides state-of-the-art neural restoration and classification.
+
+- **Lacunae Restoration**: ByT5-based **Scholarly Span Corruption** (LoRA).
+- **Inscription Classifier**: Neural MLP achieving **99% Macro F1**.
+- **Prosopography**: Neural Entity Disambiguation (NED) using `pgvector`.
+
+Available on [Hugging Face](https://huggingface.co/Eddy1919/openetruscan-classifier).
+
+#### Performance Benchmarks
+| Task | Model | Metric | Baseline (V1) | **Intelligence V2** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Classification** | Embedding MLP | F1-Macro | 0.52 | **0.99** |
+| **Restoration** | ByT5-Small | Phil. Safety | Low (Halluc.) | **High (Sentinels)** |
+
+See [Intelligence V2 Methodology](docs/INTELLIGENCE_V2.md) for architectural details.
 
 ## Development
 

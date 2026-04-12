@@ -455,10 +455,26 @@ class FamilyGraph:
     Can be built from a Corpus or from raw data.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, db_url: str | None = None) -> None:
         """Initialize an empty prosopographical graph."""
         self._persons: dict[str, Person] = {}
         self._clans: dict[str, ClanInfo] = {}
+        self.db_url = db_url
+
+    def resolve_entities(self, threshold: float = 0.85):
+        """
+        Bleeding Edge: Perform identity resolution using the NeuralEntityLinker.
+        Connects spatial, temporal, and semantic context to merge person records.
+        """
+        if not self.db_url:
+            raise ValueError("Database URL required for Neural Resolution.")
+        
+        from openetruscan.ml.entity_linker_v2 import NeuralEntityLinker
+        linker = NeuralEntityLinker(self.db_url)
+        linker.threshold = threshold
+        
+        links = linker.resolve_entities(self)
+        return links
 
     @classmethod
     def from_corpus(cls, corpus, language: str = "etruscan") -> FamilyGraph:

@@ -62,6 +62,23 @@ def _require_torch() -> None:
         )
 
 
+class AlphaFocalLoss(nn.Module):
+    """
+    α-balanced Focal Loss: FL(pt) = -αt (1 - pt)^γ log(pt)
+    Designed to address class imbalance by focusing on hard examples and weighting by rare classes.
+    """
+    def __init__(self, alpha: torch.Tensor, gamma: float = 2.0):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        ce_loss = F.cross_entropy(inputs, targets, reduction='none', weight=self.alpha)
+        pt = torch.exp(-ce_loss)
+        focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
+        return focal_loss
+
+
 # ---------------------------------------------------------------------------
 # Classification labels (same order everywhere)
 # ---------------------------------------------------------------------------
@@ -415,7 +432,7 @@ def _weak_label(canonical: str, tokens: list[str]) -> str | None:
 
 
 def load_training_data(
-    db_path: str | Path,
+    db_url: str | Path,
 ) -> tuple[list[str], list[str]]:
     """
     Load inscriptions from the corpus and generate weak labels.
@@ -425,7 +442,7 @@ def load_training_data(
     import psycopg2
     from psycopg2.extras import DictCursor
 
-    conn = psycopg2.connect(str(db_path))
+    conn = psycopg2.connect(str(db_url))
     with conn.cursor(cursor_factory=DictCursor) as cur:
         cur.execute(
             "SELECT canonical, classification FROM inscriptions"
@@ -493,7 +510,7 @@ class NeuralClassifier:
 
     def train_from_corpus(
         self,
-        db_path: str | Path,
+        db_url: str | Path,
         epochs: int = 30,
         batch_size: int = 64,
         lr: float = 1e-3,
@@ -510,13 +527,13 @@ class NeuralClassifier:
         from sklearn.metrics import classification_report, f1_score
         from sklearn.model_selection import train_test_split
 
-        texts_full, labels_full = load_training_data(db_path)
+        texts_full, labels_full = load_training_data(db_url)
 
         # We also need context for Ithaca. Let's fetch context for all texts.
         import psycopg2
         from psycopg2.extras import DictCursor
 
-        conn = psycopg2.connect(str(db_path))
+        conn = psycopg2.connect(str(db_url))
         with conn.cursor(cursor_factory=DictCursor) as cur:
             cur.execute(
                 "SELECT canonical, findspot_lat, findspot_lon, date_approx FROM inscriptions"
@@ -616,14 +633,15 @@ class NeuralClassifier:
 
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
 
-        # Compute inverse-frequency class weights to handle imbalance
+        # α-balanced Focal Loss (γ=2.0)
         class_counts = torch.bincount(y_train_t, minlength=num_classes).float()
-        # Inverse frequency: total / (num_classes * count_per_class)
-        class_weights = len(y_train_t) / (num_classes * class_counts.clamp(min=1))
+        alpha = len(y_train_t) / (num_classes * class_counts.clamp(min=1))
+        
         if verbose:
-            weight_info = {self.labels[i]: f"{class_weights[i]:.2f}" for i in range(num_classes)}
-            print(f"  Class weights: {weight_info}")
-        criterion = nn.CrossEntropyLoss(weight=class_weights)
+            weight_info = {self.labels[i]: f"{alpha[i]:.2f}" for i in range(num_classes)}
+            print(f"  α-Weights: {weight_info}")
+            
+        criterion = AlphaFocalLoss(alpha=alpha.to(x_train_t.device), gamma=2.0)
 
         best_val_f1 = 0.0
         best_state = None

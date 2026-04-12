@@ -1,0 +1,53 @@
+@prefix : <https://openetruscan.com/#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://openetruscan.com/void.ttl> a void:DatasetDescription ;
+    dcterms:title "OpenEtruscan VoID Description" ;
+    dcterms:creator :OpenEtruscanTeam ;
+    foaf:primaryTopic :OpenEtruscanInscriptions .
+
+:OpenEtruscanInscriptions a void:Dataset ;
+    dcterms:title "OpenEtruscan Epigraphic Corpus" ;
+    dcterms:description "A curated dataset of ~11,000 Etruscan inscriptions with phonological and spatial metadata." ;
+    dcterms:publisher :OpenEtruscanTeam ;
+    dcterms:license <http://creativecommons.org/licenses/by/4.0/> ;
+    dcterms:issued "2026-04-13"^^xsd:date ;
+    void:feature <http://www.w3.org/ns/formats/JSON-LD> ;
+    void:dataDump <https://openetruscan.com/pelagios.jsonld> ;
+    void:sparqlEndpoint <https://openetruscan.com/sparql> ;
+    void:entities 11361 ;
+    void:triples 34477 ;
+    
+    # Vocabulary mappings
+    void:vocabulary <http://www.w3.org/ns/anno.jsonld> ;
+    void:vocabulary <http://purl.org/dc/terms/> ;
+
+    # Linksets
+    void:subset :PleiadesLinks ;
+    void:subset :TrismegistosLinks ;
+    void:subset :WikidataLinks .
+
+:PleiadesLinks a void:Linkset ;
+    void:target :OpenEtruscanInscriptions ;
+    void:target <https://pleiades.stoa.org> ;
+    void:linkPredicate <http://www.w3.org/ns/oa#hasTarget> ;
+    void:objectsTarget <https://pleiades.stoa.org> .
+
+:TrismegistosLinks a void:Linkset ;
+    void:target :OpenEtruscanInscriptions ;
+    void:target <https://www.trismegistos.org> ;
+    void:linkPredicate <http://www.w3.org/ns/oa#hasTarget> ;
+    void:objectsTarget <https://www.trismegistos.org> .
+
+:WikidataLinks a void:Linkset ;
+    void:target :OpenEtruscanInscriptions ;
+    void:target <https://www.wikidata.org> ;
+    void:linkPredicate <http://www.w3.org/ns/oa#hasTarget> ;
+    void:objectsTarget <https://www.wikidata.org> .
+
+:OpenEtruscanTeam a foaf:Organization ;
+    foaf:name "OpenEtruscan Contributors" ;
+    foaf:homepage <https://openetruscan.com> .

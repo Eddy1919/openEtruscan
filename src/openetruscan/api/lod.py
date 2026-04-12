@@ -9,17 +9,24 @@ See: https://pelagios.org, https://pleiades.stoa.org,
      https://www.trismegistos.org, https://www.eagle-network.eu
 """
 
-from __future__ import annotations
-
 import json
+import logging
 from pathlib import Path
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 PLEIADES_BASE = "https://pleiades.stoa.org/places/"
 TRISMEGISTOS_BASE = "https://www.trismegistos.org/text/"
 EAGLE_BASE = "https://www.eagle-network.eu/resource/inscriptions/"
 OPENETRUSCAN_BASE = "https://openetruscan.com"
+CC_BY_4_0 = "http://creativecommons.org/licenses/by/4.0/"
+
+# JSON-LD Contexts
+WEB_ANNO_CONTEXT = "http://www.w3.org/ns/anno.jsonld"
+DCTERMS_CONTEXT = "http://purl.org/dc/terms/"
+VOID_CONTEXT = "http://rdfs.org/ns/void#"
 
 _mapping_cache: dict[str, str] | None = None
 _tm_mapping_cache: dict[str, str] | None = None
@@ -126,9 +133,14 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
     eagle_uri = get_eagle_uri(inscription.id)
 
     annotation = {
-        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "@context": [
+            WEB_ANNO_CONTEXT,
+            {"dcterms": DCTERMS_CONTEXT, "void": VOID_CONTEXT},
+        ],
         "id": f"{OPENETRUSCAN_BASE}/inscriptions/{inscription.id}",
         "type": "Annotation",
+        "dcterms:license": CC_BY_4_0,
+        "dcterms:issued": inscription.created_at.isoformat() if hasattr(inscription, 'created_at') and inscription.created_at else None,
         "body": [
             {
                 "type": "TextualBody",
@@ -171,14 +183,14 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
         )
 
     # 4. Handle Spatial selectors if coordinates are present
-    # Pelagios uses SVG selectors or WKT for identifying regions of interest
+    # Upgrade to Gold Standard: GeoJSON Point geometries for Peripleo 3 compliance
     if inscription.findspot_lat is not None and inscription.findspot_lon is not None:
         annotation["target"]["selector"] = {
-            "type": "SvgSelector",
-            "value": (
-                f"<svg><circle cx='{inscription.findspot_lon}' "
-                f"cy='{inscription.findspot_lat}' r='0.01'/></svg>"
-            ),
+            "type": "GeoJSONSelector",
+            "value": {
+                "type": "Point",
+                "coordinates": [inscription.findspot_lon, inscription.findspot_lat],
+            },
         }
 
     return annotation
