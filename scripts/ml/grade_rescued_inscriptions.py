@@ -47,7 +47,7 @@ gemini_schema = {
     "required": ["classification", "confidence"]
 }
 
-def call_gemini(prompt):
+def call_gemini(prompt, retries=3):
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
@@ -57,23 +57,28 @@ def call_gemini(prompt):
         }
     }
     
-    req = urllib.request.Request(gemini_url, json.dumps(data).encode('utf-8'), {'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            res_body = response.read().decode('utf-8')
-            res_json = json.loads(res_body)
-            text_resp = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+    for attempt in range(retries):
+        req = urllib.request.Request(gemini_url, json.dumps(data).encode('utf-8'), {'Content-Type': 'application/json'})
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                res_body = response.read().decode('utf-8')
+                res_json = json.loads(res_body)
+                text_resp = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                
+                # Remove markdown JSON blocks if present
+                if text_resp.startswith("```json"):
+                    text_resp = text_resp.replace("```json", "", 1).replace("```", "", 1).strip()
+                elif text_resp.startswith("```"):
+                     text_resp = text_resp.replace("```", "", 2).strip()
+                     
+                return json.loads(text_resp)
+        except Exception as e:
+            wait_time = (attempt + 1) * 5
+            print(f"\nAPI Attempt {attempt+1} failed: {e}. Retrying in {wait_time}s...")
+            time.sleep(wait_time)
             
-            # Remove markdown JSON blocks if present
-            if text_resp.startswith("```json"):
-                text_resp = text_resp.replace("```json", "", 1).replace("```", "", 1).strip()
-            elif text_resp.startswith("```"):
-                 text_resp = text_resp.replace("```", "", 2).strip()
-                 
-            return json.loads(text_resp)
-    except Exception as e:
-        print(f"\nAPI Error: {e}")
-        return None
+    print(f"\nFinal API failure after {retries} retries.")
+    return None
 
 def grade_inscriptions():
     if not db_path.exists():
