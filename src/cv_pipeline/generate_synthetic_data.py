@@ -22,8 +22,33 @@ IMG_SIZE = 512
 NUM_IMAGES = 1000  # Number of synthetic images to generate
 NUM_VAL_IMAGES = 200
 
-# The 27 Etruscan Characters
-ETRUSCAN_CHARS = ["𐌀", "𐌁", "𐌂", "𐌃", "𐌄", "𐌅", "𐌆", "𐌇", "𐌈", "𐌉", "𐌊", "𐌋", "𐌌", "𐌍", "𐌎", "𐌏", "𐌐", "𐌑", "𐌒", "𐌓", "𐌔", "𐌕", "𐌖", "𐌗", "𐌘", "𐌙", "𐌚"]
+# The 23 Etruscan Characters (from etruscan.yaml — the source of truth)
+# Excludes non-Etruscan Old Italic: BE (U+10301), DE (U+10303), O (U+1030F), KHE (U+10319)
+ETRUSCAN_CHARS = [
+    "𐌀",  #  0: a
+    "𐌂",  #  1: c
+    "𐌄",  #  2: e
+    "𐌅",  #  3: v
+    "𐌆",  #  4: z
+    "𐌇",  #  5: h
+    "𐌈",  #  6: θ (THE)
+    "𐌉",  #  7: i
+    "𐌊",  #  8: k
+    "𐌋",  #  9: l
+    "𐌌",  # 10: m
+    "𐌍",  # 11: n
+    "𐌎",  # 12: ξ (ESH / four-stroke sigma)
+    "𐌐",  # 13: p
+    "𐌑",  # 14: ś (SHE)
+    "𐌒",  # 15: q
+    "𐌓",  # 16: r
+    "𐌔",  # 17: s
+    "𐌕",  # 18: t
+    "𐌖",  # 19: u
+    "𐌗",  # 20: χ (EKS / aspirated velar)
+    "𐌘",  # 21: φ (PHE / aspirated bilabial)
+    "𐌚",  # 22: f (late Etruscan)
+]
 CHAR_TO_CLASS = {char: idx for idx, char in enumerate(ETRUSCAN_CHARS)}
 
 def setup_directories():

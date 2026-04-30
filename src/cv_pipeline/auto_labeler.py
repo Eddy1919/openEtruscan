@@ -18,8 +18,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# The 27 Etruscan Characters for class mapping
-ETRUSCAN_CHARS = ["𐌀", "𐌁", "𐌂", "𐌃", "𐌄", "𐌅", "𐌆", "𐌇", "𐌈", "𐌉", "𐌊", "𐌋", "𐌌", "𐌍", "𐌎", "𐌏", "𐌐", "𐌑", "𐌒", "𐌓", "𐌔", "𐌕", "𐌖", "𐌗", "𐌘", "𐌙", "𐌚"]
+# The 23 Etruscan Characters (from etruscan.yaml)
+ETRUSCAN_CHARS = ["𐌀", "𐌂", "𐌄", "𐌅", "𐌆", "𐌇", "𐌈", "𐌉", "𐌊", "𐌋", "𐌌", "𐌍", "𐌎", "𐌐", "𐌑", "𐌒", "𐌓", "𐌔", "𐌕", "𐌖", "𐌗", "𐌘", "𐌚"]
 CHAR_TO_CLASS = {char: idx for idx, char in enumerate(ETRUSCAN_CHARS)}
 
 def find_glyph_bounding_boxes(image_path: str):
