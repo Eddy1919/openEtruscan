@@ -20,7 +20,7 @@ from ultralytics import YOLO
 from huggingface_hub import HfApi
 
 # Configuration
-DATASET_DIR = Path("data/yolo_dataset")
+DATASET_DIR = Path("data/synthetic_yolo")
 MODEL_NAME = "yolo11n.pt"  # Use latest Nano architecture for edge performance
 HF_REPO_ID = "openEtruscan/glyph-detector-yolo"
 EPOCHS = 100
@@ -30,72 +30,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def extract_db_to_yolo():
-    """
-    Simulates extracting from the primary database (e.g., PostgreSQL/PostGIS)
-    and formatting the images and annotations into the YOLO format:
-    
-    dataset/
-      images/
-        train/
-        val/
-      labels/
-        train/
-        val/
-      dataset.yaml
-    """
-    logger.info("Extracting tons of material from DB to YOLO format...")
-    
-    # Create directory structure
-    for split in ["train", "val"]:
-        (DATASET_DIR / "images" / split).mkdir(parents=True, exist_ok=True)
-        (DATASET_DIR / "labels" / split).mkdir(parents=True, exist_ok=True)
-
-    # ---------------------------------------------------------
-    # DB Extraction Logic Here
-    # e.g., session.query(GlyphAnnotation).all()
-    # Write normalized coords to .txt files
-    # ---------------------------------------------------------
-    
-    # Generate the dataset.yaml
-    yaml_content = f"""
-path: {DATASET_DIR.absolute()}
-train: images/train
-val: images/val
-
-names:
-  0: 𐌀
-  1: 𐌁
-  2: 𐌂
-  3: 𐌃
-  4: 𐌄
-  5: 𐌅
-  6: 𐌆
-  7: 𐌇
-  8: 𐌈
-  9: 𐌉
-  10: 𐌊
-  11: 𐌋
-  12: 𐌌
-  13: 𐌍
-  14: 𐌎
-  15: 𐌏
-  16: 𐌐
-  17: 𐌑
-  18: 𐌒
-  19: 𐌓
-  20: 𐌔
-  21: 𐌕
-  22: 𐌖
-  23: 𐌗
-  24: 𐌘
-  25: 𐌙
-  26: 𐌚
-"""
-    with open(DATASET_DIR / "dataset.yaml", "w", encoding="utf-8") as f:
-        f.write(yaml_content.strip())
-        
-    logger.info("Dataset formatted successfully at %s", DATASET_DIR)
+def verify_dataset():
+    """Ensure the synthetic dataset has been generated."""
+    yaml_path = DATASET_DIR / "dataset.yaml"
+    if not yaml_path.exists():
+        logger.error("Dataset YAML not found! Please run generate_synthetic_data.py first.")
+        raise FileNotFoundError(f"{yaml_path} is missing.")
+    logger.info("Dataset found at %s", DATASET_DIR)
 
 
 def train_and_export():
@@ -156,13 +97,13 @@ def push_to_huggingface(onnx_path: str):
 if __name__ == "__main__":
     logger.info("--- Starting OpenEtruscan CV Pipeline ---")
     
-    # 1. Prepare data
-    extract_db_to_yolo()
+    # 1. Verify data
+    verify_dataset()
     
-    # 2. Train and export (Uncomment when actual data exists in DB)
-    # onnx_file = train_and_export()
+    # 2. Train and export 
+    onnx_file = train_and_export()
     
-    # 3. Push to registry (Uncomment when model is trained)
-    # push_to_huggingface(onnx_file)
+    # 3. Push to registry 
+    push_to_huggingface(onnx_file)
     
-    logger.info("Pipeline structure built successfully.")
+    logger.info("Pipeline execution built successfully.")

@@ -75,3 +75,6 @@ data/cie/full_extraction.json
 # Local security audit (contains grep patterns for secrets — keep local)
 scripts/security_check.sh
 /data
+
+# Ultralytics YOLO runs
+runs/
