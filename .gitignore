@@ -56,8 +56,8 @@ htmlcov/
 # NOTE: corpus_data.js and languages.js are tracked because
 # production deploys via git pull and needs them to serve the web UI.
 
-# Nginx configs (environment-specific)
-nginx.conf
+# Nginx dev override (the prod config nginx.conf IS tracked so changes go
+# through review; nginx.dev.conf is for local-only experiments).
 nginx.dev.conf
 
 # ML model artifacts
