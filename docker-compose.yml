@@ -41,9 +41,13 @@ services:
     image: stain/jena-fuseki:latest
     restart: unless-stopped
     user: root
+    mem_limit: 512m
     environment:
       ADMIN_PASSWORD: ${FUSEKI_ADMIN_PASSWORD:-etruscan_sparql}
       FUSEKI_DATASET_1: openetruscan
+      # Constrain JVM heap to fit the e2-small VM. Without this, Fuseki claims a
+      # 4 GiB heap on a 1.9 GiB host and the OOM-killer becomes a problem under load.
+      JAVA_OPTIONS: "-Xmx384m -Xms128m"
     volumes:
       - fuseki_data:/fuseki
       - ./data/rdf:/staging:ro

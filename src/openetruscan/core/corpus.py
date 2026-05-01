@@ -31,6 +31,20 @@ SCRIPT_SYSTEMS = ("old_italic", "latin", "greek", "other")
 COMPLETENESS_VALUES = ("complete", "fragmentary", "illegible")
 PROVENANCE_STATUSES = ("verified", "quarantined", "rejected")
 
+# Columns consumed by _dict_to_inscription. Excludes emb_text/emb_context/emb_combined
+# (vector(768), ~3 KB each), fts_canonical (tsvector), and geom (PostGIS) — which
+# _dict_to_inscription never reads. Pulling them turned full-table scans into 700-second
+# queries on the production read path.
+_INSCRIPTION_COLS = (
+    "id, raw_text, canonical, phonetic, old_italic, "
+    "findspot, findspot_lat, findspot_lon, findspot_uncertainty_m, "
+    "date_approx, date_uncertainty, "
+    "medium, object_type, source, bibliography, notes, "
+    "language, classification, script_system, completeness, "
+    "provenance_status, provenance_flags, "
+    "trismegistos_id, eagle_id, pleiades_id, geonames_id, is_codex"
+)
+
 # Geographic bounds for Etruscan cultural area (used by provenance checks)
 _ETRUSCAN_LAT_RANGE = (35.0, 48.0)
 _ETRUSCAN_LON_RANGE = (5.0, 18.0)
@@ -752,8 +766,8 @@ class Corpus:
         if geo_only:
             conditions.append("findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL")
 
-        where_clause = " AND ".join(conditions) if conditions else "1=1"
-        count_query = f"SELECT COUNT(*) FROM inscriptions WHERE {where_clause}"  # nosec B608 # nosemgrep
+        where_sql = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+        count_query = f"SELECT COUNT(*) FROM inscriptions{where_sql}"  # nosec B608 # nosemgrep
 
         # Valid sort columns mapping
         valid_sorts = {
@@ -764,7 +778,7 @@ class Corpus:
         }
         order_by = valid_sorts.get(sort_by, "id ASC")
 
-        query = f"SELECT * FROM inscriptions WHERE {where_clause} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"  # nosec B608 # nosemgrep
+        query = f"SELECT {_INSCRIPTION_COLS} FROM inscriptions{where_sql} ORDER BY {order_by} LIMIT {ph} OFFSET {ph}"  # nosec B608 # nosemgrep
         filter_params = list(params)
         query_params = list(params) + [limit, offset]
         return query, count_query, query_params, filter_params
@@ -838,8 +852,8 @@ class Corpus:
         import psycopg2.extras
 
         radius_m = radius_km * 1000.0
-        query = """
-            SELECT *,
+        query = f"""
+            SELECT {_INSCRIPTION_COLS},
                    ST_Distance(
                        ST_Buffer(geom::geography, COALESCE(findspot_uncertainty_m, 0)),
                        ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
@@ -853,7 +867,7 @@ class Corpus:
             )
             ORDER BY dist ASC
             LIMIT %s
-        """
+        """  # nosec B608 # nosemgrep -- _INSCRIPTION_COLS is a static constant
         count_query = """
             SELECT COUNT(*)
             FROM inscriptions
@@ -916,7 +930,7 @@ class Corpus:
         if field not in ("emb_text", "emb_context", "emb_combined"):
             raise ValueError(f"Invalid embedding field: {field}")
 
-        query_parts = ["SELECT *"]
+        query_parts = [f"SELECT {_INSCRIPTION_COLS}"]
         from_parts = ["FROM inscriptions"]
         where_parts = []
         order_parts = []
@@ -953,11 +967,13 @@ class Corpus:
         else:
             order_parts.append("sparse_rank DESC")
 
+        # query_parts already include their own leading ", " for appended scores,
+        # so concatenate without an extra separator.
         sql_stmt = (
             sql.SQL(" ")
             .join(
                 [
-                    sql.SQL(", ".join(query_parts).replace("SELECT *, ,", "SELECT *,")),
+                    sql.SQL("".join(query_parts)),
                     sql.SQL(" ".join(from_parts)),
                     sql.SQL("WHERE " + " AND ".join(where_parts)),
                     sql.SQL("ORDER BY " + ", ".join(order_parts)),
@@ -1199,7 +1215,7 @@ class Corpus:
         ) as cur:
             # Use ANY(%s) with a list parameter for safe IN queries
             cur.execute(
-                "SELECT * FROM inscriptions WHERE id = ANY(%s)",
+                f"SELECT {_INSCRIPTION_COLS} FROM inscriptions WHERE id = ANY(%s)",  # nosec B608 # nosemgrep -- _INSCRIPTION_COLS is a static constant
                 (ids,),
             )
             rows = cur.fetchall()
