@@ -54,7 +54,12 @@ lod = ["httpx>=0.25"]
 neural = ["torch>=2.0", "onnxscript>=0.2"]
 neural-inference = ["onnxruntime>=1.16"]
 sota = ["transformers>=4.30.0", "accelerate>=0.21.0"]
-all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota]"]
+# CPU cross-encoder reranker for /search/hybrid. Optional because it pulls in
+# torch + transformers (~700 MB resident) — the e2-small VM cannot host this
+# alongside the API + Fuseki without sizing up. Document this as the gate
+# before turning on prod-side rerank in ROADMAP.md.
+rerank = ["sentence-transformers>=3.0", "torch>=2.0"]
+all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank]"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
@@ -64,6 +69,10 @@ dev = [
     "ruff>=0.4",
     "semgrep>=1.60",
     "safety>=3.0",
+    # testcontainers spins a real Postgres + pgvector locally for tests that
+    # would otherwise silently pass against in-memory SQLite. CI uses its own
+    # `services:` block; both paths land in the same conftest.py fixture.
+    "testcontainers[postgres]>=4.0",
     "openetruscan[all]",
 ]
 
