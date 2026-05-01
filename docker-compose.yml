@@ -15,15 +15,10 @@ services:
     ports:
       - "8000:8000"
 
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+  # Frontend is deployed on Vercel (openetruscan.com), not on this VM. The
+  # `./frontend` directory does not exist in this repo, so any service that
+  # builds it will fail `docker compose up -d --build`. Do not re-add unless
+  # the frontend is being moved on-prem.
 
   web:
     image: nginx:alpine
