@@ -69,8 +69,22 @@ async def lifespan(app: FastAPI):
     global START_TIME
     START_TIME = datetime.now(timezone.utc)
     _configure_logging()
-    # The InscriptionRepository handles sessions per request
-    yield
+
+    # Shared httpx client for outbound calls (Gemini embeddings, etc.).
+    # Opening one per-request was the previous pattern and showed up in latency under load.
+    import httpx
+
+    app.state.http = httpx.AsyncClient(timeout=10.0)
+
+    # Lazily-loaded ByT5/CharMLM lacunae restorer. Holding a single instance on
+    # app.state lets `predict()` reuse the model after the first call instead of
+    # re-instantiating (and re-building the dummy model) on every request.
+    app.state.lacunae = None  # constructed on first /neural/restore call
+
+    try:
+        yield
+    finally:
+        await app.state.http.aclose()
 
 
 # ── Rate Limiter ────────────────────────────────────────────────────────────
@@ -577,7 +591,10 @@ async def restore_lacunae(
                 detail="Lacunae restoration requires PyTorch, which is not installed in the lightweight API container.",
             )
 
-        restorer = LacunaeRestorer()
+        restorer = request.app.state.lacunae
+        if restorer is None:
+            restorer = LacunaeRestorer()
+            request.app.state.lacunae = restorer
         results = restorer.predict(body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
     except HTTPException:
@@ -754,22 +771,19 @@ async def semantic_search(
             detail="GEMINI_API_KEY not configured on server",
         )
 
-    # 2. Build Gemini Embedding URL
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={settings.gemini_api_key}"
+    # 2. Build Gemini Embedding request. The API key goes in the x-goog-api-key
+    # header rather than the URL query string so it does not leak into nginx
+    # access logs, browser referrers, or proxy caches.
+    url = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent"
     payload = {"content": {"parts": [{"text": q[:2048]}]}}
+    headers = {"x-goog-api-key": settings.gemini_api_key}
 
-    # local helper to fetch the embedding from Google
-    async def _fetch_emb():
-        import httpx
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(url, json=payload, timeout=10.0)
-            resp.raise_for_status()
-            return resp.json()["embedding"]["values"]
-
-    # 3. Fetch the query embedding
+    # 3. Fetch the query embedding using the shared httpx client (opened in lifespan).
     try:
-        query_embedding = await _fetch_emb()
+        client = request.app.state.http
+        resp = await client.post(url, json=payload, headers=headers)
+        resp.raise_for_status()
+        query_embedding = resp.json()["embedding"]["values"]
     except Exception as e:
         logger.error(f"Embedding failed: {e}")
         raise HTTPException(
