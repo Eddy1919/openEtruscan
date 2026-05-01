@@ -12,7 +12,7 @@
           "Health"
         ],
         "summary": "Health Check",
-        "description": "Health check endpoint for monitoring and load balancers.",
+        "description": "Deep health check.\n\nReturns 200 with `status: healthy` only when every dependency the public\nsurface actually needs is reachable. A 503 is preferable to a green check\nwhile the DB is gone.",
         "operationId": "health_check_health_get",
         "responses": {
           "200": {
@@ -179,6 +179,43 @@
             "description": "Classification filter"
           },
           {
+            "name": "provenance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(excavated|acquired_documented|acquired_undocumented|unknown)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provenance tier: excavated, acquired_documented, acquired_undocumented, unknown",
+              "title": "Provenance"
+            },
+            "description": "Filter by provenance tier: excavated, acquired_documented, acquired_undocumented, unknown"
+          },
+          {
+            "name": "has_provenance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to inscriptions with (true) or without (false) a known findspot. Useful for citation contexts: pass `true` to omit unprovenanced material.",
+              "title": "Has Provenance"
+            },
+            "description": "Restrict to inscriptions with (true) or without (false) a known findspot. Useful for citation contexts: pass `true` to omit unprovenanced material."
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -309,6 +346,25 @@
             "description": "Classification filter"
           },
           {
+            "name": "provenance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(excavated|acquired_documented|acquired_undocumented|unknown)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Provenance tier filter",
+              "title": "Provenance"
+            },
+            "description": "Provenance tier filter"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -396,7 +452,7 @@
           "Research"
         ],
         "summary": "Get Inscription Concordance",
-        "description": "Fetch all related inscriptions that share identifiers (TM, EDR, Pleiades) \nwith the target record. Defines the physical concordance cluster.",
+        "description": "Fetch all related inscriptions that share identifiers (TM, EDR, Pleiades)\nwith the target record. Defines the physical concordance cluster.",
         "operationId": "get_inscription_concordance_inscription__inscription_id__concordance_get",
         "parameters": [
           {
@@ -437,7 +493,7 @@
           "Prosopography"
         ],
         "summary": "Get Inscription Names Network",
-        "description": "Fetch a graph representation (nodes/edges) of entities and relationships \nassociated with this inscription.",
+        "description": "Fetch a graph representation (nodes/edges) of entities and relationships\nassociated with this inscription.",
         "operationId": "get_inscription_names_network_inscription__inscription_id__names_network_get",
         "parameters": [
           {
@@ -478,7 +534,7 @@
           "Corpus"
         ],
         "summary": "Import Inscription",
-        "description": "Import an inscription from EpiDoc TEI XML.",
+        "description": "Import an inscription from EpiDoc TEI XML.\n\nSupports the ``Idempotency-Key`` header (RFC draft `idempotency-header`).\nA client retrying after a network blip can safely re-POST the same body\nwith the same key; the second call returns the cached response without\nre-running the EpiDoc parse and the upsert.",
         "operationId": "import_inscription_inscriptions_post",
         "responses": {
           "200": {
@@ -489,7 +545,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/ids": {
@@ -549,7 +610,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/stats/summary": {
@@ -558,8 +624,28 @@
           "Statistics"
         ],
         "summary": "Stats Summary",
-        "description": "Full corpus statistics for dashboard display.",
+        "description": "Full corpus statistics for dashboard display, including the provenance breakdown.",
         "operationId": "stats_summary_stats_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/provenance": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Stats Provenance",
+        "description": "Honest provenance breakdown of the corpus.\n\nReturns the per-tier counts plus the share of the corpus that has a\ndocumented findspot vs. is unprovenanced. Citation tooling (and the\nhomepage) should consume this rather than the headline `total` so users\ncan distinguish \"philologically attested\" from \"archaeologically located\".",
+        "operationId": "stats_provenance_stats_provenance_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1335,6 +1421,431 @@
           }
         }
       }
+    },
+    "/export/epidoc": {
+      "get": {
+        "tags": [
+          "Export"
+        ],
+        "summary": "Export Epidoc Bulk",
+        "description": "Stream the entire corpus as a multi-document EpiDoc XML response.",
+        "operationId": "export_epidoc_bulk_export_epidoc_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscriptions/{inscription_id}/validate": {
+      "get": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Validate Inscription Flags",
+        "description": "Auto-detect potential issues (OCR, out-of-range, etc) in an inscription.",
+        "operationId": "validate_inscription_flags_inscriptions__inscription_id__validate_get",
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/bayesian-date": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "summary": "Bayesian Date Estimate",
+        "description": "Estimate inscription date using Bayesian inference over time bins.",
+        "operationId": "bayesian_date_estimate_stats_bayesian_date_get",
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Inscription text to date probabilistically",
+              "title": "Text"
+            },
+            "description": "Inscription text to date probabilistically"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 50,
+              "description": "Language adapter",
+              "default": "etruscan",
+              "title": "Language"
+            },
+            "description": "Language adapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prosopography/export": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Export Prosopography",
+        "description": "Export the entire prosopographical FamilyGraph.",
+        "operationId": "export_prosopography_prosopography_export_get",
+        "parameters": [
+          {
+            "name": "fmt",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Export format: json, graphml, csv, neo4j",
+              "default": "json",
+              "title": "Fmt"
+            },
+            "description": "Export format: json, graphml, csv, neo4j"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prosopography/persons/search": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Search Prosopography Persons",
+        "description": "Search for specific named persons in the prosopographical network.",
+        "operationId": "search_prosopography_persons_prosopography_persons_search_get",
+        "parameters": [
+          {
+            "name": "gens",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gens"
+            }
+          },
+          {
+            "name": "praenomen",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Praenomen"
+            }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gender"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prosopography/clans/{gens}/related": {
+      "get": {
+        "tags": [
+          "Prosopography"
+        ],
+        "summary": "Related Clans",
+        "description": "Find clans strictly related to the target clan via co-occurrence.",
+        "operationId": "related_clans_prosopography_clans__gens__related_get",
+        "parameters": [
+          {
+            "name": "gens",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Gens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/validate-pleiades": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Admin Validate Pleiades",
+        "description": "Administrative audit endpoint for Pleiades identifier alignments.",
+        "operationId": "admin_validate_pleiades_admin_validate_pleiades_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "List Data Sources",
+        "description": "List the data sources backing the corpus, with provenance baselines.\n\nEach entry includes the canonical citation, license, and the *typical*\narchaeological provenance tier of rows from that source. Per-row provenance\nis still in `inscriptions.provenance_status`; the source baseline is just\na hint for the UI (\"most rows from Larth are unprovenanced\").",
+        "operationId": "list_data_sources_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/hybrid": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search Hybrid",
+        "description": "Hybrid retrieval: BM25 (FTS) \u222a pgvector top-k \u2192 optional cross-encoder rerank.\n\nThe endpoint:\n  1. runs the FTS path (`fts_canonical @@ plainto_tsquery`) for sparse hits,\n  2. embeds the query via Gemini text-embedding-004 and runs the dense path\n     against the chosen vector field with HNSW,\n  3. unions the candidates (max-of-ranks) and, if `rerank=true`, re-scores\n     each candidate with a CPU MiniLM cross-encoder.\nReturns the top `limit` results.",
+        "operationId": "search_hybrid_search_hybrid_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Free-text query",
+              "title": "Q"
+            },
+            "description": "Free-text query"
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(emb_text|emb_context|emb_combined)$",
+              "description": "Vector field to compare against",
+              "default": "emb_combined",
+              "title": "Field"
+            },
+            "description": "Vector field to compare against"
+          },
+          {
+            "name": "rerank",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Apply CPU cross-encoder rerank to the union of FTS + vector hits",
+              "default": true,
+              "title": "Rerank"
+            },
+            "description": "Apply CPU cross-encoder rerank to the union of FTS + vector hits"
+          },
+          {
+            "name": "has_provenance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to inscriptions with (true) or without (false) a known findspot",
+              "title": "Has Provenance"
+            },
+            "description": "Restrict to inscriptions with (true) or without (false) a known findspot"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1535,6 +2046,33 @@
             ],
             "title": "Provenance Status",
             "default": "verified"
+          },
+          "source_code": {
+            "type": "string",
+            "title": "Source Code",
+            "default": "unknown"
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "original_script_entry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Script Entry"
           }
         },
         "type": "object",
@@ -1655,6 +2193,12 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

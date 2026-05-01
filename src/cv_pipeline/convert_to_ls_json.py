@@ -27,7 +27,8 @@ def get_base64_image(image_path: Path):
     with open(image_path, "rb") as f:
         encoded = base64.b64encode(f.read()).decode("utf-8")
     ext = image_path.suffix.lower().replace(".", "")
-    if ext == "jpg": ext = "jpeg"
+    if ext == "jpg":
+        ext = "jpeg"
     return f"data:image/{ext};base64,{encoded}"
 
 def convert():
@@ -40,7 +41,7 @@ def convert():
         results = []
         
         if txt_path.exists():
-            with open(txt_path, "r") as f:
+            with open(txt_path) as f:
                 lines = f.readlines()
                 for line in lines:
                     parts = line.strip().split()

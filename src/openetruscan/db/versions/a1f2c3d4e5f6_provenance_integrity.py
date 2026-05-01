@@ -77,7 +77,6 @@ PROVENANCE_KINDS = (
 
 def upgrade() -> None:
     """Reify the provenance_status field and backfill from findspot evidence."""
-    bind = op.get_bind()
 
     # 1. Drop any prior CHECK constraint on the column (best-effort; some envs
     #    have a generic constraint name, others have a model-derived one).

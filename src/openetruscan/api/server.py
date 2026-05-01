@@ -600,6 +600,41 @@ async def get_inscription_names_network(
     return graph
 
 
+# In-memory idempotency store for /inscriptions POST. The endpoint runs at
+# 30/minute on a single VM instance and the import flow is admin-only, so a
+# process-local TTL cache is the right level of complexity. Once the API moves
+# to Cloud Run (multi-instance), this will need to migrate to Redis or a
+# `idempotency_keys` table — see ROADMAP.md.
+_IDEMPOTENCY_TTL_SECONDS = 24 * 3600
+_IDEMPOTENCY_CACHE: dict[str, tuple[float, dict]] = {}
+
+
+def _idempotency_get(key: str) -> dict | None:
+    """Return a cached response for `key` if present and unexpired."""
+    import time
+
+    record = _IDEMPOTENCY_CACHE.get(key)
+    if record is None:
+        return None
+    expires_at, payload = record
+    if time.time() > expires_at:
+        _IDEMPOTENCY_CACHE.pop(key, None)
+        return None
+    return payload
+
+
+def _idempotency_put(key: str, payload: dict) -> None:
+    import time
+
+    _IDEMPOTENCY_CACHE[key] = (time.time() + _IDEMPOTENCY_TTL_SECONDS, payload)
+    # Cheap eviction: if the cache grows beyond a sane bound, drop the oldest
+    # 25% of entries. Importing inscriptions is rare, so this rarely fires.
+    if len(_IDEMPOTENCY_CACHE) > 1024:
+        items = sorted(_IDEMPOTENCY_CACHE.items(), key=lambda kv: kv[1][0])
+        for k, _ in items[: len(items) // 4]:
+            _IDEMPOTENCY_CACHE.pop(k, None)
+
+
 @app.post("/inscriptions", tags=["Corpus"])
 @limiter.limit("30/minute")
 async def import_inscription(
@@ -607,12 +642,24 @@ async def import_inscription(
     _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    """Import an inscription from EpiDoc TEI XML."""
+    """Import an inscription from EpiDoc TEI XML.
+
+    Supports the ``Idempotency-Key`` header (RFC draft `idempotency-header`).
+    A client retrying after a network blip can safely re-POST the same body
+    with the same key; the second call returns the cached response without
+    re-running the EpiDoc parse and the upsert.
+    """
     content_type = request.headers.get("content-type", "")
     if "xml" not in content_type:
         raise HTTPException(
             status_code=400, detail="Content-Type must be application/xml or similar"
         )
+
+    idempotency_key = request.headers.get("idempotency-key")
+    if idempotency_key:
+        cached = _idempotency_get(idempotency_key)
+        if cached is not None:
+            return cached
 
     body = await request.body()
     try:
@@ -621,7 +668,10 @@ async def import_inscription(
         inscription = parse_epidoc(body.decode("utf-8"))
         repo = InscriptionRepository(session)
         await repo.add(inscription)
-        return {"status": "success", "id": inscription.id}
+        response = {"status": "success", "id": inscription.id}
+        if idempotency_key:
+            _idempotency_put(idempotency_key, response)
+        return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -1285,3 +1335,215 @@ async def admin_validate_pleiades(request: Request, session: AsyncSession = Depe
     """Administrative audit endpoint for Pleiades identifier alignments."""
     repo = InscriptionRepository(session)
     return await repo.validate_pleiades_ids()
+
+
+# ── Data sources ────────────────────────────────────────────────────────────
+
+
+@app.get("/sources", tags=["Sources"])
+@limiter.limit("60/minute")
+async def list_data_sources(request: Request, session: AsyncSession = Depends(get_session)):
+    """List the data sources backing the corpus, with provenance baselines.
+
+    Each entry includes the canonical citation, license, and the *typical*
+    archaeological provenance tier of rows from that source. Per-row provenance
+    is still in `inscriptions.provenance_status`; the source baseline is just
+    a hint for the UI ("most rows from Larth are unprovenanced").
+    """
+    from sqlalchemy import select, func as sa_func
+
+    from openetruscan.db.models import DataSource, Inscription
+
+    counts_subq = (
+        select(
+            Inscription.source_id.label("source_id"),
+            sa_func.count().label("count"),
+        )
+        .where(Inscription.source_id.is_not(None))
+        .group_by(Inscription.source_id)
+        .subquery()
+    )
+    stmt = select(DataSource, counts_subq.c.count).join(
+        counts_subq, counts_subq.c.source_id == DataSource.id, isouter=True
+    )
+    rows = (await session.execute(stmt)).all()
+
+    return {
+        "sources": [
+            {
+                "id": s.id,
+                "display_name": s.display_name,
+                "citation": s.citation,
+                "license": s.license,
+                "url": s.url,
+                "provenance_baseline": s.provenance_baseline,
+                "retrieved_at": s.retrieved_at.isoformat() if s.retrieved_at else None,
+                "inscription_count": int(c or 0),
+            }
+            for s, c in rows
+        ]
+    }
+
+
+# ── Hybrid search (BM25 ∪ pgvector → cross-encoder rerank) ──────────────────
+
+
+# Lazy global so the cross-encoder model is loaded once per worker. The model
+# is small (~280 MB) and CPU-only; first call pays the load cost (~3 s on the
+# e2-small host), subsequent calls reuse the loaded weights.
+_RERANKER = None
+_RERANKER_LOAD_LOCK = None
+
+
+async def _get_reranker():
+    global _RERANKER, _RERANKER_LOAD_LOCK
+    if _RERANKER is not None:
+        return _RERANKER
+    import asyncio
+
+    if _RERANKER_LOAD_LOCK is None:
+        _RERANKER_LOAD_LOCK = asyncio.Lock()
+
+    async with _RERANKER_LOAD_LOCK:
+        if _RERANKER is not None:
+            return _RERANKER
+        try:
+            from sentence_transformers import CrossEncoder
+
+            # Run the synchronous model load in a thread so we do not block the
+            # event loop. The model is light enough that this is OK on the e2-small.
+            _RERANKER = await asyncio.to_thread(
+                CrossEncoder, "cross-encoder/ms-marco-MiniLM-L-6-v2", max_length=256
+            )
+        except ImportError:
+            # The hybrid endpoint is opt-in; if sentence-transformers is not
+            # installed we still return the union (no rerank).
+            _RERANKER = False
+        return _RERANKER
+
+
+@app.get("/search/hybrid", response_model=SearchResponse, tags=["Search"])
+@limiter.limit("30/minute")
+async def search_hybrid(
+    request: Request,
+    q: Annotated[
+        str,
+        Query(description="Free-text query", min_length=1, max_length=MAX_TEXT_LEN),
+    ],
+    field: Annotated[
+        str,
+        Query(
+            description="Vector field to compare against",
+            pattern="^(emb_text|emb_context|emb_combined)$",
+        ),
+    ] = "emb_combined",
+    rerank: Annotated[
+        bool,
+        Query(description="Apply CPU cross-encoder rerank to the union of FTS + vector hits"),
+    ] = True,
+    has_provenance: Annotated[
+        bool | None,
+        Query(description="Restrict to inscriptions with (true) or without (false) a known findspot"),
+    ] = None,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=50),
+    ] = 20,
+    session: AsyncSession = Depends(get_session),
+):
+    """Hybrid retrieval: BM25 (FTS) ∪ pgvector top-k → optional cross-encoder rerank.
+
+    The endpoint:
+      1. runs the FTS path (`fts_canonical @@ plainto_tsquery`) for sparse hits,
+      2. embeds the query via Gemini text-embedding-004 and runs the dense path
+         against the chosen vector field with HNSW,
+      3. unions the candidates (max-of-ranks) and, if `rerank=true`, re-scores
+         each candidate with a CPU MiniLM cross-encoder.
+    Returns the top `limit` results.
+    """
+    if not settings.gemini_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GEMINI_API_KEY not configured on server",
+        )
+
+    repo = InscriptionRepository(session)
+    text_q = _clamp_text(q) or ""
+
+    # 1. FTS path. Pull a generous candidate pool (4× target) so the union has
+    #    room to mix sparse + dense.
+    fts_results = await repo.search(
+        text_query=text_q,
+        has_provenance=has_provenance,
+        limit=min(limit * 4, 80),
+        offset=0,
+        sort_by="id",
+    )
+
+    # 2. Dense path. Embed the query, then run pgvector cosine search.
+    try:
+        client = request.app.state.http
+        resp = await client.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
+            json={"content": {"parts": [{"text": text_q[:2048]}]}},
+            headers={"x-goog-api-key": settings.gemini_api_key},
+        )
+        resp.raise_for_status()
+        embedding = resp.json()["embedding"]["values"]
+    except Exception as e:
+        logger.warning(f"Hybrid: embedding fetch failed, falling back to FTS only: {e}")
+        embedding = None
+
+    dense_results = []
+    if embedding is not None:
+        try:
+            dense = await repo.semantic_search(
+                query_embedding=embedding,
+                field=field,
+                limit=min(limit * 4, 80),
+            )
+            dense_results = dense.inscriptions
+        except Exception as e:
+            logger.warning(f"Hybrid: vector search failed, falling back to FTS only: {e}")
+
+    # 3. Union via Reciprocal Rank Fusion (k=60 is the standard tuning).
+    rrf_k = 60
+    scored: dict[str, tuple[float, Any]] = {}
+    for rank, insc in enumerate(fts_results.inscriptions):
+        scored[insc.id] = (1.0 / (rrf_k + rank), insc)
+    for rank, insc in enumerate(dense_results):
+        prev = scored.get(insc.id)
+        contrib = 1.0 / (rrf_k + rank)
+        if prev:
+            scored[insc.id] = (prev[0] + contrib, insc)
+        else:
+            scored[insc.id] = (contrib, insc)
+
+    candidates = sorted(scored.values(), key=lambda t: -t[0])[: max(limit * 2, 20)]
+
+    # 4. Optional cross-encoder rerank. We send (query, canonical) pairs and
+    #    let the model produce a relevance score. Skip if the library isn't
+    #    installed or if the candidate pool is empty.
+    if rerank and candidates:
+        reranker = await _get_reranker()
+        if reranker:
+            import asyncio
+
+            pairs = [(text_q, c[1].canonical) for c in candidates]
+            try:
+                scores = await asyncio.to_thread(reranker.predict, pairs)
+                candidates = sorted(
+                    zip(scores, [c[1] for c in candidates], strict=True),
+                    key=lambda t: -float(t[0]),
+                )
+                final = [c[1] for c in candidates[:limit]]
+            except Exception as e:
+                logger.warning(f"Hybrid rerank failed; returning RRF order: {e}")
+                final = [c[1] for c in candidates[:limit]]
+        else:
+            final = [c[1] for c in candidates[:limit]]
+    else:
+        final = [c[1] for c in candidates[:limit]]
+
+    data = [_build_model(i) for i in final]
+    return {"total": len(final), "count": len(data), "results": data}

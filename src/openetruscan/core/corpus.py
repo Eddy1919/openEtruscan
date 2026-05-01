@@ -910,10 +910,10 @@ class Corpus:
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))
+            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
-            cur.execute(count_query, (lon, lat, radius_m))
+            cur.execute(count_query, (lon, lat, radius_m))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             total = cur.fetchone()["count"]
 
         return SearchResults(inscriptions=inscriptions, total=total)
@@ -1243,8 +1243,8 @@ class Corpus:
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
             # Use ANY(%s) with a list parameter for safe IN queries
-            cur.execute(
-                f"SELECT {_INSCRIPTION_COLS} FROM inscriptions WHERE id = ANY(%s)",  # nosec B608 # nosemgrep -- _INSCRIPTION_COLS is a static constant
+            cur.execute(  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
+                f"SELECT {_INSCRIPTION_COLS} FROM inscriptions WHERE id = ANY(%s)",  # nosec B608 -- _INSCRIPTION_COLS is a static constant
                 (ids,),
             )
             rows = cur.fetchall()

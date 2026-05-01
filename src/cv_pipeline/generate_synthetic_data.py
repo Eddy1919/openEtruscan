@@ -6,7 +6,6 @@ Usage:
     poetry run python src/cv_pipeline/generate_synthetic_data.py
 """
 
-import os
 import random
 import logging
 from pathlib import Path
@@ -72,7 +71,9 @@ def generate_stone_texture(image_id, width, height):
         try:
             # Download a random photograph
             url = f"https://picsum.photos/seed/{image_id % 50}/{width}/{height}"
-            urllib.request.urlretrieve(url, texture_path)
+            # URL is constructed from a known prefix and integer-only seed/dims;
+            # no user input. SSRF risk does not apply here.
+            urllib.request.urlretrieve(url, texture_path)  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         except Exception as e:
             logger.warning(f"Failed to fetch real texture, falling back to noise: {e}")
             pass

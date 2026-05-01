@@ -59,6 +59,12 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 
 ### ML serving
 - ◯ Move ByT5 lacuna restoration to a dedicated Cloud Run inference service with batching. Today every `/neural/restore` is a CPU-bound torch session inside the API container; that does not scale concurrently and prevents GPU usage.
+  - **Plan**:
+    - Extract the `LacunaeRestorer` model loading and inference logic into a standalone lightweight FastAPI or vLLM container.
+    - Package the container with GPU-compatible PyTorch/ONNX Runtime bindings.
+    - Deploy to Cloud Run using the `gpu` execution environment (e.g., L4 instances) to vastly reduce inference latency.
+    - Configure request batching via Cloud Run concurrency settings or dynamic batching middleware to amortize GPU costs across multiple API requests.
+    - Update the main API `/neural/restore` endpoint to act as a reverse proxy/client to the Cloud Run service instead of doing local inference.
 - ◯ Add a model registry concept (URI per version) so a new restorer can be A/B'd before flipping the default.
 - ◯ Snapshot classifier predictions on a held-out set; fail CI on regression.
 
