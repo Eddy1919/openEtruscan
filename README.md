@@ -19,7 +19,22 @@
 
 OpenEtruscan provides computationally accessible tools for the Etruscan epigraphic record. The platform normalises transcriptions across notation systems, classifies inscriptions using neural models, and publishes the full corpus as Linked Open Data.
 
-The corpus currently contains a unified, verified dataset of **8,091 inscriptions** georeferenced to 191 archaeological sites (including the recent CIE Rescue Integration), with high-fidelity semantic links to Trismegistos, EAGLE, and Pleiades.
+The corpus currently contains **6,633 unified inscriptions** drawn primarily from the *Larth Dataset* (Vico & Spanakis, 2023; ~71%) and the *Corpus Inscriptionum Etruscarum* (Vol. I extractions; ~29%), with semantic links to Trismegistos, EAGLE, and Pleiades.
+
+### Provenance disclosure
+
+OpenEtruscan separates **editorial verification of a text** (we trust the published reading) from **archaeological provenance** (we know where the inscribed object actually surfaced). These are two different scholarly claims and each row carries a `provenance_status` in one of four tiers:
+
+| Tier | Count | Share | Meaning |
+|---|---:|---:|---|
+| `acquired_documented` | 2,317 | 34.9% | A findspot is named in the source bibliography. Suitable for spatial citation. The deeper archaeological context (stratum, excavator, associated finds) is generally not recorded. |
+| `acquired_undocumented` | 4,316 | 65.1% | The text is attested in the philological literature but no findspot is recorded. Treat as **unprovenanced**; cite with care. |
+| `excavated` | 0 | 0.0% | Stratigraphically excavated with a published find context. Reserved for curatorial promotion of individual records — not assigned by automatic heuristic. |
+| `unknown` | 0 | 0.0% | Not yet assessed. |
+
+The `/search` endpoint accepts `?has_provenance=true` to restrict to the first two tiers, and the website's search UI defaults to that filter. The `/stats/provenance` endpoint returns the live breakdown.
+
+The "184 archaeological sites" referenced in earlier copy is the count of distinct findspot strings across the **34.9% with documented provenance** — not across the whole corpus.
 
 The platform follows a decoupled, cloud-native architecture:
 - **Data Layer:** PostgreSQL (PostGIS + pgvector) hosted on Google Cloud SQL, featuring 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision epigraphic similarity search.

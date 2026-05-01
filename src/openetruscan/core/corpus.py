@@ -29,7 +29,27 @@ CLASSIFICATIONS = (
 
 SCRIPT_SYSTEMS = ("old_italic", "latin", "greek", "other")
 COMPLETENESS_VALUES = ("complete", "fragmentary", "illegible")
-PROVENANCE_STATUSES = ("verified", "quarantined", "rejected")
+
+# Tiered provenance vocabulary. See migration `a1f2c3d4e5f6_provenance_integrity`
+# for the rationale. The four values describe the *archaeological* status of an
+# inscription, not the editorial status of its text:
+#   - excavated:             documented stratigraphic recovery (curator-set).
+#   - acquired_documented:   findspot named in the bibliography, no dig context.
+#   - acquired_undocumented: no findspot recorded; "Discovery Vector".
+#   - unknown:               not yet assessed.
+PROVENANCE_STATUSES = (
+    "excavated",
+    "acquired_documented",
+    "acquired_undocumented",
+    "unknown",
+)
+
+# `has_provenance` (used as a /search facet) is True when the row sits in either
+# tier that asserts a known archaeological location. Conservative on purpose —
+# `acquired_documented` does NOT mean we know the dig context, only that we know
+# *where* the object surfaced; that's already enough for spatial citation work.
+PROVENANCE_KINDS_WITH_PROVENANCE = ("excavated", "acquired_documented")
+PROVENANCE_KINDS_WITHOUT_PROVENANCE = ("acquired_undocumented", "unknown")
 
 # Columns consumed by _dict_to_inscription. Excludes emb_text/emb_context/emb_combined
 # (vector(768), ~3 KB each), fts_canonical (tsvector), and geom (PostGIS) — which
@@ -493,10 +513,19 @@ class Corpus:
         self._conn.autocommit = False
 
     @classmethod
-    def connect(cls, url: str) -> Corpus:
-        """Connect to PostgreSQL and ensure schema exists."""
+    def connect(cls, url: str, init_schema: bool = False) -> Corpus:
+        """Connect to PostgreSQL.
+
+        Schema management lives in alembic now (see `src/openetruscan/db/versions/`).
+        Calling `_ensure_db()` on every connect was the second-largest entry in
+        pg_stat_statements (547 ALTER TABLE ADD COLUMN IF NOT EXISTS calls,
+        ~5.8 s each, plus 1,561 CREATE INDEX IF NOT EXISTS calls), all idempotent
+        no-ops on a populated DB. Pass `init_schema=True` from one-shot bootstrap
+        scripts only.
+        """
         corpus = cls(url)
-        corpus._ensure_db()
+        if init_schema:
+            corpus._ensure_db()
         return corpus
 
     def _prepare_inscription(self, inscription: Inscription, language: str) -> Inscription:
