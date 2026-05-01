@@ -78,3 +78,7 @@ scripts/security_check.sh
 
 # Ultralytics YOLO runs
 runs/
+
+# Internal operations documentation (project IDs, SA emails, rotation runbooks).
+# Kept local-only so a public clone never ships internal infra details.
+docs/internal/
