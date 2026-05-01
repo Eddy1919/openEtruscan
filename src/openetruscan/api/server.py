@@ -124,7 +124,9 @@ app.add_middleware(
     allow_origins=settings.cors_origins,  # Controlled via .env
     allow_credentials=True,
     allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    # Tightened from "*". With allow_credentials=True, "*" expands to a generous
+    # CSRF surface; list only the headers the frontend actually sends.
+    allow_headers=["Accept", "Content-Type", "Authorization"],
     max_age=600,  # Cache preflight responses for 10 minutes
 )
 
@@ -281,9 +283,17 @@ def _build_model(i) -> InscriptionModel:
 
 # ── Health Endpoint ────────────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])
-async def health_check(session: AsyncSession = Depends(get_session)):
-    """Health check endpoint for monitoring and load balancers."""
+async def health_check(request: Request, session: AsyncSession = Depends(get_session)):
+    """Deep health check.
+
+    Returns 200 with `status: healthy` only when every dependency the public
+    surface actually needs is reachable. A 503 is preferable to a green check
+    while the DB is gone.
+    """
+    import asyncio
+
     uptime = (datetime.now(timezone.utc) - START_TIME).total_seconds()
+
     rss_mb = 0.0
     try:
         import resource
@@ -293,18 +303,49 @@ async def health_check(session: AsyncSession = Depends(get_session)):
     except ImportError:
         pass
 
-    repo = InscriptionRepository(session)
-    count = await repo.count()
+    async def probe_db():
+        try:
+            t0 = datetime.now(timezone.utc)
+            count = await InscriptionRepository(session).count()
+            ms = (datetime.now(timezone.utc) - t0).total_seconds() * 1000
+            return {"ok": count > 0, "count": count, "latency_ms": round(ms, 1)}
+        except Exception as e:
+            return {"ok": False, "error": type(e).__name__}
 
-    return {
-        "status": "healthy" if count > 0 else "unhealthy",
+    async def probe_fuseki():
+        # Side-channel: nginx routes /sparql -> http://fuseki:3030/openetruscan/sparql.
+        # We hit the internal hostname directly so a public outage does not affect this.
+        try:
+            client = request.app.state.http
+            t0 = datetime.now(timezone.utc)
+            resp = await client.get(
+                "http://fuseki:3030/openetruscan/sparql",
+                params={"query": "SELECT (COUNT(*) AS ?c) WHERE { ?s ?p ?o } LIMIT 1"},
+                timeout=2.0,
+            )
+            ms = (datetime.now(timezone.utc) - t0).total_seconds() * 1000
+            return {"ok": resp.status_code == 200, "latency_ms": round(ms, 1)}
+        except Exception as e:
+            return {"ok": False, "error": type(e).__name__}
+
+    db_result, fuseki_result = await asyncio.gather(probe_db(), probe_fuseki())
+
+    deps_ok = db_result["ok"]  # fuseki failure is degraded, not down
+    status_code = 200 if deps_ok else 503
+
+    body = {
+        "status": "healthy" if deps_ok else "unhealthy",
         "version": __version__,
         "uptime_seconds": round(uptime, 2),
-        "corpus_loaded": True,
-        "total_inscriptions": count,
         "mem_rss_mb": rss_mb,
+        "checks": {
+            "db": db_result,
+            "fuseki": fuseki_result,
+            "gemini_configured": bool(settings.gemini_api_key),
+        },
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    return JSONResponse(content=body, status_code=status_code)
 
 
 @app.get("/ready", tags=["Health"])
@@ -362,6 +403,25 @@ async def search_corpus(
         str | None,
         Query(description="Classification filter", max_length=50),
     ] = None,
+    provenance: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Filter by provenance tier: excavated, acquired_documented, "
+                "acquired_undocumented, unknown"
+            ),
+            pattern="^(excavated|acquired_documented|acquired_undocumented|unknown)$",
+        ),
+    ] = None,
+    has_provenance: Annotated[
+        bool | None,
+        Query(
+            description=(
+                "Restrict to inscriptions with (true) or without (false) a known findspot. "
+                "Useful for citation contexts: pass `true` to omit unprovenanced material."
+            ),
+        ),
+    ] = None,
     limit: Annotated[
         int,
         Query(ge=1, le=MAX_LIMIT, description="Maximum number of results"),
@@ -385,6 +445,8 @@ async def search_corpus(
         findspot=findspot,
         language=language,
         classification=classification,
+        provenance=provenance,
+        has_provenance=has_provenance,
         limit=_clamp_limit(limit),
         offset=offset,
         sort_by=actual_sort,
@@ -422,6 +484,13 @@ async def search_geo(
         str | None,
         Query(description="Classification filter", max_length=50),
     ] = None,
+    provenance: Annotated[
+        str | None,
+        Query(
+            description="Provenance tier filter",
+            pattern="^(excavated|acquired_documented|acquired_undocumented|unknown)$",
+        ),
+    ] = None,
     limit: Annotated[
         int,
         Query(ge=1, le=5000, description="Max results"),
@@ -434,6 +503,7 @@ async def search_geo(
         text_query=_clamp_text(text),
         findspot=findspot,
         classification=classification,
+        provenance=provenance,
         limit=min(limit, 5000),
         offset=0,
         geo_only=True,
@@ -609,9 +679,25 @@ async def restore_lacunae(
 @app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
 async def stats_summary(request: Request, session: AsyncSession = Depends(get_session)):
-    """Full corpus statistics for dashboard display."""
+    """Full corpus statistics for dashboard display, including the provenance breakdown."""
     repo = InscriptionRepository(session)
     return await repo.get_stats_summary()
+
+
+@app.get("/stats/provenance", tags=["Statistics"])
+@limiter.limit("60/minute")
+async def stats_provenance(request: Request, session: AsyncSession = Depends(get_session)):
+    """
+    Honest provenance breakdown of the corpus.
+
+    Returns the per-tier counts plus the share of the corpus that has a
+    documented findspot vs. is unprovenanced. Citation tooling (and the
+    homepage) should consume this rather than the headline `total` so users
+    can distinguish "philologically attested" from "archaeologically located".
+    """
+    repo = InscriptionRepository(session)
+    summary = await repo.get_stats_summary()
+    return summary["provenance"]
 
 
 @app.get("/stats/timeline", tags=["Statistics"])

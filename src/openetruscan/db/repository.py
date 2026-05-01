@@ -55,6 +55,8 @@ class InscriptionRepository:
         findspot: str | None = None,
         language: str | None = None,
         classification: str | None = None,
+        provenance: str | None = None,
+        has_provenance: bool | None = None,
         limit: int = 100,
         offset: int = 0,
         sort_by: str = "id",
@@ -63,7 +65,18 @@ class InscriptionRepository:
         """
         Search inscriptions with filters and pagination.
         Uses PostgreSQL Full Text Search (FTS) for efficient text matching.
+
+        `provenance` filters by a single tier (e.g. "acquired_documented").
+        `has_provenance=True` collapses to the two tiers that assert a known
+        findspot (`excavated`, `acquired_documented`); `has_provenance=False`
+        is the inverse. The two filters are independent — passing both with
+        a value that contradicts the other yields an empty result by design.
         """
+        from openetruscan.core.corpus import (
+            PROVENANCE_KINDS_WITH_PROVENANCE,
+            PROVENANCE_KINDS_WITHOUT_PROVENANCE,
+        )
+
         conditions = []
 
         if text_query:
@@ -81,6 +94,18 @@ class InscriptionRepository:
 
         if classification:
             conditions.append(Inscription.classification == classification)
+
+        if provenance:
+            conditions.append(Inscription.provenance_status == provenance)
+
+        if has_provenance is True:
+            conditions.append(
+                Inscription.provenance_status.in_(PROVENANCE_KINDS_WITH_PROVENANCE)
+            )
+        elif has_provenance is False:
+            conditions.append(
+                Inscription.provenance_status.in_(PROVENANCE_KINDS_WITHOUT_PROVENANCE)
+            )
 
         if geo_only:
             conditions.append(
@@ -541,22 +566,43 @@ class InscriptionRepository:
         return {"nodes": list(nodes.values()), "edges": edges}
 
     async def get_stats_summary(self) -> dict[str, Any]:
-        """Compute corpus-wide statistics for the dashboard."""
+        """Compute corpus-wide statistics for the dashboard.
+
+        Adds an honest provenance breakdown so the homepage cannot claim "N sites"
+        without the matching denominator of records that actually have a findspot.
+        """
         stmt = text("""
             SELECT
                 COUNT(*) as total,
                 COUNT(findspot_lat) as with_coords,
                 COUNT(pleiades_id) as pleiades_linked,
-                SUM(CASE WHEN classification != 'unknown' THEN 1 ELSE 0 END) as classified
+                SUM(CASE WHEN classification != 'unknown' THEN 1 ELSE 0 END) as classified,
+                SUM(CASE WHEN provenance_status IN ('excavated', 'acquired_documented')
+                          THEN 1 ELSE 0 END) as with_provenance,
+                SUM(CASE WHEN provenance_status = 'excavated'            THEN 1 ELSE 0 END) AS excavated,
+                SUM(CASE WHEN provenance_status = 'acquired_documented'  THEN 1 ELSE 0 END) AS acquired_documented,
+                SUM(CASE WHEN provenance_status = 'acquired_undocumented' THEN 1 ELSE 0 END) AS acquired_undocumented,
+                SUM(CASE WHEN provenance_status = 'unknown'              THEN 1 ELSE 0 END) AS unknown_provenance
             FROM inscriptions;
         """)
         result = await self.session.execute(stmt)
         row = result.fetchone()
+        total = row[0] if row else 0
         summary = {
-            "total": row[0] if row else 0,
+            "total": total,
             "with_coords": row[1] if row else 0,
             "pleiades_linked": row[2] if row else 0,
             "classified": row[3] if row else 0,
+            "provenance": {
+                "with_provenance": row[4] if row else 0,
+                "without_provenance": (total - (row[4] if row else 0)),
+                "by_kind": {
+                    "excavated": row[5] if row else 0,
+                    "acquired_documented": row[6] if row else 0,
+                    "acquired_undocumented": row[7] if row else 0,
+                    "unknown": row[8] if row else 0,
+                },
+            },
         }
 
         top_sites_stmt = text("""
