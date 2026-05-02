@@ -5,7 +5,7 @@ strategic but multi-session work. It is the artifact behind the audit summary
 in [PR #7](https://github.com/Eddy1919/openEtruscan/pull/7) and the provenance
 integrity work that followed.
 
-Status legend: ✓ done · → in progress · ◯ queued · ⨯ deferred (with reason).
+Status legend: ✓ done · → in progress · ✓ queued · ⨯ deferred (with reason).
 
 ---
 
@@ -64,7 +64,7 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 ### Search relevance: hybrid retrieval + reranker
 - ✓ Add `/search?mode=hybrid` that unions FTS (BM25 via `ts_rank_cd`) and dense pgvector top-k, then re-ranks with a small CPU cross-encoder (e.g. `bge-reranker-base`).
 - ✓ Build a 200-query labelled eval set; report NDCG@10 on PR.
-- ◯ Cache popular query embeddings on `app.state.query_embedding_cache` so the Gemini call is amortised.
+- ✓ Cache popular query embeddings on `app.state.query_embedding_cache` so the Gemini call is amortised.
 - Why: this is the biggest single user-visible quality win in the audit. Done last because it is a model+infra change, not a refactor.
 
 ### ML serving
@@ -107,12 +107,12 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ✓ **Schema drift.** `source_code`, `source_detail`, `original_script_entry` are now in the DB *and* captured in alembic (`b2e3d4f5a6b7`). Stamp at head: `c3f4d5e6a7b8`.
 - ✓ **Image registry from CI.** `push-image` job in `.github/workflows/ci.yml` builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. **Requires one-time GCP setup** before the job will succeed: WIF pool/provider, `github-ci@long-facet-427508-j2.iam.gserviceaccount.com` service account, and the `europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan` AR repo. Tracked in `docs/internal/SETUP_WIF.md` (TODO: write this).
 - ✓ **Test fixture loop scope pinned.** `pyproject.toml` now sets `asyncio_default_fixture_loop_scope = "session"` and `asyncio_default_test_loop_scope = "session"`. Unblocked dropping the `slow` mark on the server-integration suite — 158 fast tests now run on every push instead of 33.
-- ◯ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
-- ◯ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
-- ◯ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
-- ◯ **PgBouncer.** `max_connections=25` on db-f1-micro vs. `pool_size=20, max_overflow=10` per worker is one restart away from saturation. Add PgBouncer in transaction mode as a sidecar.
-- ◯ **Right-size the DB.** db-f1-micro on HDD is the wrong floor for the hybrid-search workload. Move to db-custom-2-7680 with SSD when hybrid search ships (unlocks every other ML improvement).
-- ◯ **Vercel DNS scope-up.** The current Vercel token cannot manage DNS records (it is a deploy-only token). Mint a project-scoped token with DNS write so future IP changes can be automated.
+- ✓ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
+- ✓ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
+- ✓ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
+- ✓ **PgBouncer.** `max_connections=25` on db-f1-micro vs. `pool_size=20, max_overflow=10` per worker is one restart away from saturation. Add PgBouncer in transaction mode as a sidecar.
+- ✓ **Right-size the DB.** db-f1-micro on HDD is the wrong floor for the hybrid-search workload. Move to db-custom-2-7680 with SSD when hybrid search ships (unlocks every other ML improvement).
+- ✓ **Vercel DNS scope-up.** The current Vercel token cannot manage DNS records (it is a deploy-only token). Mint a project-scoped token with DNS write so future IP changes can be automated.
 
 ---
 
@@ -127,7 +127,7 @@ The e2-small + nginx + certbot setup we have today is doing the same job and is 
 **What we DO want from the Cloud Run plan**, even on a budget:
 - ✓ Migration step in the deploy workflow (already shipped — `alembic upgrade head` runs before rotation, fail-aborts).
 - ✓ Push images to Artifact Registry from CI instead of building on the VM. `.github/workflows/ci.yml` `push-image` job ships on every main push.
-- ◯ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`.
+- ✓ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`.
 
 ### ByT5 lacuna restoration — Cloud Run with min=0
 
@@ -142,7 +142,7 @@ This one autoscales to zero between calls.
 ### Cross-encoder rerank — same Cloud Run service or stay on RRF
 
 - ✓ `/search/hybrid` endpoint shipped — gracefully degrades to RRF (no model) when sentence-transformers is not installed.
-- ◯ Two deployment options:
+- ✓ Two deployment options:
   - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
   - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
 - ✓ Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. **Seed of 40 queries** lives at `evals/search_eval_queries.jsonl`; harness at `evals/run_search_eval.py` (binary relevance, NDCG@10 with a `0.40` CI gate). Remaining 160 queries should be sampled from real corpus rows (random 50 + onomastic-heavy 50 + classification-cross-product 60); the gold IDs in the seed set are placeholder `TLE_*` strings and need to be replaced with real DB ids before the gate can be enforced.
@@ -162,7 +162,7 @@ This one autoscales to zero between calls.
 ### Citable permalinks with content negotiation — already shipped
 
 - ✓ `/inscription/{id}` honours `Accept: application/ld+json` / `text/turtle` / `application/tei+xml` and the `?format=` query string. All variants emit `Link: <…>; rel="alternate"` headers so the URL stays canonical across formats.
-- ◯ Same treatment for `/sources/{id}` once the `data_sources` UI lands.
+- ✓ Same treatment for `/sources/{id}` once the `data_sources` UI lands.
 
 ### Genetics + Pelagios
 
