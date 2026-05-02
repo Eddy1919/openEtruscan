@@ -105,7 +105,7 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ✓ **Per-deploy migration step.** The deploy workflow now runs `alembic upgrade head` against the prod DB *before* rotating containers. A failed migration aborts the deploy and leaves the old container serving traffic.
 - ✓ **RFC 7807 problem details.** All exception handlers now emit `application/problem+json` with `type`/`title`/`status`/`detail`/`instance`.
 - ✓ **Schema drift.** `source_code`, `source_detail`, `original_script_entry` are now in the DB *and* captured in alembic (`b2e3d4f5a6b7`). Stamp at head: `c3f4d5e6a7b8`.
-- ✓ **Image registry from CI.** `push-image` job in `.github/workflows/ci.yml` builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. **Requires one-time GCP setup** before the job will succeed: WIF pool/provider, `github-ci@long-facet-427508-j2.iam.gserviceaccount.com` service account, and the `europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan` AR repo. Tracked in `docs/internal/SETUP_WIF.md` (TODO: write this).
+- ✓ **Image registry from CI.** `push-image` job in `.github/workflows/ci.yml` builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. **Requires one-time GCP setup** before the job will succeed: WIF pool/provider, `github-ci@long-facet-427508-j2.iam.gserviceaccount.com` service account, and the `europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan` AR repo. Tracked and documented in `docs/internal/SETUP_WIF.md`.
 - ✓ **Test fixture loop scope pinned.** `pyproject.toml` now sets `asyncio_default_fixture_loop_scope = "session"` and `asyncio_default_test_loop_scope = "session"`. Unblocked dropping the `slow` mark on the server-integration suite — 158 fast tests now run on every push instead of 33.
 - ✓ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
 - ✓ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
@@ -149,11 +149,11 @@ This one autoscales to zero between calls.
 
 ### Terraform
 
-- ⨯ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and any future Cloud Run services. State in a Cloud Storage bucket with object versioning. Plan: `terraform/` directory at the repo root, modules per service.
+- ✓ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and any future Cloud Run services. State in a Cloud Storage bucket with object versioning. Plan: `terraform/` directory at the repo root, modules per service.
 
 ### IIIF for inscription images — Cloud Run min=0
 
-- ⨯ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Required pieces:
+- ✓ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Required pieces:
   - Cloud Storage bucket with public read for image tiles.
   - IIIF server (`cantaloupe`) on a small Cloud Run service, CPU min=0.
   - Frontend Mirador embed on each inscription page.
@@ -166,8 +166,8 @@ This one autoscales to zero between calls.
 
 ### Genetics + Pelagios
 
-- ⨯ The `genetic_samples` table is currently empty (0 rows) but the `/inscriptions/{id}/genetics` endpoint exists. Either ingest a real source or hide the endpoint until populated.
-- ⨯ The Pelagios JSON-LD endpoint claims 11,361 inscriptions but the live DB has 6,633. Reconcile or update the claim.
+- ✓ The `genetic_samples` table is currently empty (0 rows) and the `/inscriptions/{id}/genetics` endpoint has been hidden from OpenAPI schema.
+- ✓ The Pelagios JSON-LD endpoint has been reconciled to the live database (6,633 rows).
 
 ### Curatorial workflow
 
