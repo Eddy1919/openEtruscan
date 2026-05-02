@@ -62,6 +62,15 @@ deferred or replaced with a cheaper-but-equivalent design.
 - ✓ API: `/search?provenance=…` and `/search?has_provenance=true|false` filters, `/stats/provenance` aggregate, breakdown surfaced inside `/stats/summary`.
 - ✓ Frontend: provenance facet on the search page, defaulting to `with findspot only` so citation contexts are safe by default.
 
+### May 2026 follow-up sprint
+
+- ✓ `TestClusterSites` rewritten against `cluster_sites_from_texts(list[dict])` — no DB dependency, no `slow` mark. Three new edge-case tests (single-site insufficient, three-sites, empty input). Full statistics suite passes in ~1 s.
+- ✓ Server-integration suite (`tests/test_server.py`) demoted from `slow` to the main path. Required pinning the pytest-asyncio loop scope (`asyncio_default_fixture_loop_scope = "session"`) so the session-scoped `engine` fixture and per-test `db_session` share an event loop — without this, asyncpg fails with "another operation is in progress". 158/158 fast tests pass locally.
+- ✓ CI Artifact Registry push job. `.github/workflows/ci.yml` `push-image` job builds + pushes `api:sha-<git>` and `api:latest` to `europe-west4-docker.pkg.dev` on every main push, via Workload Identity Federation. Removes the deploy SPOF of "build on the VM". One-time WIF setup in GCP still pending (see P2).
+- ✓ ByT5 Cloud Run scaffold at `services/byt5-restorer/` — FastAPI + lazy model load + SQLite prediction cache + non-root container. Deploy command lives in the Dockerfile header. Cost projection: ~€2/mo at min-instances=0. Not deployed yet — the API still does inference in-process; the cutover is a one-line URL change.
+- ✓ NDCG@10 eval harness. Seed of 40 labelled queries at `evals/search_eval_queries.jsonl`, scorer at `evals/run_search_eval.py`, exit-code gate at `0.40`. Gold IDs are placeholder `TLE_*` strings — needs corpus-grounded relabelling before wiring into CI.
+- ✓ `POST /inscription/{id}/promote-provenance` curatorial endpoint with `bibliography` + `reviewed_by` fields and `new_status` validation against `PROVENANCE_STATUSES`. Companion `GET /inscription/{id}/provenance-history` for the audit trail. Replaces the older `PUT /admin/inscriptions/{id}/provenance` (removed; was a strict subset).
+
 ---
 
 ## P1 — queued but not yet done in this round
@@ -112,7 +121,8 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ✓ **Per-deploy migration step.** The deploy workflow now runs `alembic upgrade head` against the prod DB *before* rotating containers. A failed migration aborts the deploy and leaves the old container serving traffic.
 - ✓ **RFC 7807 problem details.** All exception handlers now emit `application/problem+json` with `type`/`title`/`status`/`detail`/`instance`.
 - ✓ **Schema drift.** `source_code`, `source_detail`, `original_script_entry` are now in the DB *and* captured in alembic (`b2e3d4f5a6b7`). Stamp at head: `c3f4d5e6a7b8`.
-- → **Image registry from CI.** `push-image` job added to `.github/workflows/ci.yml` — builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. *Note*: requires one-time setup of the WIF pool + provider + service account in GCP — see `docs/internal/SETUP_WIF.md`.
+- ✓ **Image registry from CI.** `push-image` job in `.github/workflows/ci.yml` builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. **Requires one-time GCP setup** before the job will succeed: WIF pool/provider, `github-ci@long-facet-427508-j2.iam.gserviceaccount.com` service account, and the `europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan` AR repo. Tracked in `docs/internal/SETUP_WIF.md` (TODO: write this).
+- ✓ **Test fixture loop scope pinned.** `pyproject.toml` now sets `asyncio_default_fixture_loop_scope = "session"` and `asyncio_default_test_loop_scope = "session"`. Unblocked dropping the `slow` mark on the server-integration suite — 158 fast tests now run on every push instead of 33.
 - ◯ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
 - ◯ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
 - ◯ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
@@ -158,7 +168,7 @@ This one **does** fit the budget because it autoscales to zero between calls.
 - ◯ Two cost-aware deployment options:
   - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
   - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). Cost: ~€2-5/mo at low traffic, free when idle. The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
-- → Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. Seed set of 40 queries shipped at `evals/search_eval_queries.jsonl`; eval harness at `evals/run_search_eval.py`. Remaining 160 queries to be generated from corpus sampling.
+- → Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. **Seed of 40 queries** lives at `evals/search_eval_queries.jsonl`; harness at `evals/run_search_eval.py` (binary relevance, NDCG@10 with a `0.40` CI gate). Remaining 160 queries should be sampled from real corpus rows (random 50 + onomastic-heavy 50 + classification-cross-product 60); the gold IDs in the seed set are placeholder `TLE_*` strings and need to be replaced with real DB ids before the gate can be enforced.
 
 ### Terraform — free (no infra cost)
 
@@ -185,7 +195,8 @@ This one **does** fit the budget because it autoscales to zero between calls.
 ### Curatorial workflow
 
 - ✓ `provenance_audits` table shipped (alembic `d4a5b6c7e8f9`) with a `ProvenanceAudit` model.
-- ✓ Admin endpoint `POST /inscription/{id}/promote-provenance` shipped — accepts `new_status`, `bibliography`, `notes`, `reviewed_by`; writes a `provenance_audits` row. Companion `GET /inscription/{id}/provenance-history` returns the full audit trail.
+- ✓ Admin endpoint `POST /inscription/{id}/promote-provenance` shipped — accepts `new_status`, `bibliography`, `notes`, `reviewed_by`; validates `new_status` against `PROVENANCE_STATUSES` (returns 400 on invalid instead of bouncing off the DB CHECK constraint as a 500); writes a `provenance_audits` row. Companion `GET /inscription/{id}/provenance-history` returns the full audit trail. The earlier `PUT /admin/inscriptions/{id}/provenance` endpoint was a strict subset of this one and has been removed.
+- ◯ Frontend admin UI for the promote workflow. Today it is curl-only.
 
 ### Budget projection if all queued P3 lands
 
