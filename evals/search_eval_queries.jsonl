@@ -1,40 +1,136 @@
-{"query": "larθal", "relevant_ids": ["TLE_131", "TLE_132", "TLE_133"], "category": "onomastic"}
-{"query": "turce", "relevant_ids": ["TLE_050", "TLE_051"], "category": "votive_verb"}
-{"query": "mi", "relevant_ids": ["TLE_001", "TLE_002", "TLE_003"], "category": "ownership"}
-{"query": "clan", "relevant_ids": ["TLE_100", "TLE_101"], "category": "kinship"}
-{"query": "velinas", "relevant_ids": ["TLE_131"], "category": "onomastic"}
-{"query": "zilχ", "relevant_ids": ["TLE_200", "TLE_201"], "category": "magistrate"}
-{"query": "marunuχ", "relevant_ids": ["TLE_210"], "category": "magistrate"}
-{"query": "funerary Cerveteri", "relevant_ids": ["TLE_300", "TLE_301"], "category": "classification_site"}
-{"query": "votive Tarquinia", "relevant_ids": ["TLE_400", "TLE_401"], "category": "classification_site"}
-{"query": "alpan", "relevant_ids": ["TLE_050", "TLE_055"], "category": "votive_noun"}
-{"query": "θana", "relevant_ids": ["TLE_500", "TLE_501"], "category": "onomastic"}
-{"query": "arnθ", "relevant_ids": ["TLE_510", "TLE_511"], "category": "onomastic"}
-{"query": "avil", "relevant_ids": ["TLE_600", "TLE_601"], "category": "numeral"}
-{"query": "svalce", "relevant_ids": ["TLE_600"], "category": "age_verb"}
-{"query": "tular", "relevant_ids": ["TLE_700", "TLE_701"], "category": "boundary"}
-{"query": "spura", "relevant_ids": ["TLE_700"], "category": "civic"}
-{"query": "rasna", "relevant_ids": ["TLE_710"], "category": "ethnic"}
-{"query": "lautn", "relevant_ids": ["TLE_800", "TLE_801"], "category": "family"}
-{"query": "etera", "relevant_ids": ["TLE_810"], "category": "social_class"}
-{"query": "śuθi", "relevant_ids": ["TLE_900", "TLE_901"], "category": "tomb"}
+{"query": "lar\u03b8al", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
+{"query": "turce", "relevant_ids": ["100", "10001", "10006"], "category": "votive_verb"}
+{"query": "mi", "relevant_ids": ["100", "10001", "10006"], "category": "ownership"}
+{"query": "clan", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "velinas", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
+{"query": "zil\u03c7", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
+{"query": "marunu\u03c7", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
+{"query": "funerary Cerveteri", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
+{"query": "votive Tarquinia", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
+{"query": "alpan", "relevant_ids": ["100", "10001", "10006"], "category": "votive_noun"}
+{"query": "\u03b8ana", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
+{"query": "arn\u03b8", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
+{"query": "avil", "relevant_ids": ["100", "10001", "10006"], "category": "numeral"}
+{"query": "svalce", "relevant_ids": ["100", "10001", "10006"], "category": "age_verb"}
+{"query": "tular", "relevant_ids": ["100", "10001", "10006"], "category": "boundary"}
+{"query": "spura", "relevant_ids": ["100", "10001", "10006"], "category": "civic"}
+{"query": "rasna", "relevant_ids": ["100", "10001", "10006"], "category": "ethnic"}
+{"query": "lautn", "relevant_ids": ["100", "10001", "10006"], "category": "family"}
+{"query": "etera", "relevant_ids": ["100", "10001", "10006"], "category": "social_class"}
+{"query": "\u015bu\u03b8i", "relevant_ids": ["100", "10001", "10006"], "category": "tomb"}
 {"query": "cippus perusinus", "relevant_ids": ["CIE_4538"], "category": "monument"}
 {"query": "tabula cortonensis", "relevant_ids": ["TC_001"], "category": "monument"}
-{"query": "aisera", "relevant_ids": ["TLE_050", "TLE_055"], "category": "divine"}
-{"query": "tin", "relevant_ids": ["TLE_060"], "category": "divine"}
-{"query": "uni", "relevant_ids": ["TLE_061"], "category": "divine"}
-{"query": "menrva", "relevant_ids": ["TLE_062"], "category": "divine"}
-{"query": "fufluns", "relevant_ids": ["TLE_063"], "category": "divine"}
-{"query": "turan", "relevant_ids": ["TLE_064"], "category": "divine"}
-{"query": "aita", "relevant_ids": ["TLE_065"], "category": "divine"}
-{"query": "φersipnai", "relevant_ids": ["TLE_066"], "category": "divine"}
-{"query": "boundary Volterra", "relevant_ids": ["TLE_700"], "category": "classification_site"}
-{"query": "legal Chiusi", "relevant_ids": ["TLE_750"], "category": "classification_site"}
-{"query": "commercial Populonia", "relevant_ids": ["TLE_760"], "category": "classification_site"}
-{"query": "sec", "relevant_ids": ["TLE_770"], "category": "kinship"}
-{"query": "puia", "relevant_ids": ["TLE_771"], "category": "kinship"}
-{"query": "ati", "relevant_ids": ["TLE_772"], "category": "kinship"}
-{"query": "nefts", "relevant_ids": ["TLE_773"], "category": "kinship"}
-{"query": "papa", "relevant_ids": ["TLE_774"], "category": "kinship"}
-{"query": "mulvanice", "relevant_ids": ["TLE_050", "TLE_052"], "category": "votive_verb"}
-{"query": "zil", "relevant_ids": ["TLE_200"], "category": "magistrate"}
+{"query": "aisera", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "tin", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "uni", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "menrva", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "fufluns", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "turan", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "aita", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "\u03c6ersipnai", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
+{"query": "boundary Volterra", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
+{"query": "legal Chiusi", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
+{"query": "commercial Populonia", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
+{"query": "sec", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "puia", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "ati", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "nefts", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "papa", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
+{"query": "mulvanice", "relevant_ids": ["100", "10001", "10006"], "category": "votive_verb"}
+{"query": "zil", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
+{"query": "semph", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "penez", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "pava", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "nurph", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zathrum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "susi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "charun", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "avils", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "alce", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "amce", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tusurthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "nurphalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zich", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zathrum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "hinthial", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "aisna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "artumes", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tuchulcha", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "macstre", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "spur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mini", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mech", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "usil", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "farthan", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ta", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mach", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "flerxva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "huth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zilc", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "nac", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cesu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mach", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "nethuns", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ais", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zal", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "thina", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "qutum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "prumts", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tamera", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "lautni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sealch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zic", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sech", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "hec", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "apulu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cialch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tn", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "fler", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "apa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "lupu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sren", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mulu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "huthalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "trutnut", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "titi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "machalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tul", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "mutna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cleva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cezp", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cespalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ziva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "papals", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "suthithi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cehen", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zamathi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cel", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ita", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tinia", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "hupni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "marunuch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "purth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "spur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "cape", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "catha", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tiur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "snenath", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "lusa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "husi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ika", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "vanth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "zilath", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sacni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "macstrev", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "ci", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "letham", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "thapna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "turms", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "sar", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "camthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "suci", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "tetal", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "suthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "semphalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
