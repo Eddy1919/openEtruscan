@@ -185,7 +185,13 @@ jobs:
   push-image:
     name: Push API Image to Artifact Registry
     needs: [test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Gated on the `ENABLE_AR_PUSH` repo variable so the job stays silent
+    # until the one-time GCP-side setup (WIF pool/provider, service account,
+    # AR repo) is complete. See `docs/internal/SETUP_WIF.md`.
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      vars.ENABLE_AR_PUSH == 'true'
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
