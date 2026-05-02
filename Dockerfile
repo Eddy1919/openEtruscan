@@ -14,8 +14,9 @@ COPY src/ src/
 
 # Install only the runtime extras needed for the API container.
 # neural-inference (onnxruntime) is lightweight; neural (torch) is NOT included.
+# telemetry pulls in opentelemetry SDK (~30 MB on disk, no torch/transformers).
 RUN pip install --no-cache-dir --prefix=/install \
-    ".[server,postgres,prosopography,stats,lod,neural-inference]"
+    ".[server,postgres,prosopography,stats,lod,neural-inference,telemetry]"
 
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────
@@ -35,8 +36,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy pre-built Python packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application source (no tests, scripts, data, frontend)
+# Copy application source (no tests, scripts, data, frontend) and the alembic
+# config so the same image can run `alembic upgrade head` during deploys.
 COPY src/ src/
+COPY alembic.ini ./
 
 # Create non-root user
 RUN groupadd --system appuser && useradd --system --gid appuser appuser

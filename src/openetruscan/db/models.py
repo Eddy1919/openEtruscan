@@ -230,3 +230,24 @@ class Relationship(Base):
             name="check_relationship_target",
         ),
     )
+
+
+class ProvenanceAudit(Base):
+    """
+    Audit log for curatorial changes to an inscription's provenance status.
+    """
+    __tablename__ = "provenance_audits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    old_status: Mapped[str] = mapped_column(Text, nullable=False)
+    new_status: Mapped[str] = mapped_column(Text, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[str] = mapped_column(Text, nullable=False, default="system")
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    inscription: Mapped[Optional["Inscription"]] = relationship()

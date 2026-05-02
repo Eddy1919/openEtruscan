@@ -47,8 +47,33 @@ jobs:
               set -e
               REPO_DIR=\$(sudo find /home -maxdepth 2 -name 'openEtruscan' -type d -print -quit)
               if [ -z \"\$REPO_DIR\" ]; then echo 'Repository not found'; exit 1; fi
+
+              # 1. Pull the new code.
               sudo bash -c \"cd \$REPO_DIR && git -c safe.directory='*' fetch --all && git -c safe.directory='*' reset --hard origin/main\"
-              sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --build --remove-orphans
+
+              # 2. Refresh .env from Secret Manager so we never deploy with a
+              # stale/manually-edited .env. Falls back to the existing file if
+              # the helper script is unavailable in older deployments.
+              if [ -f \$REPO_DIR/scripts/ops/fetch-env-from-sm.sh ]; then
+                sudo bash \$REPO_DIR/scripts/ops/fetch-env-from-sm.sh
+              fi
+
+              # 3. Build the new image (does not affect running containers).
+              sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose build api
+
+              # 4. Run alembic migrations BEFORE rotating containers. The new
+              # api image contains both the migration scripts and alembic.ini;
+              # we use `compose run` so the one-shot picks up the existing
+              # network and .env. A non-zero exit aborts the deploy and leaves
+              # the old api container serving traffic.
+              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose run --rm --no-deps api alembic upgrade head || {
+                echo '::error::Alembic migration failed. Deploy aborted, old api container still serving traffic.'
+                exit 1
+              }
+
+              # 5. Rotate the api / fuseki / web containers onto the new image.
+              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --remove-orphans
+
               sudo docker image prune -f
             "
 

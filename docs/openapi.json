@@ -409,7 +409,7 @@
           "Corpus"
         ],
         "summary": "Get Inscription",
-        "description": "Fetch a single inscription by ID.",
+        "description": "Fetch a single inscription by ID with content negotiation.\n\nEach inscription is a citable resource; serve it in the format the caller\nasks for (JSON for the frontend, JSON-LD for linked-data aggregators,\nTurtle for triple stores, EpiDoc TEI for philological tooling). All four\nvariants point at the same canonical IRI via ``Link: rel=\"alternate\"``\nheaders so the URL itself stays stable across formats.",
         "operationId": "get_inscription_inscription__inscription_id__get",
         "parameters": [
           {
@@ -1725,6 +1725,62 @@
         }
       }
     },
+    "/admin/inscriptions/{inscription_id}/provenance": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Admin Update Provenance",
+        "description": "Curatorial workflow for promoting individual rows to `excavated` (admin endpoint + audit log).",
+        "operationId": "admin_update_provenance_admin_inscriptions__inscription_id__provenance_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inscription Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvenanceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sources": {
       "get": {
         "tags": [
@@ -2094,6 +2150,30 @@
         "title": "InscriptionModel",
         "description": "Data model representing a single Etruscan inscription for API output."
       },
+      "ProvenanceUpdateRequest": {
+        "properties": {
+          "new_status": {
+            "type": "string",
+            "title": "New Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_status"
+        ],
+        "title": "ProvenanceUpdateRequest"
+      },
       "RestoreRequest": {
         "properties": {
           "text": {
@@ -2104,6 +2184,11 @@
             "type": "integer",
             "title": "Top K",
             "default": 5
+          },
+          "model_uri": {
+            "type": "string",
+            "title": "Model Uri",
+            "default": "local://default"
           }
         },
         "type": "object",

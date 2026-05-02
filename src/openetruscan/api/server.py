@@ -10,10 +10,13 @@ import logging
 import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import asyncio
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import secrets
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,12 +66,57 @@ def _configure_logging():
         logging.basicConfig(level=log_level)
 
 
+def _maybe_install_otel(app: FastAPI) -> None:
+    """Wire OpenTelemetry tracing if the optional packages are installed.
+
+    The instrumentation is opt-in via ``[telemetry]`` extra so the prod
+    container only pays the import cost when intended (~30 MB on disk and a
+    handful of milliseconds at startup). When ``OTEL_EXPORTER_OTLP_ENDPOINT``
+    is set we ship spans to a collector (Cloud Trace via the ops agent's OTLP
+    receiver, or any OpenTelemetry collector). Without it, tracing is enabled
+    in-memory only — useful for local debugging via ``otel-cli``.
+    """
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    except ImportError:
+        # Optional. Production prefers explicit dep install; dev runs without.
+        return
+
+    resource = Resource.create({
+        "service.name": "openetruscan-api",
+        "service.version": __version__,
+    })
+    provider = TracerProvider(resource=resource)
+
+    import os as _os
+    endpoint = _os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
+        try:
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+            provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+        except ImportError:
+            pass
+
+    trace.set_tracer_provider(provider)
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="/health,/ready,/live")
+    AsyncPGInstrumentor().instrument()
+    HTTPXClientInstrumentor().instrument()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown events, including uptime initialization."""
     global START_TIME
     START_TIME = datetime.now(timezone.utc)
     _configure_logging()
+    _maybe_install_otel(app)
 
     # Shared httpx client for outbound calls (Gemini embeddings, etc.).
     # Opening one per-request was the previous pattern and showed up in latency under load.
@@ -152,7 +200,14 @@ async def _global_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={
+            "type": "about:blank",
+            "title": "Internal Server Error",
+            "status": 500,
+            "detail": "Internal server error",
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
     )
 
 
@@ -162,7 +217,47 @@ async def _value_error_handler(request: Request, exc: ValueError):
     logger.warning("ValueError on %s %s: %s", request.method, request.url.path, str(exc))
     return JSONResponse(
         status_code=400,
-        content={"detail": str(exc)},
+        content={
+            "type": "about:blank",
+            "title": "Bad Request",
+            "status": 400,
+            "detail": str(exc),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Format standard HTTP exceptions to RFC 7807."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "type": "about:blank",
+            "title": "HTTP Error",
+            "status": exc.status_code,
+            "detail": str(exc.detail),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Format FastAPI validation errors to RFC 7807."""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "type": "about:blank",
+            "title": "Unprocessable Entity",
+            "status": 422,
+            "detail": "Request validation failed",
+            "errors": exc.errors(),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
     )
 
 
@@ -525,6 +620,112 @@ async def search_geo(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+def _inscription_jsonld(inscription) -> dict:
+    """Render an inscription as Schema.org / Pelagios-flavoured JSON-LD."""
+    base = "https://api.openetruscan.com"
+    iri = f"{base}/inscription/{inscription.id}"
+    place = (
+        {
+            "@type": "Place",
+            "name": inscription.findspot,
+            **(
+                {"geo": {"@type": "GeoCoordinates",
+                         "latitude": inscription.findspot_lat,
+                         "longitude": inscription.findspot_lon}}
+                if inscription.findspot_lat is not None
+                and inscription.findspot_lon is not None
+                else {}
+            ),
+        }
+        if inscription.findspot
+        else None
+    )
+    same_as = []
+    if inscription.trismegistos_id:
+        same_as.append(f"https://www.trismegistos.org/text/{inscription.trismegistos_id}")
+    if inscription.pleiades_id:
+        same_as.append(f"https://pleiades.stoa.org/places/{inscription.pleiades_id}")
+    if inscription.eagle_id:
+        same_as.append(f"https://www.edr-edr.it/edr_programmi/res_complex_comune.php?do=show&id_nr={inscription.eagle_id}")
+
+    payload = {
+        "@context": [
+            "http://www.w3.org/ns/anno.jsonld",
+            {"schema": "http://schema.org/", "lawd": "http://lawd.info/ontology/"},
+        ],
+        "@id": iri,
+        "@type": ["lawd:Inscription", "schema:CreativeWork"],
+        "schema:identifier": inscription.id,
+        "schema:text": inscription.canonical,
+        "schema:alternativeHeadline": inscription.raw_text,
+        "lawd:foundAt": place,
+        "schema:dateCreated": (
+            f"-{abs(inscription.date_approx):04d}"
+            if inscription.date_approx and inscription.date_approx < 0
+            else (str(inscription.date_approx) if inscription.date_approx else None)
+        ),
+        "schema:about": inscription.classification,
+        "schema:inLanguage": inscription.language,
+        "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    }
+    if same_as:
+        payload["schema:sameAs"] = same_as
+    return payload
+
+
+def _inscription_turtle(inscription) -> str:
+    """Render an inscription as RDF/Turtle. Lossy but stable."""
+    lines = [
+        "@prefix lawd: <http://lawd.info/ontology/> .",
+        "@prefix schema: <http://schema.org/> .",
+        "@prefix dcterms: <http://purl.org/dc/terms/> .",
+        "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
+        "",
+        f"<https://api.openetruscan.com/inscription/{inscription.id}> a lawd:Inscription ;",
+        f'    schema:identifier "{inscription.id}" ;',
+        f'    schema:text """{(inscription.canonical or "").replace(chr(34), chr(92) + chr(34))}""" ;',
+        f'    schema:inLanguage "{inscription.language}" ;',
+        f'    schema:about "{inscription.classification}"',
+    ]
+    if inscription.findspot:
+        lines.append(
+            f'    ; lawd:foundAt [ a schema:Place ; schema:name "{inscription.findspot}" ]'
+        )
+    lines.append("    .")
+    return "\n".join(lines) + "\n"
+
+
+def _negotiate(request: Request) -> str:
+    """Return the canonical media type to render for this request.
+
+    Honours both the ``Accept`` header and the ``?format=`` query string. The
+    query string wins (handier for sharable links / curl). Supported keys:
+
+      - ``html`` / ``application/json``  → default JSON for the API and the
+        front-end (returned as the standard Pydantic InscriptionModel).
+      - ``jsonld`` / ``application/ld+json`` → Schema.org + Pelagios LAWD.
+      - ``turtle`` / ``text/turtle`` → RDF/Turtle.
+      - ``tei`` / ``application/tei+xml``  → EpiDoc XML.
+    """
+    fmt = request.query_params.get("format", "").lower()
+    if fmt in {"jsonld", "json-ld"}:
+        return "application/ld+json"
+    if fmt in {"turtle", "ttl", "rdf"}:
+        return "text/turtle"
+    if fmt in {"tei", "epidoc", "xml"}:
+        return "application/tei+xml"
+    if fmt in {"json", "html"}:
+        return "application/json"
+    accept = request.headers.get("accept", "")
+    if "application/ld+json" in accept:
+        return "application/ld+json"
+    if "text/turtle" in accept:
+        return "text/turtle"
+    if any(t in accept for t in ("application/tei+xml", "application/xml", "text/xml")):
+        return "application/tei+xml"
+    return "application/json"
+
+
 @app.get("/inscription/{inscription_id}", tags=["Corpus"])
 @limiter.limit("120/minute")
 async def get_inscription(
@@ -535,33 +736,71 @@ async def get_inscription(
     ],
     session: AsyncSession = Depends(get_session),
 ):
-    """Fetch a single inscription by ID."""
+    """Fetch a single inscription by ID with content negotiation.
+
+    Each inscription is a citable resource; serve it in the format the caller
+    asks for (JSON for the frontend, JSON-LD for linked-data aggregators,
+    Turtle for triple stores, EpiDoc TEI for philological tooling). All four
+    variants point at the same canonical IRI via ``Link: rel="alternate"``
+    headers so the URL itself stays stable across formats.
+    """
     repo = InscriptionRepository(session)
     model = await repo.get_by_id(inscription_id)
     if not model:
         raise HTTPException(status_code=404, detail="Inscription not found")
 
     inscription = repo._to_dataclass(model)
+    media = _negotiate(request)
 
-    # ── Content Negotiation ──
-    accept_header = request.headers.get("accept", "")
-    if (
-        "application/xml" in accept_header
-        or "application/tei+xml" in accept_header
-        or "text/xml" in accept_header
-    ):
+    base = f"https://api.openetruscan.com/inscription/{inscription_id}"
+    alt_links = ", ".join(
+        f'<{base}?format={fmt}>; rel="alternate"; type="{mt}"'
+        for fmt, mt in (
+            ("json", "application/json"),
+            ("jsonld", "application/ld+json"),
+            ("turtle", "text/turtle"),
+            ("tei", "application/tei+xml"),
+        )
+    )
+    headers = {
+        "Link": alt_links,
+        "Vary": "Accept",
+    }
+
+    from fastapi.responses import JSONResponse, Response
+
+    if media == "application/ld+json":
+        return JSONResponse(
+            _inscription_jsonld(inscription),
+            media_type="application/ld+json",
+            headers=headers,
+        )
+    if media == "text/turtle":
+        return Response(
+            content=_inscription_turtle(inscription),
+            media_type="text/turtle; charset=utf-8",
+            headers=headers,
+        )
+    if media == "application/tei+xml":
         try:
-            from fastapi.responses import Response
             from openetruscan.core.epidoc import inscription_to_epidoc
 
             xml_data = inscription_to_epidoc(inscription)
-            return Response(content=xml_data, media_type="application/tei+xml")
+            return Response(
+                content=xml_data,
+                media_type="application/tei+xml",
+                headers=headers,
+            )
         except ImportError:
             raise HTTPException(
                 status_code=501, detail="EpiDoc TEI capability is not installed server-side."
             )
 
-    return _build_model(inscription)
+    # JSON default — emit Pydantic via JSONResponse so the Link header lands.
+    return JSONResponse(
+        _build_model(inscription).model_dump(),
+        headers=headers,
+    )
 
 
 @app.get("/inscription/{inscription_id}/concordance", tags=["Research"])
@@ -692,6 +931,7 @@ class RestoreRequest(BaseModel):
 
     text: str
     top_k: int = 5
+    model_uri: str = "local://default"
 
 
 @app.post("/neural/restore", tags=["Neural"])
@@ -711,10 +951,13 @@ async def restore_lacunae(
                 detail="Lacunae restoration requires PyTorch, which is not installed in the lightweight API container.",
             )
 
-        restorer = request.app.state.lacunae
+        registry = getattr(request.app.state, "lacunae_registry", {})
+        restorer = registry.get(body.model_uri)
         if restorer is None:
-            restorer = LacunaeRestorer()
-            request.app.state.lacunae = restorer
+            restorer = LacunaeRestorer(model_uri=body.model_uri)
+            registry[body.model_uri] = restorer
+            request.app.state.lacunae_registry = registry
+            
         results = restorer.predict(body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
     except HTTPException:
@@ -1211,14 +1454,23 @@ async def bayesian_date_estimate(
 
 
 _FAMILY_GRAPH_CACHE = None
+_FAMILY_GRAPH_LOCK = None
 
 
 async def _get_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
     """Returns a cached FamilyGraph, building it once upon first request."""
-    global _FAMILY_GRAPH_CACHE
-    if _FAMILY_GRAPH_CACHE is None:
-        _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
-    return _FAMILY_GRAPH_CACHE
+    global _FAMILY_GRAPH_CACHE, _FAMILY_GRAPH_LOCK
+    
+    if _FAMILY_GRAPH_CACHE is not None:
+        return _FAMILY_GRAPH_CACHE
+        
+    if _FAMILY_GRAPH_LOCK is None:
+        _FAMILY_GRAPH_LOCK = asyncio.Lock()
+        
+    async with _FAMILY_GRAPH_LOCK:
+        if _FAMILY_GRAPH_CACHE is None:
+            _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
+        return _FAMILY_GRAPH_CACHE
 
 
 async def _build_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
@@ -1338,6 +1590,45 @@ async def admin_validate_pleiades(request: Request, session: AsyncSession = Depe
 
 
 # ── Data sources ────────────────────────────────────────────────────────────
+
+
+class ProvenanceUpdateRequest(BaseModel):
+    new_status: str
+    notes: str | None = None
+
+
+@app.put("/admin/inscriptions/{inscription_id}/provenance", tags=["Admin"])
+@limiter.limit("30/minute")
+async def admin_update_provenance(
+    request: Request,
+    inscription_id: str,
+    payload: ProvenanceUpdateRequest,
+    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Curatorial workflow for promoting individual rows to `excavated` (admin endpoint + audit log).
+    """
+    repo = InscriptionRepository(session)
+    insc = await repo.get_inscription(inscription_id)
+    if not insc:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+        
+    old_status = insc.provenance_status
+    insc.provenance_status = payload.new_status
+    
+    from openetruscan.db.models import ProvenanceAudit
+    audit = ProvenanceAudit(
+        inscription_id=insc.id,
+        old_status=old_status,
+        new_status=payload.new_status,
+        notes=payload.notes,
+        created_by="admin"
+    )
+    session.add(audit)
+    await session.commit()
+    
+    return {"status": "success", "old_status": old_status, "new_status": payload.new_status}
 
 
 @app.get("/sources", tags=["Sources"])

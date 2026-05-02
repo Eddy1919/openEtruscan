@@ -52,6 +52,7 @@ _USER_TABLES = (
     "genetic_samples",
     "inscriptions",
     "data_sources",
+    "provenance_audits",
 )
 
 

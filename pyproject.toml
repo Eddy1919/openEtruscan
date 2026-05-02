@@ -42,6 +42,9 @@ dependencies = [
     "asyncpg>=0.29.0",
     "sqlalchemy[asyncio]>=2.0.0",
     "defusedxml>=0.7.1",
+    # Alembic ships with the runtime so the deploy workflow can run
+    # `alembic upgrade head` against prod from inside the api image.
+    "alembic>=1.13",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +62,17 @@ sota = ["transformers>=4.30.0", "accelerate>=0.21.0"]
 # alongside the API + Fuseki without sizing up. Document this as the gate
 # before turning on prod-side rerank in ROADMAP.md.
 rerank = ["sentence-transformers>=3.0", "torch>=2.0"]
-all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank]"]
+# OpenTelemetry instrumentation. The api auto-wires FastAPI + asyncpg + httpx
+# spans when these are installed, with optional OTLP export to Cloud Trace via
+# OTEL_EXPORTER_OTLP_ENDPOINT.
+telemetry = [
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-asyncpg>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.27",
+]
+all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry]"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
