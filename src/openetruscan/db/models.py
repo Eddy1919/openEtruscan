@@ -93,7 +93,11 @@ class Inscription(Base):
     script_system: Mapped[str] = mapped_column(Text, nullable=False, default="old_italic")
     completeness: Mapped[str] = mapped_column(Text, nullable=False, default="complete")
     provenance_status: Mapped[str] = mapped_column(
-        Text, nullable=False, default="verified", index=True
+        Text,
+        nullable=False,
+        default="unknown",
+        server_default="unknown",
+        index=True,
     )
     provenance_flags: Mapped[str] = mapped_column(Text, nullable=False, default="")
 

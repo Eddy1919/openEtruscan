@@ -249,6 +249,73 @@ async def test_404_not_found(client: AsyncClient, sample_data):
     assert response.status_code == 404
 
 
+# ============================================================================
+# Curatorial workflow (promote-provenance)
+# ============================================================================
+
+
+async def test_promote_provenance_happy_path(client: AsyncClient, sample_data, monkeypatch):
+    """End-to-end: promote a row, confirm audit row, then read it back via history.
+
+    This used to silently 500 in prod because the endpoint called
+    `repo.get_inscription`, which doesn't exist. Pin a regression here.
+    """
+    from openetruscan.core.config import settings
+
+    monkeypatch.setattr(settings, "admin_token", "test-admin-token")
+    headers = {"Authorization": "Bearer test-admin-token"}
+
+    response = await client.post(
+        "/inscription/ETR_001/promote-provenance",
+        json={
+            "new_status": "excavated",
+            "bibliography": "CIE I 1234",
+            "notes": "Confirmed via 1923 excavation report",
+            "reviewed_by": "test_curator",
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "promoted"
+    # New rows get the schema default "unknown"; the migration backfill rule
+    # only applies to rows that pre-existed when a1f2c3d4e5f6 ran.
+    assert body["old_status"] == "unknown"
+    assert body["new_status"] == "excavated"
+    assert isinstance(body["audit_id"], int)
+
+    history = await client.get("/inscription/ETR_001/provenance-history")
+    assert history.status_code == 200
+    audits = history.json()["audits"]
+    assert len(audits) >= 1
+    latest = audits[0]
+    assert latest["new_status"] == "excavated"
+    assert latest["created_by"] == "test_curator"
+    assert "CIE I 1234" in (latest["notes"] or "")
+
+
+async def test_promote_provenance_rejects_invalid_status(client: AsyncClient, sample_data, monkeypatch):
+    """Invalid status must 400, not 500 — guards the DB CHECK constraint."""
+    from openetruscan.core.config import settings
+
+    monkeypatch.setattr(settings, "admin_token", "test-admin-token")
+    response = await client.post(
+        "/inscription/ETR_001/promote-provenance",
+        json={"new_status": "definitely_not_a_real_tier"},
+        headers={"Authorization": "Bearer test-admin-token"},
+    )
+    assert response.status_code == 400
+
+
+async def test_promote_provenance_requires_admin(client: AsyncClient, sample_data):
+    """Missing or wrong bearer token must 401/403, never 200."""
+    response = await client.post(
+        "/inscription/ETR_001/promote-provenance",
+        json={"new_status": "excavated"},
+    )
+    assert response.status_code in (401, 403)
+
+
 async def test_method_not_allowed(client: AsyncClient, sample_data):
     """Test POST to GET-only endpoint."""
     response = await client.post("/search")
