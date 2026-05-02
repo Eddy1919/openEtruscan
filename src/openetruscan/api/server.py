@@ -1625,6 +1625,98 @@ async def admin_update_provenance(
     return {"status": "success", "old_status": old_status, "new_status": payload.new_status}
 
 
+class PromoteProvenanceRequest(BaseModel):
+    new_status: str
+    bibliography: str | None = None
+    notes: str | None = None
+    reviewed_by: str = "admin"
+
+
+@app.post("/inscription/{inscription_id}/promote-provenance", tags=["Admin"])
+@limiter.limit("30/minute")
+async def promote_provenance(
+    request: Request,
+    inscription_id: str,
+    payload: PromoteProvenanceRequest,
+    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Promote an inscription's provenance tier and write an audit row.
+
+    This is the primary curatorial endpoint for upgrading provenance status
+    (e.g. ``unprovenanced`` → ``acquired_documented`` → ``excavated``).
+    Every call produces a ``provenance_audits`` row for the chain of evidence.
+    """
+    repo = InscriptionRepository(session)
+    insc = await repo.get_inscription(inscription_id)
+    if not insc:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+
+    old_status = insc.provenance_status or "unknown"
+    insc.provenance_status = payload.new_status
+
+    from openetruscan.db.models import ProvenanceAudit
+
+    note_parts = []
+    if payload.bibliography:
+        note_parts.append(f"Bib: {payload.bibliography}")
+    if payload.notes:
+        note_parts.append(payload.notes)
+
+    audit = ProvenanceAudit(
+        inscription_id=insc.id,
+        old_status=old_status,
+        new_status=payload.new_status,
+        notes=" | ".join(note_parts) if note_parts else None,
+        created_by=payload.reviewed_by,
+    )
+    session.add(audit)
+    await session.commit()
+
+    return {
+        "status": "promoted",
+        "inscription_id": inscription_id,
+        "old_status": old_status,
+        "new_status": payload.new_status,
+        "audit_id": audit.id,
+    }
+
+
+@app.get("/inscription/{inscription_id}/provenance-history", tags=["Corpus"])
+@limiter.limit("60/minute")
+async def provenance_history(
+    request: Request,
+    inscription_id: str,
+    session: AsyncSession = Depends(get_session),
+):
+    """Return the full provenance audit trail for an inscription."""
+    from openetruscan.db.models import ProvenanceAudit
+    from sqlalchemy import select
+
+    stmt = (
+        select(ProvenanceAudit)
+        .where(ProvenanceAudit.inscription_id == inscription_id)
+        .order_by(ProvenanceAudit.created_at.desc())
+    )
+    result = await session.execute(stmt)
+    audits = result.scalars().all()
+
+    return {
+        "inscription_id": inscription_id,
+        "audits": [
+            {
+                "id": a.id,
+                "old_status": a.old_status,
+                "new_status": a.new_status,
+                "notes": a.notes,
+                "created_by": a.created_by,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+            }
+            for a in audits
+        ],
+    }
+
 @app.get("/sources", tags=["Sources"])
 @limiter.limit("60/minute")
 async def list_data_sources(request: Request, session: AsyncSession = Depends(get_session)):

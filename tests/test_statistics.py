@@ -3,13 +3,13 @@
 import pytest
 
 from openetruscan.core.adapter import load_adapter
-from openetruscan.core.corpus import Corpus, Inscription
 from openetruscan.core.statistics import (
     BayesianDatingResult,
     ClusterResult,
     ComparisonResult,
     FrequencyResult,
     bayesian_date,
+    cluster_sites_from_texts,
     compare_frequencies,
     estimate_date,
     letter_frequencies,
@@ -97,75 +97,71 @@ class TestCompareFrequencies:
         assert "effect_size" in d
 
 
-@pytest.mark.slow
 class TestClusterSites:
-    """Test dialect clustering.
+    """Test dialect clustering via cluster_sites_from_texts.
 
-    Marked `slow` because the test signature still references a `cluster_sites`
-    helper that was renamed to `cluster_sites_from_texts` (signature also
-    changed: list of dicts instead of a Corpus instance). The tests need to be
-    rewritten against the current API. Excluded from CI's fast path until
-    that refactor lands.
+    Rewritten to use the current API which accepts ``list[dict]`` with
+    ``findspot`` and ``canonical`` keys instead of a ``Corpus`` instance.
+    No database access required — these are pure-compute tests.
     """
 
-    def _build_corpus(self):
-        corpus = Corpus.load()
-        # Clean up test data
-        test_ids = [f"A{i}" for i in range(10)] + [f"B{i}" for i in range(10)]
-        with corpus._conn.cursor() as cur:
-            cur.execute("DELETE FROM inscriptions WHERE id = ANY(%s)", (test_ids,))
-        corpus._conn.commit()
-        # Two distinct "dialect" groups
+    @staticmethod
+    def _make_rows() -> list[dict[str, str]]:
+        """Build synthetic inscription rows for two distinct 'dialect' groups."""
+        rows: list[dict[str, str]] = []
         for i in range(10):
-            corpus.add(
-                Inscription(
-                    id=f"A{i}",
-                    raw_text="larθal velinas",
-                    findspot="Cerveteri",
-                    language="etruscan",
-                )
-            )
-            corpus.add(
-                Inscription(
-                    id=f"B{i}",
-                    raw_text="θana matunai",
-                    findspot="Tarquinia",
-                    language="etruscan",
-                )
-            )
-        return corpus
+            rows.append({"findspot": "Cerveteri", "canonical": "larθal velinas"})
+            rows.append({"findspot": "Tarquinia", "canonical": "θana matunai"})
+        return rows
 
     def test_returns_clusters(self):
-        corpus = self._build_corpus()
-        result = cluster_sites(corpus, min_inscriptions=5)
+        rows = self._make_rows()
+        result = cluster_sites_from_texts(rows, min_inscriptions=5)
         assert isinstance(result, ClusterResult)
         assert result.n_clusters >= 2
         assert len(result.sites) == 2
-        corpus.close()
 
     def test_pca_coordinates(self):
-        corpus = self._build_corpus()
-        result = cluster_sites(corpus, min_inscriptions=5)
+        rows = self._make_rows()
+        result = cluster_sites_from_texts(rows, min_inscriptions=5)
         for site in result.sites:
             assert isinstance(site.pca_x, float)
             assert isinstance(site.pca_y, float)
-        corpus.close()
 
     def test_to_dict(self):
-        corpus = self._build_corpus()
-        result = cluster_sites(corpus, min_inscriptions=5)
+        rows = self._make_rows()
+        result = cluster_sites_from_texts(rows, min_inscriptions=5)
         d = result.to_dict()
         assert "n_clusters" in d
         assert "clusters" in d
         assert "dendrogram" in d
-        corpus.close()
 
     def test_min_inscriptions_filter(self):
-        corpus = self._build_corpus()
-        result = cluster_sites(corpus, min_inscriptions=20)
+        rows = self._make_rows()
+        result = cluster_sites_from_texts(rows, min_inscriptions=20)
         # Both sites have only 10 inscriptions, so nothing should pass
         assert len(result.sites) == 0
-        corpus.close()
+
+    def test_empty_input(self):
+        result = cluster_sites_from_texts([], min_inscriptions=1)
+        assert result.n_clusters == 0
+        assert len(result.sites) == 0
+
+    def test_single_site_insufficient(self):
+        rows = [{"findspot": "Cerveteri", "canonical": "larθal"} for _ in range(10)]
+        result = cluster_sites_from_texts(rows, min_inscriptions=5)
+        # Only one site → cannot cluster (need ≥2 sites)
+        assert result.n_clusters == 0
+
+    def test_three_sites(self):
+        rows = (
+            [{"findspot": "Cerveteri", "canonical": "larθal velinas"} for _ in range(10)]
+            + [{"findspot": "Tarquinia", "canonical": "θana matunai"} for _ in range(10)]
+            + [{"findspot": "Chiusi", "canonical": "arnθ śeθre"} for _ in range(10)]
+        )
+        result = cluster_sites_from_texts(rows, min_inscriptions=5)
+        assert result.n_clusters >= 2
+        assert len(result.sites) == 3
 
 
 class TestDateEstimate:
