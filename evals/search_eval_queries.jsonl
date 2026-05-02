@@ -1,0 +1,40 @@
+{"query": "larθal", "relevant_ids": ["TLE_131", "TLE_132", "TLE_133"], "category": "onomastic"}
+{"query": "turce", "relevant_ids": ["TLE_050", "TLE_051"], "category": "votive_verb"}
+{"query": "mi", "relevant_ids": ["TLE_001", "TLE_002", "TLE_003"], "category": "ownership"}
+{"query": "clan", "relevant_ids": ["TLE_100", "TLE_101"], "category": "kinship"}
+{"query": "velinas", "relevant_ids": ["TLE_131"], "category": "onomastic"}
+{"query": "zilχ", "relevant_ids": ["TLE_200", "TLE_201"], "category": "magistrate"}
+{"query": "marunuχ", "relevant_ids": ["TLE_210"], "category": "magistrate"}
+{"query": "funerary Cerveteri", "relevant_ids": ["TLE_300", "TLE_301"], "category": "classification_site"}
+{"query": "votive Tarquinia", "relevant_ids": ["TLE_400", "TLE_401"], "category": "classification_site"}
+{"query": "alpan", "relevant_ids": ["TLE_050", "TLE_055"], "category": "votive_noun"}
+{"query": "θana", "relevant_ids": ["TLE_500", "TLE_501"], "category": "onomastic"}
+{"query": "arnθ", "relevant_ids": ["TLE_510", "TLE_511"], "category": "onomastic"}
+{"query": "avil", "relevant_ids": ["TLE_600", "TLE_601"], "category": "numeral"}
+{"query": "svalce", "relevant_ids": ["TLE_600"], "category": "age_verb"}
+{"query": "tular", "relevant_ids": ["TLE_700", "TLE_701"], "category": "boundary"}
+{"query": "spura", "relevant_ids": ["TLE_700"], "category": "civic"}
+{"query": "rasna", "relevant_ids": ["TLE_710"], "category": "ethnic"}
+{"query": "lautn", "relevant_ids": ["TLE_800", "TLE_801"], "category": "family"}
+{"query": "etera", "relevant_ids": ["TLE_810"], "category": "social_class"}
+{"query": "śuθi", "relevant_ids": ["TLE_900", "TLE_901"], "category": "tomb"}
+{"query": "cippus perusinus", "relevant_ids": ["CIE_4538"], "category": "monument"}
+{"query": "tabula cortonensis", "relevant_ids": ["TC_001"], "category": "monument"}
+{"query": "aisera", "relevant_ids": ["TLE_050", "TLE_055"], "category": "divine"}
+{"query": "tin", "relevant_ids": ["TLE_060"], "category": "divine"}
+{"query": "uni", "relevant_ids": ["TLE_061"], "category": "divine"}
+{"query": "menrva", "relevant_ids": ["TLE_062"], "category": "divine"}
+{"query": "fufluns", "relevant_ids": ["TLE_063"], "category": "divine"}
+{"query": "turan", "relevant_ids": ["TLE_064"], "category": "divine"}
+{"query": "aita", "relevant_ids": ["TLE_065"], "category": "divine"}
+{"query": "φersipnai", "relevant_ids": ["TLE_066"], "category": "divine"}
+{"query": "boundary Volterra", "relevant_ids": ["TLE_700"], "category": "classification_site"}
+{"query": "legal Chiusi", "relevant_ids": ["TLE_750"], "category": "classification_site"}
+{"query": "commercial Populonia", "relevant_ids": ["TLE_760"], "category": "classification_site"}
+{"query": "sec", "relevant_ids": ["TLE_770"], "category": "kinship"}
+{"query": "puia", "relevant_ids": ["TLE_771"], "category": "kinship"}
+{"query": "ati", "relevant_ids": ["TLE_772"], "category": "kinship"}
+{"query": "nefts", "relevant_ids": ["TLE_773"], "category": "kinship"}
+{"query": "papa", "relevant_ids": ["TLE_774"], "category": "kinship"}
+{"query": "mulvanice", "relevant_ids": ["TLE_050", "TLE_052"], "category": "votive_verb"}
+{"query": "zil", "relevant_ids": ["TLE_200"], "category": "magistrate"}

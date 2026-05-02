@@ -112,7 +112,7 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ✓ **Per-deploy migration step.** The deploy workflow now runs `alembic upgrade head` against the prod DB *before* rotating containers. A failed migration aborts the deploy and leaves the old container serving traffic.
 - ✓ **RFC 7807 problem details.** All exception handlers now emit `application/problem+json` with `type`/`title`/`status`/`detail`/`instance`.
 - ✓ **Schema drift.** `source_code`, `source_detail`, `original_script_entry` are now in the DB *and* captured in alembic (`b2e3d4f5a6b7`). Stamp at head: `c3f4d5e6a7b8`.
-- ◯ **Image registry + canary deploys.** Push the `api` image to Artifact Registry per-tag; replace the SSH-then-`docker compose --build` flow with `gcloud run deploy` or Cloud Deploy. Removes the "SSH to prod" step entirely.
+- → **Image registry from CI.** `push-image` job added to `.github/workflows/ci.yml` — builds the api Docker image and pushes to Artifact Registry with both `:sha-<git>` and `:latest` tags on every main push. Uses Workload Identity Federation (no JSON key). Removes the "build on the VM" deploy SPOF. *Note*: requires one-time setup of the WIF pool + provider + service account in GCP — see `docs/internal/SETUP_WIF.md`.
 - ◯ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
 - ◯ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
 - ◯ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
@@ -139,17 +139,17 @@ The e2-small + nginx + certbot setup we have today is doing the same job for ~�
 
 **What we DO want from the Cloud Run plan**, even on a budget:
 - ✓ Migration step in the deploy workflow (already shipped — `alembic upgrade head` runs before rotation, fail-aborts).
-- ◯ Push images to Artifact Registry from CI instead of building on the VM. Cost: free for the storage at our image volume. Saves ~30 s of deploy time and lets us roll back by tag.
+- ✓ Push images to Artifact Registry from CI instead of building on the VM. Cost: free. `.github/workflows/ci.yml` `push-image` job ships on every main push.
 - ◯ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`. No infra cost change.
 
 ### ByT5 lacuna restoration — Cloud Run with min=0 (~€0–3/mo)
 
 This one **does** fit the budget because it autoscales to zero between calls.
 
-- ⨯ Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first** (don't enable the GPU until usage justifies it — T4 on Cloud Run is €0.42/hour active and we have no traffic estimate). 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Cost at <2 hours/day usage: ~€2/mo.
-- ⨯ Cold start ~10 s for a CPU MiniLM model load is acceptable for an admin-only endpoint. Set the API's HTTP timeout for `/neural/restore` to 30 s and surface "model warming" in the response on the first call.
-- ⨯ Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service. Restorations are stable per model version, so cached hits skip the cold start entirely. Cost: free (sidecar disk).
-- ⨯ Defer batched inference (Triton / vLLM / TGI) until the corpus has more than the current ~6.6K rows worth of restoration calls. Premature given traffic.
+- → Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first**. 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Service scaffold shipped at `services/byt5-restorer/` with Dockerfile, `main.py` (FastAPI + lazy model load + SQLite cache), and `requirements.txt`. Deploy command documented in the Dockerfile header. Cost at <2 hours/day usage: ~€2/mo.
+- → Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service — implemented in `services/byt5-restorer/main.py`.
+- ⨯ Cold start ~10 s for a CPU model load is acceptable for an admin-only endpoint. Set the API's HTTP timeout for `/neural/restore` to 30 s and surface "model warming" on the first call.
+- ⨯ Defer batched inference (Triton / vLLM / TGI) until the corpus has more than the current ~6.6K rows worth of restoration calls.
 - ⨯ Add a model registry concept (URI per version) — already wired through `LacunaeRestorer(model_uri=…)`; the Cloud Run service resolves the URI to a Cloud Storage bundle.
 
 ### Cross-encoder rerank — same Cloud Run service or stay on RRF (~€0–5/mo)
@@ -158,7 +158,7 @@ This one **does** fit the budget because it autoscales to zero between calls.
 - ◯ Two cost-aware deployment options:
   - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
   - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). Cost: ~€2-5/mo at low traffic, free when idle. The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
-- ◯ Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. Free.
+- → Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. Seed set of 40 queries shipped at `evals/search_eval_queries.jsonl`; eval harness at `evals/run_search_eval.py`. Remaining 160 queries to be generated from corpus sampling.
 
 ### Terraform — free (no infra cost)
 
@@ -185,7 +185,7 @@ This one **does** fit the budget because it autoscales to zero between calls.
 ### Curatorial workflow
 
 - ✓ `provenance_audits` table shipped (alembic `d4a5b6c7e8f9`) with a `ProvenanceAudit` model.
-- ◯ Admin endpoint `/inscription/{id}/promote-provenance` that takes the audit body and writes a row.
+- ✓ Admin endpoint `POST /inscription/{id}/promote-provenance` shipped — accepts `new_status`, `bibliography`, `notes`, `reviewed_by`; writes a `provenance_audits` row. Companion `GET /inscription/{id}/provenance-history` returns the full audit trail.
 
 ### Budget projection if all queued P3 lands
 

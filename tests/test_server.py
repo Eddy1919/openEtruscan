@@ -32,11 +32,9 @@ from openetruscan.db.repository import InscriptionRepository, InscriptionData
 
 
 # All tests in this module mount the FastAPI app + a real Postgres session
-# from conftest.py. They are marked `slow` because the per-test fixture
-# turnaround on a fresh Postgres takes ~250 ms each and the matrix runs them
-# 4× across Python versions; running them on every push blew the CI budget.
-# `pytest -m slow` exercises them locally / nightly.
-pytestmark = pytest.mark.slow
+# from conftest.py. Per-test fixture turnaround is ~250 ms, which is
+# acceptable now that the slow cluster tests have been rewritten as pure-
+# compute (no DB). These run in the main CI path.
 
 
 @pytest_asyncio.fixture
