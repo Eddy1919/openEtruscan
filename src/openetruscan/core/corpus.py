@@ -556,13 +556,20 @@ class Corpus:
 
     @classmethod
     def load(cls, db_path=None) -> Corpus:
-        """Factory method to load the corpus using the default database URL from settings."""
+        """Factory method to load the corpus using the default database URL from settings.
+
+        ``Corpus.load()`` is the friendly entry point for CLI scripts and tests
+        that don't want to know about schema-management plumbing — it ensures
+        the schema exists before returning. Hot-path callers in long-running
+        workers should use ``Corpus.connect(url, init_schema=False)`` (the
+        default) so they don't re-run the IF NOT EXISTS DDL on every connect.
+        """
         from openetruscan.core.config import settings
 
         env_url = settings.database_url
         if not env_url:
             raise ValueError("DATABASE_URL environment variable is missing.")
-        return cls.connect(env_url)
+        return cls.connect(env_url, init_schema=True)
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist (ignored for read-only users)."""
