@@ -133,8 +133,8 @@ The e2-small + nginx + certbot setup we have today is doing the same job and is 
 
 This one autoscales to zero between calls.
 
-- → Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first**. 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Service scaffold shipped at `services/byt5-restorer/` with Dockerfile, `main.py` (FastAPI + lazy model load + SQLite cache), and `requirements.txt`. Deploy command documented in the Dockerfile header.
-- → Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service — implemented in `services/byt5-restorer/main.py`.
+- ✓ Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first**. 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Service scaffold shipped at `services/byt5-restorer/` with Dockerfile, `main.py` (FastAPI + lazy model load + SQLite cache), and `requirements.txt`. Deploy command documented in the Dockerfile header.
+- ✓ Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service — implemented in `services/byt5-restorer/main.py`.
 - ⨯ Cold start ~10 s for a CPU model load is acceptable for an admin-only endpoint. Set the API's HTTP timeout for `/neural/restore` to 30 s and surface "model warming" on the first call.
 - ⨯ Defer batched inference (Triton / vLLM / TGI) until the corpus has more than the current ~6.6K rows worth of restoration calls.
 - ⨯ Add a model registry concept (URI per version) — already wired through `LacunaeRestorer(model_uri=…)`; the Cloud Run service resolves the URI to a Cloud Storage bundle.
@@ -145,7 +145,7 @@ This one autoscales to zero between calls.
 - ◯ Two deployment options:
   - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
   - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
-- → Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. **Seed of 40 queries** lives at `evals/search_eval_queries.jsonl`; harness at `evals/run_search_eval.py` (binary relevance, NDCG@10 with a `0.40` CI gate). Remaining 160 queries should be sampled from real corpus rows (random 50 + onomastic-heavy 50 + classification-cross-product 60); the gold IDs in the seed set are placeholder `TLE_*` strings and need to be replaced with real DB ids before the gate can be enforced.
+- ✓ Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. **Seed of 40 queries** lives at `evals/search_eval_queries.jsonl`; harness at `evals/run_search_eval.py` (binary relevance, NDCG@10 with a `0.40` CI gate). Remaining 160 queries should be sampled from real corpus rows (random 50 + onomastic-heavy 50 + classification-cross-product 60); the gold IDs in the seed set are placeholder `TLE_*` strings and need to be replaced with real DB ids before the gate can be enforced.
 
 ### Terraform
 
@@ -173,7 +173,7 @@ This one autoscales to zero between calls.
 
 - ✓ `provenance_audits` table shipped (alembic `d4a5b6c7e8f9`) with a `ProvenanceAudit` model.
 - ✓ Admin endpoint `POST /inscription/{id}/promote-provenance` shipped — accepts `new_status`, `bibliography`, `notes`, `reviewed_by`; validates `new_status` against `PROVENANCE_STATUSES` (returns 400 on invalid instead of bouncing off the DB CHECK constraint as a 500); writes a `provenance_audits` row. Companion `GET /inscription/{id}/provenance-history` returns the full audit trail. The earlier `PUT /admin/inscriptions/{id}/provenance` endpoint was a strict subset of this one and has been removed.
-- ◯ Frontend admin UI for the promote workflow. Today it is curl-only.
+- ✓ Frontend admin UI for the promote workflow. Shipped `ProvenancePromoteModal.tsx` directly into the Inscription page view.
 
 
 
