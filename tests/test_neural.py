@@ -138,8 +138,10 @@ class TestNeuralClassifier:
         def _mock_load(db_path):
             return texts, labels
 
-        # Patch load_training_data in the neural module
-        monkeypatch.setattr("openetruscan.neural.load_training_data", _mock_load)
+        # Patch load_training_data in the neural module. Path is `ml.neural`
+        # as of v0.4 (the sub-package was reorganised); old tests targeting
+        # `openetruscan.neural` no longer resolve.
+        monkeypatch.setattr("openetruscan.ml.neural.load_training_data", _mock_load)
 
     @pytest.fixture()
     def tmp_dir(self, tmp_path):
