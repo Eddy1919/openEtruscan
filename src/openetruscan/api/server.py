@@ -129,6 +129,9 @@ async def lifespan(app: FastAPI):
     # re-instantiating (and re-building the dummy model) on every request.
     app.state.lacunae = None  # constructed on first /neural/restore call
 
+    import collections
+    app.state.query_embedding_cache = collections.OrderedDict()
+
     try:
         yield
     finally:
@@ -1151,18 +1154,27 @@ async def semantic_search(
     payload = {"content": {"parts": [{"text": q[:2048]}]}}
     headers = {"x-goog-api-key": settings.gemini_api_key}
 
-    # 3. Fetch the query embedding using the shared httpx client (opened in lifespan).
-    try:
-        client = request.app.state.http
-        resp = await client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        query_embedding = resp.json()["embedding"]["values"]
-    except Exception as e:
-        logger.error(f"Embedding failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to generate embedding for search query",
-        ) from e
+    # 3. Fetch from cache or Gemini API
+    cache = getattr(request.app.state, "query_embedding_cache", None)
+    if cache is not None and q in cache:
+        query_embedding = cache[q]
+        cache.move_to_end(q)
+    else:
+        try:
+            client = request.app.state.http
+            resp = await client.post(url, json=payload, headers=headers)
+            resp.raise_for_status()
+            query_embedding = resp.json()["embedding"]["values"]
+            if cache is not None:
+                cache[q] = query_embedding
+                if len(cache) > 1000:
+                    cache.popitem(last=False)
+        except Exception as e:
+            logger.error(f"Embedding failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to generate embedding for search query",
+            ) from e
 
     # 4. Execute the vector search via repository
     try:
@@ -1828,14 +1840,23 @@ async def search_hybrid(
 
     # 2. Dense path. Embed the query, then run pgvector cosine search.
     try:
-        client = request.app.state.http
-        resp = await client.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
-            json={"content": {"parts": [{"text": text_q[:2048]}]}},
-            headers={"x-goog-api-key": settings.gemini_api_key},
-        )
-        resp.raise_for_status()
-        embedding = resp.json()["embedding"]["values"]
+        cache = getattr(request.app.state, "query_embedding_cache", None)
+        if cache is not None and text_q in cache:
+            embedding = cache[text_q]
+            cache.move_to_end(text_q)
+        else:
+            client = request.app.state.http
+            resp = await client.post(
+                "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
+                json={"content": {"parts": [{"text": text_q[:2048]}]}},
+                headers={"x-goog-api-key": settings.gemini_api_key},
+            )
+            resp.raise_for_status()
+            embedding = resp.json()["embedding"]["values"]
+            if cache is not None:
+                cache[text_q] = embedding
+                if len(cache) > 1000:
+                    cache.popitem(last=False)
     except Exception as e:
         logger.warning(f"Hybrid: embedding fetch failed, falling back to FTS only: {e}")
         embedding = None
