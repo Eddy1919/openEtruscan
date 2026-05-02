@@ -1586,45 +1586,6 @@ async def admin_validate_pleiades(request: Request, session: AsyncSession = Depe
 # ── Data sources ────────────────────────────────────────────────────────────
 
 
-class ProvenanceUpdateRequest(BaseModel):
-    new_status: str
-    notes: str | None = None
-
-
-@app.put("/admin/inscriptions/{inscription_id}/provenance", tags=["Admin"])
-@limiter.limit("30/minute")
-async def admin_update_provenance(
-    request: Request,
-    inscription_id: str,
-    payload: ProvenanceUpdateRequest,
-    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
-    session: AsyncSession = Depends(get_session)
-):
-    """
-    Curatorial workflow for promoting individual rows to `excavated` (admin endpoint + audit log).
-    """
-    repo = InscriptionRepository(session)
-    insc = await repo.get_inscription(inscription_id)
-    if not insc:
-        raise HTTPException(status_code=404, detail="Inscription not found")
-        
-    old_status = insc.provenance_status
-    insc.provenance_status = payload.new_status
-    
-    from openetruscan.db.models import ProvenanceAudit
-    audit = ProvenanceAudit(
-        inscription_id=insc.id,
-        old_status=old_status,
-        new_status=payload.new_status,
-        notes=payload.notes,
-        created_by="admin"
-    )
-    session.add(audit)
-    await session.commit()
-    
-    return {"status": "success", "old_status": old_status, "new_status": payload.new_status}
-
-
 class PromoteProvenanceRequest(BaseModel):
     new_status: str
     bibliography: str | None = None
@@ -1648,6 +1609,14 @@ async def promote_provenance(
     (e.g. ``unprovenanced`` → ``acquired_documented`` → ``excavated``).
     Every call produces a ``provenance_audits`` row for the chain of evidence.
     """
+    from openetruscan.core.corpus import PROVENANCE_STATUSES
+
+    if payload.new_status not in PROVENANCE_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"new_status must be one of {PROVENANCE_STATUSES}",
+        )
+
     repo = InscriptionRepository(session)
     insc = await repo.get_inscription(inscription_id)
     if not insc:

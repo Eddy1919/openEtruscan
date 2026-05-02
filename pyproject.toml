@@ -105,6 +105,11 @@ packages = ["src/openetruscan"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
+# Bind every async fixture and test to the same session-scoped event loop.
+# Required because conftest.py creates a session-scoped asyncpg engine, and
+# asyncpg connections cannot cross event loops.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]

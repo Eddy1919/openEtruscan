@@ -160,7 +160,7 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
         await eng.dispose()
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="session")
 async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     """A clean AsyncSession per test, truncating user tables on entry.
 
@@ -168,6 +168,12 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     committed up-front. Mixing it into the test's session ran into asyncpg's
     "another operation is in progress" error when the test code expected a
     fresh transaction state.
+
+    ``loop_scope="session"`` is required because the ``engine`` fixture is
+    session-scoped and its asyncpg connection pool is bound to the session
+    event loop. Without this, pytest-asyncio gives this fixture a
+    function-scoped loop and the pooled connections cross loops, which
+    asyncpg refuses with "another operation is in progress".
     """
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
