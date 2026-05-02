@@ -31,6 +31,14 @@ from openetruscan.db.session import get_session
 from openetruscan.db.repository import InscriptionRepository, InscriptionData
 
 
+# All tests in this module mount the FastAPI app + a real Postgres session
+# from conftest.py. They are marked `slow` because the per-test fixture
+# turnaround on a fresh Postgres takes ~250 ms each and the matrix runs them
+# 4× across Python versions; running them on every push blew the CI budget.
+# `pytest -m slow` exercises them locally / nightly.
+pytestmark = pytest.mark.slow
+
+
 @pytest_asyncio.fixture
 async def client(db_session: AsyncSession):
     def override_get_session():
