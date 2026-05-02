@@ -1196,7 +1196,7 @@ async def semantic_search(
     return {"total": results.total, "count": len(data), "results": data}
 
 
-@app.get("/inscriptions/{id}/genetics", tags=["Genetics"])
+@app.get("/inscriptions/{id}/genetics", tags=["Genetics"], include_in_schema=False)
 @limiter.limit("30/minute")
 async def get_genetic_matches(
     request: Request,
@@ -1357,7 +1357,8 @@ async def pelagios_feed(session: AsyncSession = Depends(get_session)) -> Any:
     from openetruscan.api.lod import corpus_to_pelagios_jsonld
 
     repo = InscriptionRepository(session)
-    results = await repo.search(limit=500, geo_only=True)
+    # Reconciled to the actual 6633 corpus rows, no longer artificially constrained to 500 geo-only
+    results = await repo.search(limit=10000, geo_only=False)
     jsonld = corpus_to_pelagios_jsonld(results)
     return Response(
         content=jsonld,
