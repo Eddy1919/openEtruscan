@@ -52,6 +52,7 @@ fetch() {
 DB_URL=$(fetch oe-database-url)
 HF=$(fetch oe-hf-token)
 GEM=$(fetch oe-gemini-api-key)
+ADM=$(fetch oe-admin-token)
 
 umask 077
 tmp=$(mktemp)
@@ -59,6 +60,7 @@ tmp=$(mktemp)
   printf 'DATABASE_URL=%s\n' "$DB_URL"
   printf 'HF_TOKEN=%s\n'     "$HF"
   printf 'GEMINI_API_KEY=%s\n' "$GEM"
+  printf 'ADMIN_TOKEN=%s\n'  "$ADM"
 } > "$tmp"
 chmod 600 "$tmp"
 chown "$ENV_OWNER" "$tmp" 2>/dev/null || true
