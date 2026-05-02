@@ -544,19 +544,27 @@ class InscriptionRepository:
 
         result = await self.session.execute(stmt)
         clans_raw = result.fetchall()
+        if not clans_raw:
+            return {"nodes": [], "edges": []}
 
-        nodes = {}
-        # Fetch actual clan names for the nodes
-        for row in clans_raw:
-            clan_id = row[0]
-            clan_obj = await self.session.get(Clan, clan_id)
-            if clan_obj:
-                nodes[clan_id] = {
-                    "id": clan_id,
-                    "label": clan_obj.name,
-                    "type": "clan",
-                    "size": row[1],
-                }
+        clan_ids = [row[0] for row in clans_raw]
+        sizes = {row[0]: row[1] for row in clans_raw}
+
+        # Single batch fetch instead of N round-trips. The previous loop was
+        # doing one SELECT per clan, which made this endpoint linear in the
+        # number of frequent clans and a P99 outlier under load.
+        clan_rows = await self.session.execute(
+            select(Clan).where(Clan.id.in_(clan_ids))
+        )
+        nodes = {
+            clan.id: {
+                "id": clan.id,
+                "label": clan.name,
+                "type": "clan",
+                "size": sizes.get(clan.id, 0),
+            }
+            for clan in clan_rows.scalars().all()
+        }
 
         # 2. Identify Edges (People belong to clans via relationships)
         # For simplicity, we just return the clan-person connections mapped to nodes

@@ -948,14 +948,20 @@ async def restore_lacunae(
                 detail="Lacunae restoration requires PyTorch, which is not installed in the lightweight API container.",
             )
 
+        import asyncio
+
         registry = getattr(request.app.state, "lacunae_registry", {})
         restorer = registry.get(body.model_uri)
         if restorer is None:
-            restorer = LacunaeRestorer(model_uri=body.model_uri)
+            # First-time model load is also CPU-bound and >5 s; offload it.
+            restorer = await asyncio.to_thread(LacunaeRestorer, model_uri=body.model_uri)
             registry[body.model_uri] = restorer
             request.app.state.lacunae_registry = registry
-            
-        results = restorer.predict(body.text, top_k=body.top_k)
+
+        # Inference is CPU-bound torch — running it directly blocks the event
+        # loop and starves every other request. Offload to the default thread
+        # pool, matching the pattern used by /search/hybrid's reranker.
+        results = await asyncio.to_thread(restorer.predict, body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
     except HTTPException:
         raise
@@ -1351,7 +1357,8 @@ async def date_estimate(
 
 
 @app.get("/pelagios.jsonld", tags=["Linked Data"])
-async def pelagios_feed(session: AsyncSession = Depends(get_session)) -> Any:
+@limiter.limit("5/minute")
+async def pelagios_feed(request: Request, session: AsyncSession = Depends(get_session)) -> Any:
     """Pelagios-compatible JSON-LD feed for Linked Open Data."""
     from fastapi.responses import Response
     from openetruscan.api.lod import corpus_to_pelagios_jsonld
@@ -1606,7 +1613,33 @@ class PromoteProvenanceRequest(BaseModel):
     reviewed_by: str = "admin"
 
 
-@app.post("/inscription/{inscription_id}/promote-provenance", tags=["Admin"])
+class PromoteProvenanceResponse(BaseModel):
+    status: str
+    inscription_id: str
+    old_status: str
+    new_status: str
+    audit_id: int
+
+
+class ProvenanceAuditEntry(BaseModel):
+    id: int
+    old_status: str | None
+    new_status: str
+    notes: str | None
+    created_by: str | None
+    created_at: str | None
+
+
+class ProvenanceHistoryResponse(BaseModel):
+    inscription_id: str
+    audits: list[ProvenanceAuditEntry]
+
+
+@app.post(
+    "/inscription/{inscription_id}/promote-provenance",
+    tags=["Admin"],
+    response_model=PromoteProvenanceResponse,
+)
 @limiter.limit("30/minute")
 async def promote_provenance(
     request: Request,
@@ -1631,7 +1664,7 @@ async def promote_provenance(
         )
 
     repo = InscriptionRepository(session)
-    insc = await repo.get_inscription(inscription_id)
+    insc = await repo.get_by_id(inscription_id)
     if not insc:
         raise HTTPException(status_code=404, detail="Inscription not found")
 
@@ -1665,7 +1698,11 @@ async def promote_provenance(
     }
 
 
-@app.get("/inscription/{inscription_id}/provenance-history", tags=["Corpus"])
+@app.get(
+    "/inscription/{inscription_id}/provenance-history",
+    tags=["Corpus"],
+    response_model=ProvenanceHistoryResponse,
+)
 @limiter.limit("60/minute")
 async def provenance_history(
     request: Request,
@@ -1684,20 +1721,20 @@ async def provenance_history(
     result = await session.execute(stmt)
     audits = result.scalars().all()
 
-    return {
-        "inscription_id": inscription_id,
-        "audits": [
-            {
-                "id": a.id,
-                "old_status": a.old_status,
-                "new_status": a.new_status,
-                "notes": a.notes,
-                "created_by": a.created_by,
-                "created_at": a.created_at.isoformat() if a.created_at else None,
-            }
+    return ProvenanceHistoryResponse(
+        inscription_id=inscription_id,
+        audits=[
+            ProvenanceAuditEntry(
+                id=a.id,
+                old_status=a.old_status,
+                new_status=a.new_status,
+                notes=a.notes,
+                created_by=a.created_by,
+                created_at=a.created_at.isoformat() if a.created_at else None,
+            )
             for a in audits
         ],
-    }
+    )
 
 @app.get("/sources", tags=["Sources"])
 @limiter.limit("60/minute")

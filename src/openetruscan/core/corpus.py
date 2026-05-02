@@ -100,7 +100,7 @@ class Inscription:
     classification: str = "unknown"
     script_system: str = "old_italic"
     completeness: str = "complete"
-    provenance_status: str | None = "verified"
+    provenance_status: str | None = "unknown"
     provenance_flags: list[str] = field(default_factory=list)
     trismegistos_id: str | None = None
     eagle_id: str | None = None

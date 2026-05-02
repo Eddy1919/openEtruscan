@@ -986,63 +986,6 @@
         }
       }
     },
-    "/inscriptions/{id}/genetics": {
-      "get": {
-        "tags": [
-          "Genetics"
-        ],
-        "summary": "Get Genetic Matches",
-        "description": "Spatio-temporal matchmaking between inscriptions and archaeogenetic samples.",
-        "operationId": "get_genetic_matches_inscriptions__id__genetics_get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "ID of the inscription to find genetic matches for",
-              "title": "Id"
-            },
-            "description": "ID of the inscription to find genetic matches for"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20,
-              "minimum": 1,
-              "default": 5,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Get Genetic Matches Inscriptions  Id  Genetics Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/clan/{gens}": {
       "get": {
         "tags": [
@@ -1737,7 +1680,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PromoteProvenanceResponse"
+                }
               }
             }
           },
@@ -1778,7 +1723,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceHistoryResponse"
+                }
               }
             }
           },
@@ -2203,6 +2150,126 @@
           "new_status"
         ],
         "title": "PromoteProvenanceRequest"
+      },
+      "PromoteProvenanceResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "inscription_id": {
+            "type": "string",
+            "title": "Inscription Id"
+          },
+          "old_status": {
+            "type": "string",
+            "title": "Old Status"
+          },
+          "new_status": {
+            "type": "string",
+            "title": "New Status"
+          },
+          "audit_id": {
+            "type": "integer",
+            "title": "Audit Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "inscription_id",
+          "old_status",
+          "new_status",
+          "audit_id"
+        ],
+        "title": "PromoteProvenanceResponse"
+      },
+      "ProvenanceAuditEntry": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "old_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Status"
+          },
+          "new_status": {
+            "type": "string",
+            "title": "New Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "old_status",
+          "new_status",
+          "notes",
+          "created_by",
+          "created_at"
+        ],
+        "title": "ProvenanceAuditEntry"
+      },
+      "ProvenanceHistoryResponse": {
+        "properties": {
+          "inscription_id": {
+            "type": "string",
+            "title": "Inscription Id"
+          },
+          "audits": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceAuditEntry"
+            },
+            "type": "array",
+            "title": "Audits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inscription_id",
+          "audits"
+        ],
+        "title": "ProvenanceHistoryResponse"
       },
       "RestoreRequest": {
         "properties": {
