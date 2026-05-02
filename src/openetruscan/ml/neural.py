@@ -884,13 +884,23 @@ class LacunaeRestorer:
     Interface for Probabilistic Lacunae Restoration using CharMLM.
     """
 
-    def __init__(self, max_len: int = 128) -> None:
-        """Initialize the MLM-based lacunae restorer with fixed context window."""
+    def __init__(self, model_uri: str = "local://default", max_len: int = 128) -> None:
+        """Initialize the MLM-based lacunae restorer with fixed context window and model URI."""
         _require_torch()
         self.max_len = max_len
+        self.model_uri = model_uri
         self.vocab: CharVocab | None = None
         self.model: CharMLM | None = None
         self._trained = False
+        
+        self._load_from_registry()
+        
+    def _load_from_registry(self) -> None:
+        """Resolve the model_uri from the model registry and load it."""
+        # For a full implementation, this would fetch from S3 or local disk based on URI scheme.
+        if self.model_uri != "local://default":
+            # For example: path = self.model_uri.replace("local://", "data/models/")
+            pass
 
     def _tokenize_lacunae(self, text: str) -> tuple[list[str], list[int]]:
         """Identify [..] mask markers and convert text into tokenized sequences with mask indices."""

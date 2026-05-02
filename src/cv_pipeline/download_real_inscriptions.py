@@ -9,7 +9,6 @@ Usage:
     poetry run python src/cv_pipeline/download_real_inscriptions.py
 """
 
-import os
 import requests
 import logging
 from pathlib import Path
@@ -56,7 +55,7 @@ def fetch_wikimedia_images(query: str, limit: int = 5):
         pages = data.get("query", {}).get("pages", {})
         image_urls = []
         
-        for page_id, page_data in pages.items():
+        for _page_id, page_data in pages.items():
             image_info = page_data.get("imageinfo", [])
             if image_info:
                 img_url = image_info[0].get("url")

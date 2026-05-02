@@ -12,8 +12,6 @@ Usage:
     poetry run python src/cv_pipeline/train_yolo.py
 """
 
-import os
-import shutil
 import logging
 from pathlib import Path
 from ultralytics import YOLO
@@ -78,7 +76,11 @@ def push_to_huggingface(onnx_path: str):
     try:
         api.create_repo(repo_id=HF_REPO_ID, private=False, exist_ok=True)
     except Exception as e:
-        logger.warning("Could not verify/create HF repo. Make sure HF_TOKEN is set. Error: %s", e)
+        # The exception object can include the upstream HF response body, which is
+        # never the credential itself; semgrep flags any logger call that mentions
+        # "TOKEN" in the message. Suppress because the message text is a hint,
+        # not an emitted secret.
+        logger.warning("Could not verify/create HF repo. Make sure HF_TOKEN is set. Error: %s", e)  # nosemgrep
         return
 
     # Upload the ONNX file

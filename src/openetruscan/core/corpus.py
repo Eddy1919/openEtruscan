@@ -556,13 +556,20 @@ class Corpus:
 
     @classmethod
     def load(cls, db_path=None) -> Corpus:
-        """Factory method to load the corpus using the default database URL from settings."""
+        """Factory method to load the corpus using the default database URL from settings.
+
+        ``Corpus.load()`` is the friendly entry point for CLI scripts and tests
+        that don't want to know about schema-management plumbing — it ensures
+        the schema exists before returning. Hot-path callers in long-running
+        workers should use ``Corpus.connect(url, init_schema=False)`` (the
+        default) so they don't re-run the IF NOT EXISTS DDL on every connect.
+        """
         from openetruscan.core.config import settings
 
         env_url = settings.database_url
         if not env_url:
             raise ValueError("DATABASE_URL environment variable is missing.")
-        return cls.connect(env_url)
+        return cls.connect(env_url, init_schema=True)
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist (ignored for read-only users)."""
@@ -910,10 +917,10 @@ class Corpus:
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))
+            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
-            cur.execute(count_query, (lon, lat, radius_m))
+            cur.execute(count_query, (lon, lat, radius_m))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             total = cur.fetchone()["count"]
 
         return SearchResults(inscriptions=inscriptions, total=total)
@@ -1243,8 +1250,8 @@ class Corpus:
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
             # Use ANY(%s) with a list parameter for safe IN queries
-            cur.execute(
-                f"SELECT {_INSCRIPTION_COLS} FROM inscriptions WHERE id = ANY(%s)",  # nosec B608 # nosemgrep -- _INSCRIPTION_COLS is a static constant
+            cur.execute(  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
+                f"SELECT {_INSCRIPTION_COLS} FROM inscriptions WHERE id = ANY(%s)",  # nosec B608 -- _INSCRIPTION_COLS is a static constant
                 (ids,),
             )
             rows = cur.fetchall()

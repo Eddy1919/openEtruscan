@@ -9,7 +9,6 @@ Usage:
     poetry run python src/cv_pipeline/yolo_pseudo_labeler.py
 """
 
-import os
 from pathlib import Path
 from ultralytics import YOLO
 import logging

@@ -10,10 +10,13 @@ import logging
 import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import asyncio
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import secrets
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,12 +66,57 @@ def _configure_logging():
         logging.basicConfig(level=log_level)
 
 
+def _maybe_install_otel(app: FastAPI) -> None:
+    """Wire OpenTelemetry tracing if the optional packages are installed.
+
+    The instrumentation is opt-in via ``[telemetry]`` extra so the prod
+    container only pays the import cost when intended (~30 MB on disk and a
+    handful of milliseconds at startup). When ``OTEL_EXPORTER_OTLP_ENDPOINT``
+    is set we ship spans to a collector (Cloud Trace via the ops agent's OTLP
+    receiver, or any OpenTelemetry collector). Without it, tracing is enabled
+    in-memory only — useful for local debugging via ``otel-cli``.
+    """
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    except ImportError:
+        # Optional. Production prefers explicit dep install; dev runs without.
+        return
+
+    resource = Resource.create({
+        "service.name": "openetruscan-api",
+        "service.version": __version__,
+    })
+    provider = TracerProvider(resource=resource)
+
+    import os as _os
+    endpoint = _os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
+        try:
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+            provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+        except ImportError:
+            pass
+
+    trace.set_tracer_provider(provider)
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="/health,/ready,/live")
+    AsyncPGInstrumentor().instrument()
+    HTTPXClientInstrumentor().instrument()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown events, including uptime initialization."""
     global START_TIME
     START_TIME = datetime.now(timezone.utc)
     _configure_logging()
+    _maybe_install_otel(app)
 
     # Shared httpx client for outbound calls (Gemini embeddings, etc.).
     # Opening one per-request was the previous pattern and showed up in latency under load.
@@ -152,7 +200,14 @@ async def _global_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={
+            "type": "about:blank",
+            "title": "Internal Server Error",
+            "status": 500,
+            "detail": "Internal server error",
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
     )
 
 
@@ -162,7 +217,47 @@ async def _value_error_handler(request: Request, exc: ValueError):
     logger.warning("ValueError on %s %s: %s", request.method, request.url.path, str(exc))
     return JSONResponse(
         status_code=400,
-        content={"detail": str(exc)},
+        content={
+            "type": "about:blank",
+            "title": "Bad Request",
+            "status": 400,
+            "detail": str(exc),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Format standard HTTP exceptions to RFC 7807."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "type": "about:blank",
+            "title": "HTTP Error",
+            "status": exc.status_code,
+            "detail": str(exc.detail),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Format FastAPI validation errors to RFC 7807."""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "type": "about:blank",
+            "title": "Unprocessable Entity",
+            "status": 422,
+            "detail": "Request validation failed",
+            "errors": exc.errors(),
+            "instance": request.url.path
+        },
+        media_type="application/problem+json"
     )
 
 
@@ -369,15 +464,9 @@ async def liveness_check():
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
-
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"], deprecated=True)
-@limiter.limit("10/minute")
-async def get_full_corpus(request: Request, session: AsyncSession = Depends(get_session)):
-    """DEPRECATED — use /search with pagination instead."""
-    repo = InscriptionRepository(session)
-    results = await repo.search(limit=500)
-    data = [_build_model(i) for i in results.inscriptions]
-    return data
+# /corpus was deprecated in v0.3 in favour of /search with pagination. Removed
+# in this branch — there are no remaining callers in the frontend or the
+# documented client examples. /search?limit=500 is the drop-in replacement.
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
@@ -525,6 +614,112 @@ async def search_geo(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+def _inscription_jsonld(inscription) -> dict:
+    """Render an inscription as Schema.org / Pelagios-flavoured JSON-LD."""
+    base = "https://api.openetruscan.com"
+    iri = f"{base}/inscription/{inscription.id}"
+    place = (
+        {
+            "@type": "Place",
+            "name": inscription.findspot,
+            **(
+                {"geo": {"@type": "GeoCoordinates",
+                         "latitude": inscription.findspot_lat,
+                         "longitude": inscription.findspot_lon}}
+                if inscription.findspot_lat is not None
+                and inscription.findspot_lon is not None
+                else {}
+            ),
+        }
+        if inscription.findspot
+        else None
+    )
+    same_as = []
+    if inscription.trismegistos_id:
+        same_as.append(f"https://www.trismegistos.org/text/{inscription.trismegistos_id}")
+    if inscription.pleiades_id:
+        same_as.append(f"https://pleiades.stoa.org/places/{inscription.pleiades_id}")
+    if inscription.eagle_id:
+        same_as.append(f"https://www.edr-edr.it/edr_programmi/res_complex_comune.php?do=show&id_nr={inscription.eagle_id}")
+
+    payload = {
+        "@context": [
+            "http://www.w3.org/ns/anno.jsonld",
+            {"schema": "http://schema.org/", "lawd": "http://lawd.info/ontology/"},
+        ],
+        "@id": iri,
+        "@type": ["lawd:Inscription", "schema:CreativeWork"],
+        "schema:identifier": inscription.id,
+        "schema:text": inscription.canonical,
+        "schema:alternativeHeadline": inscription.raw_text,
+        "lawd:foundAt": place,
+        "schema:dateCreated": (
+            f"-{abs(inscription.date_approx):04d}"
+            if inscription.date_approx and inscription.date_approx < 0
+            else (str(inscription.date_approx) if inscription.date_approx else None)
+        ),
+        "schema:about": inscription.classification,
+        "schema:inLanguage": inscription.language,
+        "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    }
+    if same_as:
+        payload["schema:sameAs"] = same_as
+    return payload
+
+
+def _inscription_turtle(inscription) -> str:
+    """Render an inscription as RDF/Turtle. Lossy but stable."""
+    lines = [
+        "@prefix lawd: <http://lawd.info/ontology/> .",
+        "@prefix schema: <http://schema.org/> .",
+        "@prefix dcterms: <http://purl.org/dc/terms/> .",
+        "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
+        "",
+        f"<https://api.openetruscan.com/inscription/{inscription.id}> a lawd:Inscription ;",
+        f'    schema:identifier "{inscription.id}" ;',
+        f'    schema:text """{(inscription.canonical or "").replace(chr(34), chr(92) + chr(34))}""" ;',
+        f'    schema:inLanguage "{inscription.language}" ;',
+        f'    schema:about "{inscription.classification}"',
+    ]
+    if inscription.findspot:
+        lines.append(
+            f'    ; lawd:foundAt [ a schema:Place ; schema:name "{inscription.findspot}" ]'
+        )
+    lines.append("    .")
+    return "\n".join(lines) + "\n"
+
+
+def _negotiate(request: Request) -> str:
+    """Return the canonical media type to render for this request.
+
+    Honours both the ``Accept`` header and the ``?format=`` query string. The
+    query string wins (handier for sharable links / curl). Supported keys:
+
+      - ``html`` / ``application/json``  → default JSON for the API and the
+        front-end (returned as the standard Pydantic InscriptionModel).
+      - ``jsonld`` / ``application/ld+json`` → Schema.org + Pelagios LAWD.
+      - ``turtle`` / ``text/turtle`` → RDF/Turtle.
+      - ``tei`` / ``application/tei+xml``  → EpiDoc XML.
+    """
+    fmt = request.query_params.get("format", "").lower()
+    if fmt in {"jsonld", "json-ld"}:
+        return "application/ld+json"
+    if fmt in {"turtle", "ttl", "rdf"}:
+        return "text/turtle"
+    if fmt in {"tei", "epidoc", "xml"}:
+        return "application/tei+xml"
+    if fmt in {"json", "html"}:
+        return "application/json"
+    accept = request.headers.get("accept", "")
+    if "application/ld+json" in accept:
+        return "application/ld+json"
+    if "text/turtle" in accept:
+        return "text/turtle"
+    if any(t in accept for t in ("application/tei+xml", "application/xml", "text/xml")):
+        return "application/tei+xml"
+    return "application/json"
+
+
 @app.get("/inscription/{inscription_id}", tags=["Corpus"])
 @limiter.limit("120/minute")
 async def get_inscription(
@@ -535,33 +730,71 @@ async def get_inscription(
     ],
     session: AsyncSession = Depends(get_session),
 ):
-    """Fetch a single inscription by ID."""
+    """Fetch a single inscription by ID with content negotiation.
+
+    Each inscription is a citable resource; serve it in the format the caller
+    asks for (JSON for the frontend, JSON-LD for linked-data aggregators,
+    Turtle for triple stores, EpiDoc TEI for philological tooling). All four
+    variants point at the same canonical IRI via ``Link: rel="alternate"``
+    headers so the URL itself stays stable across formats.
+    """
     repo = InscriptionRepository(session)
     model = await repo.get_by_id(inscription_id)
     if not model:
         raise HTTPException(status_code=404, detail="Inscription not found")
 
     inscription = repo._to_dataclass(model)
+    media = _negotiate(request)
 
-    # ── Content Negotiation ──
-    accept_header = request.headers.get("accept", "")
-    if (
-        "application/xml" in accept_header
-        or "application/tei+xml" in accept_header
-        or "text/xml" in accept_header
-    ):
+    base = f"https://api.openetruscan.com/inscription/{inscription_id}"
+    alt_links = ", ".join(
+        f'<{base}?format={fmt}>; rel="alternate"; type="{mt}"'
+        for fmt, mt in (
+            ("json", "application/json"),
+            ("jsonld", "application/ld+json"),
+            ("turtle", "text/turtle"),
+            ("tei", "application/tei+xml"),
+        )
+    )
+    headers = {
+        "Link": alt_links,
+        "Vary": "Accept",
+    }
+
+    from fastapi.responses import JSONResponse, Response
+
+    if media == "application/ld+json":
+        return JSONResponse(
+            _inscription_jsonld(inscription),
+            media_type="application/ld+json",
+            headers=headers,
+        )
+    if media == "text/turtle":
+        return Response(
+            content=_inscription_turtle(inscription),
+            media_type="text/turtle; charset=utf-8",
+            headers=headers,
+        )
+    if media == "application/tei+xml":
         try:
-            from fastapi.responses import Response
             from openetruscan.core.epidoc import inscription_to_epidoc
 
             xml_data = inscription_to_epidoc(inscription)
-            return Response(content=xml_data, media_type="application/tei+xml")
+            return Response(
+                content=xml_data,
+                media_type="application/tei+xml",
+                headers=headers,
+            )
         except ImportError:
             raise HTTPException(
                 status_code=501, detail="EpiDoc TEI capability is not installed server-side."
             )
 
-    return _build_model(inscription)
+    # JSON default — emit Pydantic via JSONResponse so the Link header lands.
+    return JSONResponse(
+        _build_model(inscription).model_dump(),
+        headers=headers,
+    )
 
 
 @app.get("/inscription/{inscription_id}/concordance", tags=["Research"])
@@ -600,6 +833,41 @@ async def get_inscription_names_network(
     return graph
 
 
+# In-memory idempotency store for /inscriptions POST. The endpoint runs at
+# 30/minute on a single VM instance and the import flow is admin-only, so a
+# process-local TTL cache is the right level of complexity. Once the API moves
+# to Cloud Run (multi-instance), this will need to migrate to Redis or a
+# `idempotency_keys` table — see ROADMAP.md.
+_IDEMPOTENCY_TTL_SECONDS = 24 * 3600
+_IDEMPOTENCY_CACHE: dict[str, tuple[float, dict]] = {}
+
+
+def _idempotency_get(key: str) -> dict | None:
+    """Return a cached response for `key` if present and unexpired."""
+    import time
+
+    record = _IDEMPOTENCY_CACHE.get(key)
+    if record is None:
+        return None
+    expires_at, payload = record
+    if time.time() > expires_at:
+        _IDEMPOTENCY_CACHE.pop(key, None)
+        return None
+    return payload
+
+
+def _idempotency_put(key: str, payload: dict) -> None:
+    import time
+
+    _IDEMPOTENCY_CACHE[key] = (time.time() + _IDEMPOTENCY_TTL_SECONDS, payload)
+    # Cheap eviction: if the cache grows beyond a sane bound, drop the oldest
+    # 25% of entries. Importing inscriptions is rare, so this rarely fires.
+    if len(_IDEMPOTENCY_CACHE) > 1024:
+        items = sorted(_IDEMPOTENCY_CACHE.items(), key=lambda kv: kv[1][0])
+        for k, _ in items[: len(items) // 4]:
+            _IDEMPOTENCY_CACHE.pop(k, None)
+
+
 @app.post("/inscriptions", tags=["Corpus"])
 @limiter.limit("30/minute")
 async def import_inscription(
@@ -607,12 +875,24 @@ async def import_inscription(
     _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
     session: AsyncSession = Depends(get_session),
 ):
-    """Import an inscription from EpiDoc TEI XML."""
+    """Import an inscription from EpiDoc TEI XML.
+
+    Supports the ``Idempotency-Key`` header (RFC draft `idempotency-header`).
+    A client retrying after a network blip can safely re-POST the same body
+    with the same key; the second call returns the cached response without
+    re-running the EpiDoc parse and the upsert.
+    """
     content_type = request.headers.get("content-type", "")
     if "xml" not in content_type:
         raise HTTPException(
             status_code=400, detail="Content-Type must be application/xml or similar"
         )
+
+    idempotency_key = request.headers.get("idempotency-key")
+    if idempotency_key:
+        cached = _idempotency_get(idempotency_key)
+        if cached is not None:
+            return cached
 
     body = await request.body()
     try:
@@ -621,7 +901,10 @@ async def import_inscription(
         inscription = parse_epidoc(body.decode("utf-8"))
         repo = InscriptionRepository(session)
         await repo.add(inscription)
-        return {"status": "success", "id": inscription.id}
+        response = {"status": "success", "id": inscription.id}
+        if idempotency_key:
+            _idempotency_put(idempotency_key, response)
+        return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -642,6 +925,7 @@ class RestoreRequest(BaseModel):
 
     text: str
     top_k: int = 5
+    model_uri: str = "local://default"
 
 
 @app.post("/neural/restore", tags=["Neural"])
@@ -661,10 +945,13 @@ async def restore_lacunae(
                 detail="Lacunae restoration requires PyTorch, which is not installed in the lightweight API container.",
             )
 
-        restorer = request.app.state.lacunae
+        registry = getattr(request.app.state, "lacunae_registry", {})
+        restorer = registry.get(body.model_uri)
         if restorer is None:
-            restorer = LacunaeRestorer()
-            request.app.state.lacunae = restorer
+            restorer = LacunaeRestorer(model_uri=body.model_uri)
+            registry[body.model_uri] = restorer
+            request.app.state.lacunae_registry = registry
+            
         results = restorer.predict(body.text, top_k=body.top_k)
         return {"text": body.text, "predictions": results}
     except HTTPException:
@@ -1161,14 +1448,23 @@ async def bayesian_date_estimate(
 
 
 _FAMILY_GRAPH_CACHE = None
+_FAMILY_GRAPH_LOCK = None
 
 
 async def _get_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
     """Returns a cached FamilyGraph, building it once upon first request."""
-    global _FAMILY_GRAPH_CACHE
-    if _FAMILY_GRAPH_CACHE is None:
-        _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
-    return _FAMILY_GRAPH_CACHE
+    global _FAMILY_GRAPH_CACHE, _FAMILY_GRAPH_LOCK
+    
+    if _FAMILY_GRAPH_CACHE is not None:
+        return _FAMILY_GRAPH_CACHE
+        
+    if _FAMILY_GRAPH_LOCK is None:
+        _FAMILY_GRAPH_LOCK = asyncio.Lock()
+        
+    async with _FAMILY_GRAPH_LOCK:
+        if _FAMILY_GRAPH_CACHE is None:
+            _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
+        return _FAMILY_GRAPH_CACHE
 
 
 async def _build_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
@@ -1285,3 +1581,254 @@ async def admin_validate_pleiades(request: Request, session: AsyncSession = Depe
     """Administrative audit endpoint for Pleiades identifier alignments."""
     repo = InscriptionRepository(session)
     return await repo.validate_pleiades_ids()
+
+
+# ── Data sources ────────────────────────────────────────────────────────────
+
+
+class ProvenanceUpdateRequest(BaseModel):
+    new_status: str
+    notes: str | None = None
+
+
+@app.put("/admin/inscriptions/{inscription_id}/provenance", tags=["Admin"])
+@limiter.limit("30/minute")
+async def admin_update_provenance(
+    request: Request,
+    inscription_id: str,
+    payload: ProvenanceUpdateRequest,
+    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Curatorial workflow for promoting individual rows to `excavated` (admin endpoint + audit log).
+    """
+    repo = InscriptionRepository(session)
+    insc = await repo.get_inscription(inscription_id)
+    if not insc:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+        
+    old_status = insc.provenance_status
+    insc.provenance_status = payload.new_status
+    
+    from openetruscan.db.models import ProvenanceAudit
+    audit = ProvenanceAudit(
+        inscription_id=insc.id,
+        old_status=old_status,
+        new_status=payload.new_status,
+        notes=payload.notes,
+        created_by="admin"
+    )
+    session.add(audit)
+    await session.commit()
+    
+    return {"status": "success", "old_status": old_status, "new_status": payload.new_status}
+
+
+@app.get("/sources", tags=["Sources"])
+@limiter.limit("60/minute")
+async def list_data_sources(request: Request, session: AsyncSession = Depends(get_session)):
+    """List the data sources backing the corpus, with provenance baselines.
+
+    Each entry includes the canonical citation, license, and the *typical*
+    archaeological provenance tier of rows from that source. Per-row provenance
+    is still in `inscriptions.provenance_status`; the source baseline is just
+    a hint for the UI ("most rows from Larth are unprovenanced").
+    """
+    from sqlalchemy import select, func as sa_func
+
+    from openetruscan.db.models import DataSource, Inscription
+
+    counts_subq = (
+        select(
+            Inscription.source_id.label("source_id"),
+            sa_func.count().label("count"),
+        )
+        .where(Inscription.source_id.is_not(None))
+        .group_by(Inscription.source_id)
+        .subquery()
+    )
+    stmt = select(DataSource, counts_subq.c.count).join(
+        counts_subq, counts_subq.c.source_id == DataSource.id, isouter=True
+    )
+    rows = (await session.execute(stmt)).all()
+
+    return {
+        "sources": [
+            {
+                "id": s.id,
+                "display_name": s.display_name,
+                "citation": s.citation,
+                "license": s.license,
+                "url": s.url,
+                "provenance_baseline": s.provenance_baseline,
+                "retrieved_at": s.retrieved_at.isoformat() if s.retrieved_at else None,
+                "inscription_count": int(c or 0),
+            }
+            for s, c in rows
+        ]
+    }
+
+
+# ── Hybrid search (BM25 ∪ pgvector → cross-encoder rerank) ──────────────────
+
+
+# Lazy global so the cross-encoder model is loaded once per worker. The model
+# is small (~280 MB) and CPU-only; first call pays the load cost (~3 s on the
+# e2-small host), subsequent calls reuse the loaded weights.
+_RERANKER = None
+_RERANKER_LOAD_LOCK = None
+
+
+async def _get_reranker():
+    global _RERANKER, _RERANKER_LOAD_LOCK
+    if _RERANKER is not None:
+        return _RERANKER
+    import asyncio
+
+    if _RERANKER_LOAD_LOCK is None:
+        _RERANKER_LOAD_LOCK = asyncio.Lock()
+
+    async with _RERANKER_LOAD_LOCK:
+        if _RERANKER is not None:
+            return _RERANKER
+        try:
+            from sentence_transformers import CrossEncoder
+
+            # Run the synchronous model load in a thread so we do not block the
+            # event loop. The model is light enough that this is OK on the e2-small.
+            _RERANKER = await asyncio.to_thread(
+                CrossEncoder, "cross-encoder/ms-marco-MiniLM-L-6-v2", max_length=256
+            )
+        except ImportError:
+            # The hybrid endpoint is opt-in; if sentence-transformers is not
+            # installed we still return the union (no rerank).
+            _RERANKER = False
+        return _RERANKER
+
+
+@app.get("/search/hybrid", response_model=SearchResponse, tags=["Search"])
+@limiter.limit("30/minute")
+async def search_hybrid(
+    request: Request,
+    q: Annotated[
+        str,
+        Query(description="Free-text query", min_length=1, max_length=MAX_TEXT_LEN),
+    ],
+    field: Annotated[
+        str,
+        Query(
+            description="Vector field to compare against",
+            pattern="^(emb_text|emb_context|emb_combined)$",
+        ),
+    ] = "emb_combined",
+    rerank: Annotated[
+        bool,
+        Query(description="Apply CPU cross-encoder rerank to the union of FTS + vector hits"),
+    ] = True,
+    has_provenance: Annotated[
+        bool | None,
+        Query(description="Restrict to inscriptions with (true) or without (false) a known findspot"),
+    ] = None,
+    limit: Annotated[
+        int,
+        Query(ge=1, le=50),
+    ] = 20,
+    session: AsyncSession = Depends(get_session),
+):
+    """Hybrid retrieval: BM25 (FTS) ∪ pgvector top-k → optional cross-encoder rerank.
+
+    The endpoint:
+      1. runs the FTS path (`fts_canonical @@ plainto_tsquery`) for sparse hits,
+      2. embeds the query via Gemini text-embedding-004 and runs the dense path
+         against the chosen vector field with HNSW,
+      3. unions the candidates (max-of-ranks) and, if `rerank=true`, re-scores
+         each candidate with a CPU MiniLM cross-encoder.
+    Returns the top `limit` results.
+    """
+    if not settings.gemini_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GEMINI_API_KEY not configured on server",
+        )
+
+    repo = InscriptionRepository(session)
+    text_q = _clamp_text(q) or ""
+
+    # 1. FTS path. Pull a generous candidate pool (4× target) so the union has
+    #    room to mix sparse + dense.
+    fts_results = await repo.search(
+        text_query=text_q,
+        has_provenance=has_provenance,
+        limit=min(limit * 4, 80),
+        offset=0,
+        sort_by="id",
+    )
+
+    # 2. Dense path. Embed the query, then run pgvector cosine search.
+    try:
+        client = request.app.state.http
+        resp = await client.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
+            json={"content": {"parts": [{"text": text_q[:2048]}]}},
+            headers={"x-goog-api-key": settings.gemini_api_key},
+        )
+        resp.raise_for_status()
+        embedding = resp.json()["embedding"]["values"]
+    except Exception as e:
+        logger.warning(f"Hybrid: embedding fetch failed, falling back to FTS only: {e}")
+        embedding = None
+
+    dense_results = []
+    if embedding is not None:
+        try:
+            dense = await repo.semantic_search(
+                query_embedding=embedding,
+                field=field,
+                limit=min(limit * 4, 80),
+            )
+            dense_results = dense.inscriptions
+        except Exception as e:
+            logger.warning(f"Hybrid: vector search failed, falling back to FTS only: {e}")
+
+    # 3. Union via Reciprocal Rank Fusion (k=60 is the standard tuning).
+    rrf_k = 60
+    scored: dict[str, tuple[float, Any]] = {}
+    for rank, insc in enumerate(fts_results.inscriptions):
+        scored[insc.id] = (1.0 / (rrf_k + rank), insc)
+    for rank, insc in enumerate(dense_results):
+        prev = scored.get(insc.id)
+        contrib = 1.0 / (rrf_k + rank)
+        if prev:
+            scored[insc.id] = (prev[0] + contrib, insc)
+        else:
+            scored[insc.id] = (contrib, insc)
+
+    candidates = sorted(scored.values(), key=lambda t: -t[0])[: max(limit * 2, 20)]
+
+    # 4. Optional cross-encoder rerank. We send (query, canonical) pairs and
+    #    let the model produce a relevance score. Skip if the library isn't
+    #    installed or if the candidate pool is empty.
+    if rerank and candidates:
+        reranker = await _get_reranker()
+        if reranker:
+            import asyncio
+
+            pairs = [(text_q, c[1].canonical) for c in candidates]
+            try:
+                scores = await asyncio.to_thread(reranker.predict, pairs)
+                candidates = sorted(
+                    zip(scores, [c[1] for c in candidates], strict=True),
+                    key=lambda t: -float(t[0]),
+                )
+                final = [c[1] for c in candidates[:limit]]
+            except Exception as e:
+                logger.warning(f"Hybrid rerank failed; returning RRF order: {e}")
+                final = [c[1] for c in candidates[:limit]]
+        else:
+            final = [c[1] for c in candidates[:limit]]
+    else:
+        final = [c[1] for c in candidates[:limit]]
+
+    data = [_build_model(i) for i in final]
+    return {"total": len(final), "count": len(data), "results": data}
