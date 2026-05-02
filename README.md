@@ -194,3 +194,8 @@ npx vercel --prod -y
 𐌀 𐌁 𐌂 𐌃 𐌄 𐌅 𐌆 𐌇 𐌈 𐌉 𐌊 𐌋 𐌌 𐌍 𐌎 𐌏 𐌐 𐌑 𐌓 𐌔 𐌕 𐌖 𐌗 𐌘 𐌙 𐌚
 
 </div>
+
+## What's New in v0.5.0
+- **Cloud Run Neural Restoration**: The ByT5 lacunae restoration model has been moved to a dedicated, autoscaling Cloud Run inference service (`/services/byt5-restorer`).
+- **Production CI/CD Eval Gates**: Implemented hybrid search NDCG@10 CI eval gates seeded with real DB queries (`evals/search_eval_queries.jsonl`).
+- **Admin Curatorial UI**: Deployed frontend provenance promotion workflow inside the Inscription viewer (`ProvenancePromoteModal.tsx`).
