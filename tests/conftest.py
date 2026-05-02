@@ -28,13 +28,20 @@ isolation is delivered by truncating user tables in ``db_session``.
 from __future__ import annotations
 
 import os
-import socket
-import time
-from collections.abc import AsyncGenerator, Generator
-from contextlib import suppress
-from typing import Any
 
-import pytest
+# Force test environment BEFORE any openetruscan import. settings() captures
+# os.environ at first import, so anything set later (e.g. inside an individual
+# test module) is too late and CORS / docs / debug toggles end up wrong.
+os.environ.setdefault("ENVIRONMENT", "testing")
+os.environ.setdefault("ENABLE_DOCS", "1")
+
+import socket  # noqa: E402
+import time  # noqa: E402
+from collections.abc import AsyncGenerator, Generator  # noqa: E402
+from contextlib import suppress  # noqa: E402
+from typing import Any  # noqa: E402
+
+import pytest  # noqa: E402
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
