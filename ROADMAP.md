@@ -7,24 +7,8 @@ integrity work that followed.
 
 Status legend: ✓ done · → in progress · ◯ queued · ⨯ deferred (with reason).
 
-## Budget envelope: ≤ €50 / month
-
-Every plan below is constrained to fit a hard cap of **€50/month total** GCP
-spend. Today's run-rate sits at roughly:
-
-| line item | cost |
-|---|---:|
-| GCE `openetruscan-eu` (e2-small, 100 GB pd-standard, static IP) | ~€22 |
-| Cloud SQL `openetruscan` (db-f1-micro, 10 GB HDD, 30-day backups, PITR) | ~€10 |
-| Cloud Monitoring uptime check + Secret Manager + Logging | ~€1 |
-| Egress + DNS + everything else | ~€1 |
-| **current monthly run-rate** | **~€34** |
-
-Headroom: ~€16/mo for P3 work. Costed line items appear in the relevant P3
-sections below. Anything that would push the total over €50 is explicitly
-deferred or replaced with a cheaper-but-equivalent design.
-
 ---
+
 
 ## Done in the audit (April / May 2026)
 
@@ -67,7 +51,7 @@ deferred or replaced with a cheaper-but-equivalent design.
 - ✓ `TestClusterSites` rewritten against `cluster_sites_from_texts(list[dict])` — no DB dependency, no `slow` mark. Three new edge-case tests (single-site insufficient, three-sites, empty input). Full statistics suite passes in ~1 s.
 - ✓ Server-integration suite (`tests/test_server.py`) demoted from `slow` to the main path. Required pinning the pytest-asyncio loop scope (`asyncio_default_fixture_loop_scope = "session"`) so the session-scoped `engine` fixture and per-test `db_session` share an event loop — without this, asyncpg fails with "another operation is in progress". 158/158 fast tests pass locally.
 - ✓ CI Artifact Registry push job. `.github/workflows/ci.yml` `push-image` job builds + pushes `api:sha-<git>` and `api:latest` to `europe-west4-docker.pkg.dev` on every main push, via Workload Identity Federation. Removes the deploy SPOF of "build on the VM". One-time WIF setup in GCP still pending (see P2).
-- ✓ ByT5 Cloud Run scaffold at `services/byt5-restorer/` — FastAPI + lazy model load + SQLite prediction cache + non-root container. Deploy command lives in the Dockerfile header. Cost projection: ~€2/mo at min-instances=0. Not deployed yet — the API still does inference in-process; the cutover is a one-line URL change.
+- ✓ ByT5 Cloud Run scaffold at `services/byt5-restorer/` — FastAPI + lazy model load + SQLite prediction cache + non-root container. Deploy command lives in the Dockerfile header. Not deployed yet — the API still does inference in-process; the cutover is a one-line URL change.
 - ✓ NDCG@10 eval harness. Seed of 40 labelled queries at `evals/search_eval_queries.jsonl`, scorer at `evals/run_search_eval.py`, exit-code gate at `0.40`. Gold IDs are placeholder `TLE_*` strings — needs corpus-grounded relabelling before wiring into CI.
 - ✓ `POST /inscription/{id}/promote-provenance` curatorial endpoint with `bibliography` + `reviewed_by` fields and `new_status` validation against `PROVENANCE_STATUSES`. Companion `GET /inscription/{id}/provenance-history` for the audit trail. Replaces the older `PUT /admin/inscriptions/{id}/provenance` (removed; was a strict subset).
 
@@ -127,60 +111,53 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ◯ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
 - ◯ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
 - ◯ **PgBouncer.** `max_connections=25` on db-f1-micro vs. `pool_size=20, max_overflow=10` per worker is one restart away from saturation. Add PgBouncer in transaction mode as a sidecar.
-- ◯ **Right-size the DB.** db-f1-micro on HDD is the wrong floor for the hybrid-search workload. Move to db-custom-2-7680 with SSD when hybrid search ships (~$130/mo cost difference, unlocks every other ML improvement).
+- ◯ **Right-size the DB.** db-f1-micro on HDD is the wrong floor for the hybrid-search workload. Move to db-custom-2-7680 with SSD when hybrid search ships (unlocks every other ML improvement).
 - ◯ **Vercel DNS scope-up.** The current Vercel token cannot manage DNS records (it is a deploy-only token). Mint a project-scoped token with DNS write so future IP changes can be automated.
 
 ---
 
 ## P3 — strategic, multi-session
 
-### Cloud Run migration — DEFERRED at the €50/mo budget
+### Cloud Run migration — DEFERRED
 
-A full Cloud-Run-plus-LB migration was the original P3 plan. **It does not fit the €50/mo cap** and has been deferred. Cost was the blocker:
+A full Cloud-Run-plus-LB migration was the original P3 plan. **It has been deferred due to budget constraints**.
 
-| component | monthly cost | verdict |
-|---|---:|---|
-| Cloud Run api (min-instances=1, 1 vCPU, 512 MB) | ~€18 | always-on idle cost |
-| Cloud Load Balancer (HTTPS LB, fwd rule + min charge) | ~€18 | unavoidable to get a managed cert |
-| Cloud SQL Auth Proxy on Cloud Run | ~€2 | small |
-| **delta vs. today** | **~€38/mo** | breaks the budget |
-
-The e2-small + nginx + certbot setup we have today is doing the same job for ~€22 and is reproducible. Revisit if/when the corpus or traffic outgrow the e2-small (currently we're nowhere near saturating it — RSS ~150 MB on a 1.6 GiB ceiling).
+The e2-small + nginx + certbot setup we have today is doing the same job and is reproducible. Revisit if/when the corpus or traffic outgrow the e2-small (currently we're nowhere near saturating it — RSS ~150 MB on a 1.6 GiB ceiling).
 
 **What we DO want from the Cloud Run plan**, even on a budget:
 - ✓ Migration step in the deploy workflow (already shipped — `alembic upgrade head` runs before rotation, fail-aborts).
-- ✓ Push images to Artifact Registry from CI instead of building on the VM. Cost: free. `.github/workflows/ci.yml` `push-image` job ships on every main push.
-- ◯ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`. No infra cost change.
+- ✓ Push images to Artifact Registry from CI instead of building on the VM. `.github/workflows/ci.yml` `push-image` job ships on every main push.
+- ◯ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`.
 
-### ByT5 lacuna restoration — Cloud Run with min=0 (~€0–3/mo)
+### ByT5 lacuna restoration — Cloud Run with min=0
 
-This one **does** fit the budget because it autoscales to zero between calls.
+This one autoscales to zero between calls.
 
-- → Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first**. 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Service scaffold shipped at `services/byt5-restorer/` with Dockerfile, `main.py` (FastAPI + lazy model load + SQLite cache), and `requirements.txt`. Deploy command documented in the Dockerfile header. Cost at <2 hours/day usage: ~€2/mo.
+- → Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first**. 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Service scaffold shipped at `services/byt5-restorer/` with Dockerfile, `main.py` (FastAPI + lazy model load + SQLite cache), and `requirements.txt`. Deploy command documented in the Dockerfile header.
 - → Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service — implemented in `services/byt5-restorer/main.py`.
 - ⨯ Cold start ~10 s for a CPU model load is acceptable for an admin-only endpoint. Set the API's HTTP timeout for `/neural/restore` to 30 s and surface "model warming" on the first call.
 - ⨯ Defer batched inference (Triton / vLLM / TGI) until the corpus has more than the current ~6.6K rows worth of restoration calls.
 - ⨯ Add a model registry concept (URI per version) — already wired through `LacunaeRestorer(model_uri=…)`; the Cloud Run service resolves the URI to a Cloud Storage bundle.
 
-### Cross-encoder rerank — same Cloud Run service or stay on RRF (~€0–5/mo)
+### Cross-encoder rerank — same Cloud Run service or stay on RRF
 
 - ✓ `/search/hybrid` endpoint shipped — gracefully degrades to RRF (no model) when sentence-transformers is not installed.
-- ◯ Two cost-aware deployment options:
+- ◯ Two deployment options:
   - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
-  - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). Cost: ~€2-5/mo at low traffic, free when idle. The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
+  - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
 - → Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. **Seed of 40 queries** lives at `evals/search_eval_queries.jsonl`; harness at `evals/run_search_eval.py` (binary relevance, NDCG@10 with a `0.40` CI gate). Remaining 160 queries should be sampled from real corpus rows (random 50 + onomastic-heavy 50 + classification-cross-product 60); the gold IDs in the seed set are placeholder `TLE_*` strings and need to be replaced with real DB ids before the gate can be enforced.
 
-### Terraform — free (no infra cost)
+### Terraform
 
-- ⨯ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and any future Cloud Run services. State in a Cloud Storage bucket with object versioning (~€0/mo at our size). Plan: `terraform/` directory at the repo root, modules per service.
+- ⨯ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and any future Cloud Run services. State in a Cloud Storage bucket with object versioning. Plan: `terraform/` directory at the repo root, modules per service.
 
-### IIIF for inscription images — Cloud Run min=0 (~€0–3/mo)
+### IIIF for inscription images — Cloud Run min=0
 
-- ⨯ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Required pieces and costs:
-  - Cloud Storage bucket with public read for image tiles. Pricing: storage €0.020/GB/mo + €0.10/GB egress. At ~1 K images of ~1 MB each = €0.02/mo storage. Free at our scale.
-  - IIIF server (`cantaloupe`) on a small Cloud Run service, CPU min=0. Cost: ~€2-3/mo at low traffic.
-  - Frontend Mirador embed on each inscription page. Free.
-  - Migration that adds `images.iiif_manifest_url` column. Free.
+- ⨯ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Required pieces:
+  - Cloud Storage bucket with public read for image tiles.
+  - IIIF server (`cantaloupe`) on a small Cloud Run service, CPU min=0.
+  - Frontend Mirador embed on each inscription page.
+  - Migration that adds `images.iiif_manifest_url` column.
 
 ### Citable permalinks with content negotiation — already shipped
 
@@ -198,22 +175,7 @@ This one **does** fit the budget because it autoscales to zero between calls.
 - ✓ Admin endpoint `POST /inscription/{id}/promote-provenance` shipped — accepts `new_status`, `bibliography`, `notes`, `reviewed_by`; validates `new_status` against `PROVENANCE_STATUSES` (returns 400 on invalid instead of bouncing off the DB CHECK constraint as a 500); writes a `provenance_audits` row. Companion `GET /inscription/{id}/provenance-history` returns the full audit trail. The earlier `PUT /admin/inscriptions/{id}/provenance` endpoint was a strict subset of this one and has been removed.
 - ◯ Frontend admin UI for the promote workflow. Today it is curl-only.
 
-### Budget projection if all queued P3 lands
 
-| addition | est. cost |
-|---|---:|
-| ByT5 Cloud Run (CPU, min=0) | ~€2 |
-| Rerank Cloud Run (CPU, min=0) | ~€3 |
-| IIIF Cloud Run (CPU, min=0) | ~€3 |
-| Cloud Storage (bundles + tiles) | ~€1 |
-| Artifact Registry (image storage) | ~€0 |
-| Terraform state bucket | ~€0 |
-| **total addition** | **~€9** |
-| **projected monthly** | **~€43** |
-
-Headroom of ~€7/mo against the €50 cap, which is enough margin for traffic growth before the next budget review.
-
----
 
 ## What is intentionally NOT on this list
 
