@@ -66,33 +66,6 @@
         }
       }
     },
-    "/corpus": {
-      "get": {
-        "tags": [
-          "Corpus"
-        ],
-        "summary": "Get Full Corpus",
-        "description": "DEPRECATED \u2014 use /search with pagination instead.",
-        "operationId": "get_full_corpus_corpus_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/InscriptionModel"
-                  },
-                  "type": "array",
-                  "title": "Response Get Full Corpus Corpus Get"
-                }
-              }
-            }
-          }
-        },
-        "deprecated": true
-      }
-    },
     "/search": {
       "get": {
         "tags": [

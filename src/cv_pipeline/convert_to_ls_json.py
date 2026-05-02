@@ -77,10 +77,20 @@ def convert():
                             "type": "rectanglelabels"
                         })
                         
+        data_dict = {
+            "image": get_base64_image(img_path)
+        }
+        
+        stem_lower = img_path.stem.lower()
+        if "cippus_perusinus" in stem_lower:
+            data_dict["transliteration"] = "eurat tanna larezul ame vaχr lautn velθinaš eštla afunas sleleθ caru tezan fušleri tesnšteiš rašneš ipa ama hen naper χii velθinaθuraš araš peraš cincem amercnl velθina zia šatenete sne eca velθinaθuraš θaura helu"
+            data_dict["translation"] = "THIS IS THE SETTLEMENT BETWEEN THE VELTHINA AND AFUNA FAMILIES CONCERNING THE PROPERTY BOUNDARIES AND THE TOMB OF THE VELTHINA AS ARBITRATED BY LART REZUL ACCORDING TO ETRUSCAN LAW"
+        elif "tabula_cortonensis" in stem_lower:
+            data_dict["transliteration"] = "et peṭruiš scēvies eliuntś"
+            data_dict["translation"] = "This is the estate of Petru Scevie"
+
         tasks.append({
-            "data": {
-                "image": get_base64_image(img_path)
-            },
+            "data": data_dict,
             "annotations": [
                 {
                     "result": results

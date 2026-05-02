@@ -464,15 +464,9 @@ async def liveness_check():
 
 # ── API Endpoints ───────────────────────────────────────────────────────────
 
-
-@app.get("/corpus", response_model=list[InscriptionModel], tags=["Corpus"], deprecated=True)
-@limiter.limit("10/minute")
-async def get_full_corpus(request: Request, session: AsyncSession = Depends(get_session)):
-    """DEPRECATED — use /search with pagination instead."""
-    repo = InscriptionRepository(session)
-    results = await repo.search(limit=500)
-    data = [_build_model(i) for i in results.inscriptions]
-    return data
+# /corpus was deprecated in v0.3 in favour of /search with pagination. Removed
+# in this branch — there are no remaining callers in the frontend or the
+# documented client examples. /search?limit=500 is the drop-in replacement.
 
 
 @app.get("/search", response_model=SearchResponse, tags=["Search"])
