@@ -1,14 +1,11 @@
 import logging
-from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import Any
 
-import torch
-import torch.nn as nn
 import psycopg2
 from psycopg2.extras import DictCursor
 from scipy.spatial.distance import cosine
 
-from openetruscan.core.prosopography import Person, NameFormula, FamilyGraph
+from openetruscan.core.prosopography import Person, FamilyGraph
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +20,7 @@ class NeuralEntityLinker:
         self.db_url = db_url
         self.threshold = 0.85  # Confidence threshold for merging
         
-    def _fetch_embedding_context(self, inscription_ids: List[str]) -> Dict[str, Any]:
+    def _fetch_embedding_context(self, inscription_ids: list[str]) -> dict[str, Any]:
         """Fetches 3072-dim embeddings and spatial metadata from Postgres."""
         conn = psycopg2.connect(self.db_url)
         context = {}
@@ -62,14 +59,16 @@ class NeuralEntityLinker:
         blocks = {}
         for p in persons:
             gens = p.gentilicium or "Unknown"
-            if gens not in blocks: blocks[gens] = []
+            if gens not in blocks:
+                blocks[gens] = []
             blocks[gens].append(p)
-            
+
         merged_pairs = []
-        
+
         # 3. Pairwise comparison within blocks
-        for gens, members in blocks.items():
-            if len(members) < 2: continue
+        for _gens, members in blocks.items():
+            if len(members) < 2:
+                continue
             
             for i in range(len(members)):
                 for j in range(i + 1, len(members)):
@@ -84,7 +83,7 @@ class NeuralEntityLinker:
         logger.info(f"Identified {len(merged_pairs)} identity links.")
         return merged_pairs
 
-    def calculate_similarity(self, p1: Person, p2: Person, context_map: Dict[str, Any]) -> float:
+    def calculate_similarity(self, p1: Person, p2: Person, context_map: dict[str, Any]) -> float:
         """
         Multimodal similarity score:
         S = 0.4*(Name) + 0.4*(Semantic) + 0.2*(Spatial/Temporal)

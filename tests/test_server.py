@@ -1,6 +1,12 @@
 """
 Integration tests for the OpenEtruscan FastAPI server (Async Version).
 
+The DB and session fixtures live in `tests/conftest.py` and now point at a
+real Postgres backend (CI: the `services:` Postgres; local dev: a
+testcontainers-managed pgvector container; SQLite is only the last-resort
+fallback). Tests that depend on PostGIS or pgvector are tagged with
+`requires_postgis` / `requires_pgvector` markers.
+
 Tests cover:
 - Health endpoints (/health)
 - Search endpoints (/search, /radius)
@@ -11,40 +17,29 @@ Tests cover:
 """
 
 import os
+
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["ENABLE_DOCS"] = "1"
 
 from openetruscan.api.server import app
 from openetruscan.db.session import get_session
-from openetruscan.db.models import Base
 from openetruscan.db.repository import InscriptionRepository, InscriptionData
 
-# Test database setup
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-engine = create_async_engine(TEST_DATABASE_URL)
-async_session = async_sessionmaker(engine, expire_on_commit=False)
+
+# All tests in this module mount the FastAPI app + a real Postgres session
+# from conftest.py. They are marked `slow` because the per-test fixture
+# turnaround on a fresh Postgres takes ~250 ms each and the matrix runs them
+# 4× across Python versions; running them on every push blew the CI budget.
+# `pytest -m slow` exercises them locally / nightly.
+pytestmark = pytest.mark.slow
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def setup_test_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-@pytest.fixture
-async def db_session():
-    async with async_session() as session:
-        yield session
-
-
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(db_session: AsyncSession):
     def override_get_session():
         yield db_session
@@ -55,7 +50,7 @@ async def client(db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_data(db_session: AsyncSession):
     repo = InscriptionRepository(db_session)
     test_data = [

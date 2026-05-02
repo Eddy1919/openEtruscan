@@ -39,6 +39,31 @@ class Base(DeclarativeBase):
     )
 
 
+class DataSource(Base):
+    """A bibliographic / dataset source for inscriptions.
+
+    Each row in ``inscriptions`` may point at one DataSource via ``source_id``.
+    The DataSource carries the canonical citation, license, and a *provenance
+    baseline* (the tier most rows from this source typically fall into).
+    See migration ``c3f4d5e6a7b8_data_sources_table`` for the rationale.
+    """
+
+    __tablename__ = "data_sources"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    display_name: Mapped[str] = mapped_column(Text, nullable=False)
+    citation: Mapped[str] = mapped_column(Text, nullable=False)
+    license: Mapped[str] = mapped_column(Text, nullable=False, default="unknown")
+    url: Mapped[str | None] = mapped_column(Text)
+    provenance_baseline: Mapped[str] = mapped_column(
+        Text, nullable=False, default="unknown"
+    )
+    retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Inscription(Base):
     """
     Represents a single epigraphic record in the corpus.
@@ -76,6 +101,13 @@ class Inscription(Base):
     source_code: Mapped[str] = mapped_column(Text, nullable=False, default="unknown", index=True)
     source_detail: Mapped[str | None] = mapped_column(Text)
     original_script_entry: Mapped[str | None] = mapped_column(Text)
+
+    # Optional FK into data_sources. Nullable for legacy rows that pre-date the
+    # data_sources table. The textual `source` column above is kept for
+    # backwards compatibility and as a denormalised display string.
+    source_id: Mapped[str | None] = mapped_column(
+        ForeignKey("data_sources.id", ondelete="SET NULL"), index=True
+    )
 
     trismegistos_id: Mapped[str | None] = mapped_column(Text)
     eagle_id: Mapped[str | None] = mapped_column(Text)
@@ -198,3 +230,24 @@ class Relationship(Base):
             name="check_relationship_target",
         ),
     )
+
+
+class ProvenanceAudit(Base):
+    """
+    Audit log for curatorial changes to an inscription's provenance status.
+    """
+    __tablename__ = "provenance_audits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    old_status: Mapped[str] = mapped_column(Text, nullable=False)
+    new_status: Mapped[str] = mapped_column(Text, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[str] = mapped_column(Text, nullable=False, default="system")
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    inscription: Mapped[Optional["Inscription"]] = relationship()
