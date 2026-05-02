@@ -162,15 +162,25 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
 
 @pytest_asyncio.fixture
 async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
-    """A clean AsyncSession per test, truncating user tables on entry."""
+    """A clean AsyncSession per test, truncating user tables on entry.
+
+    The truncation runs through a *separate* short-lived session and is
+    committed up-front. Mixing it into the test's session ran into asyncpg's
+    "another operation is in progress" error when the test code expected a
+    fresh transaction state.
+    """
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+
+    # Pre-test cleanup in its own session so the test's session starts clean.
+    async with sessionmaker() as cleanup:
+        for tbl in _USER_TABLES:
+            try:
+                await cleanup.execute(text(f"DELETE FROM {tbl}"))
+            except Exception:  # noqa: BLE001 -- table may not exist on this backend
+                await cleanup.rollback()
+        await cleanup.commit()
+
     async with sessionmaker() as session:
-        # Truncate (Postgres) or DELETE (SQLite). Cheap because the corpus
-        # under test is small.
-        async with session.begin():
-            for tbl in _USER_TABLES:
-                with suppress(Exception):
-                    await session.execute(text(f"DELETE FROM {tbl}"))
         yield session
 
 
