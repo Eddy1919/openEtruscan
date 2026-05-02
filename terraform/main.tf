@@ -198,3 +198,41 @@ resource "google_cloud_run_v2_service" "minilm" {
     }
   }
 }
+
+resource "google_cloud_run_v2_service" "iiif_server" {
+  name     = "openetruscan-iiif"
+  location = var.region
+
+  template {
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 10
+    }
+    containers {
+      image = "krux/cantaloupe:latest"
+      env {
+        name  = "CANTALOUPE_ENDPOINT_API_SECRET"
+        value = "placeholder-replace-me"
+      }
+      env {
+        name  = "CANTALOUPE_SOURCE_STATIC"
+        value = "FilesystemSource"
+      }
+      # A better approach for Cloud Run is HttpSource pointing to the GCS bucket or S3Source
+      env {
+        name  = "CANTALOUPE_SOURCE_STATIC"
+        value = "HttpSource"
+      }
+      env {
+        name  = "CANTALOUPE_HTTPSOURCE_BASICLOOKUPSTRATEGY_URL_PREFIX"
+        value = "https://storage.googleapis.com/${google_storage_bucket.iiif_images.name}/"
+      }
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "1Gi"
+        }
+      }
+    }
+  }
+}
