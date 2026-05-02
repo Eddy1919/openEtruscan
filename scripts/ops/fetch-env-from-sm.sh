@@ -1,26 +1,42 @@
 #!/bin/bash
-# Pull the OpenEtruscan API container's runtime secrets from Google Secret Manager
-# into the on-disk .env that docker-compose's `env_file:` consumes.
+# Pull the OpenEtruscan API container's runtime secrets from Google Secret
+# Manager into the on-disk .env that docker-compose's `env_file:` consumes.
 #
-# Designed to run on the production GCE VM, where the attached service account
-# (openetruscan-vm@long-facet-427508-j2.iam.gserviceaccount.com) holds
-# roles/secretmanager.secretAccessor on the project.
+# Designed to run on a Google Compute Engine VM that has a service account
+# attached with roles/secretmanager.secretAccessor on the chosen project.
+# COS notes: /home and /mnt/stateful_partition are mounted noexec, so the
+# script must always be invoked via `sudo bash <path>`, never run directly.
 #
-# Usage (on VM):
-#   sudo /home/edoardo.panichi/openEtruscan/scripts/ops/fetch-env-from-sm.sh
+# Configuration via environment variables (all have sensible defaults):
+#
+#   OE_PROJECT     GCP project that holds the secrets. Required if not the
+#                  same project as the VM (default: read from metadata).
+#   OE_ENV_PATH    Where to write the .env file
+#                  (default: $PWD/.env, i.e. the docker-compose working dir).
+#   OE_ENV_OWNER   chown target for the file (default: current user).
+#   OE_SECRETS     space-separated list of "ENV_NAME=secret-name" pairs
+#                  (default: the three OpenEtruscan production secrets).
 #
 # Intended hooks:
 #   - Run before `docker compose up -d` in the deploy workflow.
-#   - Run on boot (e.g. via cloud-init or a systemd oneshot pointing at this path).
+#   - Run on boot via cloud-init or a systemd oneshot pointing at this path.
 #
 # The script never reads the existing .env, so it is the only writer.
 # Secret Manager is the source of truth.
 
 set -euo pipefail
 
-PROJECT="${OE_PROJECT:-long-facet-427508-j2}"
-ENV_PATH="${OE_ENV_PATH:-/home/edoardo.panichi/openEtruscan/.env}"
-ENV_OWNER="${OE_ENV_OWNER:-edoardo.panichi:edoardo.panichi}"
+# Default to the project the VM itself is in — derived from the metadata
+# service so a public clone of this script works in any environment.
+PROJECT="${OE_PROJECT:-$(curl -fsS -H 'Metadata-Flavor: Google' \
+  http://metadata.google.internal/computeMetadata/v1/project/project-id 2>/dev/null || echo '')}"
+if [ -z "$PROJECT" ]; then
+  echo "OE_PROJECT must be set (could not infer from VM metadata)" >&2
+  exit 1
+fi
+
+ENV_PATH="${OE_ENV_PATH:-$(pwd)/.env}"
+ENV_OWNER="${OE_ENV_OWNER:-$(id -un):$(id -gn)}"
 
 token=$(curl -fsS -H "Metadata-Flavor: Google" \
   http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \

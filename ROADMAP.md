@@ -7,16 +7,33 @@ integrity work that followed.
 
 Status legend: ✓ done · → in progress · ◯ queued · ⨯ deferred (with reason).
 
+## Budget envelope: ≤ €50 / month
+
+Every plan below is constrained to fit a hard cap of **€50/month total** GCP
+spend. Today's run-rate sits at roughly:
+
+| line item | cost |
+|---|---:|
+| GCE `openetruscan-eu` (e2-small, 100 GB pd-standard, static IP) | ~€22 |
+| Cloud SQL `openetruscan` (db-f1-micro, 10 GB HDD, 30-day backups, PITR) | ~€10 |
+| Cloud Monitoring uptime check + Secret Manager + Logging | ~€1 |
+| Egress + DNS + everything else | ~€1 |
+| **current monthly run-rate** | **~€34** |
+
+Headroom: ~€16/mo for P3 work. Costed line items appear in the relevant P3
+sections below. Anything that would push the total over €50 is explicitly
+deferred or replaced with a cheaper-but-equivalent design.
+
 ---
 
 ## Done in the audit (April / May 2026)
 
 ### Stop-the-bleed (P0)
 - ✓ Cloud SQL backups enabled (30-day retention) + PITR + 7-day transaction log + deletion protection.
-- ✓ Public DB IP removed; Private IP `10.50.0.3` only via VPC peering on the default network.
+- ✓ Public DB IP removed; Private IP only via VPC peering on the default network.
 - ✓ `0.0.0.0/0` ACL cleared; `sslMode: ENCRYPTED_ONLY`; `ssl = require` on every API connection.
-- ✓ Dedicated VM service account `openetruscan-vm@…` with `secretmanager.secretAccessor`, `cloudsql.client`, `logging.logWriter`. VM scope `cloud-platform`.
-- ✓ External IP `34.90.171.125` reserved as a static address (`openetruscan-eu-static`); Vercel A record updated.
+- ✓ Dedicated VM service account with `secretmanager.secretAccessor`, `cloudsql.client`, `logging.logWriter`. VM scope `cloud-platform`.
+- ✓ External IP reserved as a static address; DNS A record updated.
 - ✓ Three secrets in Secret Manager (`oe-database-url`, `oe-hf-token`, `oe-gemini-api-key`); fetch script committed at [`scripts/ops/fetch-env-from-sm.sh`](scripts/ops/fetch-env-from-sm.sh).
 - ✓ `corpus_reader` Postgres password rotated.
 - ✓ Boot disk grown 50 → 100 GB (was 87% full).
@@ -97,7 +114,7 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 - ✓ **Schema drift.** `source_code`, `source_detail`, `original_script_entry` are now in the DB *and* captured in alembic (`b2e3d4f5a6b7`). Stamp at head: `c3f4d5e6a7b8`.
 - ◯ **Image registry + canary deploys.** Push the `api` image to Artifact Registry per-tag; replace the SSH-then-`docker compose --build` flow with `gcloud run deploy` or Cloud Deploy. Removes the "SSH to prod" step entirely.
 - ◯ **Slow-query alert.** Cloud Monitoring alert policy on `cloudsql.googleapis.com/database/postgresql/transaction_count` > N/min for the slow-query class.
-- ◯ **TLS automation.** Move api.openetruscan.com cert from the user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path is currently `/home/edoardo.panichi/certs/...`, which is a `userdel` away from broken TLS).
+- ◯ **TLS automation.** Move api.openetruscan.com cert from a user-home `certbot` install to a Google-managed cert behind a Cloud Load Balancer (the cert path currently lives under a maintainer's home directory, which is a `userdel` away from broken TLS).
 - ◯ **Cross-region cleanup.** API VM is in europe-west4, DB is in europe-west1. Move the DB to europe-west4 (smaller blast radius than moving the VM); minor egress savings, real latency win.
 - ◯ **PgBouncer.** `max_connections=25` on db-f1-micro vs. `pool_size=20, max_overflow=10` per worker is one restart away from saturation. Add PgBouncer in transaction mode as a sidecar.
 - ◯ **Right-size the DB.** db-f1-micro on HDD is the wrong floor for the hybrid-search workload. Move to db-custom-2-7680 with SSD when hybrid search ships (~$130/mo cost difference, unlocks every other ML improvement).
@@ -107,41 +124,55 @@ These are the audit's P1 items that did not fit in the May 1 push, ranked by lev
 
 ## P3 — strategic, multi-session
 
-### Cloud Run migration (the API, not Fuseki)
+### Cloud Run migration — DEFERRED at the €50/mo budget
 
-- ⨯ **Phase 1 — Artifact Registry.** Push every commit's api image to `europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan/api` with both `:sha-<git>` and `:latest` tags. The deploy workflow already builds locally on the VM; switch to pushing from CI and pulling on the VM as an interim step.
-- ⨯ **Phase 2 — Cloud Run service.** Deploy `openetruscan-api` as a Cloud Run service in europe-west4, min-instances=1 (warm) max-instances=5, 1 vCPU, 512 MB. Wire env vars from Secret Manager directly via `--set-secrets`. The api becomes stateless — Fuseki and the cert dir stay on the e2-small.
-- ⨯ **Phase 3 — Cloud Load Balancer + Google-managed cert.** Bring up an HTTPS LB pointing at Cloud Run + the Fuseki VM, swap the Vercel A record to the LB IP. Drops the certbot dependency and the "userdel breaks TLS" risk.
-- ⨯ **Phase 4 — Decommission the VM-based api.** Once the LB has been live for two weeks with no incidents, delete the api service from `docker-compose.yml`. The VM keeps running nginx-for-Fuseki and the SPARQL endpoint.
+A full Cloud-Run-plus-LB migration was the original P3 plan. **It does not fit the €50/mo cap** and has been deferred. Cost was the blocker:
 
-Risk: the in-process `LacunaeRestorer` and the optional cross-encoder reranker need a different home (next item). Cloud Run autoscaling means cold starts pay model load each time.
+| component | monthly cost | verdict |
+|---|---:|---|
+| Cloud Run api (min-instances=1, 1 vCPU, 512 MB) | ~€18 | always-on idle cost |
+| Cloud Load Balancer (HTTPS LB, fwd rule + min charge) | ~€18 | unavoidable to get a managed cert |
+| Cloud SQL Auth Proxy on Cloud Run | ~€2 | small |
+| **delta vs. today** | **~€38/mo** | breaks the budget |
 
-### ByT5 lacuna restoration on Cloud Run with batching
+The e2-small + nginx + certbot setup we have today is doing the same job for ~€22 and is reproducible. Revisit if/when the corpus or traffic outgrow the e2-small (currently we're nowhere near saturating it — RSS ~150 MB on a 1.6 GiB ceiling).
 
-- ⨯ Package the ByT5 inference loop as its own Cloud Run service (1× T4 GPU, min-instances=0, idle-timeout=15min). The api calls it via gRPC/HTTP with a 10s timeout and a fallback to "model unavailable, try again" on cold start.
-- ⨯ Adopt Triton, vLLM, or `text-generation-inference` for batched inference — the current pure-PyTorch loop processes one mask at a time. Batch size 8 on T4 cuts per-mask latency by ~5x.
-- ⨯ Cache restored predictions keyed by `(text_with_lacunae, top_k)` in Redis or a small SQLite next to the service — restorations are stable per model version.
-- ⨯ Add a model registry concept (URI per version) so a new restorer can be A/B'd before flipping the default.
+**What we DO want from the Cloud Run plan**, even on a budget:
+- ✓ Migration step in the deploy workflow (already shipped — `alembic upgrade head` runs before rotation, fail-aborts).
+- ◯ Push images to Artifact Registry from CI instead of building on the VM. Cost: free for the storage at our image volume. Saves ~30 s of deploy time and lets us roll back by tag.
+- ◯ Replace certbot with Cloud DNS-challenge automation that can survive a `userdel`. No infra cost change.
 
-### Cross-encoder rerank (already coded, not yet enabled in prod)
+### ByT5 lacuna restoration — Cloud Run with min=0 (~€0–3/mo)
 
-- ✓ `/search/hybrid` endpoint with RRF union of FTS + pgvector and an optional cross-encoder rerank (gracefully degrades to RRF when sentence-transformers is not installed).
-- ◯ Install `[rerank]` extra in the api Dockerfile *after* the API moves to Cloud Run with at least 1 GiB RAM. The current e2-small + 1.6 GiB api container cannot host MiniLM (~280 MB model + torch).
-- ◯ Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression.
+This one **does** fit the budget because it autoscales to zero between calls.
 
-### Terraform
+- ⨯ Package the ByT5 inference loop as its own Cloud Run service. **CPU-only first** (don't enable the GPU until usage justifies it — T4 on Cloud Run is €0.42/hour active and we have no traffic estimate). 1 vCPU / 1 GiB / min-instances=0 / idle-timeout=15 min. Cost at <2 hours/day usage: ~€2/mo.
+- ⨯ Cold start ~10 s for a CPU MiniLM model load is acceptable for an admin-only endpoint. Set the API's HTTP timeout for `/neural/restore` to 30 s and surface "model warming" in the response on the first call.
+- ⨯ Cache restored predictions keyed by `(text_with_lacunae, top_k)` in a small SQLite next to the service. Restorations are stable per model version, so cached hits skip the cold start entirely. Cost: free (sidecar disk).
+- ⨯ Defer batched inference (Triton / vLLM / TGI) until the corpus has more than the current ~6.6K rows worth of restoration calls. Premature given traffic.
+- ⨯ Add a model registry concept (URI per version) — already wired through `LacunaeRestorer(model_uri=…)`; the Cloud Run service resolves the URI to a Cloud Storage bundle.
 
-- ⨯ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and the future Cloud Run service. Today every infra change is a click in the console. Plan: `terraform/` directory at the repo root, modules per service, state in a Cloud Storage bucket with object versioning.
+### Cross-encoder rerank — same Cloud Run service or stay on RRF (~€0–5/mo)
 
-### IIIF for inscription images
+- ✓ `/search/hybrid` endpoint shipped — gracefully degrades to RRF (no model) when sentence-transformers is not installed.
+- ◯ Two cost-aware deployment options:
+  - **Cheap**: install `[rerank]` extra in the api Dockerfile. Adds ~280 MB of model + 1.5 GiB of torch to RAM at startup. **Does not fit on the e2-small** (1.6 GiB api container). Dead end at current size.
+  - **Right-sized**: deploy MiniLM as a second Cloud Run service alongside ByT5 (`openetruscan-rerank`, CPU min-0). Cost: ~€2-5/mo at low traffic, free when idle. The api calls it via gRPC/HTTP for `/search/hybrid?rerank=true`.
+- ◯ Build a 200-query labelled eval set; report NDCG@10 on PR; gate merges on no regression. Free.
 
-- ⨯ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Field-archaeologist and palaeographer use cases expect zoom/region annotation as table stakes. Required pieces:
-  - Cloud Storage bucket with public read for image tiles.
-  - IIIF server (`iiif-server-for-storage`, `cantaloupe`) on a small Cloud Run service.
-  - Frontend Mirador embed on each inscription page.
-  - Migration that adds `images.iiif_manifest_url` column.
+### Terraform — free (no infra cost)
 
-### Citable permalinks with content negotiation
+- ⨯ Codify the GCE VM, Cloud SQL, DNS, IAM bindings, Secret Manager secrets, Cloud Monitoring policies, the uptime check, and any future Cloud Run services. State in a Cloud Storage bucket with object versioning (~€0/mo at our size). Plan: `terraform/` directory at the repo root, modules per service.
+
+### IIIF for inscription images — Cloud Run min=0 (~€0–3/mo)
+
+- ⨯ Adopt IIIF Image API + Mirador / OpenSeadragon for the `images` table (currently empty). Required pieces and costs:
+  - Cloud Storage bucket with public read for image tiles. Pricing: storage €0.020/GB/mo + €0.10/GB egress. At ~1 K images of ~1 MB each = €0.02/mo storage. Free at our scale.
+  - IIIF server (`cantaloupe`) on a small Cloud Run service, CPU min=0. Cost: ~€2-3/mo at low traffic.
+  - Frontend Mirador embed on each inscription page. Free.
+  - Migration that adds `images.iiif_manifest_url` column. Free.
+
+### Citable permalinks with content negotiation — already shipped
 
 - ✓ `/inscription/{id}` honours `Accept: application/ld+json` / `text/turtle` / `application/tei+xml` and the `?format=` query string. All variants emit `Link: <…>; rel="alternate"` headers so the URL stays canonical across formats.
 - ◯ Same treatment for `/sources/{id}` once the `data_sources` UI lands.
@@ -153,8 +184,23 @@ Risk: the in-process `LacunaeRestorer` and the optional cross-encoder reranker n
 
 ### Curatorial workflow
 
-- ⨯ `provenance_audits` table (referenced in the test fixture) for tracking the chain of evidence behind promoting an inscription to `excavated`. One row per audit decision: who, when, what they reviewed, the bibliography pointer, the resulting tier.
-- ⨯ Admin endpoint `/inscription/{id}/promote-provenance` that takes the audit body and writes a row.
+- ✓ `provenance_audits` table shipped (alembic `d4a5b6c7e8f9`) with a `ProvenanceAudit` model.
+- ◯ Admin endpoint `/inscription/{id}/promote-provenance` that takes the audit body and writes a row.
+
+### Budget projection if all queued P3 lands
+
+| addition | est. cost |
+|---|---:|
+| ByT5 Cloud Run (CPU, min=0) | ~€2 |
+| Rerank Cloud Run (CPU, min=0) | ~€3 |
+| IIIF Cloud Run (CPU, min=0) | ~€3 |
+| Cloud Storage (bundles + tiles) | ~€1 |
+| Artifact Registry (image storage) | ~€0 |
+| Terraform state bucket | ~€0 |
+| **total addition** | **~€9** |
+| **projected monthly** | **~€43** |
+
+Headroom of ~€7/mo against the €50 cap, which is enough margin for traffic growth before the next budget review.
 
 ---
 

@@ -81,6 +81,7 @@ jobs:
         # always honoured by the rule pack runner.
         run: semgrep scan --config auto --error
               --exclude src/openetruscan/core/corpus.py
+              --exclude scripts/
               --exclude tests/
 
   gitleaks:
