@@ -62,5 +62,17 @@ services:
         exec /jena-fuseki/fuseki-server --loc /fuseki/databases/openetruscan /openetruscan
       '
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=100
+      - DEFAULT_POOL_SIZE=20
+      - MAX_DB_CONNECTIONS=20
+    ports:
+      - "6432:5432"
+
 volumes:
   fuseki_data:
