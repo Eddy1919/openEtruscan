@@ -1,7 +1,5 @@
 """Tests for the statistical analysis engine."""
 
-import pytest
-
 from openetruscan.core.adapter import load_adapter
 from openetruscan.core.statistics import (
     BayesianDatingResult,
@@ -109,7 +107,7 @@ class TestClusterSites:
     def _make_rows() -> list[dict[str, str]]:
         """Build synthetic inscription rows for two distinct 'dialect' groups."""
         rows: list[dict[str, str]] = []
-        for i in range(10):
+        for _ in range(10):
             rows.append({"findspot": "Cerveteri", "canonical": "larθal velinas"})
             rows.append({"findspot": "Tarquinia", "canonical": "θana matunai"})
         return rows

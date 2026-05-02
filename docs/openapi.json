@@ -1698,14 +1698,14 @@
         }
       }
     },
-    "/admin/inscriptions/{inscription_id}/provenance": {
-      "put": {
+    "/inscription/{inscription_id}/promote-provenance": {
+      "post": {
         "tags": [
           "Admin"
         ],
-        "summary": "Admin Update Provenance",
-        "description": "Curatorial workflow for promoting individual rows to `excavated` (admin endpoint + audit log).",
-        "operationId": "admin_update_provenance_admin_inscriptions__inscription_id__provenance_put",
+        "summary": "Promote Provenance",
+        "description": "Promote an inscription's provenance tier and write an audit row.\n\nThis is the primary curatorial endpoint for upgrading provenance status\n(e.g. ``unprovenanced`` \u2192 ``acquired_documented`` \u2192 ``excavated``).\nEvery call produces a ``provenance_audits`` row for the chain of evidence.",
+        "operationId": "promote_provenance_inscription__inscription_id__promote_provenance_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1727,11 +1727,52 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProvenanceUpdateRequest"
+                "$ref": "#/components/schemas/PromoteProvenanceRequest"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inscription/{inscription_id}/provenance-history": {
+      "get": {
+        "tags": [
+          "Corpus"
+        ],
+        "summary": "Provenance History",
+        "description": "Return the full provenance audit trail for an inscription.",
+        "operationId": "provenance_history_inscription__inscription_id__provenance_history_get",
+        "parameters": [
+          {
+            "name": "inscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Inscription Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2123,11 +2164,22 @@
         "title": "InscriptionModel",
         "description": "Data model representing a single Etruscan inscription for API output."
       },
-      "ProvenanceUpdateRequest": {
+      "PromoteProvenanceRequest": {
         "properties": {
           "new_status": {
             "type": "string",
             "title": "New Status"
+          },
+          "bibliography": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bibliography"
           },
           "notes": {
             "anyOf": [
@@ -2139,13 +2191,18 @@
               }
             ],
             "title": "Notes"
+          },
+          "reviewed_by": {
+            "type": "string",
+            "title": "Reviewed By",
+            "default": "admin"
           }
         },
         "type": "object",
         "required": [
           "new_status"
         ],
-        "title": "ProvenanceUpdateRequest"
+        "title": "PromoteProvenanceRequest"
       },
       "RestoreRequest": {
         "properties": {
