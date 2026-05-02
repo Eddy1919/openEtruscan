@@ -104,8 +104,9 @@ async def test_health_response_structure(client: AsyncClient, sample_data):
     """Test /health returns correct structure."""
     response = await client.get("/health")
     data = response.json()
-    required = ["status", "version", "uptime_seconds", "corpus_loaded", "timestamp"]
-    assert all(k in data for k in required)
+    required = ["status", "version", "uptime_seconds", "checks", "timestamp"]
+    assert all(k in data for k in required), f"missing keys; got {list(data)}"
+    assert "db" in data["checks"]
 
 
 async def test_health_status_healthy(client: AsyncClient, sample_data):
@@ -113,7 +114,8 @@ async def test_health_status_healthy(client: AsyncClient, sample_data):
     response = await client.get("/health")
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["corpus_loaded"] is True
+    assert data["checks"]["db"]["ok"] is True
+    assert data["checks"]["db"]["count"] >= 3
 
 
 # ============================================================================
