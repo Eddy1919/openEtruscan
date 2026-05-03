@@ -77,10 +77,13 @@ jobs:
         # constants. The sqlalchemy-execute-raw-query rule cannot tell that
         # the substitution is not user input and flags every usage. We've
         # inspected each call site; user input is always passed via %s
-        # parameters. Excluded explicitly here because .semgrepignore is not
-        # always honoured by the rule pack runner.
+        # parameters. Same story for db/versions/ — alembic migrations build
+        # DDL via op.execute(f"…") with hardcoded constants. Excluded
+        # explicitly here because .semgrepignore is not always honoured by
+        # the rule pack runner.
         run: semgrep scan --config auto --error
               --exclude src/openetruscan/core/corpus.py
+              --exclude src/openetruscan/db/versions/
               --exclude scripts/
               --exclude tests/
 
