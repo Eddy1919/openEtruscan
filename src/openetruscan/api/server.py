@@ -1886,9 +1886,17 @@ async def _get_reranker():
 # ground truth for "what does 'archaic' mean here". If the boundaries
 # change, update both files together.
 _PERIOD_RANGES: dict[str, tuple[int, int]] = {
-    "archaic":   (-700, -500),  # noqa: E241 - lined up with siblings
-    "classical": (-499, -300),
-    "late":      (-299,  -50),  # noqa: E241
+    "archaic":       (-700, -500),  # noqa: E241 - lined up with siblings
+    "classical":     (-499, -300),  # noqa: E241
+    "late":          (-299,  -50),  # noqa: E241
+    # Orientalising overlaps the early end of archaic; keep it as a separate
+    # token because Etruscan typology distinguishes them (Pallottino 1968 §3,
+    # de Grummond 2014). Querying "orientalising" should return rows in
+    # the orientalising window even if they're not flagged "archaic".
+    "orientalising": (-720, -580),
+    # Hellenistic is the standard alias for "late" in Etruscan studies.
+    # Same bounds — querying either returns the same gold set.
+    "hellenistic":   (-299,  -50),  # noqa: E241
 }
 
 # Cross-corpus markers: when one of these tokens appears in the query, we

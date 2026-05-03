@@ -485,6 +485,23 @@ class TestParseStructuredQuery:
         assert filters["date_min"] == -499
         assert filters["date_max"] == -300
 
+    def test_orientalising_window(self):
+        """Etruscan orientalising = 720-580 BCE; overlaps archaic deliberately."""
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("orientalising")
+        assert filters["date_min"] == -720
+        assert filters["date_max"] == -580
+
+    def test_hellenistic_aliases_late(self):
+        """Hellenistic and late share bounds in Etruscan studies."""
+        from openetruscan.api.server import _parse_structured_query
+
+        _, late_f = _parse_structured_query("late")
+        _, hell_f = _parse_structured_query("hellenistic")
+        assert late_f["date_min"] == hell_f["date_min"]
+        assert late_f["date_max"] == hell_f["date_max"]
+
     def test_two_periods_widen_the_range(self):
         """Multiple period tokens should produce the widest spanning window."""
         from openetruscan.api.server import _parse_structured_query
