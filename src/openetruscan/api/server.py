@@ -144,6 +144,13 @@ async def lifespan(app: FastAPI):
     import collections
     app.state.query_embedding_cache = collections.OrderedDict()
 
+    from openetruscan.api.zotero import ZoteroClient
+    app.state.zotero = ZoteroClient(
+        group_id=settings.zotero_group_id,
+        api_key=settings.zotero_api_key,
+        client=app.state.http
+    )
+
     try:
         yield
     finally:
@@ -325,6 +332,8 @@ class InscriptionModel(BaseModel):
     source_code: str = "unknown"
     source_detail: str | None = None
     original_script_entry: str | None = None
+    zotero_id: str | None = None
+    zotero_bibliography: dict | None = None
 
 
 class SearchResponse(BaseModel):
@@ -388,6 +397,7 @@ def _build_model(i) -> InscriptionModel:
         source_code=i.source_code,
         source_detail=i.source_detail,
         original_script_entry=i.original_script_entry,
+        zotero_id=i.zotero_id,
     )
 
 
@@ -807,8 +817,15 @@ async def get_inscription(
             )
 
     # JSON default — emit Pydantic via JSONResponse so the Link header lands.
+    data = _build_model(inscription).model_dump()
+    
+    if inscription.zotero_id:
+        zotero_data = await request.app.state.zotero.get_item_csl(inscription.zotero_id)
+        if zotero_data:
+            data["zotero_bibliography"] = zotero_data
+
     return JSONResponse(
-        _build_model(inscription).model_dump(),
+        data,
         headers=headers,
     )
 
