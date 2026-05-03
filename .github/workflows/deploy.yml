@@ -61,12 +61,15 @@ jobs:
               # 3. Build the new image (does not affect running containers).
               sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose build api
 
-              # 4. Run alembic migrations BEFORE rotating containers. The new
-              # api image contains both the migration scripts and alembic.ini;
-              # we use `compose run` so the one-shot picks up the existing
-              # network and .env. A non-zero exit aborts the deploy and leaves
-              # the old api container serving traffic.
-              sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose run --rm --no-deps api alembic upgrade head || {
+              # 4. Run alembic migrations BEFORE rotating containers. We
+              # bypass `docker compose run` here because compose v2 tries to
+              # recreate the api service container as part of `run` even
+              # with --no-deps, which collides with the running
+              # `openetruscan-api-1`. Plain `docker run` against the image
+              # we just built sidesteps that, and using --network on the
+              # compose-managed network keeps the migration's DB connection
+              # working with whatever DATABASE_URL is in .env.
+              sudo docker run --rm --network openetruscan_default --env-file \$REPO_DIR/.env -v \"\$REPO_DIR:\$REPO_DIR\" -w \"\$REPO_DIR\" openetruscan-api alembic upgrade head || {
                 echo '::error::Alembic migration failed. Deploy aborted, old api container still serving traffic.'
                 exit 1
               }
