@@ -368,6 +368,56 @@ async def test_inscription_unknown_id_404(client: AsyncClient, sample_data):
     assert response.status_code == 404
 
 
+# ============================================================================
+# Neural restore (proxy mode)
+# ============================================================================
+
+
+async def test_neural_restore_proxies_when_byt5_url_set(
+    client: AsyncClient, sample_data, monkeypatch
+):
+    """When BYT5_SERVICE_URL is set, /neural/restore must call the remote
+    service instead of loading torch in-process.
+
+    Pinned because the cutover is one env var: any regression that brings
+    in-process torch back to prod silently undoes the ~700 MB RAM win.
+    """
+    from openetruscan.api import server as server_mod
+    from openetruscan.core.config import settings
+
+    monkeypatch.setattr(settings, "admin_token", "test-admin-token")
+    monkeypatch.setattr(settings, "byt5_service_url", "https://byt5.example/")
+
+    calls: list[str] = []
+
+    class _FakeResp:
+        status_code = 200
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return {"predictions": [{"restored": "larθal", "score": 0.9}]}
+
+    class _FakeClient:
+        async def post(self, url, json, timeout):  # noqa: A002
+            calls.append(url)
+            return _FakeResp()
+
+    # The lifespan-singleton httpx client lives at app.state.http; swap it.
+    server_mod.app.state.http = _FakeClient()
+
+    response = await client.post(
+        "/neural/restore",
+        json={"text": "lar[---]al", "top_k": 3},
+        headers={"Authorization": "Bearer test-admin-token"},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["predictions"][0]["restored"] == "larθal"
+    assert calls == ["https://byt5.example/restore"], (
+        "expected exactly one upstream call to the proxied service"
+    )
+
+
 async def test_admin_endpoint_returns_503_when_token_unconfigured(
     client: AsyncClient, sample_data, monkeypatch
 ):

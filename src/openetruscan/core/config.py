@@ -72,6 +72,16 @@ class Settings(BaseSettings):
         description="Master API Bearer Token required for mutating database endpoints",
     )
 
+    # Remote ML services
+    byt5_service_url: str | None = Field(
+        default=None,
+        description=(
+            "If set, /neural/restore proxies to this URL (a Cloud Run instance "
+            "of services/byt5-restorer/) instead of running torch in-process. "
+            "Frees ~700 MB of RAM on the api container."
+        ),
+    )
+
     @field_validator("database_url", "images_dir")
     @classmethod
     def validate_not_empty(cls, v: str) -> str:
