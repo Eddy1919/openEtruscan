@@ -36,20 +36,20 @@ import httpx
 
 EVAL_FILE = Path(__file__).parent / "search_eval_queries.jsonl"
 K = 10
-# Per-category gates by default. After the structured-query parser
-# landed on top of the FTS widening, the May-2026 prod baseline is:
+# Per-category gates by default. May-2026 prod baseline (post FTS widening +
+# structured-query parsing + orientalising/hellenistic period tokens):
 #
-#   chronology      mean=1.0000  n=3   (every period query maps to a date range)
-#   cross_corpus    mean=1.0000  n=1   (trismegistos token → has_trismegistos)
-#   place_pleiades  mean=0.7939  median=1.0000  n=19
-#   place_findspot  mean=0.3912  median=0.0649  n=8
-#   lexical         mean=0.3242  median=0.2201  n=40
-#   macro_mean=0.7019, micro_mean=0.4955
+#   chronology      n= 5  mean=1.0000  (period queries → date_min/date_max)
+#   cross_corpus    n= 1  mean=1.0000  (trismegistos token → has_trismegistos)
+#   place_pleiades  n=20  mean=0.8042  (Pleiades-aligned semantic place retrieval)
+#   place_findspot  n= 8  mean=0.3912  (literal findspot string match)
+#   lexical         n=40  mean=0.3242  (substring regression detector)
+#   macro_mean=0.7039  micro_mean=0.5160
 #
-# Gates sit well below those baselines to catch material regressions
-# without false-failing on noise. chronology and cross_corpus are gated
-# tightly (0.80) because they're now solved via structured parsing —
-# any drop signals a regression in the parser or the search filters.
+# Gates sit comfortably below baseline so noise doesn't false-fail. Tighter
+# bounds (0.80) on chronology and cross_corpus because the structured-query
+# parser makes them deterministic — any drop signals a regression in the
+# parser or the repo.search filter wiring.
 DEFAULT_GATE = (
     "lexical=0.25,place_pleiades=0.50,place_findspot=0.20,"
     "chronology=0.80,cross_corpus=0.80,macro_mean=0.50"
