@@ -66,10 +66,17 @@ jobs:
               # recreate the api service container as part of `run` even
               # with --no-deps, which collides with the running
               # `openetruscan-api-1`. Plain `docker run` against the image
-              # we just built sidesteps that, and using --network on the
-              # compose-managed network keeps the migration's DB connection
-              # working with whatever DATABASE_URL is in .env.
-              sudo docker run --rm --network openetruscan_default --env-file \$REPO_DIR/.env -v \"\$REPO_DIR:\$REPO_DIR\" -w \"\$REPO_DIR\" openetruscan-api alembic upgrade head || {
+              # we just built sidesteps that.
+              #
+              # Two extra wrinkles:
+              #  * --user 0 (root): the .env on the host is chmod 600 and
+              #    pydantic-settings opens it on Settings() instantiation,
+              #    so the default `appuser` from the Dockerfile can't read
+              #    it and the import chain crashes. Migration is short-lived
+              #    DDL — running as root for it is acceptable.
+              #  * --network openetruscan_default attaches us to the same
+              #    bridge the running stack uses so DATABASE_URL resolves.
+              sudo docker run --rm --user 0 --network openetruscan_default --env-file \$REPO_DIR/.env -v \"\$REPO_DIR:\$REPO_DIR\" -w \"\$REPO_DIR\" openetruscan-api alembic upgrade head || {
                 echo '::error::Alembic migration failed. Deploy aborted, old api container still serving traffic.'
                 exit 1
               }
