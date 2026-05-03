@@ -26,8 +26,11 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+        # `lod` pulls in httpx, which the API now imports for the Zotero
+        # client; without it the server module can't import and the schema
+        # export crashes with ModuleNotFoundError.
         run: |
-          pip install -e ".[server,prosopography]"
+          pip install -e ".[server,prosopography,lod]"
 
       - name: Export OpenAPI schema
         run: python scripts/data_pipeline/export_openapi.py

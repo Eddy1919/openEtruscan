@@ -208,8 +208,13 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-          service_account: github-ci@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+          # Reuses the same WIF pool/provider that .github/workflows/deploy.yml
+          # already authenticates against — `github-actions` / `github-provider`,
+          # bound in long-facet-427508-j2 (project number 19927826393). Earlier
+          # this referenced a hypothetical `github-pool` from the runbook draft;
+          # the actual pool the maintainer created is `github-actions`.
+          workload_identity_provider: projects/19927826393/locations/global/workloadIdentityPools/github-actions/providers/github-provider
+          service_account: gh-actions-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
