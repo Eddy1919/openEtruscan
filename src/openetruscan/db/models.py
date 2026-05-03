@@ -151,6 +151,8 @@ class GeneticSample(Base):
     date_uncertainty: Mapped[int | None] = mapped_column(Integer)
     y_haplogroup: Mapped[str | None] = mapped_column(Text)
     mt_haplogroup: Mapped[str | None] = mapped_column(Text)
+    biological_sex: Mapped[str | None] = mapped_column(Text)
+    c14_date_range: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str | None] = mapped_column(Text, default="")
     notes: Mapped[str | None] = mapped_column(Text, default="")
     created_at: Mapped[datetime | None] = mapped_column(
