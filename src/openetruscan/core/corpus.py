@@ -65,6 +65,29 @@ _INSCRIPTION_COLS = (
     "trismegistos_id, eagle_id, pleiades_id, geonames_id, zotero_id, is_codex"
 )
 
+# Widened FTS expression — single source of truth for the bootstrap path here
+# and the alembic migration `e7c8d9e0f1a2_widen_fts_canonical`. canonical is
+# weight A (primary text), structured identifiers are B, bibliographic
+# context is C. ts_rank_cd applies the standard {0.1, 0.2, 0.4, 1.0} weights
+# from D→A unless overridden, so canonical-text relevance still dominates.
+_FTS_DOC_EXPR = (
+    "setweight(to_tsvector('simple', coalesce(canonical, '')), 'A') || "
+    "setweight(to_tsvector('simple', "
+    "coalesce(findspot, '') || ' ' || "
+    "coalesce(pleiades_id, '') || ' ' || "
+    "coalesce(geonames_id, '') || ' ' || "
+    "coalesce(trismegistos_id, '') || ' ' || "
+    "coalesce(eagle_id, '')"
+    "), 'B') || "
+    "setweight(to_tsvector('simple', "
+    "coalesce(source, '') || ' ' || "
+    "coalesce(source_detail, '') || ' ' || "
+    "coalesce(bibliography, '') || ' ' || "
+    "coalesce(notes, '') || ' ' || "
+    "coalesce(raw_text, '')"
+    "), 'C')"
+)
+
 # Geographic bounds for Etruscan cultural area (used by provenance checks)
 _ETRUSCAN_LAT_RANGE = (35.0, 48.0)
 _ETRUSCAN_LON_RANGE = (5.0, 18.0)
@@ -318,7 +341,21 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     fts_canonical tsvector GENERATED ALWAYS AS (
-        to_tsvector('simple', coalesce(canonical, ''))
+        setweight(to_tsvector('simple', coalesce(canonical, '')), 'A') ||
+        setweight(to_tsvector('simple',
+            coalesce(findspot, '') || ' ' ||
+            coalesce(pleiades_id, '') || ' ' ||
+            coalesce(geonames_id, '') || ' ' ||
+            coalesce(trismegistos_id, '') || ' ' ||
+            coalesce(eagle_id, '')
+        ), 'B') ||
+        setweight(to_tsvector('simple',
+            coalesce(source, '') || ' ' ||
+            coalesce(source_detail, '') || ' ' ||
+            coalesce(bibliography, '') || ' ' ||
+            coalesce(notes, '') || ' ' ||
+            coalesce(raw_text, '')
+        ), 'C')
     ) STORED
 );
 
@@ -645,8 +682,7 @@ class Corpus:
                 )
                 cur.execute(
                     "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS fts_canonical "
-                    "tsvector GENERATED ALWAYS AS "
-                    "(to_tsvector('simple', coalesce(canonical, ''))) STORED;"
+                    f"tsvector GENERATED ALWAYS AS ({_FTS_DOC_EXPR}) STORED;"
                 )
                 cur.execute(
                     "CREATE INDEX IF NOT EXISTS idx_fts_canonical "
