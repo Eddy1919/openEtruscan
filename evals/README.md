@@ -101,32 +101,47 @@ is intentionally not gated by default.
 - *EAGLE / TEI gold* — the `eagle_id` column is empty across the corpus.
   When the EAGLE ingest lands, add a `cross_corpus_eagle` category.
 
-## Known finding (May 2026)
+## What the eval has caught and how it was fixed
 
-The first run of v2 surfaced a real product gap:
+**May 2026 — FTS widening.** First run of v2 found that
+`/search/hybrid?q=Tarquinia` returned 0 rows even though
+`/search?findspot=Tarquinia` returned 47. The `fts_canonical` tsvector
+indexed canonical text only; it didn't see findspot, pleiades_id,
+trismegistos_id, or any other structured column. Every category that
+depended on structured metadata scored 0.0.
+
+Migration `e7c8d9e0f1a2_widen_fts_canonical` rebuilt the tsvector with
+weighted ranks: weight A for canonical (primary signal), B for
+findspot + cross-corpus IDs, C for source / notes / bibliography.
+Post-deploy:
 
 ```text
-[place_pleiades]  n=20  mean=0.0000   ← all 20 Pelagios place queries: 0
-[place_findspot]   n= 8  mean=0.0000   ← all 8 findspot queries: 0
-[chronology]      n= 3  mean=0.0000   ← period names not in canonical text
-[cross_corpus]    n= 1  mean=0.0000   ← "trismegistos" not in canonical text
-[lexical]         n=40  mean=0.3382   ← substring baseline (only signal)
-Macro mean: 0.0676
+                  before        after        n
+place_pleiades    0.0000   →   0.8042       20    (median 1.0000)
+place_findspot    0.0000   →   0.3912       8
+lexical           0.3382   →   0.3242       40    (within rerank noise)
+chronology        0.0000   →   0.0000       3
+cross_corpus      0.0000   →   0.0000       1
+Macro mean        0.0676   →   0.3039
 ```
 
-`/search/hybrid?q=Tarquinia` returns **zero rows** even though
-`/search?findspot=Tarquinia` returns 47. The hybrid retrieval index searches
-canonical inscription text only — it doesn't see the `findspot` /
-`pleiades_id` / `geonames_id` columns. So users searching "Tarquinia" in the
-public search box get nothing.
+Default gate now enforces `place_pleiades=0.50,place_findspot=0.20`
+plus the lexical and macro-mean thresholds, so the regression can't
+silently come back.
 
-**Fix path** (not in the eval branch; tracked separately): widen the
-`/search/hybrid` query to include findspot / source / cross-corpus columns
-in the FTS document, OR cascade to a structured-filter fallback when the
-hybrid index returns zero. Once the fix lands, add
-`place_pleiades=0.30,place_findspot=0.30` to the default gate in
-`run_search_eval.py` so this can't silently regress again.
+## Known gaps still to close
 
-This is exactly the kind of gap a real eval is supposed to find — the
-substring baseline missed it entirely because place names rarely appear
-inside the canonical text of the inscriptions found at those places.
+`chronology` and `cross_corpus` both score 0.0 because the queries are
+*conceptual* — "archaic", "trismegistos" — and those literal strings
+don't appear in any indexed column. Two paths:
+
+- Add structured query parsing to `/search/hybrid`: detect period names
+  and convert to `WHERE date_approx BETWEEN …`; detect "trismegistos"
+  and convert to `WHERE trismegistos_id IS NOT NULL`. This is a
+  feature, not a retrieval fix.
+- Or accept that these categories are out of scope for an FTS-driven
+  endpoint and remove them from the eval (they're flagging a real
+  product gap, just not one the retrieval pipeline can fix).
+
+The eval keeps both categories tracked but un-gated until the product
+decision is made.
