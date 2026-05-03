@@ -1,136 +1,90 @@
-{"query": "lar\u03b8al", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
-{"query": "turce", "relevant_ids": ["100", "10001", "10006"], "category": "votive_verb"}
-{"query": "mi", "relevant_ids": ["100", "10001", "10006"], "category": "ownership"}
-{"query": "clan", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "velinas", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
-{"query": "zil\u03c7", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
-{"query": "marunu\u03c7", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
-{"query": "funerary Cerveteri", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
-{"query": "votive Tarquinia", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
-{"query": "alpan", "relevant_ids": ["100", "10001", "10006"], "category": "votive_noun"}
-{"query": "\u03b8ana", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
-{"query": "arn\u03b8", "relevant_ids": ["100", "10001", "10006"], "category": "onomastic"}
-{"query": "avil", "relevant_ids": ["100", "10001", "10006"], "category": "numeral"}
-{"query": "svalce", "relevant_ids": ["100", "10001", "10006"], "category": "age_verb"}
-{"query": "tular", "relevant_ids": ["100", "10001", "10006"], "category": "boundary"}
-{"query": "spura", "relevant_ids": ["100", "10001", "10006"], "category": "civic"}
-{"query": "rasna", "relevant_ids": ["100", "10001", "10006"], "category": "ethnic"}
-{"query": "lautn", "relevant_ids": ["100", "10001", "10006"], "category": "family"}
-{"query": "etera", "relevant_ids": ["100", "10001", "10006"], "category": "social_class"}
-{"query": "\u015bu\u03b8i", "relevant_ids": ["100", "10001", "10006"], "category": "tomb"}
-{"query": "cippus perusinus", "relevant_ids": ["CIE_4538"], "category": "monument"}
-{"query": "tabula cortonensis", "relevant_ids": ["TC_001"], "category": "monument"}
-{"query": "aisera", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "tin", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "uni", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "menrva", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "fufluns", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "turan", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "aita", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "\u03c6ersipnai", "relevant_ids": ["100", "10001", "10006"], "category": "divine"}
-{"query": "boundary Volterra", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
-{"query": "legal Chiusi", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
-{"query": "commercial Populonia", "relevant_ids": ["100", "10001", "10006"], "category": "classification_site"}
-{"query": "sec", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "puia", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "ati", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "nefts", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "papa", "relevant_ids": ["100", "10001", "10006"], "category": "kinship"}
-{"query": "mulvanice", "relevant_ids": ["100", "10001", "10006"], "category": "votive_verb"}
-{"query": "zil", "relevant_ids": ["100", "10001", "10006"], "category": "magistrate"}
-{"query": "semph", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "penez", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "pava", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "nurph", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zathrum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "susi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "charun", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "avils", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "alce", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "amce", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tusurthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "nurphalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zich", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zathrum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "hinthial", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "aisna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "artumes", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tuchulcha", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "macstre", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "spur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mini", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mech", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "usil", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "farthan", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ta", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mach", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "flerxva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "huth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zilc", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "nac", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cesu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mach", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "nethuns", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ais", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zal", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "thina", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "qutum", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "prumts", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tamera", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "lautni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sealch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zic", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sech", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "hec", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "apulu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cialch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tn", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "fler", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "apa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "lupu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sren", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mulu", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "huthalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "trutnut", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "titi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "machalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tul", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "mutna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cleva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cezp", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cespalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ziva", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "papals", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "suthithi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cehen", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zamathi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cel", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ita", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tinia", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "hupni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "marunuch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "purth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "spur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "cape", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "catha", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tiur", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "snenath", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "lusa", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "husi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ika", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "vanth", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "zilath", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sacni", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "macstrev", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "ci", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "letham", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "thapna", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "turms", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "sar", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "camthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "suci", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "tetal", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "suthi", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
-{"query": "semphalch", "relevant_ids": ["100", "10001", "10006"], "category": "random_sample"}
+{"query": "larθal", "relevant_ids": ["4787", "5225", "5473", "5755", "690", "AT 1.47", "CIE 162", "CIE 1763", "CIE 1855", "CIE 186", "CIE 187", "CIE 1885", "CIE 189", "CIE 1903", "CIE 205", "CIE 206", "CIE 2092", "CIE 2274", "CIE 2393", "CIE 2501", "CIE 2574", "CIE 2762", "CIE 2805", "CIE 3030", "CIE 427", "CODEX_TCo_B", "Cl 1.2261", "Cr 1.10", "ETP 280", "ETP 343", "ETP 51", "ETP 74", "Ta 1.182", "Ta 1.191", "Ta 1.96", "Vc 1.84"], "category": "onomastic", "n_relevant": 36}
+{"query": "turce", "relevant_ids": ["10007", "2340", "438", "7666", "7927", "9276", "9392", "CIE 437", "CIE 438", "Co 3.7", "ETP 189", "ETP 190", "ETP 238", "ETP 239", "ETP 279", "ETP 332", "ETP 336", "ETP 339", "ETP 340", "Ta 3.6"], "category": "votive_verb", "n_relevant": 20}
+{"query": "clan", "relevant_ids": ["1072", "1073", "1133", "12956", "1754", "2369", "3551", "4139", "At 1.172", "CIE 1754", "CIE 1767", "CIE 1873", "CIE 2097", "CIE 2269", "CIE 2440", "CIE 2534", "CIE 2936", "CIE 441", "Cl 1.2261", "Cr 1.10", "ETP 192", "ETP 237", "ETP 74", "Ta 1.15", "Ta 1.182", "Ta 1.183", "Ta 1.191", "Ta 1.62", "Ta 1.9", "Ta 1.96", "Vs 1.178"], "category": "kinship", "n_relevant": 31}
+{"query": "zilχ", "relevant_ids": ["Ta 1.9"], "category": "magistrate", "n_relevant": 1}
+{"query": "marunuχ", "relevant_ids": ["AT 1.171"], "category": "magistrate", "n_relevant": 1}
+{"query": "alpan", "relevant_ids": ["10688", "12691", "15296", "17034", "5565", "8927", "CIE 437", "CIE 438", "Co 3.6", "ETP 340", "ETP 352"], "category": "votive_noun", "n_relevant": 11}
+{"query": "θana", "relevant_ids": ["1304", "13916", "15977", "16310", "1910", "197", "2619", "2869", "4376", "493", "5417", "5773", "6312", "7057", "7456", "8168", "8770", "919", "CIE 151", "CIE 1879", "CIE 1880", "CIE 1883", "CIE 1884", "CIE 2052", "CIE 2053", "CIE 2055", "CIE 2213", "CIE 2215", "CIE 2332", "CIE 2407", "CIE 2418", "CIE 2491", "CIE 2760", "CIE 2761", "CIE 2777", "CIE 2778", "CIE 2782", "CIE 2783", "CIE 2785", "CIE 2787", "CIE 2912", "CIE 2916", "CIE 318", "CIE 44", "CIE 46", "Cl 1.314", "ETP 171", "ETP 207", "ETP 228", "ETP 235", "ETP 278", "ETP 303", "ETP 316", "ETP 59", "Ta 1.108", "Ta 7.3"], "category": "onomastic", "n_relevant": 56}
+{"query": "arnθ", "relevant_ids": ["1097", "11033", "1124", "1132", "12090", "12388", "12429", "12606", "12610", "12615", "1264", "12931", "12933", "1394", "1423", "14705", "14786", "14809", "14876", "14926", "1513", "15374", "15922", "15926", "16", "16499", "17073", "1710", "1736", "179", "1846", "1847", "1850", "1916", "1924", "2050", "211", "2125", "2155", "2327", "2328", "2429", "2458", "2627", "2771", "2805", "2948", "3059", "3090", "313", "3131", "3762", "3778", "3826", "3830", "3840", "4062", "4072", "4073", "4095", "419", "4380", "4484", "4515", "4542", "4636", "4664", "4675", "4686", "4800", "4838", "5148", "5309", "5313", "5378", "5427", "5437", "5521", "5719", "5751", "5815", "582", "5855", "5874", "5886", "598", "6169", "6673", "7225", "7246", "832", "9182", "946", "9722", "9820", "AT 1.171", "AT 1.47", "At 1.100", "At 1.111", "At 1.172", "CIE 182", "CIE 1825", "CIE 183", "CIE 184", "CIE 190", "CIE 2049", "CIE 205", "CIE 2050", "CIE 2074", "CIE 211", "CIE 2125", "CIE 2126", "CIE 2155", "CIE 2259", "CIE 2327", "CIE 2328", "CIE 2393", "CIE 2490", "CIE 2756", "CIE 2805", "CIE 3039", "CIE 3092", "CIE 3096", "CIE 3101", "CIE 313", "CIE 437", "CIE 438", "Cl 1.2050", "ETP 139", "ETP 202", "ETP 313", "ETP 339", "ETP 76", "ETP 83", "Ta 1.13", "Ta 1.147", "Ta 1.183", "Ta 1.82", "Vc 1.84", "Vs 1.178"], "category": "onomastic", "n_relevant": 140}
+{"query": "avil", "relevant_ids": ["10442", "11258", "11772", "12424", "14875", "168", "1857", "3284", "4253", "5423", "5755", "6327", "6456", "7288", "8901", "9850", "AS 2.1", "AT 1.15", "AT 1.171", "AT 1.46", "AT 1.47", "At 1.172", "CIE 1857", "CIE 3283a", "CIE 3284", "CODEX_LL_X", "CODEX_PY_A_1", "CODEX_PY_B_1", "CODEX_TC_II", "ETP 52", "ETP 76", "Ta 1.107", "Ta 1.108", "Ta 1.147", "Ta 1.15", "Ta 1.168", "Ta 1.18", "Ta 1.183", "Ta 1.191", "Ta 1.81", "Ta 1.82", "Ta 1.89", "Ta 1.9", "Vs 1.178"], "category": "numeral", "n_relevant": 44}
+{"query": "svalce", "relevant_ids": ["5459", "5755", "7770", "ETP 52", "Ta 1.107", "Ta 1.82", "Ta 1.89"], "category": "age_verb", "n_relevant": 7}
+{"query": "tular", "relevant_ids": ["15157", "16824", "8881", "9128", "9243", "9886", "CIE 439", "ETP 332", "Fs 8.3"], "category": "boundary", "n_relevant": 9}
+{"query": "spura", "relevant_ids": ["16222", "9221", "AT 1.171"], "category": "civic", "n_relevant": 3}
+{"query": "rasna", "relevant_ids": ["2592", "CIE 2592", "ETP 74"], "category": "ethnic", "n_relevant": 3}
+{"query": "lautn", "relevant_ids": ["1529", "15922", "1945", "2414", "2481", "2694", "3059", "3075", "3076", "3078", "4725", "4870", "CIE 1854", "CIE 1856", "CIE 1945", "CIE 2068", "CIE 2120", "CIE 2196", "CIE 2209", "CIE 2383", "CIE 2392", "CIE 2480", "CIE 2481", "CIE 2484", "CIE 2550", "CIE 2635", "CIE 2694", "CIE 2835", "CIE 3001", "CODEX_CP_A", "Cl 1.314", "ETP 334", "Pe 1.211", "Pe 1.948", "Pe 5.2", "Po 4.4"], "category": "family", "n_relevant": 36}
+{"query": "etera", "relevant_ids": ["14827", "5451", "AT 1.105", "Ta 1.96"], "category": "social_class", "n_relevant": 4}
+{"query": "śuθi", "relevant_ids": ["Li 1.1", "Pe 1.948"], "category": "tomb", "n_relevant": 2}
+{"query": "aisera", "relevant_ids": ["9276"], "category": "divine", "n_relevant": 1}
+{"query": "tin", "relevant_ids": ["10177", "1038", "1039", "10560", "1068", "10990", "1132", "12312", "12648", "12816", "1305", "13924", "14037", "14523", "14561", "14590", "15032", "1528", "1529", "15497", "15607", "15654", "15911", "15931", "15960", "16019", "16021", "16072", "16187", "16312", "16811", "17035", "17038", "17084", "1789", "20474", "2181", "229", "2369", "2550", "2586", "2675", "2779", "2829", "2836", "2841", "2843", "2942", "2956", "3042", "3608", "371", "4200", "4203", "4503", "458", "4610", "476", "4763", "478", "4800", "4882", "558", "579", "5900", "6041", "6085", "6115", "6451", "7122", "7240", "7734", "803", "804", "805", "996", "Ar 1.3", "Ar 4.3", "CIE 1758", "CIE 1759", "CIE 1911", "CIE 1914", "CIE 1972", "CIE 1973", "CIE 1974", "CIE 2002", "CIE 2111", "CIE 2180", "CIE 2181", "CIE 2278", "CIE 229", "CIE 2393", "CIE 2440", "CIE 246", "CIE 2548", "CIE 2549", "CIE 2550", "CIE 2669", "CIE 2675", "CIE 2748", "CIE 2827", "CIE 2829", "CIE 2830", "CIE 2831", "CIE 2832", "CIE 2833", "CIE 2834", "CIE 2835", "CIE 2836", "CIE 2837", "CIE 2838", "CIE 2839", "CIE 2841", "CIE 2842", "CIE 2843", "CIE 2844", "CIE 2845", "CIE 2846", "CIE 2847", "CIE 2956", "CIE 2981", "CIE 2984", "CIE 2985", "CIE 3015", "CIE 3041", "CIE 3042", "CIE 3093", "CIE 3125", "CIE 316", "CIE 3200", "CIE 3253", "CIE 3262", "CIE 3290", "CIE 336", "CIE 393", "CIE 394", "CIE 395", "CIE 431", "CIE 440", "CIE 457", "CIE 52a, b", "CIE 54", "CIE 55", "CIE 63", "CODEX_LL_IX", "CODEX_LL_VII", "CODEX_LL_X", "CODEX_TC_II", "CODEX_TCo_B", "Cl 1.1885", "ETP 112", "ETP 124", "ETP 136", "ETP 141", "ETP 316", "ETP 367", "ETP 70", "ETP 74", "Pa 4.1", "Po 4.4", "Ta 3.2"], "category": "divine", "n_relevant": 161}
+{"query": "uni", "relevant_ids": ["1049", "1073", "11124", "1132", "1146", "1183", "12481", "1286", "1348", "1371", "13910", "13964", "144", "1451", "14526", "1459", "1478", "14800", "1489", "15169", "15187", "15515", "15648", "15653", "15670", "15910", "16030", "16031", "1665", "1697", "1795", "1900", "1908", "20264", "20500", "2194", "2215", "2228", "2406", "2454", "2718", "2767", "2884", "2906", "3043", "3044", "3075", "3113", "3189", "3237", "3393", "3450", "3629", "3669", "3854", "3855", "4034", "4062", "4079", "4091", "4253", "4277", "4418", "4488", "4547", "4717", "4760", "4901", "5255", "5275", "5385", "5436", "5526", "553", "580", "588", "6170", "634", "6413", "6421", "6433", "653", "7051", "7141", "7866", "859", "9286", "9535", "963", "9835", "9908", "CIE 1834", "CIE 1900", "CIE 1912", "CIE 1921", "CIE 2008", "CIE 2020", "CIE 2215", "CIE 2225", "CIE 2226", "CIE 2227", "CIE 2228", "CIE 2229", "CIE 2230", "CIE 2333", "CIE 2406", "CIE 2445", "CIE 2454", "CIE 2571", "CIE 2572", "CIE 2573", "CIE 2574", "CIE 2608", "CIE 2635", "CIE 2760", "CIE 2761", "CIE 2787", "CIE 2803", "CIE 2811", "CIE 2820", "CIE 2902", "CIE 2905", "CIE 2906", "CIE 2907", "CIE 2909", "CIE 2912", "CIE 2916", "CIE 297", "CIE 3019", "CIE 3029", "CIE 3033", "CIE 3038", "CIE 3043", "CIE 3070", "CIE 3073", "CIE 3121", "CIE 3230", "CIE 3289", "CIE 3291", "CIE 366", "CIE 471", "CIE 52a, b", "CODEX_CP_B", "CODEX_PL_OUTER", "CODEX_PY_A_1", "CODEX_PY_B_1", "CODEX_TC_III", "Cl 1.1885", "Cl 1.324", "Cl 1.373", "ETP 128", "ETP 165", "ETP 224", "ETP 230", "ETP 238", "ETP 284", "ETP 301", "ETP 339", "ETP 352", "ETP 55", "ETP 74", "ETP 94", "OA 3.9", "Po 4.4", "Ta S.8", "Vt S.2"], "category": "divine", "n_relevant": 166}
+{"query": "menrva", "relevant_ids": ["16526", "16638", "7946", "8884", "ETP 339"], "category": "divine", "n_relevant": 5}
+{"query": "fufluns", "relevant_ids": ["15489"], "category": "divine", "n_relevant": 1}
+{"query": "turan", "relevant_ids": ["10425", "14612", "17019", "6414", "CODEX_PL_OUTER", "ETP 359"], "category": "divine", "n_relevant": 6}
+{"query": "aita", "relevant_ids": ["16675", "6760", "CIE 2945", "CIE 3044"], "category": "divine", "n_relevant": 4}
+{"query": "sec", "relevant_ids": ["15543", "370", "4115", "4627", "5630", "9072", "AT 1.46", "CIE 1770", "CIE 1876", "CIE 2009", "CIE 2440", "CIE 2441", "CIE 2527", "CIE 2533", "CIE 2611", "CIE 2725", "CIE 2755", "CIE 2757", "CIE 2847", "CIE 2916", "CIE 2984", "CIE 3067", "CIE 3073", "CIE 317", "CIE 318", "CIE 319", "CIE 3292", "CIE 364", "CIE 367", "ETP 181", "Vt 4.2"], "category": "kinship", "n_relevant": 31}
+{"query": "puia", "relevant_ids": ["126", "12787", "14876", "15601", "2378", "2400", "2691", "2727", "2785", "3411", "3676", "3791", "3960", "4001", "4854", "7045", "757", "At 1.111", "CIE 1765", "CIE 1873", "CIE 2113", "CIE 2333", "CIE 2691", "CIE 2727", "CIE 2785", "CIE 3016", "CIE 319", "CIE 367", "ETP 74", "Ta 1.13", "Ta 1.168"], "category": "kinship", "n_relevant": 31}
+{"query": "ati", "relevant_ids": ["1038", "10447", "10734", "10886", "10927", "11266", "11267", "11268", "11271", "1154", "12469", "12864", "13924", "13965", "14523", "14561", "15427", "15571", "15647", "1569", "1579", "15911", "15960", "15971", "16053", "16072", "16152", "16460", "16516", "16897", "1709", "17228", "1770", "1776", "1789", "20699", "2148", "229", "2329", "2369", "2510", "2511", "2512", "2515", "2516", "2517", "2586", "2675", "2767", "2869", "2894", "2942", "3042", "328", "3283", "3293", "3940", "3951", "4207", "4447", "4493", "4503", "452", "454", "4675", "47", "4800", "4856", "4882", "4913", "4925", "498", "532", "5329", "5592", "5609", "578", "579", "6195", "7670", "7803", "7933", "8010", "819", "8464", "8571", "9711", "Ar 1.3", "CIE 111", "CIE 1758", "CIE 1759", "CIE 1776", "CIE 1796", "CIE 1837", "CIE 1899", "CIE 1911", "CIE 1914", "CIE 1933", "CIE 1954", "CIE 2002", "CIE 2025", "CIE 2071", "CIE 2078", "CIE 2111", "CIE 2167", "CIE 2240", "CIE 229", "CIE 2329", "CIE 2457", "CIE 2470", "CIE 2510", "CIE 2511", "CIE 2512", "CIE 2669", "CIE 2675", "CIE 2717", "CIE 2744", "CIE 2748", "CIE 2761", "CIE 2762", "CIE 2844", "CIE 2845", "CIE 2894", "CIE 2895", "CIE 2927", "CIE 2981", "CIE 2982", "CIE 3041", "CIE 3042", "CIE 3083", "CIE 3093", "CIE 3121", "CIE 3125", "CIE 316", "CIE 3230", "CIE 3239", "CIE 3242", "CIE 3264", "CIE 3293", "CIE 336", "CIE 393", "CIE 395", "CIE 445", "CIE 457", "CIE 52a, b", "CIE 54", "CODEX_PY_A_1", "CODEX_TCo_B", "Cl 1.1885", "Co 4.1", "Cr 5.2", "ETP 136", "ETP 141", "ETP 169", "ETP 189", "ETP 193", "ETP 289", "ETP 43", "ETP 74", "ETP 96", "Ta 1.66", "Vt 4.2"], "category": "kinship", "n_relevant": 162}
+{"query": "nefts", "relevant_ids": ["1421"], "category": "kinship", "n_relevant": 1}
+{"query": "papa", "relevant_ids": ["11255", "1213", "1214", "14825", "16156", "16157", "2953", "2958", "2959", "556", "7042", "9446", "AT 1.105", "CIE 1765", "CIE 2212", "CIE 2506", "CIE 2507", "CIE 2951", "CIE 2952", "CIE 2953", "CIE 2956", "CIE 2957", "CIE 2958", "CIE 2959", "CIE 3067", "CIE 3068", "ETP 181", "ETP 74"], "category": "kinship", "n_relevant": 28}
+{"query": "mulvanice", "relevant_ids": ["15459", "6451", "ETP 186", "Ve 3.13"], "category": "votive_verb", "n_relevant": 4}
+{"query": "zil", "relevant_ids": ["11156", "1458", "14779", "2175", "3076", "3078", "5112", "5385", "5410", "5451", "5517", "5521", "5566", "5874", "7097", "7803", "7947", "AT 1.105", "AT 1.108", "AT 1.171", "At 1.100", "CIE 2175", "CIE 2244", "CODEX_LL_VI", "CODEX_PY_A_1", "CODEX_TCo_B", "ETP 352", "ETP 74", "ETP 76", "Ta 1.183", "Ta 1.9", "Ta 5.5"], "category": "magistrate", "n_relevant": 32}
+{"query": "pava", "relevant_ids": ["CODEX_TCo_A", "ETP 74"], "category": "random_sample", "n_relevant": 2}
+{"query": "susi", "relevant_ids": ["7225", "CIE 2824"], "category": "random_sample", "n_relevant": 2}
+{"query": "charun", "relevant_ids": ["14713", "16749", "9309"], "category": "random_sample", "n_relevant": 3}
+{"query": "avils", "relevant_ids": ["AT 1.15", "AT 1.171", "AT 1.46", "AT 1.47", "At 1.172", "Ta 1.108", "Ta 1.147", "Ta 1.15", "Ta 1.168", "Ta 1.18", "Ta 1.183", "Ta 1.191", "Ta 1.81", "Vs 1.178"], "category": "random_sample", "n_relevant": 14}
+{"query": "alce", "relevant_ids": ["429", "430", "5459", "5755", "7770", "8896", "CIE 3025", "CIE 429", "CIE 430", "CODEX_CP_B", "ETP 52", "Ta 1.107", "Ta 1.82", "Ta 1.89"], "category": "random_sample", "n_relevant": 14}
+{"query": "amce", "relevant_ids": ["14573", "15601", "5094", "5430", "AT 1.171", "At 1.100", "Ta 1.168"], "category": "random_sample", "n_relevant": 7}
+{"query": "tusurthi", "relevant_ids": ["3858"], "category": "random_sample", "n_relevant": 1}
+{"query": "zich", "relevant_ids": ["1085", "12429", "435", "8682"], "category": "random_sample", "n_relevant": 4}
+{"query": "artumes", "relevant_ids": ["10006"], "category": "random_sample", "n_relevant": 1}
+{"query": "macstre", "relevant_ids": ["5683"], "category": "random_sample", "n_relevant": 1}
+{"query": "spur", "relevant_ids": ["11290", "11803", "15567", "16222", "4465", "5427", "5429", "658", "7192", "9221", "9815", "AT 1.108", "AT 1.171", "Cr 3.7", "ETP 335", "La 2.3"], "category": "random_sample", "n_relevant": 16}
+{"query": "mini", "relevant_ids": ["11164", "11233", "11520", "12551", "15547", "16296", "6405", "6415", "6421", "6451", "7064", "7258", "8933", "9815", "CIE 119", "CIE 182", "CIE 1936", "CIE 2043", "CIE 2044", "CIE 2471", "CIE 2472", "CIE 2666", "CIE 3033", "Cm 2.13", "Cr 3.11", "Cr 3.14", "Cr 3.17", "Cr 3.9", "ETP 130", "ETP 252", "ETP 269", "ETP 284", "ETP 333", "ETP 354", "Ve 3.29", "Vn 1.1", "Vt 3.1"], "category": "random_sample", "n_relevant": 37}
+{"query": "usil", "relevant_ids": ["2836"], "category": "random_sample", "n_relevant": 1}
+{"query": "huth", "relevant_ids": ["9242"], "category": "random_sample", "n_relevant": 1}
+{"query": "zilc", "relevant_ids": ["5385", "5517", "5521", "5874", "7803", "7947", "AT 1.171", "CODEX_LL_VI", "CODEX_TCo_B", "ETP 352", "ETP 74", "ETP 76", "Ta 5.5"], "category": "random_sample", "n_relevant": 13}
+{"query": "nac", "relevant_ids": ["10163", "12269", "12994", "13967", "14523", "15616", "304", "446", "5417", "5975", "6312", "6449", "7064", "7456", "805", "8168", "9416", "9438", "AV 6.1", "CIE 1786", "CIE 1996", "CIE 214", "CIE 2374", "CIE 2377", "CODEX_LL_IX", "CODEX_LL_VII", "CODEX_LL_VIII", "CODEX_LL_X", "CODEX_PY_A_1", "CODEX_PY_B_1", "CODEX_TCo_A", "Co 3.6", "ETP 120", "ETP 74", "Vc 7.38", "Ve 6.2"], "category": "random_sample", "n_relevant": 36}
+{"query": "cesu", "relevant_ids": ["1791", "5452", "5554", "6213", "707", "CIE 2464", "CIE 2465", "Cr 5.2", "ETP 74", "Ta 1.66", "Vc 1.59"], "category": "random_sample", "n_relevant": 11}
+{"query": "ais", "relevant_ids": ["11559", "12430", "12931", "14504", "14521", "15659", "15705", "15706", "16477", "17137", "17287", "21002", "393", "5026", "8163", "8237", "897", "8989", "9121", "9196", "9276", "CIE 2063", "CIE 2082", "CIE 2504", "CIE 2950", "CIE 3047", "CIE 3231", "CIE 3232", "CIE 393", "CODEX_LL_IX", "CODEX_LL_VII", "CODEX_LL_X", "Cr 3.14", "Pa 4.1", "Vt 4.2"], "category": "random_sample", "n_relevant": 35}
+{"query": "zal", "relevant_ids": ["10296", "5544", "8686", "CIE 2005", "CIE 2006", "CODEX_TCo_A", "ETP 102", "ETP 74"], "category": "random_sample", "n_relevant": 8}
+{"query": "thina", "relevant_ids": ["10465", "10683", "10686", "10726", "10819", "10830", "10838", "10855", "10857", "12381", "13901", "14623", "15293", "16619", "16690", "232", "3738", "4401", "6212", "7218", "8989", "8990", "9257", "CIE 231", "CIE 232"], "category": "random_sample", "n_relevant": 25}
+{"query": "qutum", "relevant_ids": ["Cr 2.18", "ETP 345", "ETP 346"], "category": "random_sample", "n_relevant": 3}
+{"query": "tamera", "relevant_ids": ["Cr 5.4"], "category": "random_sample", "n_relevant": 1}
+{"query": "lautni", "relevant_ids": ["1529", "15922", "1945", "2414", "2694", "3059", "3075", "3076", "3078", "4870", "CIE 1854", "CIE 1856", "CIE 1945", "CIE 2068", "CIE 2196", "CIE 2209", "CIE 2383", "CIE 2484", "CIE 2550", "CIE 2635", "CIE 2694", "CIE 2835", "CIE 3001", "Cl 1.314", "ETP 334", "Pe 1.211", "Pe 1.948", "Po 4.4"], "category": "random_sample", "n_relevant": 28}
+{"query": "zic", "relevant_ids": ["1085", "12429", "13997", "435", "8682", "ETP 74"], "category": "random_sample", "n_relevant": 6}
+{"query": "sech", "relevant_ids": ["370"], "category": "random_sample", "n_relevant": 1}
+{"query": "hec", "relevant_ids": ["16140", "7430", "7431", "7432", "7549", "Pe 5.2"], "category": "random_sample", "n_relevant": 6}
+{"query": "apulu", "relevant_ids": ["17016", "17154", "8897"], "category": "random_sample", "n_relevant": 3}
+{"query": "cialch", "relevant_ids": ["12598", "15910"], "category": "random_sample", "n_relevant": 2}
+{"query": "fler", "relevant_ids": ["11188", "CODEX_LL_VI", "CODEX_LL_VII", "CODEX_LL_VIII", "CODEX_TC_II", "CODEX_TC_III", "Co 3.7", "ETP 84", "Pe 3.3", "Vc 7.38"], "category": "random_sample", "n_relevant": 10}
+{"query": "apa", "relevant_ids": ["11224", "11255", "1213", "1214", "12693", "12840", "14825", "15616", "15724", "15789", "16156", "16157", "16172", "2953", "2958", "2959", "5451", "5473", "556", "7042", "7248", "8822", "9220", "9446", "AT 1.105", "AT 1.108", "CIE 1765", "CIE 2079", "CIE 2080", "CIE 2212", "CIE 2240", "CIE 2299", "CIE 2506", "CIE 2507", "CIE 2951", "CIE 2952", "CIE 2953", "CIE 2956", "CIE 2957", "CIE 2958", "CIE 2959", "CIE 3067", "CIE 3068", "CIE 3306", "CIE 441", "Cr 5.2", "ETP 114", "ETP 122", "ETP 180", "ETP 181", "ETP 213", "ETP 332", "ETP 369", "ETP 74", "Ta 1.183"], "category": "random_sample", "n_relevant": 55}
+{"query": "lupu", "relevant_ids": ["5092", "5521", "5566", "5720", "AT 1.171", "At 1.172", "CIE 142", "CIE 2093", "Ta 1.15", "Ta 1.168", "Ta 1.183", "Ta 1.191", "Vs 1.178"], "category": "random_sample", "n_relevant": 13}
+{"query": "sren", "relevant_ids": ["Vt S.2"], "category": "random_sample", "n_relevant": 1}
+{"query": "mulu", "relevant_ids": ["11233", "11234", "11258", "12097", "12551", "13811", "3234", "6421", "6456", "8613", "9343", "9815", "Cr 3.10", "Cr 3.12", "Cr 3.18", "Cr 3.20", "Cr 3.9", "ETP 128", "ETP 269", "ETP 284", "ETP 303", "ETP 354", "Vt 3.1"], "category": "random_sample", "n_relevant": 23}
+{"query": "titi", "relevant_ids": ["14559", "14680", "15087", "20474", "2869", "5641", "6115", "672", "CIE 1841", "CIE 1977", "CIE 2089", "CIE 2158", "CIE 2167", "CIE 2463", "CIE 2530", "CIE 2531", "CIE 2589", "CIE 2590", "CIE 2593", "CIE 2860", "CIE 2880", "CIE 2882", "CIE 2891", "CIE 2898", "CIE 2899", "CIE 2902", "CIE 2903", "CIE 2905", "CIE 2906", "CIE 2907", "CIE 2908", "CIE 2909", "CIE 2910", "CIE 2912", "CIE 2913", "CIE 2915", "CIE 2916", "CIE 2961", "CIE 3067", "CIE 3104", "CIE 3272", "CIE 3289", "CIE 455", "CIE 70", "CODEX_TCo_B", "Cl 1.147", "ETP 181", "ETP 230", "Po 4.4"], "category": "random_sample", "n_relevant": 49}
+{"query": "tul", "relevant_ids": ["12767", "12800", "15157", "16824", "20509", "8881", "9128", "9243", "9886", "CIE 315", "CIE 433", "CIE 439", "CODEX_PY_A_1", "ETP 332", "Fs 8.3", "Sp 2.36", "TCa 8", "Ve 3.2"], "category": "random_sample", "n_relevant": 18}
+{"query": "mutna", "relevant_ids": ["5638", "5722", "5724", "5751", "7093", "7096", "AT 1.34"], "category": "random_sample", "n_relevant": 7}
+{"query": "cleva", "relevant_ids": ["CODEX_PY_B_1"], "category": "random_sample", "n_relevant": 1}
+{"query": "cezp", "relevant_ids": ["5466", "Ta 1.82"], "category": "random_sample", "n_relevant": 2}
+{"query": "ziva", "relevant_ids": ["14928", "CIE 2086", "Ta 1.182"], "category": "random_sample", "n_relevant": 3}
+{"query": "papals", "relevant_ids": ["9446", "AT 1.105"], "category": "random_sample", "n_relevant": 2}
+{"query": "cel", "relevant_ids": ["12354", "12836", "1532", "15727", "15911", "16524", "17054", "1977", "3744", "4602", "5189", "5191", "6030", "6434", "7691", "8345", "8389", "CIE 1978", "CIE 1984", "CIE 1986", "CIE 214", "CIE 2974", "CIE 3006", "CODEX_LL_IX", "CODEX_LL_VII", "CODEX_LL_VIII", "CODEX_TC_II", "CODEX_TCo_B", "Co 4.1", "ETP 333", "ETP 361", "ETP 74", "LL 5", "Ta 1.66"], "category": "random_sample", "n_relevant": 34}
+{"query": "ita", "relevant_ids": ["13970", "14521", "14784", "16072", "16675", "17226", "20051", "2151", "6760", "7052", "8901", "AH 3.4", "AV 6.1", "CIE 155", "CIE 1786", "CIE 1787", "CIE 1788", "CIE 1964", "CIE 1989", "CIE 2026", "CIE 2071", "CIE 2151", "CIE 2243", "CIE 229", "CIE 2339", "CIE 2355", "CIE 2357", "CIE 2358", "CIE 2359", "CIE 2360", "CIE 2367", "CIE 2369", "CIE 2373", "CIE 2447", "CIE 2484", "CIE 2514", "CIE 2515", "CIE 2942", "CIE 2945", "CIE 3042", "CIE 3044", "CIE 3242", "CIE 3258", "CIE 3269", "CIE 3286", "CIE 3287", "CIE 461", "CODEX_PY_A_1", "ETP 118", "ETP 254", "Po 4.4"], "category": "random_sample", "n_relevant": 51}
+{"query": "tinia", "relevant_ids": ["1038", "10560", "13924", "15497", "15960", "16021", "16312", "2369", "2942", "3608", "4200", "4203", "4882", "5900", "6041", "CIE 1758", "CIE 1759", "CIE 2002", "CIE 2844", "CIE 3262", "CIE 54", "Pa 4.1"], "category": "random_sample", "n_relevant": 22}
+{"query": "hupni", "relevant_ids": ["CIE 312", "CODEX_LL_VI", "CODEX_LL_VII", "Co 1.3"], "category": "random_sample", "n_relevant": 4}
+{"query": "purth", "relevant_ids": ["5549"], "category": "random_sample", "n_relevant": 1}
+{"query": "spur", "relevant_ids": ["11290", "11803", "15567", "16222", "4465", "5427", "5429", "658", "7192", "9221", "9815", "AT 1.108", "AT 1.171", "Cr 3.7", "ETP 335", "La 2.3"], "category": "random_sample", "n_relevant": 16}
+{"query": "cape", "relevant_ids": ["4283"], "category": "random_sample", "n_relevant": 1}
+{"query": "catha", "relevant_ids": ["9303"], "category": "random_sample", "n_relevant": 1}
+{"query": "tiur", "relevant_ids": ["CODEX_LL_VII", "CODEX_LL_X", "CODEX_PY_B_1", "CODEX_TC_II", "CODEX_TCo_A", "ETP 74"], "category": "random_sample", "n_relevant": 6}
+{"query": "lusa", "relevant_ids": ["1205", "12607", "5562", "8389", "CIE 1760", "CIE 2336", "CIE 2755", "CIE 3132", "CIE 3133", "CIE 3150"], "category": "random_sample", "n_relevant": 10}
+{"query": "ika", "relevant_ids": ["10697", "13819", "144", "14517", "14548", "16839", "5022", "8412", "9473", "CIE 144", "CIE 1789"], "category": "random_sample", "n_relevant": 11}
+{"query": "vanth", "relevant_ids": ["16636", "5258"], "category": "random_sample", "n_relevant": 2}
+{"query": "zilath", "relevant_ids": ["5112", "5410", "5566"], "category": "random_sample", "n_relevant": 3}
+{"query": "sacni", "relevant_ids": ["12503", "14784", "15446", "Ta 5.5"], "category": "random_sample", "n_relevant": 4}
+{"query": "macstrev", "relevant_ids": ["5683"], "category": "random_sample", "n_relevant": 1}
+{"query": "letham", "relevant_ids": ["10041", "CODEX_TC_I"], "category": "random_sample", "n_relevant": 2}
+{"query": "turms", "relevant_ids": ["11419", "9239", "ETP 352"], "category": "random_sample", "n_relevant": 3}
+{"query": "sar", "relevant_ids": ["10001", "10677", "1174", "12242", "15705", "15706", "16146", "3304", "4784", "5148", "5334", "CIE 112", "CIE 2802", "CIE 3304", "ETP 74"], "category": "random_sample", "n_relevant": 15}
+{"query": "tetal", "relevant_ids": ["3766"], "category": "random_sample", "n_relevant": 1}
+{"query": "suthi", "relevant_ids": ["10683", "10686", "10726", "10819", "10830", "10838", "10855", "10857", "11156", "118", "14784", "15546", "16619", "16690", "3305", "4997", "5037", "5225", "5239", "5303", "7218", "7224", "9257", "9449", "9857"], "category": "random_sample", "n_relevant": 25}

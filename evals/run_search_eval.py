@@ -18,6 +18,7 @@ import argparse
 import json
 import math
 import sys
+import time
 from pathlib import Path
 
 import httpx
@@ -25,6 +26,10 @@ import httpx
 EVAL_FILE = Path(__file__).parent / "search_eval_queries.jsonl"
 K = 10
 GATE_THRESHOLD = 0.40
+# Prod rate-limits /search/hybrid at 60/min (slowapi). Stay safely under
+# that with one request per second; a full 90-query run takes ~90 s.
+PER_REQUEST_DELAY_S = 1.05
+RETRY_AFTER_429_S = 30.0
 
 
 def dcg(relevances: list[float], k: int = K) -> float:
@@ -41,33 +46,54 @@ def ndcg(relevances: list[float], ideal: list[float], k: int = K) -> float:
 def evaluate(api_url: str) -> float:
     queries = [json.loads(line) for line in EVAL_FILE.read_text().splitlines() if line.strip()]
     scores: list[float] = []
+    skipped = 0
 
     for q in queries:
         query_text = q["query"]
         relevant = set(q["relevant_ids"])
 
+        # Honour the prod rate limit. A full run sleeps ~90 s but never 429s.
+        # If the API is local (no rate limit), pass --fast.
+        score = _query_ndcg(api_url, query_text, relevant)
+        if score is None:
+            skipped += 1
+            continue
+
+        scores.append(score)
+        print(f"  {score:.3f}  {query_text}")
+        time.sleep(PER_REQUEST_DELAY_S)
+
+    mean = sum(scores) / len(scores) if scores else 0.0
+    print(
+        f"\nMean NDCG@{K}: {mean:.4f}  "
+        f"({len(scores)} queries evaluated, {skipped} skipped)"
+    )
+    return mean
+
+
+def _query_ndcg(api_url: str, query_text: str, relevant: set[str]) -> float | None:
+    """One query → one NDCG@10. Retries once on 429."""
+    for attempt in (1, 2):
         try:
             resp = httpx.get(
                 f"{api_url}/search/hybrid",
                 params={"q": query_text, "limit": K},
                 timeout=10.0,
             )
+            if resp.status_code == 429 and attempt == 1:
+                print(f"  WAIT  429 on {query_text!r}, sleeping {RETRY_AFTER_429_S}s")
+                time.sleep(RETRY_AFTER_429_S)
+                continue
             resp.raise_for_status()
             results = resp.json().get("results", [])
         except Exception as exc:
             print(f"  SKIP  {query_text!r}: {exc}")
-            continue
+            return None
 
-        # Binary relevance: 1.0 if in gold set, 0.0 otherwise
         rels = [1.0 if r.get("id") in relevant else 0.0 for r in results]
         ideal = [1.0] * len(relevant)
-        score = ndcg(rels, ideal)
-        scores.append(score)
-        print(f"  {score:.3f}  {query_text}")
-
-    mean = sum(scores) / len(scores) if scores else 0.0
-    print(f"\nMean NDCG@{K}: {mean:.4f}  ({len(scores)} queries evaluated)")
-    return mean
+        return ndcg(rels, ideal)
+    return None
 
 
 def main():
