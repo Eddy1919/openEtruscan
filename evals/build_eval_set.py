@@ -192,51 +192,21 @@ def queries_place_pleiades(rows: list[dict]) -> list[dict]:
     return out
 
 
-# Canonical groupings of findspot string variants.
-#
-# The corpus stores findspots in their source-faithful Latin forms, often as
-# full prepositional phrases (genitive "Clusii", locative "Clusino", territorial
-# "Clusii in agro"). All of these refer to the same place. A user typing
-# "Chiusi" or "Clusium" should retrieve every variant. The eval query is the
-# canonical name; the gold set is the union of every variant's rows.
-#
-# Names that already appear as a `place_pleiades` query are intentionally
-# *excluded* here so the same query doesn't show up in two categories with
-# different gold sets.
-FINDSPOT_CANONICAL_GROUPS: dict[str, list[str]] = {
-    # Largest single place in the corpus by row count: the CIE Volume I
-    # Clusium ingest. Latin variants alone account for >800 rows.
-    "Clusium": [
-        "Clusii in agro",
-        "Clusii",
-        "Clusium cum agro",
-        "Clusino",
-        "Clusium",
-        "in museo publico Clusino",
-        "in museo publico Clusino GA.",
-        "in museo publico Clusino (succ.) DA.",
-        "in museo publico Clusino (succ.) Da.",
-        "Bettolle in oppidum, 5 km remotum",
-    ],
-    "Volterra": ["Volaterris", "Volaterrae"],
-}
-
-
 def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
-    """Generate place queries from the findspot column.
+    """Each findspot with ≥``min_n`` rows becomes a literal-string query.
 
-    Two flavours:
+    A previous version of this function tried to canonicalise findspot
+    variants (e.g. "Clusii" + "Clusii in agro" + "Clusium" → query "Clusium")
+    and reported the union as the gold set. That was wrong: PostgreSQL FTS
+    with the `simple` config tokenises on whitespace and does no stemming,
+    so the tokens `clusium` and `clusii` look as unrelated as `cat` and
+    `dog`. The query "Clusium" landed only on rows whose findspot literally
+    contained the token `clusium` — a tiny minority of the gold set —
+    and NDCG@10 collapsed.
 
-    * **Canonical groups** (FINDSPOT_CANONICAL_GROUPS): the query is the
-      canonical modern/Latin nominative name; gold = every row whose findspot
-      matches one of the listed variants. Tests semantic-equivalence retrieval
-      across spelling and case variants without leaning on Pleiades alignment.
-    * **Solo high-frequency findspots**: any remaining findspot with ≥``min_n``
-      rows whose canonical form does not already appear in ``place_pleiades``
-      gets its own query, using the literal findspot string. This is the v1
-      behaviour and exists for places we haven't curated a canonical group for.
-
-    Names already covered by ``place_pleiades`` are skipped to avoid
+    Until either the FTS config gets a stemmer or queries get expanded with
+    OR-of-variants, the safe move is to keep each findspot as its own
+    query. Names already covered by ``place_pleiades`` are skipped to avoid
     double-counting between the two categories.
     """
     pleiades_findspots: set[str] = set()
@@ -244,29 +214,6 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
         if r.get("pleiades_id") and r.get("findspot"):
             pleiades_findspots.add(normalise(r["findspot"]))
 
-    out: list[dict] = []
-    consumed_variants: set[str] = set()
-
-    # Pass 1: canonical groups first — they're hand-curated and take priority.
-    for canon, variants in FINDSPOT_CANONICAL_GROUPS.items():
-        ids = sorted({r["id"] for r in rows if r.get("findspot") in variants})
-        if len(ids) < min_n:
-            continue
-        out.append(
-            {
-                "query": canon,
-                "relevant_ids": ids[:MAX_GOLD_PER_QUERY],
-                "category": "place_findspot",
-                "methodology": (
-                    "canonical group: rows with findspot in "
-                    + str(variants)
-                ),
-                "n_relevant": len(ids),
-            }
-        )
-        consumed_variants.update(variants)
-
-    # Pass 2: solo findspots that aren't already pleiades-linked or grouped.
     findspot_counts: Counter[str] = Counter()
     for r in rows:
         fs = r.get("findspot")
@@ -274,12 +221,11 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
             continue
         findspot_counts[fs] += 1
 
+    out: list[dict] = []
     for fs, count in findspot_counts.most_common():
         if count < min_n:
             continue
         if normalise(fs) in pleiades_findspots:
-            continue
-        if fs in consumed_variants:
             continue
         ids = [r["id"] for r in rows if r.get("findspot") == fs]
         out.append(

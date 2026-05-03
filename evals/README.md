@@ -158,12 +158,15 @@ false-fail, but a real regression in any category will trip the gate.
 
 - `place_findspot` mean=0.39 is dragged down by full Latin-phrase
   findspots like "Clusii in agro" — those are not normal search
-  queries. Could be addressed by canonicalising findspot strings or
-  by including the most common bigram of each findspot in the gold set
-  generator.
-- More period vocabulary: "orientalising", "hellenistic" don't yet
-  parse. Add them to `_PERIOD_RANGES` when the corpus has dated rows
-  in those windows.
+  queries. A first attempt to canonicalise variants ("Clusium" →
+  rows with findspot "Clusii", "Clusii in agro", "Clusino", ...)
+  failed because PostgreSQL FTS with the `simple` config does no
+  stemming, so `clusium` and `clusii` are unrelated tokens. To close
+  this properly we need either (a) a stemming language config on
+  `fts_canonical`, (b) query expansion to OR all known surface forms,
+  or (c) explicit canonical-name columns added to the schema. None
+  of those is a 5-line change so the category stays at the literal-
+  string baseline for now.
 - Person/clan retrieval (deferred): the prosopography graph is
   currently dominated by parsing artefacts (see ROADMAP). Once the
   entity extractor is cleaned up, add a `prosopography` category that
