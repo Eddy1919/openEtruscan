@@ -76,14 +76,14 @@ jobs:
                 exit 1
               }
 
-              # 5. Rotate the api / fuseki / web containers onto the new image.
-              # --force-recreate tells compose to stop+rm+create even if the
-              # service config didn't change at the spec level (the image
-              # changed but the compose file didn't). Without it, compose v2
-              # tried to create a NEW api-1 alongside the running one and
-              # crashed on the duplicate name. A previous attempt with
-              # docker-rm-f outside of compose lost the race against the
-              # restart-unless-stopped policy.
+              # 5. Rotate every compose service onto the new image. We sweep
+              # any stale temp-renamed containers compose v2 leaves behind
+              # when a prior --force-recreate was interrupted (those have
+              # a hex-prefix like c7cdb9af59f9_<service>-1 and block the
+              # next recreate from claiming the canonical name). Then a
+              # plain compose up does the rotation; --force-recreate
+              # ensures the new image is actually picked up.
+              sudo docker ps -a --filter name=openetruscan --format '{{.ID}}' | xargs -r sudo docker rm -f
               sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --force-recreate --remove-orphans
 
               sudo docker image prune -f
