@@ -113,35 +113,58 @@ depended on structured metadata scored 0.0.
 Migration `e7c8d9e0f1a2_widen_fts_canonical` rebuilt the tsvector with
 weighted ranks: weight A for canonical (primary signal), B for
 findspot + cross-corpus IDs, C for source / notes / bibliography.
-Post-deploy:
+
+**May 2026 — structured-query parsing.** With the FTS widened, the two
+remaining at-zero categories were `chronology` and `cross_corpus`,
+where the queries are *conceptual* ("archaic", "trismegistos") and
+those literal strings never appear in any indexed column. Solved by
+adding a token-level parser to `/search/hybrid` that maps recognised
+words to structured `repo.search` filters:
+
+  | token                 | becomes                        |
+  |-----------------------|--------------------------------|
+  | `archaic`             | `date_min=-700, date_max=-500` |
+  | `classical`           | `date_min=-499, date_max=-300` |
+  | `late`                | `date_min=-299, date_max=-50`  |
+  | `trismegistos` / `tm` | `has_trismegistos=True`        |
+  | `pleiades`            | `has_pleiades=True`            |
+  | `eagle`               | `has_eagle=True`               |
+
+Mixed queries split cleanly: `q="archaic larthal"` runs the FTS+dense
+pipeline on `larthal` with the date range as a structured WHERE.
+`q="archaic late"` widens the date range to span both periods.
 
 ```text
-                  before        after        n
-place_pleiades    0.0000   →   0.8042       20    (median 1.0000)
-place_findspot    0.0000   →   0.3912       8
-lexical           0.3382   →   0.3242       40    (within rerank noise)
-chronology        0.0000   →   0.0000       3
-cross_corpus      0.0000   →   0.0000       1
-Macro mean        0.0676   →   0.3039
+              first eval   post FTS    post parser    n
+chronology        0.0000   →  0.0000   →   1.0000     3
+cross_corpus      0.0000   →  0.0000   →   1.0000     1
+place_pleiades    0.0000   →  0.8042   →   0.7939     19
+place_findspot    0.0000   →  0.3912   →   0.3912     8
+lexical           0.3382   →  0.3242   →   0.3242     40
+Macro mean        0.0676   →  0.3039   →   0.7019
 ```
 
-Default gate now enforces `place_pleiades=0.50,place_findspot=0.20`
-plus the lexical and macro-mean thresholds, so the regression can't
-silently come back.
+The default gate now enforces every category that has signal:
+
+```text
+lexical=0.25,place_pleiades=0.50,place_findspot=0.20,
+chronology=0.80,cross_corpus=0.80,macro_mean=0.50
+```
+
+Each threshold is set well below the current baseline so noise doesn't
+false-fail, but a real regression in any category will trip the gate.
 
 ## Known gaps still to close
 
-`chronology` and `cross_corpus` both score 0.0 because the queries are
-*conceptual* — "archaic", "trismegistos" — and those literal strings
-don't appear in any indexed column. Two paths:
-
-- Add structured query parsing to `/search/hybrid`: detect period names
-  and convert to `WHERE date_approx BETWEEN …`; detect "trismegistos"
-  and convert to `WHERE trismegistos_id IS NOT NULL`. This is a
-  feature, not a retrieval fix.
-- Or accept that these categories are out of scope for an FTS-driven
-  endpoint and remove them from the eval (they're flagging a real
-  product gap, just not one the retrieval pipeline can fix).
-
-The eval keeps both categories tracked but un-gated until the product
-decision is made.
+- `place_findspot` mean=0.39 is dragged down by full Latin-phrase
+  findspots like "Clusii in agro" — those are not normal search
+  queries. Could be addressed by canonicalising findspot strings or
+  by including the most common bigram of each findspot in the gold set
+  generator.
+- More period vocabulary: "orientalising", "hellenistic" don't yet
+  parse. Add them to `_PERIOD_RANGES` when the corpus has dated rows
+  in those windows.
+- Person/clan retrieval (deferred): the prosopography graph is
+  currently dominated by parsing artefacts (see ROADMAP). Once the
+  entity extractor is cleaned up, add a `prosopography` category that
+  tests retrieval by clan name.
