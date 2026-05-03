@@ -61,6 +61,7 @@ tmp=$(mktemp)
   printf 'HF_TOKEN=%s\n'     "$HF"
   printf 'GEMINI_API_KEY=%s\n' "$GEM"
   printf 'ADMIN_TOKEN=%s\n'  "$ADM"
+  printf 'BYT5_SERVICE_URL=%s\n' "https://openetruscan-byt5-o2ja6yhqqq-ez.a.run.app"
 } > "$tmp"
 chmod 600 "$tmp"
 chown "$ENV_OWNER" "$tmp" 2>/dev/null || true
