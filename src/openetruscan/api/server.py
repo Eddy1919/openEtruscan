@@ -1259,7 +1259,7 @@ async def semantic_search(
     return {"total": results.total, "count": len(data), "results": data}
 
 
-@app.get("/inscriptions/{id}/genetics", tags=["Genetics"], include_in_schema=False)
+@app.get("/inscriptions/{id}/genetics", tags=["Genetics"])
 @limiter.limit("30/minute")
 async def get_genetic_matches(
     request: Request,
@@ -1875,6 +1875,79 @@ async def _get_reranker():
         return _RERANKER
 
 
+# ---------------------------------------------------------------------------
+# Structured-token parsing for /search/hybrid
+# ---------------------------------------------------------------------------
+
+# Period vocabulary maps to (date_min, date_max) inclusive bounds in the
+# corpus's native date_approx encoding (negative = BCE).
+#
+# Bucket boundaries match `evals/build_eval_set.py` so the eval is the
+# ground truth for "what does 'archaic' mean here". If the boundaries
+# change, update both files together.
+_PERIOD_RANGES: dict[str, tuple[int, int]] = {
+    "archaic":   (-700, -500),  # noqa: E241 - lined up with siblings
+    "classical": (-499, -300),
+    "late":      (-299,  -50),  # noqa: E241
+}
+
+# Cross-corpus markers: when one of these tokens appears in the query, we
+# additionally require the matching <corpus>_id column to be non-NULL.
+# The token is also stripped from the FTS query so it doesn't try to match
+# the literal string in canonical text (where it never appears).
+_CORPUS_MARKERS: dict[str, str] = {
+    "trismegistos": "has_trismegistos",
+    "tm":           "has_trismegistos",  # noqa: E241
+    "pleiades":     "has_pleiades",      # noqa: E241
+    "eagle":        "has_eagle",         # noqa: E241
+}
+
+
+def _parse_structured_query(q: str) -> tuple[str, dict[str, Any]]:
+    """Pull period names and corpus markers out of a free-text query.
+
+    Returns ``(residual_text, structured_filters)`` where ``residual_text``
+    is the original query with the recognised tokens stripped (whitespace
+    collapsed), and ``structured_filters`` is a dict of kwargs ready to
+    forward to ``InscriptionRepository.search``.
+
+    Tokens are matched as whole words (case-insensitive) so a query like
+    "archaicus" or "lateral" doesn't trigger a false positive. Multiple
+    period tokens collapse to the *widest* range. Multiple corpus markers
+    AND together (a query for "trismegistos pleiades" requires both IDs).
+
+    Designed to be cheap and side-effect-free — it can run on every
+    /search/hybrid request without measurable overhead.
+    """
+    tokens = q.lower().split()
+    residual_tokens: list[str] = []
+    filters: dict[str, Any] = {}
+
+    period_min: int | None = None
+    period_max: int | None = None
+
+    for token in tokens:
+        # Strip surrounding punctuation that the user might naturally type,
+        # e.g. "archaic," or "(late)".
+        clean = token.strip(".,;:!?\"'()[]")
+        if clean in _PERIOD_RANGES:
+            lo, hi = _PERIOD_RANGES[clean]
+            period_min = lo if period_min is None else min(period_min, lo)
+            period_max = hi if period_max is None else max(period_max, hi)
+            continue
+        if clean in _CORPUS_MARKERS:
+            filters[_CORPUS_MARKERS[clean]] = True
+            continue
+        residual_tokens.append(token)
+
+    if period_min is not None and period_max is not None:
+        filters["date_min"] = period_min
+        filters["date_max"] = period_max
+
+    residual = " ".join(residual_tokens).strip()
+    return residual, filters
+
+
 @app.get("/search/hybrid", response_model=SearchResponse, tags=["Search"])
 @limiter.limit("30/minute")
 async def search_hybrid(
@@ -1914,47 +1987,59 @@ async def search_hybrid(
          each candidate with a CPU MiniLM cross-encoder.
     Returns the top `limit` results.
     """
-    if not settings.gemini_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="GEMINI_API_KEY not configured on server",
-        )
-
     repo = InscriptionRepository(session)
-    text_q = _clamp_text(q) or ""
+    raw_q = _clamp_text(q) or ""
+
+    # 0. Pull period names ("archaic", "classical", "late") and corpus
+    #    markers ("trismegistos", "pleiades", "eagle") out of the query.
+    #    Those tokens never appear in canonical text, so leaving them in
+    #    the FTS string costs recall. Map them to structured filters
+    #    instead and use the residual for the lexical+dense paths.
+    text_q, structured_filters = _parse_structured_query(raw_q)
 
     # 1. FTS path. Pull a generous candidate pool (4× target) so the union has
-    #    room to mix sparse + dense.
+    #    room to mix sparse + dense. If the user typed a pure structured
+    #    query like just "archaic", text_q is empty and we rely on the
+    #    structured filters alone — repo.search returns the matching rows
+    #    ordered by id, which is fine because the dense path can't help
+    #    when there's no text to embed either.
     fts_results = await repo.search(
-        text_query=text_q,
+        text_query=text_q or None,
         has_provenance=has_provenance,
+        **structured_filters,
         limit=min(limit * 4, 80),
         offset=0,
         sort_by="id",
     )
 
     # 2. Dense path. Embed the query, then run pgvector cosine search.
-    try:
-        cache = getattr(request.app.state, "query_embedding_cache", None)
-        if cache is not None and text_q in cache:
-            embedding = cache[text_q]
-            cache.move_to_end(text_q)
-        else:
-            client = request.app.state.http
-            resp = await client.post(
-                "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
-                json={"content": {"parts": [{"text": text_q[:2048]}]}},
-                headers={"x-goog-api-key": settings.gemini_api_key},
-            )
-            resp.raise_for_status()
-            embedding = resp.json()["embedding"]["values"]
-            if cache is not None:
-                cache[text_q] = embedding
-                if len(cache) > 1000:
-                    cache.popitem(last=False)
-    except Exception as e:
-        logger.warning(f"Hybrid: embedding fetch failed, falling back to FTS only: {e}")
-        embedding = None
+    # Skip the embedding round-trip entirely when text_q is empty (pure
+    # structured query like "archaic") or when the Gemini key isn't
+    # configured. The endpoint stays usable in both cases — FTS + structured
+    # filters still produce results.
+    embedding = None
+    if text_q and settings.gemini_api_key:
+        try:
+            cache = getattr(request.app.state, "query_embedding_cache", None)
+            if cache is not None and text_q in cache:
+                embedding = cache[text_q]
+                cache.move_to_end(text_q)
+            else:
+                client = request.app.state.http
+                resp = await client.post(
+                    "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
+                    json={"content": {"parts": [{"text": text_q[:2048]}]}},
+                    headers={"x-goog-api-key": settings.gemini_api_key},
+                )
+                resp.raise_for_status()
+                embedding = resp.json()["embedding"]["values"]
+                if cache is not None:
+                    cache[text_q] = embedding
+                    if len(cache) > 1000:
+                        cache.popitem(last=False)
+        except Exception as e:
+            logger.warning(f"Hybrid: embedding fetch failed, falling back to FTS only: {e}")
+            embedding = None
 
     dense_results = []
     if embedding is not None:
