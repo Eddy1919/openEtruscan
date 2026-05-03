@@ -36,19 +36,24 @@ import httpx
 
 EVAL_FILE = Path(__file__).parent / "search_eval_queries.jsonl"
 K = 10
-# Per-category gates by default. After the FTS widening
-# (migration e7c8d9e0f1a2, May 2026) the post-deploy baseline was:
+# Per-category gates by default. After the structured-query parser
+# landed on top of the FTS widening, the May-2026 prod baseline is:
 #
-#   place_pleiades  mean=0.8042  median=1.0000  n=20
+#   chronology      mean=1.0000  n=3   (every period query maps to a date range)
+#   cross_corpus    mean=1.0000  n=1   (trismegistos token → has_trismegistos)
+#   place_pleiades  mean=0.7939  median=1.0000  n=19
 #   place_findspot  mean=0.3912  median=0.0649  n=8
 #   lexical         mean=0.3242  median=0.2201  n=40
-#   chronology      mean=0.0000  n=3   (period words not in any indexed field)
-#   cross_corpus    mean=0.0000  n=1   (the literal string "trismegistos" isn't indexed)
+#   macro_mean=0.7019, micro_mean=0.4955
 #
-# Gates are set well below baseline to catch material regressions without
-# false-failing on noise. chronology / cross_corpus are intentionally not
-# gated yet — both are tracked product gaps, not pipeline regressions.
-DEFAULT_GATE = "lexical=0.25,place_pleiades=0.50,place_findspot=0.20,macro_mean=0.20"
+# Gates sit well below those baselines to catch material regressions
+# without false-failing on noise. chronology and cross_corpus are gated
+# tightly (0.80) because they're now solved via structured parsing —
+# any drop signals a regression in the parser or the search filters.
+DEFAULT_GATE = (
+    "lexical=0.25,place_pleiades=0.50,place_findspot=0.20,"
+    "chronology=0.80,cross_corpus=0.80,macro_mean=0.50"
+)
 
 # Prod rate-limits /search/hybrid at 60/min (slowapi). One request per second
 # stays comfortably under that. A full eval (~70 queries) takes ~80 s.
