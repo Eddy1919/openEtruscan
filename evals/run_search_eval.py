@@ -36,16 +36,19 @@ import httpx
 
 EVAL_FILE = Path(__file__).parent / "search_eval_queries.jsonl"
 K = 10
-# Per-category gates by default. The May-2026 baseline showed that
-# `/search/hybrid` scores 0 on every category that depends on structured
-# metadata (place_pleiades, place_findspot, chronology, cross_corpus) —
-# the hybrid index searches canonical text only and doesn't see findspot,
-# pleiades_id, date_approx, or trismegistos_id. Gating on those would block
-# every push until the index is widened. Until that fix lands the only
-# reliable signal is `lexical`; keep its threshold below the current
-# baseline (0.34) so noise doesn't false-fail. Once the index is widened,
-# add `place_pleiades=0.30,place_findspot=0.30,chronology=0.20` here.
-DEFAULT_GATE = "lexical=0.25"
+# Per-category gates by default. After the FTS widening
+# (migration e7c8d9e0f1a2, May 2026) the post-deploy baseline was:
+#
+#   place_pleiades  mean=0.8042  median=1.0000  n=20
+#   place_findspot  mean=0.3912  median=0.0649  n=8
+#   lexical         mean=0.3242  median=0.2201  n=40
+#   chronology      mean=0.0000  n=3   (period words not in any indexed field)
+#   cross_corpus    mean=0.0000  n=1   (the literal string "trismegistos" isn't indexed)
+#
+# Gates are set well below baseline to catch material regressions without
+# false-failing on noise. chronology / cross_corpus are intentionally not
+# gated yet — both are tracked product gaps, not pipeline regressions.
+DEFAULT_GATE = "lexical=0.25,place_pleiades=0.50,place_findspot=0.20,macro_mean=0.20"
 
 # Prod rate-limits /search/hybrid at 60/min (slowapi). One request per second
 # stays comfortably under that. A full eval (~70 queries) takes ~80 s.
@@ -226,7 +229,8 @@ def main() -> int:
         for f in failures:
             print(f"FAIL: {f}", file=sys.stderr)
         return 1
-    print("\nPASS")
+    # PASS goes to stderr so `--json | jq` pipelines stay clean.
+    print("\nPASS", file=sys.stderr)
     return 0
 
 

@@ -77,6 +77,10 @@ jobs:
               }
 
               # 5. Rotate the api / fuseki / web containers onto the new image.
+              # We force-remove the live api container first because compose v2
+              # otherwise hits Container name conflict trying to create the new
+              # api-1 while the old one is still claiming the name.
+              sudo docker rm -f openetruscan-api-1 || true
               sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose up -d --remove-orphans
 
               sudo docker image prune -f
