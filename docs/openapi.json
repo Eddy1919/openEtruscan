@@ -552,7 +552,7 @@
           "Neural"
         ],
         "summary": "Restore Lacunae",
-        "description": "Predict missing characters in text with Leiden conventions (e.g. lar[..]i).",
+        "description": "Predict missing characters in text with Leiden conventions (e.g. lar[..]i).\n\nTwo modes:\n  * **Remote** \u2014 if ``settings.byt5_service_url`` is set we proxy the request\n    to a dedicated Cloud Run service (`services/byt5-restorer/`). This is\n    the production mode: the API container stays small and inference\n    autoscales to zero between calls.\n  * **In-process** \u2014 fallback when no service URL is configured. Loads the\n    torch model lazily and offloads inference to a worker thread.",
         "operationId": "restore_lacunae_neural_restore_post",
         "requestBody": {
           "content": {

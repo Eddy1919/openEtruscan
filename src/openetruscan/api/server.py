@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import asyncio
 from typing import Annotated, Any
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -950,7 +951,34 @@ async def restore_lacunae(
     body: RestoreRequest,
     _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
 ):
-    """Predict missing characters in text with Leiden conventions (e.g. lar[..]i)."""
+    """Predict missing characters in text with Leiden conventions (e.g. lar[..]i).
+
+    Two modes:
+      * **Remote** — if ``settings.byt5_service_url`` is set we proxy the request
+        to a dedicated Cloud Run service (`services/byt5-restorer/`). This is
+        the production mode: the API container stays small and inference
+        autoscales to zero between calls.
+      * **In-process** — fallback when no service URL is configured. Loads the
+        torch model lazily and offloads inference to a worker thread.
+    """
+    if settings.byt5_service_url:
+        client = request.app.state.http
+        try:
+            resp = await client.post(
+                f"{settings.byt5_service_url.rstrip('/')}/restore",
+                json={"text": body.text, "top_k": body.top_k},
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            return {"text": body.text, "predictions": resp.json().get("predictions", [])}
+        except httpx.HTTPStatusError as e:
+            # The remote service is up but rejected the call — surface its status.
+            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        except httpx.HTTPError as e:
+            # Connection / timeout. 502 is the right shape for "we couldn't reach
+            # an upstream we depend on".
+            raise HTTPException(status_code=502, detail=f"ByT5 service unreachable: {e}")
+
     try:
         from openetruscan.ml.neural import _TORCH_AVAILABLE, LacunaeRestorer
 

@@ -227,3 +227,34 @@ jobs:
             ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  search-quality:
+    name: Search quality (NDCG@10)
+    # Gated on the `ENABLE_SEARCH_EVAL` repo variable so the job stays silent
+    # by default. Flip to true when:
+    #   - the eval gold set in evals/search_eval_queries.jsonl is reviewed
+    #   - the prod /search/hybrid endpoint is stable
+    # The harness paces requests at 1.05 s, so 90 queries take ~95 s. Cost:
+    # one job-minute per main push.
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      vars.ENABLE_SEARCH_EVAL == 'true'
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      EVAL_API_URL: ${{ vars.EVAL_API_URL || 'https://api.openetruscan.com' }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install httpx
+        run: pip install "httpx>=0.25"
+
+      - name: Run NDCG@10 eval
+        run: python evals/run_search_eval.py --api-url "$EVAL_API_URL"
