@@ -57,6 +57,11 @@ class InscriptionRepository:
         classification: str | None = None,
         provenance: str | None = None,
         has_provenance: bool | None = None,
+        date_min: int | None = None,
+        date_max: int | None = None,
+        has_trismegistos: bool | None = None,
+        has_pleiades: bool | None = None,
+        has_eagle: bool | None = None,
         limit: int = 100,
         offset: int = 0,
         sort_by: str = "id",
@@ -111,6 +116,30 @@ class InscriptionRepository:
             conditions.append(
                 and_(Inscription.findspot_lat.is_not(None), Inscription.findspot_lon.is_not(None))
             )
+
+        # Date range. date_approx is signed BCE-negative (e.g. -500 = 500 BCE).
+        # date_min and date_max are inclusive; either may be None.
+        if date_min is not None:
+            conditions.append(Inscription.date_approx >= date_min)
+        if date_max is not None:
+            conditions.append(Inscription.date_approx <= date_max)
+
+        # Cross-corpus presence flags. None means "don't filter"; True/False
+        # require / exclude rows aligned to the given corpus.
+        if has_trismegistos is True:
+            conditions.append(Inscription.trismegistos_id.is_not(None))
+        elif has_trismegistos is False:
+            conditions.append(Inscription.trismegistos_id.is_(None))
+
+        if has_pleiades is True:
+            conditions.append(Inscription.pleiades_id.is_not(None))
+        elif has_pleiades is False:
+            conditions.append(Inscription.pleiades_id.is_(None))
+
+        if has_eagle is True:
+            conditions.append(Inscription.eagle_id.is_not(None))
+        elif has_eagle is False:
+            conditions.append(Inscription.eagle_id.is_(None))
 
         # Ordering
         order_col: Any = Inscription.id
@@ -510,7 +539,7 @@ class InscriptionRepository:
         center = f"SRID=4326;POINT({source.findspot_lon} {source.findspot_lat})"
         # Fallback to computing point from lat/lon if geom isn't synced in genetic_samples
         stmt = text(
-            "SELECT id, findspot, y_haplogroup, mt_haplogroup, "
+            "SELECT id, findspot, y_haplogroup, mt_haplogroup, biological_sex, c14_date_range, "
             "ST_Distance(ST_SetSRID(ST_MakePoint(findspot_lon, findspot_lat), 4326)::geography, ST_GeogFromText(:center)) as dist "
             "FROM genetic_samples "
             "WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL "
@@ -520,13 +549,15 @@ class InscriptionRepository:
         result = await self.session.execute(stmt)
         return [
             {
-                "genetic_sample_id": r[0],
-                "findspot": r[1],
-                "y_haplogroup": r[2],
-                "mt_haplogroup": r[3],
-                "distance_m": r[4],
+                "id": r.id,
+                "findspot": r.findspot,
+                "y_haplogroup": r.y_haplogroup,
+                "mt_haplogroup": r.mt_haplogroup,
+                "biological_sex": r.biological_sex,
+                "c14_date_range": r.c14_date_range,
+                "distance_m": round(r.dist, 1) if r.dist else None,
             }
-            for r in result.fetchall()
+            for r in result
         ]
 
     async def get_full_names_network(self, min_count: int = 5) -> dict[str, Any]:

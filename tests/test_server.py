@@ -71,6 +71,11 @@ async def sample_data(db_session: AsyncSession):
             findspot_lon=11.5,
             language="etruscan",
             classification="funerary",
+            # date_approx + trismegistos_id let the structured-query tests
+            # exercise the chronology / cross_corpus paths without needing
+            # a separate fixture.
+            date_approx=-600,  # archaic period
+            trismegistos_id="TM_12345",
         ),
         InscriptionData(
             id="ETR_003",
@@ -449,3 +454,120 @@ async def test_method_not_allowed(client: AsyncClient, sample_data):
     """Test POST to GET-only endpoint."""
     response = await client.post("/search")
     assert response.status_code == 405
+
+
+# ============================================================================
+# Structured query parser (chronology + cross-corpus markers)
+# ============================================================================
+
+
+class TestParseStructuredQuery:
+    """Unit tests for the structured-token parser used by /search/hybrid.
+
+    The parser is what closes the chronology and cross_corpus categories
+    in the eval — period words and corpus markers never appear in the
+    canonical text, so we extract them and turn them into structured
+    repo.search filters before running the FTS+dense pipeline.
+    """
+
+    def test_archaic_maps_to_pre_500_bce(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        residual, filters = _parse_structured_query("archaic")
+        assert residual == ""
+        assert filters["date_min"] == -700
+        assert filters["date_max"] == -500
+
+    def test_classical_maps_to_classical_window(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("classical")
+        assert filters["date_min"] == -499
+        assert filters["date_max"] == -300
+
+    def test_two_periods_widen_the_range(self):
+        """Multiple period tokens should produce the widest spanning window."""
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("archaic late")
+        assert filters["date_min"] == -700
+        assert filters["date_max"] == -50
+
+    def test_corpus_marker_sets_has_flag(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("trismegistos")
+        assert filters["has_trismegistos"] is True
+
+    def test_tm_alias_for_trismegistos(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("tm")
+        assert filters["has_trismegistos"] is True
+
+    def test_pleiades_marker(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("pleiades")
+        assert filters["has_pleiades"] is True
+
+    def test_mixed_query_keeps_residual(self):
+        """Non-recognised tokens stay in the residual for FTS to handle."""
+        from openetruscan.api.server import _parse_structured_query
+
+        residual, filters = _parse_structured_query("archaic larthal")
+        assert residual == "larthal"
+        assert filters["date_min"] == -700
+
+    def test_punctuation_does_not_block_match(self):
+        """Trailing punctuation a user might type shouldn't block tokenisation."""
+        from openetruscan.api.server import _parse_structured_query
+
+        _, filters = _parse_structured_query("(archaic),")
+        assert "date_min" in filters
+
+    def test_substring_does_not_match(self):
+        """`archaicus` should NOT trigger the archaic filter (whole-word match)."""
+        from openetruscan.api.server import _parse_structured_query
+
+        residual, filters = _parse_structured_query("archaicus")
+        assert "date_min" not in filters
+        assert residual == "archaicus"
+
+    def test_empty_query_yields_empty_filters(self):
+        from openetruscan.api.server import _parse_structured_query
+
+        residual, filters = _parse_structured_query("")
+        assert residual == ""
+        assert filters == {}
+
+
+# ============================================================================
+# Repository structured filters (date range, has_<corpus>)
+# ============================================================================
+
+
+async def test_repo_search_filters_by_date_range(db_session, sample_data):
+    """ETR_002 is the only row with date_approx=-600. archaic range should
+    return exactly that row; classical should return nothing."""
+    from openetruscan.db.repository import InscriptionRepository
+
+    repo = InscriptionRepository(db_session)
+    archaic = await repo.search(date_min=-700, date_max=-500, limit=50)
+    assert {r.id for r in archaic.inscriptions} == {"ETR_002"}
+
+    classical = await repo.search(date_min=-499, date_max=-300, limit=50)
+    assert classical.inscriptions == []
+
+
+async def test_repo_search_has_trismegistos(db_session, sample_data):
+    """Only ETR_002 has trismegistos_id set."""
+    from openetruscan.db.repository import InscriptionRepository
+
+    repo = InscriptionRepository(db_session)
+    aligned = await repo.search(has_trismegistos=True, limit=50)
+    assert {r.id for r in aligned.inscriptions} == {"ETR_002"}
+
+    unaligned = await repo.search(has_trismegistos=False, limit=50)
+    assert "ETR_002" not in {r.id for r in unaligned.inscriptions}
+    assert {"ETR_001", "ETR_003"}.issubset({r.id for r in unaligned.inscriptions})

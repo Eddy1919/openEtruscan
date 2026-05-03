@@ -986,6 +986,63 @@
         }
       }
     },
+    "/inscriptions/{id}/genetics": {
+      "get": {
+        "tags": [
+          "Genetics"
+        ],
+        "summary": "Get Genetic Matches",
+        "description": "Spatio-temporal matchmaking between inscriptions and archaeogenetic samples.",
+        "operationId": "get_genetic_matches_inscriptions__id__genetics_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the inscription to find genetic matches for",
+              "title": "Id"
+            },
+            "description": "ID of the inscription to find genetic matches for"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Genetic Matches Inscriptions  Id  Genetics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/clan/{gens}": {
       "get": {
         "tags": [
