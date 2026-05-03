@@ -316,6 +316,85 @@ async def test_promote_provenance_requires_admin(client: AsyncClient, sample_dat
     assert response.status_code in (401, 403)
 
 
+# ============================================================================
+# Content negotiation
+# ============================================================================
+
+
+async def test_inscription_default_returns_json(client: AsyncClient, sample_data):
+    """No Accept header / no ?format → application/json."""
+    response = await client.get("/inscription/ETR_001")
+    assert response.status_code == 200
+    assert "application/json" in response.headers["content-type"]
+    assert response.json()["id"] == "ETR_001"
+
+
+async def test_inscription_format_jsonld(client: AsyncClient, sample_data):
+    """?format=jsonld returns application/ld+json with Schema.org + LAWD shape."""
+    response = await client.get("/inscription/ETR_001?format=jsonld")
+    assert response.status_code == 200
+    assert "application/ld+json" in response.headers["content-type"]
+    body = response.json()
+    assert body.get("@context"), "JSON-LD must declare @context"
+    assert body.get("@id", "").endswith("ETR_001"), "JSON-LD must declare a canonical @id"
+
+
+async def test_inscription_accept_turtle(client: AsyncClient, sample_data):
+    """Accept: text/turtle returns RDF Turtle with proper prefixes."""
+    response = await client.get(
+        "/inscription/ETR_001",
+        headers={"Accept": "text/turtle"},
+    )
+    assert response.status_code == 200
+    assert "text/turtle" in response.headers["content-type"]
+    assert "@prefix" in response.text, "Turtle must declare prefixes"
+
+
+async def test_inscription_alternate_links_header(client: AsyncClient, sample_data):
+    """Every representation must link to the others via Link: rel=alternate."""
+    response = await client.get("/inscription/ETR_001")
+    assert response.status_code == 200
+    link = response.headers.get("Link", "")
+    assert 'rel="alternate"' in link
+    assert "application/ld+json" in link
+    assert "text/turtle" in link
+    assert "application/tei+xml" in link
+    assert response.headers.get("Vary") == "Accept"
+
+
+async def test_inscription_unknown_id_404(client: AsyncClient, sample_data):
+    """404 should propagate through content negotiation, not silently 200."""
+    response = await client.get("/inscription/DEFINITELY_NOT_REAL?format=jsonld")
+    assert response.status_code == 404
+
+
+async def test_admin_endpoint_returns_503_when_token_unconfigured(
+    client: AsyncClient, sample_data, monkeypatch
+):
+    """If ADMIN_TOKEN is not set on the deployment, admin endpoints must 503,
+    not 500 — the write surface is intentionally disabled, not crashing."""
+    from openetruscan.core.config import settings
+
+    monkeypatch.setattr(settings, "admin_token", None)
+    response = await client.post(
+        "/inscription/ETR_001/promote-provenance",
+        json={"new_status": "excavated"},
+        headers={"Authorization": "Bearer anything"},
+    )
+    assert response.status_code == 503
+    assert "ADMIN_TOKEN" in response.json()["detail"]
+
+
+async def test_health_surfaces_admin_token_configured_flag(client: AsyncClient, sample_data):
+    """/health must report whether the admin write surface is reachable.
+    Catches the operational gap of forgetting ADMIN_TOKEN in prod env."""
+    response = await client.get("/health")
+    assert response.status_code == 200
+    body = response.json()
+    assert "admin_token_configured" in body["checks"]
+    assert isinstance(body["checks"]["admin_token_configured"], bool)
+
+
 async def test_method_not_allowed(client: AsyncClient, sample_data):
     """Test POST to GET-only endpoint."""
     response = await client.post("/search")

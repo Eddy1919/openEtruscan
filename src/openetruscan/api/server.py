@@ -41,10 +41,21 @@ security_scheme = HTTPBearer()
 
 
 def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
-    """Verifies that mutational operations are using the core ADMIN_TOKEN"""
+    """Verifies that mutational operations are using the core ADMIN_TOKEN.
+
+    If ``settings.admin_token`` is not configured this returns 503 (not 500):
+    "the admin write surface is intentionally disabled" is an operational
+    state, not a server bug. /health surfaces the same condition under
+    ``checks.admin_token_configured`` so the gap is visible before someone
+    tries to call an admin endpoint.
+    """
     if not settings.admin_token:
         raise HTTPException(
-            status_code=500, detail="Server backend lacks configured admin_token in .env"
+            status_code=503,
+            detail=(
+                "Admin write endpoints are disabled because ADMIN_TOKEN is not "
+                "configured on this deployment. See docs/internal/SECRETS.md."
+            ),
         )
     if not secrets.compare_digest(credentials.credentials, settings.admin_token):
         raise HTTPException(status_code=403, detail="Invalid or missing admin credentials")
@@ -440,6 +451,7 @@ async def health_check(request: Request, session: AsyncSession = Depends(get_ses
             "db": db_result,
             "fuseki": fuseki_result,
             "gemini_configured": bool(settings.gemini_api_key),
+            "admin_token_configured": bool(settings.admin_token),
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
