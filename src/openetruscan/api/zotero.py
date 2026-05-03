@@ -1,5 +1,5 @@
 import httpx
-from typing import Any, Optional
+from typing import Any
 import logging
 
 logger = logging.getLogger("openetruscan")
@@ -10,15 +10,15 @@ class ZoteroClient:
     def __init__(
         self,
         group_id: str,
-        api_key: Optional[str] = None,
-        client: Optional[httpx.AsyncClient] = None
+        api_key: str | None = None,
+        client: httpx.AsyncClient | None = None
     ):
         self.group_id = group_id
         self.api_key = api_key
         self.client = client or httpx.AsyncClient(timeout=10.0)
         self.base_url = f"https://api.zotero.org/groups/{group_id}/items"
 
-    async def get_item_csl(self, item_key: str) -> Optional[dict[str, Any]]:
+    async def get_item_csl(self, item_key: str) -> dict[str, Any] | None:
         """Fetch an item in CSL-JSON format."""
         headers = {}
         if self.api_key:
@@ -40,7 +40,7 @@ class ZoteroClient:
             logger.error(f"Zotero API error for item {item_key}: {e}")
             return None
 
-    async def get_item_citation(self, item_key: str, style: str = "apa") -> Optional[str]:
+    async def get_item_citation(self, item_key: str, style: str = "apa") -> str | None:
         """Fetch a rendered citation string."""
         headers = {}
         if self.api_key:

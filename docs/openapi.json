@@ -2090,6 +2090,29 @@
               }
             ],
             "title": "Original Script Entry"
+          },
+          "zotero_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zotero Id"
+          },
+          "zotero_bibliography": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zotero Bibliography"
           }
         },
         "type": "object",
