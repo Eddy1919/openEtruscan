@@ -62,20 +62,15 @@ jobs:
               sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v \"\$REPO_DIR:\$REPO_DIR\" -w=\"\$REPO_DIR\" docker:cli docker compose build api
 
               # 4. Run alembic migrations BEFORE rotating containers. We
-              # bypass `docker compose run` here because compose v2 tries to
-              # recreate the api service container as part of `run` even
-              # with --no-deps, which collides with the running
-              # `openetruscan-api-1`. Plain `docker run` against the image
-              # we just built sidesteps that.
-              #
-              # Two extra wrinkles:
-              #  * --user 0 (root): the .env on the host is chmod 600 and
-              #    pydantic-settings opens it on Settings() instantiation,
-              #    so the default `appuser` from the Dockerfile can't read
-              #    it and the import chain crashes. Migration is short-lived
-              #    DDL — running as root for it is acceptable.
-              #  * --network openetruscan_default attaches us to the same
-              #    bridge the running stack uses so DATABASE_URL resolves.
+              # bypass docker-compose-run here because compose v2 tries to
+              # recreate the api service container as part of run even with
+              # --no-deps, which collides with the running api container.
+              # Plain docker run against the image we just built sidesteps
+              # that. --user 0 is needed because pydantic-settings reads
+              # .env on import and the default appuser cannot read the
+              # 600-perms file. --network openetruscan_default attaches the
+              # migration runner to the same bridge as the live stack so
+              # DATABASE_URL resolves to the same DB.
               sudo docker run --rm --user 0 --network openetruscan_default --env-file \$REPO_DIR/.env -v \"\$REPO_DIR:\$REPO_DIR\" -w \"\$REPO_DIR\" openetruscan-api alembic upgrade head || {
                 echo '::error::Alembic migration failed. Deploy aborted, old api container still serving traffic.'
                 exit 1
