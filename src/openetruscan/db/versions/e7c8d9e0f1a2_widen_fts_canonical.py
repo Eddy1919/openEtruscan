@@ -1,7 +1,7 @@
 """Widen fts_canonical to include findspot, source, notes, and cross-corpus IDs.
 
 Revision ID: e7c8d9e0f1a2
-Revises: d4a5b6c7e8f9
+Revises: f1a2b3c4d5e6
 Create Date: 2026-05-03
 
 Background
@@ -51,7 +51,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "e7c8d9e0f1a2"
-down_revision: str | Sequence[str] | None = "d4a5b6c7e8f9"
+down_revision: str | Sequence[str] | None = "f1a2b3c4d5e6"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
