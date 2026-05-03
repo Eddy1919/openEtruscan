@@ -82,6 +82,16 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Zotero
+    zotero_group_id: str | None = Field(
+        default="5441857",
+        description="Default Zotero group ID for bibliographical references",
+    )
+    zotero_api_key: str | None = Field(
+        default=None,
+        description="Optional Zotero API key for private group access",
+    )
+
     @field_validator("database_url", "images_dir")
     @classmethod
     def validate_not_empty(cls, v: str) -> str:

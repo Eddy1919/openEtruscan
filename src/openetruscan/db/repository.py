@@ -296,6 +296,7 @@ class InscriptionRepository:
                 eagle_id=inscription_dataclass.eagle_id,
                 geonames_id=inscription_dataclass.geonames_id,
                 pleiades_id=inscription_dataclass.pleiades_id,
+                zotero_id=inscription_dataclass.zotero_id,
                 is_codex=inscription_dataclass.is_codex,
             )
             .on_conflict_do_update(
@@ -321,6 +322,7 @@ class InscriptionRepository:
                     "eagle_id": inscription_dataclass.eagle_id,
                     "geonames_id": inscription_dataclass.geonames_id,
                     "pleiades_id": inscription_dataclass.pleiades_id,
+                    "zotero_id": inscription_dataclass.zotero_id,
                     "updated_at": func.now(),
                 },
             )
@@ -717,6 +719,7 @@ class InscriptionRepository:
             eagle_id=model.eagle_id,
             pleiades_id=model.pleiades_id,
             geonames_id=model.geonames_id,
+            zotero_id=model.zotero_id,
             is_codex=model.is_codex,
             source_code=model.source_code,
             source_detail=model.source_detail,

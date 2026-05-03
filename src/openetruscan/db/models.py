@@ -117,6 +117,7 @@ class Inscription(Base):
     eagle_id: Mapped[str | None] = mapped_column(Text)
     pleiades_id: Mapped[str | None] = mapped_column(Text)
     geonames_id: Mapped[str | None] = mapped_column(Text)
+    zotero_id: Mapped[str | None] = mapped_column(Text)
     is_codex: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

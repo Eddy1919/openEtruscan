@@ -62,7 +62,7 @@ _INSCRIPTION_COLS = (
     "medium, object_type, source, bibliography, notes, "
     "language, classification, script_system, completeness, "
     "provenance_status, provenance_flags, "
-    "trismegistos_id, eagle_id, pleiades_id, geonames_id, is_codex"
+    "trismegistos_id, eagle_id, pleiades_id, geonames_id, zotero_id, is_codex"
 )
 
 # Geographic bounds for Etruscan cultural area (used by provenance checks)
@@ -106,6 +106,7 @@ class Inscription:
     eagle_id: str | None = None
     pleiades_id: str | None = None
     geonames_id: str | None = None
+    zotero_id: str | None = None
     is_codex: bool = False
     source_code: str = "unknown"
     source_detail: str | None = None
@@ -150,6 +151,7 @@ class Inscription:
             "eagle_id": self.eagle_id,
             "pleiades_id": self.pleiades_id,
             "geonames_id": self.geonames_id,
+            "zotero_id": self.zotero_id,
             "is_codex": self.is_codex,
         }
 
@@ -417,6 +419,7 @@ _COLUMNS = [
     "eagle_id",
     "pleiades_id",
     "geonames_id",
+    "zotero_id",
     "is_codex",
 ]
 
