@@ -61,13 +61,13 @@ jobs:
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        run: pytest tests/ -v --tb=short -m "not slow"
+        run: pytest tests/ -v --tb=short -m "not slow and not real_model"
 
       - name: Run tests with coverage
         if: matrix.python-version == '3.12'
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        run: pytest tests/ -m "not slow" --cov=openetruscan --cov-report=term-missing
+        run: pytest tests/ -m "not slow and not real_model" --cov=openetruscan --cov-report=term-missing
 
   typecheck-mypy:
     name: Type Check (mypy)
@@ -263,3 +263,44 @@ jobs:
 
       - name: Run NDCG@10 eval
         run: python evals/run_search_eval.py --api-url "$EVAL_API_URL"
+
+  real-model-tests:
+    name: Real-model embedding tests (XLM-R)
+    # Gated on `ENABLE_REAL_MODEL_TESTS`. Default-off because XLM-R-base
+    # downloads ~1.1 GB and peaks at ~3 GB RAM during inference, which
+    # is disproportionate for routine PRs. Flip the variable to `true`
+    # when changing src/openetruscan/ml/embeddings.py or finetune.py
+    # and you want end-to-end verification against the actual encoder.
+    # Local dev: `pip install -e '.[transformers]' && pytest -m real_model`.
+    if: |
+      github.event_name == 'push' &&
+      vars.ENABLE_REAL_MODEL_TESTS == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      # HuggingFace cache lives in the runner workspace so the cache
+      # action below picks it up between runs.
+      HF_HOME: ${{ github.workspace }}/.cache/huggingface
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.HF_HOME }}
+          key: ${{ runner.os }}-hf-xlmr-base-v1
+          restore-keys: |
+            ${{ runner.os }}-hf-
+
+      - name: Install transformers extras
+        run: pip install -e ".[dev,transformers]"
+
+      - name: Run real-model tests only
+        run: pytest -v -m real_model

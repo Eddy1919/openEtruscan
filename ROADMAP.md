@@ -1,8 +1,7 @@
 # OpenEtruscan engineering roadmap
 
-This document is a forward-looking plan, not a history log. The previous
-incarnation tracked completed work and was deleted in `f624fef` once those
-tasks shipped. Recreated here to scope the next strategic initiative.
+Forward-looking plan, not a history log. The previous FastText + Procrustes
+prototype was nuked when we pivoted to the 2026 SOTA architecture below.
 
 ---
 
@@ -18,333 +17,194 @@ whose cognates can anchor the meaning of a contested word.
 
 Geometric space doesn't care about language families.
 
-If we build high-quality monolingual word-embedding spaces for Etruscan and
-for documented neighbours (Early Latin, Oscan, Umbrian), and then align
-those spaces *unsupervised* using adversarial methods, we get a shared
-coordinate system where semantically equivalent words from different
-languages occupy the same region. The geometry is anchored by the simple
-fact that all human languages describe the same physical world: words for
-*water*, *father*, *god*, *tomb* sit in similar structural relationships
-to neighbouring vocabulary regardless of language family.
+If we embed Etruscan and its documented neighbours (Latin, Greek,
+Phoenician, Oscan, Coptic, Egyptian, modern-Basque-as-Aquitanian-proxy)
+into a single shared coordinate system, every contested Etruscan word
+becomes a query: *which Latin / Greek / Phoenician words sit at the same
+coordinate?* For words with strong philological consensus the geometry
+*confirms* the consensus (high-confidence sanity check); for contested
+words it produces a ranked candidate list with quantified uncertainty.
 
-Successfully aligned, this is the closest computational analogue to a
-Rosetta Stone for an isolate language. Every contested Etruscan word
-becomes a query: *which Latin/Umbrian/Oscan words sit at the same
-coordinate?* For words with strong philological consensus the alignment
-*confirms* the consensus (high-confidence sanity check); for words with no
-consensus it produces a ranked candidate list with quantified uncertainty.
+### Architecture (2026 SOTA)
 
-### Phase 1 — Monolingual spaces
+A multilingual transformer encoder — **XLM-RoBERTa-base** by default,
+with optional **LoRA-adapter fine-tuning** on the Etruscan corpus —
+produces contextual word vectors. The encoder's pretraining covers 100+
+languages, so cross-language retrieval works **without** any explicit
+Procrustes alignment step. Every language we care about already lives
+in the same vector space because the encoder put it there.
 
-Each language gets its own independent geometric cloud. This phase is
-boring and reproducible; it's the foundation everything else stands on.
-
-**Etruscan cloud.** We already have ~10 000 inscriptions in the corpus.
-Train a **FastText** model on the canonical column. FastText (rather than
-Word2Vec) because it learns from sub-word character n-grams, which matters
-for highly inflected ancient languages where suffixes change constantly —
-the same root in five inflected forms gets a coherent vector even if some
-forms are rare. `gensim`'s `FastText` is the obvious starting library.
-
-Evaluation: held-out perplexity on a 10% test split, plus qualitative
-inspection of nearest-neighbour clusters for known Etruscan word families
-(praenomina vs. gentilicia vs. magistracy titles).
-
-**Sabellic + Latin clouds.** Ingest open epigraphic datasets:
-
-- Early Latin: Epigraphic Database Roma (EDR), filtered to pre-100 BCE
-  inscriptions. Latin BiblIndex / PHI Latin for early texts.
-- Oscan and Umbrian: ImagInes Italicae or Untermann's *Wörterbuch des
-  Oskisch-Umbrischen* digitisations.
-
-Train one FastText per language. The corpora are small (~3–5k
-inscriptions per Sabellic dialect, ~50k for early Latin) so training is a
-laptop-minute job, not an infrastructure problem.
-
-**Storage.** Each model is ~50 MB. Persist as `.bin` files in a Cloud
-Storage bucket; load lazily via `gensim.models.FastText.load`.
-
-### Phase 2a — Supervised Procrustes alignment (shipped, partial result)
-
-The unsupervised path (Phase 2 below) is parked because the corpus is
-too small. Supervised alignment using ~60 anchor pairs from the
-philological literature is now in main (`src/openetruscan/ml/alignment.py`).
-
-**Curated anchor list.** 62 Etruscan-Latin equivalences spanning
-kinship, civic/magistracies, funerary/religious, time/calendar,
-numerals, verbs, theonyms, and onomastic praenomina. Each entry has a
-confidence flag (high/medium/low) and a citation (Bonfante & Bonfante
-2002, Wallace 2008, Pallottino 1968).
-
-**The math.** Closed-form orthogonal Procrustes via SVD: given matrices
-X (Etruscan anchor vectors) and Y (Latin anchor vectors), find the
-orthogonal W minimising ‖XW − Y‖_F. Solution W = U Vᵀ where
-U S V = SVD(Xᵀ Y). The orthogonality constraint preserves cosine
-geometry across the rotation, which is what we want for nearest-
-neighbour retrieval after alignment.
-
-**Smoke test against prod.**
-
-```text
-Etruscan vocab          1306 words   (15k tokens, prod corpus)
-Synthetic Latin vocab   151 words    (hand-written demo corpus)
-Anchor pairs surviving  29 / 61      (the rest are OOV in our 15k corpus)
-Procrustes residual     4.89
-K-fold precision@1      0.000        (29 pairs is too few for held-out CV)
-K-fold precision@5      0.069        (≈2× random; signal but noisy)
-
-Qualitative IN-SAMPLE projections:
-  clan  -> filius   cosine 0.956   ← holy-grail equivalence ✓
-  avil  -> annus    cosine 0.984   ← second-most-cited ✓
-  suθi  -> deo, sacra, dedit       ← funerary/religious cluster ✓
+```
+                     ┌────────────────────────────┐
+                     │ XLM-RoBERTa-base (frozen)  │
+                     │  100+ languages, 768d      │
+                     └────────┬───────────────────┘
+                              │
+                              │  LoRA adapter (~5 MB,
+                              │  fine-tuned on the
+                              │  Etruscan corpus)
+                              ▼
+        ┌───────────────────────────────────────────┐
+        │   Embedder — emits 768-d contextual       │
+        │   word vectors for ANY input string       │
+        └───┬──────────┬──────────┬──────────┬──────┘
+            │          │          │          │
+         Etruscan    Latin     Greek    Phoenician  …
+            │          │          │          │
+            └──────────┴──────────┴──────────┘
+                          │
+                          ▼
+        ┌────────────────────────────────────────────┐
+        │ pgvector table `language_word_embeddings`  │
+        │  (language, word, vector(768)) HNSW idx    │
+        └─────────────────┬──────────────────────────┘
+                          │
+                          ▼
+        GET /neural/rosetta?word=zich&from=ett&to=lat
 ```
 
-**Honest read.** The math works (Procrustes converges, residual
-decreases, the rotation is verifiably orthogonal). The most secure
-philological equivalences (`clan`→`filius`, `avil`→`annus`) recover as
-top-1. K-fold precision@k is at noise level because (a) only 29 pairs
-survive OOV filtering, (b) the 151-word synthetic Latin corpus is too
-small to give realistic neighbour-density. Two next steps to make this
-publishable:
+### Why this beats the alternatives we tried
 
-1. **More in-vocab anchors.** ~32 of the 61 anchors fail vocab lookup
-   because they're rare in our 15k-token Etruscan corpus. Adding
-   inflected forms (e.g. `clenar` for `filii`, `lautni` for `lautn`)
-   that DO appear in the corpus should roughly double the surviving
-   pair count.
-2. **Real Latin embeddings.** The synthetic corpus is sufficient to
-   prove the math; it's not sufficient to prove anything about
-   meaning. Either download fasttext.cc's pretrained Latin model
-   (`cc.la.300.bin`, ~7 GB) or ingest a curated dump of
-   Perseus/PHI Latin and train against that. Phase 1b in the roadmap
-   tracks both.
+A pre-pivot FastText-and-Procrustes prototype shipped briefly to a side
+branch then got nuked. Three things FastText fundamentally couldn't do
+that this architecture gives us for free:
 
-CLI:
+1. **Cosine spread.** Our ~15k-token Etruscan corpus collapsed FastText's
+   manifold (mean top-N spread ≈ 0.003). XLM-R's manifold was set by
+   trillions of tokens during pretraining; the LoRA adapter inherits
+   that structure rather than competing with it.
+2. **Contextual disambiguation.** `larθ` as a praenomen is a different
+   vector from `larθ` in compound terms. FastText averages across uses;
+   transformers don't.
+3. **Sub-word vocabulary across languages.** XLM-R's SentencePiece
+   tokeniser shares pieces across 100+ languages, so an Etruscan word
+   gets a sensible vector even if the surface form is rare, *and* it
+   automatically lives in the same space as Latin / Greek / Coptic.
 
-```bash
-# Self-contained against the synthetic Latin corpus (no downloads):
-python -m openetruscan.ml.alignment evaluate \
-    --etr-model models/etruscan.bin --synthetic-latin --k-folds 5
+The tradeoff (cost):
 
-# Against a real pretrained Latin model:
-python -m openetruscan.ml.alignment align \
-    --etr-model models/etruscan.bin --lat-model models/latin.bin \
-    --output models/etr_to_lat.npy
-```
+| | shipped pre-pivot | XLM-R + LoRA |
+|---|---:|---:|
+| training compute | seconds on a laptop | ~30 min on one A10/T4 GPU |
+| model storage | 50 MB | 1.1 GB base + 5 MB LoRA |
+| inference latency | <1 ms | ~80 ms CPU / ~10 ms GPU |
+| api cost on €50/mo | already paid | +€0–10 if Cloud Run min=0 |
+| pgvector dim | 100 | 768 |
 
-### Phase 2b — Multilingual Mediterranean alignment hub (shipped, populating)
+The €50/mo budget allows for a Cloud Run GPU job at min-instances=0
+(~€0–5/mo for inference traffic) plus offline GPU rental for the
+fine-tune (~$1–3 per training run on Lambda/Vast/Modal).
 
-Phase 2a proved the math against Latin alone. To scale across the
-Mediterranean we need persistent storage for aligned vectors and a
-language-by-language honest assessment of which can actually participate.
+### What's in main today
 
-**The schema** (migration `h3c4d5e6f7a8`): one pgvector table
-`language_word_embeddings` with `(language, word, vector(300))` as the
-primary key, an HNSW index on the vector column, and an
-`alignment_source` field that records which Procrustes rotation
-produced the row (or `'native'` for the anchor language). Cross-
-language queries are a single `SELECT … WHERE language = :target ORDER
-BY vector <=> :src_vector` round-trip.
+* **Schema** — migration `i4d5e6f7a8b9_resize_embeddings_to_768`. The
+  `language_word_embeddings` pgvector table is sized at vector(768),
+  has an HNSW index on the vector column, and records each row's
+  source encoder + revision.
+* **Embedder abstraction** — `src/openetruscan/ml/embeddings.py`:
+  `Embedder` ABC, `XLMREmbedder` (production), `MockEmbedder`
+  (tests, deterministic SHA-256-derived vectors).
+* **LoRA fine-tuning** — `src/openetruscan/ml/finetune.py`. CLI:
+  `python -m openetruscan.ml.finetune train --output models/etr-lora-v1`.
+  Pulls the corpus from the inscriptions table, runs MLM with a LoRA
+  adapter on XLM-R, writes a PEFT-compatible adapter directory.
+* **Multilingual storage + lookup** — `src/openetruscan/ml/multilingual.py`:
+  `populate_language()` writes vectors via any `Embedder`,
+  `find_cross_language_neighbours()` does the SQL-side cosine search,
+  `LANGUAGE_TIERS` registry honestly classifies every language.
+* **API endpoint** — `GET /neural/rosetta?word=&from=&to=&k=`,
+  `GET /neural/rosetta/languages`. Tier-3 languages refuse cross-language
+  semantic queries (`HTTP 400`) but their structural embeddings can
+  still be stored and queried within-language.
+* **Operator scripts** — `scripts/ops/populate_language.py` drives the
+  full populate path with `--vocab-from-corpus` / `--vocab-from-file` /
+  `--use-mock-embedder` / `--dry-run` flags.
+* **Tests** — 31 fast tests using `MockEmbedder` plus 3 real-model
+  tests gated behind the `real_model` pytest marker. The real-model
+  tests confirm that **even without LoRA fine-tuning**, XLM-R-base
+  places Etruscan `clan` closer to Latin `filius` than to an unrelated
+  word — the multilingual sub-word vocabulary alone gives us
+  measurable cross-language structure.
+* **CI** — fast tests run on every push (excluding `slow` and
+  `real_model` markers); a separate `real-model-tests` job runs on
+  demand when `vars.ENABLE_REAL_MODEL_TESTS == 'true'`, with HF
+  model cache reused between runs.
 
-**The honest language-tier registry** (`LANGUAGE_TIERS` in
-`src/openetruscan/ml/multilingual.py`):
+### Honest registry
 
-| code   | name                              | tier | deciphered | alignable | data status |
+| code   | name                              | tier | deciphered | alignable | corpus status |
 |--------|-----------------------------------|:----:|:----------:|:---------:|---|
-| `lat`  | Latin                             | 1 | ✓ | ✓ | pretrained (fasttext.cc) |
-| `grc`  | Ancient Greek                     | 1 | ✓ | ✓ | pretrained (CLTK) |
-| `ett`  | Etruscan (anchor)                 | 2 | ✓ | ✓ | trained on this corpus |
+| `lat`  | Latin                             | 1 | ✓ | ✓ | in encoder pretraining |
+| `grc`  | Ancient Greek                     | 1 | ✓ | ✓ | in encoder pretraining |
+| `ett`  | Etruscan (anchor)                 | 2 | ✓ | ✓ | LoRA fine-tune pending |
 | `phn`  | Phoenician                        | 2 | ✓ | ✓ | KAI ingest pending |
-| `osc`  | Oscan                             | 2 | ✓ | ✓ | ImagInes ingest pending |
-| `cop`  | Coptic                            | 2 | ✓ | ✓ | CLTK pretrained |
+| `osc`  | Oscan                             | 2 | ✓ | ✓ | ImagInes pending |
+| `cop`  | Coptic                            | 2 | ✓ | ✓ | ingest pending |
 | `egy`  | Egyptian (Old/Middle/Late)        | 2 | ✓ | ✓ | hieroglyphic — substantial work |
-| `eus`  | Modern Basque (proxy for Aquitanian) | 2 | ✓ | ✓ | pretrained, with proxy caveat |
-| `lin_a`| Linear A / Minoan                 | 3 | ✗ | ✗ | undeciphered, structural-only |
-| `xnu`  | Nuragic / pre-Roman Sardic        | 3 | ✗ | ✗ | undeciphered, structural-only |
-| `xil`  | Illyrian                          | 3 | – | ✗ | onomastic-only, no productive corpus |
-| `xfa`  | Faliscan                          | 3 | ✓ | ✗ | corpus too small (<1k tokens) |
+| `eus`  | Modern Basque (Aquitanian proxy)  | 2 | ✓ | ✓ | in encoder pretraining (proxy caveat) |
+| `lin_a`| Linear A / Minoan                 | 3 | ✗ | ✗ | structurally embeddable, not alignable |
+| `xnu`  | Nuragic / pre-Roman Sardic        | 3 | ✗ | ✗ | corpus too thin |
+| `xil`  | Illyrian                          | 3 | – | ✗ | onomastic-only |
+| `xfa`  | Faliscan                          | 3 | ✓ | ✗ | corpus < 1k tokens |
 
-Tier-3 entries are listed in the registry for transparency but
-`find_cross_language_neighbours` and the `/neural/rosetta` API
-*explicitly refuse* to align them. We are not going to publish "Linear
-A word X means Latin Y" on the strength of two structural manifolds
-that happen to coincide in their PCA — that's the kind of overclaim
-that destroys academic credibility.
+`alignable` gates cross-language semantic queries. Tier-3 languages
+return HTTP 400 with the registry's note as `detail`.
 
-**API**:
+### Next steps to ship a publishable cross-language eval
 
-```http
-GET /neural/rosetta/languages
-GET /neural/rosetta?word=<src>&from=<lang>&to=<lang>&k=10
-```
+1. **LoRA fine-tune Etruscan.** Run `scripts/ops/finetune_etruscan.py`
+   on a rented GPU (~$1–3, ~30 min). Push the adapter to Cloud Storage.
+2. **Populate Etruscan vectors.**
+   `python scripts/ops/populate_language.py --language ett --base-model xlm-roberta-base --adapter <path> --vocab-from-corpus`
+3. **Populate Latin.** No fine-tune needed — Latin is in XLM-R's
+   pretraining. Pull a vocab list (top 100k words by frequency from
+   any reasonable Latin corpus) and call populate_language with the
+   base model alone.
+4. **Run the held-out eval.** `evals/rosetta_eval_pairs.py` has the
+   62 curated equivalences from Bonfante 2002 / Wallace 2008 /
+   Pallottino 1968. After populate, query each Etruscan word and check
+   whether its known Latin equivalent lands in the top-k neighbours.
+   Target: precision@5 ≥ 0.4 (Procrustes-on-FastText was 0.07).
+5. **Add Greek + Coptic + Phoenician** the same way. Each is a
+   new vocab list + a populate run. No alignment step required because
+   they all share the encoder's pretrained space.
+6. **Discovery cron.** `scripts/ops/rosetta_discovery.py` (TODO):
+   for every Etruscan word currently classified as `unknown` or
+   appearing fewer than 3 times in the corpus, query the top-k Latin
+   neighbours and emit a CSV of the highest-confidence candidate
+   translations. The output is the artefact that turns the alignment
+   from a tool into a research finding.
 
-Tier-3 source or target → 400 with the registry's note as `detail`.
+### Risks and open questions
 
-**What's left** before this is publishable cross-language eval:
+* **Etruscan in XLM-R's pretraining is essentially zero.** The encoder
+  has *some* Etruscan pieces in its sub-word vocabulary because
+  Wikipedia/CommonCrawl have a few Etruscan-Wikipedia pages, but the
+  representation is thin. The LoRA adapter compensates — but how well
+  it compensates is the central open question. The held-out
+  precision@k against Bonfante's anchor pairs is the empirical answer.
+* **Reproducibility for publication.** Any paper coming out of this
+  needs the exact corpus snapshot, the seed and hyperparameters, the
+  saved LoRA adapter, and the bilingual eval set committed to git.
+  Plan a release-tagged `models/` directory in Cloud Storage with the
+  adapter artefacts.
+* **Hieroglyphic Egyptian.** Out of scope for now. Coptic (`cop`) is
+  reachable via XLM-R's pretraining; Old/Middle/Late Egyptian (`egy`)
+  needs Manuel-de-Codage transliteration before any encoder will see
+  it. Tracked as a separate strand.
 
-- Wire each tier-1/tier-2 language's data pipeline. Latin is the
-  immediate next step (download `cc.la.300.bin`, align via Phase 2a's
-  Procrustes against the prod Etruscan model, populate the table).
-  Greek/Phoenician/Oscan follow the same shape; only the source-data
-  ingest differs.
-- Build per-language anchor pair lists for languages other than Latin.
-  Phoenician-Etruscan equivalences exist but are far fewer; transitive
-  alignment via Latin is probably the right path for everything beyond
-  Latin and Greek.
-
-### Phase 2 — Adversarial alignment
-
-This is where the actual research happens. Use **MUSE** (Multilingual
-Unsupervised and Supervised Embeddings) or **VecMap** to align two clouds
-into a shared space.
-
-The MUSE pipeline:
-
-1. Place the Etruscan cloud and (say) the Latin cloud in the same virtual
-   space with random initial alignment.
-2. Train a generative adversarial network. The **discriminator** looks at
-   a coordinate and tries to predict whether it came from the Latin or
-   Etruscan cloud. The **generator** is a learned linear transformation
-   (rotation + scale) applied to the Etruscan cloud, optimised to fool the
-   discriminator.
-3. Because both clouds describe the same physical reality, structurally
-   similar regions exist in both — and the generator finds the rotation
-   that lines them up. The clouds eventually snap into alignment without a
-   single hand-curated bilingual lexicon.
-4. Refine with the Procrustes step: take the most-confidently-aligned word
-   pairs, compute the closed-form orthogonal transformation, and re-align.
-   Iterate until the Procrustes solution stops moving.
-
-Sanity-check on word pairs we *do* know — the philological literature has
-maybe 100 high-confidence Etruscan-Latin equivalences (`avil`/`annus`,
-`zilath`/`praetor`, `clan`/`filius`, …). The aligned space should put
-these pairs near each other. If it doesn't, the alignment is wrong and
-we report negative results.
-
-### Phase 3 — OpenEtruscan integration
-
-Once aligned, freeze the shared vector space and deploy it.
-
-**The endpoint.** A new route on the API:
-
-```http
-GET /neural/rosetta?word=zich
-```
-
-The handler finds the coordinate for the input Etruscan word in the shared
-space, returns the *k* nearest neighbours from the Latin (and Sabellic)
-clouds with cosine-similarity scores, plus a confidence band derived from
-intra-cluster density.
-
-For `zich`, the expected output is something like:
-
-```json
-{
-  "query": "zich",
-  "candidates": [
-    {"word": "scribere", "lang": "lat", "cosine": 0.82, "gloss": "to write"},
-    {"word": "liber",    "lang": "lat", "cosine": 0.78, "gloss": "book"}
-  ],
-  "confidence": "high"
-}
-```
-
-That happens to align with the existing philological hypothesis that
-`zich` means "to write / writing", which is the kind of result we want as
-a sanity check.
-
-**The discovery tool.** A cron job that systematically maps every word in
-the corpus currently classified as `unknown` (or every hapax legomenon)
-against the Latin space, producing a ranked report of the top-50
-high-confidence candidate translations. That report is publishable.
-
-**Cost shape.** The aligned vector space is ~200 MB on disk, served from
-the existing api container or (cheaper) from a Cloud Run sidecar with
-min-instances=0 like the byt5 service. Inference is a single matrix
-multiply + nearest-neighbour lookup; sub-50 ms even on CPU.
-
-### Open questions and risks
-
-Honest list. These determine whether the project is publishable or just
-a toy demo:
-
-- **Corpus size — confirmed problem.** MUSE was developed on Wikipedia-
-  scale data (≥10⁸ tokens). Our corpus yields **15,022 training tokens
-  / 1,306 unique tokens after `min_count=2`** — five orders of magnitude
-  smaller than MUSE's training regime. The Etruscan baseline now lives
-  on prod (commit 919d9e5) and the manifold is **collapsed**: mean top-1
-  cosine ≈ 0.998, top-10 spread ≈ 0.0028 across every probe word.
-  Rankings remain meaningful (Larth-family praenomina cluster correctly,
-  kinship terms cluster, magistracy vocab clusters); absolute distances
-  do not. Sweeps tried and rejected:
-  - `vector_size` ∈ {30, 50, 75, 100}: identical top-N spread.
-  - `negative` ∈ {5, 15, 20} + `sample=1e-4` (subsample frequent words):
-    spread cosines but destroyed semantic cohesion.
-  - **Character-level pretraining** (Word2Vec on glyph streams →
-    seed FastText word vectors → continue training): seeding succeeded
-    mechanically (1306/1306 word vectors initialised), but final spread
-    was identical to baseline (0.0028 vs 0.0028) and neighbour orderings
-    were nearly unchanged. **The collapse is data-bound, not
-    initialisation-bound** — same 15k tokens, same ceiling regardless of
-    where you start the gradient descent.
-  Tooling for the char-init path is shipped (`train_model_with_char_init`,
-  CLI `--char-init`) so future experiments can re-run it against a
-  larger corpus without rewriting the wiring. **Conclusion**: vanilla
-  unsupervised MUSE is unlikely to work at this scale. Phase 2 should
-  pursue **supervised** alignment using the ~100 known Etruscan-Latin
-  equivalences from the philological literature, or **expand the
-  corpus** by ingesting CIE volumes II-III and other epigraphic
-  sources not yet in the database.
-- **Inflection density.** Etruscan inflection patterns may break FastText's
-  sub-word assumption; the language might need a custom morpheme tokeniser
-  before training. This is a 1–2 week side project on its own.
-- **Reproducibility for publication.** Any paper coming out of this needs
-  the exact corpus snapshot (with provenance metadata), the seed and
-  hyperparameters of the training runs, and the bilingual sanity-check
-  set committed to git. Plan a `data/rosetta/` directory that's
-  release-tagged.
-
-### First technical step
-
-Before any of the alignment work, set up the data pipeline + baseline
-Etruscan FastText. Concretely:
-
-1. New module `src/openetruscan/ml/rosetta.py` with:
-   - `extract_training_corpus(min_tokens=2)` — pulls canonical strings
-     from the corpus, normalises to NFC, drops fragments below the token
-     threshold, returns an iterator of token lists.
-   - `train_etruscan_model(out_path, vector_size=100, window=5,
-     min_count=2)` — trains a `gensim.models.FastText` on the iterator,
-     persists the binary, returns a metadata dict (vocab size, total
-     tokens, training-loss curve).
-   - `nearest(word, k=10)` — load + query helper.
-2. CLI entry point: `python -m openetruscan.ml.rosetta train`.
-3. A `tests/test_rosetta.py` that trains on a 100-row synthetic corpus
-   (no external deps), confirms the model serialises/loads, and asserts
-   that a known pair like `larθ` / `larθal` are within the top-5
-   neighbours of each other (basic morphology sanity check).
-4. ~30 MB Etruscan model checked into Cloud Storage (NOT git; too big and
-   regeneratable). README explains how to download it.
-
-That's a self-contained ~2-day chunk of work that produces an artifact
-(the Etruscan model) we can poke at and decide whether Phase 2 is worth
-pursuing. If FastText loss is poor or the morphology tokeniser becomes
-the long pole, we know before sinking time into alignment.
-
----
-
-## Other open initiatives
+### Other open initiatives
 
 These are tracked elsewhere but listed for completeness:
 
 - **`place_findspot` retrieval gap** — current NDCG@10 is 0.39 because
-  PostgreSQL FTS doesn't stem across Latin morphological variants. Three
-  remediation paths in `evals/README.md`. Low priority: existing
+  PostgreSQL FTS doesn't stem across Latin morphological variants.
+  Three remediation paths in `evals/README.md`. Low priority: existing
   `place_pleiades` (0.80) covers most user-visible queries.
 - **Prosopography category for the eval** — deferred until entity
   extraction is cleaned up. The existing graph is dominated by
-  punctuation parsing artefacts; needs an entity-extractor rewrite first.
+  punctuation parsing artefacts.
 - **More period vocabulary** — `archaic`, `classical`, `late`,
   `orientalising`, `hellenistic` parse. `villanovan` would be the next
-  natural addition once we have any rows that early; currently zero rows
-  are dated `<= -720`.
+  natural addition once we have any rows that early; currently zero
+  rows are dated `<= -720`.

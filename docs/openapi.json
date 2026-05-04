@@ -1089,6 +1089,33 @@
         }
       }
     },
+    "/genetics/samples": {
+      "get": {
+        "tags": [
+          "Genetics"
+        ],
+        "summary": "Get All Genetic Samples",
+        "description": "Retrieve all geotagged genetic samples for spatial mapping.",
+        "operationId": "get_all_genetic_samples_genetics_samples_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get All Genetic Samples Genetics Samples Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inscriptions/{id}/genetics": {
       "get": {
         "tags": [

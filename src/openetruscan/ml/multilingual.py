@@ -1,38 +1,48 @@
 """Multilingual word-vector storage + cross-language nearest-neighbour lookup.
 
-This module turns the in-memory Procrustes alignment from `alignment.py`
-into a persistent, queryable cross-language vector space. It writes
-*aligned* word vectors into the ``language_word_embeddings`` pgvector
-table (migration ``h3c4d5e6f7a8``) so the API can answer "which Latin
-words are nearest to Etruscan ``zich``?" with a single SQL round-trip
-instead of reloading two FastText models.
+The Rosetta Vector Space's persistence + query layer.
+
+Architecture (2026 SOTA — see ROADMAP):
+  * A multilingual transformer encoder (XLM-RoBERTa by default) produces
+    contextual word vectors. The encoder's pretraining covers 100+
+    languages so cross-language retrieval is implicit — no Procrustes
+    alignment step required.
+  * For Etruscan specifically, a LoRA adapter is fine-tuned on the
+    inscriptions corpus (see ``finetune.py``). The adapter teaches the
+    encoder Etruscan-specific morphology without overwriting the
+    pretrained multilingual structure.
+  * Word vectors are persisted in the ``language_word_embeddings``
+    pgvector table (migration ``i4d5e6f7a8b9``, vector(768)). Each row
+    records which encoder + revision produced it so re-runs are
+    distinguishable and rollback-able.
 
 Public surface
 --------------
-
-  LANGUAGE_TIERS              — registry of every language we know about,
+  LANGUAGE_TIERS              — registry of every language we recognise,
                                 with viability classification + data status.
   LanguageRecord              — schema for one language's metadata.
-  populate_aligned_language(...) — store an aligned model's word vectors.
+  populate_language(...)      — embed a vocabulary list with an Embedder
+                                and upsert into the pgvector table.
   find_cross_language_neighbours(word, source_lang, target_lang) — query.
 
 Honest scoping
 --------------
-
-`LANGUAGE_TIERS` codifies which languages this module *can* honestly
+``LANGUAGE_TIERS`` codifies which languages this module *can* honestly
 support today. Three tiers:
 
-  * tier 1 (deciphered, large corpus, alignable): Latin, Ancient Greek.
-  * tier 2 (deciphered, small corpus, alignable but noisy): Etruscan,
-    Phoenician, Oscan, Coptic Egyptian, modern-Basque-as-proxy.
-  * tier 3 (undeciphered or insufficient corpus, structural-only):
-    Linear A / Minoan, Nuragic, Illyrian, Faliscan.
+  * tier 1 (deciphered, well-represented in the encoder's pretraining):
+    Latin, Ancient Greek.
+  * tier 2 (deciphered, supported via fine-tuning or proxy):
+    Etruscan, Phoenician, Oscan, Coptic, Egyptian, Modern Basque.
+  * tier 3 (undeciphered or insufficient corpus): Linear A / Minoan,
+    Nuragic, Illyrian, Faliscan. Only Linear A has enough sign-sequence
+    data to support within-language structural embeddings; the rest
+    are listed for transparency but populate refuses to write them.
 
-Tier 3 entries can have their structural embeddings stored in the
-table (so the schema is uniform), but `find_cross_language_neighbours`
-explicitly refuses to produce semantic alignments TO/FROM them. We're
-not going to publish "Linear A word X means Latin Y" claims that the
-data cannot actually support.
+Tier-3 entries can have their structural embeddings stored, but
+``find_cross_language_neighbours`` refuses to produce semantic
+alignments TO/FROM them. We're not going to publish "Linear A word X
+means Latin Y" claims that the data cannot actually support.
 """
 
 from __future__ import annotations
@@ -45,9 +55,14 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    from openetruscan.ml.embeddings import Embedder
+
 logger = logging.getLogger("openetruscan.multilingual")
 
-EMBEDDING_DIM = 300
+# Native hidden dim for XLM-R-base. xlm-roberta-large is 1024; mBERT
+# is 768. The pgvector schema fixes this at the column type so changes
+# require a new migration.
+EMBEDDING_DIM = 768
 
 
 # ---------------------------------------------------------------------------
@@ -61,76 +76,77 @@ class LanguageRecord:
 
     Two independent capability flags:
 
-    * ``alignable`` — can be honestly aligned to other deciphered languages
-      via supervised Procrustes. Tier 1+2 only. The cross-language API
-      refuses queries where either side has ``alignable=False``.
+    * ``alignable`` — the encoder can place this language in the shared
+      multilingual space honestly. Tier 1 + 2 only. Cross-language
+      neighbour queries refuse pairs where either side is not alignable.
     * ``structural_embedding_viable`` — has enough corpus / co-occurrence
-      data for FastText to learn meaningful within-language sign
-      relationships, even if cross-language alignment is impossible.
-      Linear A (undeciphered, ~1500 fragments) qualifies; Illyrian
-      (onomastic-only, no productive corpus) does not.
-
-    A tier-3 language can have ``structural_embedding_viable=True`` —
-    that means we can store its native vectors in the table for
-    within-language exploration ("which Linear A sign clusters appear in
-    similar contexts?") without claiming any cross-language meaning.
+      data for the encoder to learn meaningful within-language sign
+      relationships. Linear A qualifies; Illyrian (onomastic-only) does
+      not. populate_language() refuses to write languages where this is
+      False.
     """
 
-    code: str               # ISO 639-3 where possible; otherwise project-local
-    name: str               # human-readable
-    tier: int               # 1 = best, 3 = structural only
+    code: str
+    name: str
+    tier: int               # 1 = best, 3 = undeciphered or sub-viable
     deciphered: bool
-    alignable: bool         # gate for cross-language semantic queries
-    corpus_status: str      # one of: pretrained, ingest_pending, undeciphered, missing
+    alignable: bool
+    corpus_status: str      # one of: pretrained_in_encoder, ingest_pending, undeciphered, missing
     notes: str = ""
     expected_dim: int = EMBEDDING_DIM
     typical_source: str = ""
-    structural_embedding_viable: bool = True  # default True for the alignable languages;
-                                              # tier-3 entries set this explicitly
+    structural_embedding_viable: bool = True
 
 
 LANGUAGE_TIERS: dict[str, LanguageRecord] = {
-    # ── Tier 1: large, deciphered, pretrained models exist ─────────────
+    # ── Tier 1: deciphered, well-covered by the encoder's pretraining ──
     "lat": LanguageRecord(
         code="lat", name="Latin", tier=1, deciphered=True, alignable=True,
-        corpus_status="pretrained",
-        typical_source="fasttext.cc cc.la.300.bin",
-        notes="The primary alignment target for Etruscan. ~10⁸ tokens.",
+        corpus_status="pretrained_in_encoder",
+        typical_source="XLM-RoBERTa multilingual pretraining (CC + Wikipedia Latin)",
+        notes="Latin is one of XLM-R's 100 pretraining languages, with "
+              "substantial Common Crawl + Wikipedia coverage. Vectors come "
+              "directly from the encoder, no separate model needed.",
     ),
     "grc": LanguageRecord(
         code="grc", name="Ancient Greek", tier=1, deciphered=True, alignable=True,
-        corpus_status="pretrained",
-        typical_source="CLTK Greek embeddings or PHI Greek",
-        notes="Etruscan-Greek alignment is best done transitively via Latin "
-              "(few documented direct equivalences besides theonyms).",
+        corpus_status="pretrained_in_encoder",
+        typical_source="XLM-R multilingual pretraining (with Greek-BERT fallback for hard inputs)",
+        notes="Ancient Greek shares vocabulary + syntax with modern Greek "
+              "well enough that XLM-R's `el` weights transfer. For domain-"
+              "specific work consider Greek-BERT (Koutsikakis et al 2020) "
+              "as an alternative encoder.",
     ),
-    # ── Tier 2: small but viable, alignable with caveats ───────────────
+    # ── Tier 2: deciphered, supported via LoRA fine-tuning or proxy ────
     "ett": LanguageRecord(
         code="ett", name="Etruscan", tier=2, deciphered=True, alignable=True,
-        corpus_status="ingest_pending",  # we have it; the model is in Cloud Storage
-        typical_source="trained from this repo's corpus DB",
-        notes="The anchor language for the Rosetta initiative.",
+        corpus_status="ingest_pending",
+        typical_source="XLM-R + LoRA adapter fine-tuned on this corpus",
+        notes="The anchor language for the Rosetta initiative. The LoRA "
+              "adapter is fine-tuned on the 6,633-inscription corpus so "
+              "Etruscan vectors live in the same multilingual space as "
+              "the languages already covered by XLM-R pretraining.",
     ),
     "phn": LanguageRecord(
         code="phn", name="Phoenician", tier=2, deciphered=True, alignable=True,
         corpus_status="ingest_pending",
-        typical_source="KAI corpus (Donner-Röllig digitisation)",
-        notes="Trains at ~50k tokens — same scale as Etruscan, similar ceiling.",
+        typical_source="XLM-R + LoRA fine-tune on KAI corpus",
+        notes="~50k tokens (KAI digitisation). LoRA fine-tune the same way "
+              "we do Etruscan; Latin-via-Greek-via-Phoenician transfer "
+              "should be measurable.",
     ),
     "osc": LanguageRecord(
         code="osc", name="Oscan", tier=2, deciphered=True, alignable=True,
         corpus_status="ingest_pending",
-        typical_source="ImagInes Italicae digitisation",
-        notes="~5k tokens. Tight Italic ties to Latin make supervised "
-              "alignment promising once ingested.",
+        typical_source="XLM-R + LoRA fine-tune on ImagInes Italicae",
+        notes="~5k tokens. Tight Italic ties to Latin make this an easy "
+              "transfer once the corpus is ingested.",
     ),
     "cop": LanguageRecord(
         code="cop", name="Coptic", tier=2, deciphered=True, alignable=True,
-        corpus_status="pretrained",
-        typical_source="CLTK Coptic embeddings",
-        notes="The latest stage of Egyptian. Older stages (Old, Middle "
-              "Egyptian, Demotic) require hieroglyphic transliteration "
-              "pipelines we don't ship; flagged separately as `egy`.",
+        corpus_status="ingest_pending",
+        typical_source="XLM-R + LoRA fine-tune (or use Coptic-SCRIPTORIUM's encoder directly)",
+        notes="Latest stage of Egyptian. Older stages flagged separately as `egy`.",
     ),
     "egy": LanguageRecord(
         code="egy", name="Egyptian (Old/Middle/Late)", tier=2, deciphered=True,
@@ -140,48 +156,41 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
     ),
     "eus": LanguageRecord(
         code="eus", name="Basque (modern, proxy for Aquitanian)", tier=2,
-        deciphered=True, alignable=True, corpus_status="pretrained",
-        typical_source="fasttext.cc cc.eu.300.bin",
+        deciphered=True, alignable=True,
+        corpus_status="pretrained_in_encoder",
+        typical_source="XLM-R multilingual pretraining (modern Basque)",
         notes="Modern Basque is the closest living relative of pre-Roman "
-              "Aquitanian. Cross-language alignment must label results "
+              "Aquitanian. Cross-language results MUST be labelled "
               "MODERN-BASQUE-VIA-PROXY, never claim direct Aquitanian "
               "equivalence.",
     ),
-    # ── Tier 3: structural-only, NOT semantically alignable ────────────
-    # `structural_embedding_viable` differentiates "we can train within-
-    # language structural FastText" from "the corpus is too thin even
-    # for that". Cross-language semantic alignment is refused for ALL
-    # tier-3 entries regardless.
+    # ── Tier 3: structural-only or non-viable ──────────────────────────
     "lin_a": LanguageRecord(
         code="lin_a", name="Linear A / Minoan", tier=3,
         deciphered=False, alignable=False,
         structural_embedding_viable=True,
         corpus_status="ingest_pending",
-        typical_source="Younger's Linear A inscription database",
-        notes="~1500 fragments / ~3000 sign tokens. Enough sign-sequence "
-              "co-occurrence to train a FastText that captures structural "
-              "neighbourhoods (which sign clusters appear in similar "
-              "contexts). Cross-language alignment to deciphered languages "
-              "is NOT supported — there's no semantic ground truth.",
+        typical_source="custom encoder fine-tuned from random init on Younger's database",
+        notes="~1500 fragments. Enough sign-sequence data to learn "
+              "structural neighbourhoods (which sign clusters appear in "
+              "similar contexts). Cross-language alignment to deciphered "
+              "languages is NOT supported — no semantic ground truth.",
     ),
     "xnu": LanguageRecord(
         code="xnu", name="Nuragic / pre-Roman Sardic", tier=3,
         deciphered=False, alignable=False,
         structural_embedding_viable=False,
         corpus_status="undeciphered",
-        notes="~30-50 short inscriptions. Below FastText viability "
-              "threshold even for structural embeddings. Move to "
-              "structural_embedding_viable=True if a larger digitisation "
-              "(e.g. all known Nuragic bronzetto inscriptions) lands.",
+        notes="~30-50 short inscriptions. Below viability threshold even "
+              "for structural embeddings.",
     ),
     "xil": LanguageRecord(
         code="xil", name="Illyrian", tier=3,
         deciphered=False, alignable=False,
         structural_embedding_viable=False,
         corpus_status="missing",
-        notes="Predominantly onomastic data — personal names attested in "
-              "Greek/Latin sources, no running text. FastText needs "
-              "co-occurrence context that this corpus doesn't provide.",
+        notes="Onomastic-only — personal names attested in Greek/Latin "
+              "sources, no running text for the encoder to learn from.",
     ),
     "xfa": LanguageRecord(
         code="xfa", name="Faliscan", tier=3,
@@ -189,10 +198,8 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
         structural_embedding_viable=False,
         corpus_status="missing",
         notes="Deciphered (Italic, sister of Latin) but corpus is ~300 "
-              "inscriptions / sub-1k tokens — below FastText viability "
-              "threshold. Move to tier 2 + alignable=True if a larger "
-              "digitisation lands; the language itself supports semantic "
-              "alignment, only the data is missing.",
+              "inscriptions / sub-1k tokens. Move to tier 2 + alignable "
+              "if a larger digitisation lands.",
     ),
 }
 
@@ -204,37 +211,34 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
 
 @dataclass
 class PopulateResult:
-    """Outcome of a populate_aligned_language run."""
+    """Outcome of a populate_language run."""
 
     language: str
+    embedder_model_id: str
+    embedder_revision: str | None
     n_inserted: int
-    n_skipped_oov: int
+    n_skipped_empty: int
     skipped_examples: list[str] = field(default_factory=list)
 
 
-async def populate_aligned_language(
+async def populate_language(
     *,
     language: str,
-    model: Any,
-    alignment_W: Any | None,
+    words: list[str],
+    embedder: Embedder,
     session: AsyncSession,
     source: str,
-    alignment_source: str = "procrustes_v1",
-    max_words: int | None = None,
-    min_frequency: int | None = None,
+    frequencies: dict[str, int] | None = None,
 ) -> PopulateResult:
-    """Insert one language's word vectors into ``language_word_embeddings``.
+    """Embed a vocabulary list and upsert it into ``language_word_embeddings``.
 
-    ``alignment_W``: pass the Procrustes rotation matrix (vector_size² of
-    floats) to project every model word into the shared Rosetta space.
-    For the *anchor* language (Etruscan) pass ``None`` — the native
-    vectors go in unchanged with ``alignment_source='native'``.
+    The caller is responsible for assembling the vocab — typically by
+    iterating a corpus and counting tokens, or by reading the
+    ``language_word_embeddings.word`` column from a previous run for
+    re-population.
 
-    ``model``: any object with a gensim-compatible ``.wv`` interface.
-    Iterates ``model.wv.key_to_index`` to enumerate the vocab.
-
-    Vectors are unit-normalised at write time so cosine queries reduce to
-    inner products on the pgvector side.
+    The embedder identifies itself via ``embedder.info`` so future
+    queries can know which model + revision produced each row.
     """
     import numpy as np
     from sqlalchemy import text
@@ -246,108 +250,101 @@ async def populate_aligned_language(
         )
     if not record.structural_embedding_viable:
         raise ValueError(
-            f"Language {language!r} is registered as structurally non-viable "
-            f"(insufficient corpus). Refusing to populate vectors that would "
-            f"be misleading. Note: {record.notes}"
+            f"Language {language!r} is registered as structurally non-viable. "
+            f"Refusing to populate vectors that would be misleading. "
+            f"Note: {record.notes}"
         )
 
+    info = embedder.info
+    if info.dim != record.expected_dim:
+        raise ValueError(
+            f"Embedder dim {info.dim} != expected {record.expected_dim} for "
+            f"language {language!r}. Either change the embedder or write a "
+            f"new migration that resizes the vector column."
+        )
+
+    if not words:
+        logger.warning("populate_language(%r): empty word list, nothing to do", language)
+        return PopulateResult(
+            language=language,
+            embedder_model_id=info.model_id,
+            embedder_revision=info.revision,
+            n_inserted=0,
+            n_skipped_empty=0,
+        )
+
+    # Compute embeddings in one batch (Embedder handles internal batching).
+    logger.info(
+        "populate_language(%r): embedding %d words via %s",
+        language, len(words), info.model_id,
+    )
+    vectors = embedder.embed_words(words)
+
     rows: list[dict[str, Any]] = []
-    n_skipped_oov = 0
+    n_skipped_empty = 0
     skipped_examples: list[str] = []
 
-    keys = list(model.wv.key_to_index)
-    if max_words is not None:
-        # Most-frequent-first ordering; gensim already orders index by freq.
-        keys = keys[:max_words]
-
-    for word in keys:
-        # Frequency filter (gensim stores it on the vocab object).
-        freq = getattr(model.wv.get_vecattr(word, "count"), "__int__", None)
-        if min_frequency is not None and freq is not None and freq < min_frequency:
-            continue
-
-        try:
-            vec = model.wv[word]
-        except KeyError:
-            n_skipped_oov += 1
+    for word, vec in zip(words, vectors, strict=True):
+        norm = float(np.linalg.norm(vec))
+        if norm == 0:
+            n_skipped_empty += 1
             if len(skipped_examples) < 5:
                 skipped_examples.append(word)
             continue
-
-        if alignment_W is not None:
-            vec = vec @ alignment_W
-
-        if vec.shape[0] != record.expected_dim:
-            # Procrustes preserves dimension; if we hit this it's a config
-            # bug, not a runtime failure. Fail loudly.
-            raise ValueError(
-                f"Vector dim {vec.shape[0]} != expected {record.expected_dim} "
-                f"for language {language!r}. Re-train at the right size or "
-                f"PCA-project before populating."
-            )
-
-        # L2-normalise for cosine == dot product on pgvector's side.
-        norm = float(np.linalg.norm(vec))
-        if norm == 0:
-            n_skipped_oov += 1
-            continue
-        vec = (vec / norm).astype(np.float32)
-
         rows.append(
             {
                 "language": language,
                 "word": unicodedata.normalize("NFC", word).lower(),
-                "vector": vec.tolist(),
-                "frequency": int(freq) if freq is not None else None,
+                "vector": "[" + ",".join(f"{x:.6f}" for x in vec.tolist()) + "]",
+                "frequency": frequencies.get(word) if frequencies else None,
                 "source": source,
-                "alignment_source": alignment_source if alignment_W is not None else "native",
+                "embedder": info.model_id,
+                "embedder_revision": info.revision,
             }
         )
 
     if not rows:
         return PopulateResult(
             language=language,
+            embedder_model_id=info.model_id,
+            embedder_revision=info.revision,
             n_inserted=0,
-            n_skipped_oov=n_skipped_oov,
+            n_skipped_empty=n_skipped_empty,
             skipped_examples=skipped_examples,
         )
 
-    # Upsert: replace any existing (language, word) row so re-running
-    # populate_aligned_language with a fresher model is idempotent.
+    # Upsert: rerunning is idempotent + replaces vectors with the latest
+    # encoder output.
     stmt = text(
         """
         INSERT INTO language_word_embeddings
-            (language, word, vector, frequency, source, alignment_source)
-        VALUES (:language, :word, :vector, :frequency, :source, :alignment_source)
+            (language, word, vector, frequency, source, embedder, embedder_revision)
+        VALUES
+            (:language, :word, :vector, :frequency, :source, :embedder, :embedder_revision)
         ON CONFLICT (language, word) DO UPDATE SET
             vector = EXCLUDED.vector,
             frequency = EXCLUDED.frequency,
             source = EXCLUDED.source,
-            alignment_source = EXCLUDED.alignment_source
+            embedder = EXCLUDED.embedder,
+            embedder_revision = EXCLUDED.embedder_revision
         """
     )
 
-    # Batch executemany for throughput; pgvector via asyncpg+sqlalchemy
-    # accepts list-of-floats directly when registered, but the safe path
-    # for a generic Postgres deployment is the array-cast string form.
-    BATCH = 1000
+    BATCH = 500
     for i in range(0, len(rows), BATCH):
-        batch = rows[i : i + BATCH]
-        # asyncpg + sqlalchemy.text doesn't take vector(300) literals
-        # transparently; encode each vector as a Postgres array literal.
-        for row in batch:
-            row["vector"] = "[" + ",".join(f"{x:.6f}" for x in row["vector"]) + "]"
-        await session.execute(stmt, batch)
+        await session.execute(stmt, rows[i : i + BATCH])
     await session.commit()
 
     logger.info(
-        "Inserted %d vectors for language %r (skipped %d OOV)",
-        len(rows), language, n_skipped_oov,
+        "populate_language(%r): inserted %d rows (skipped %d zero-norm)",
+        language, len(rows), n_skipped_empty,
     )
     return PopulateResult(
         language=language,
+        embedder_model_id=info.model_id,
+        embedder_revision=info.revision,
         n_inserted=len(rows),
-        n_skipped_oov=n_skipped_oov,
+        n_skipped_empty=n_skipped_empty,
         skipped_examples=skipped_examples,
     )
 
@@ -373,11 +370,11 @@ async def find_cross_language_neighbours(
     k: int = 10,
 ) -> list[CrossLanguageHit]:
     """For ``word`` in ``source_lang``, return the top-k nearest words in
-    ``target_lang`` (cosine similarity in the shared Rosetta space).
+    ``target_lang`` (cosine similarity in the shared multilingual space).
 
-    Refuses when either language is tier-3 (undeciphered or sub-viable):
-    stored structural embeddings carry no semantic anchor that would make
-    the result meaningful.
+    Refuses tier-3 languages on either side. Refuses unknown codes.
+    Returns an empty list if the source word has no stored vector — the
+    caller can decide whether to embed-on-demand and retry.
     """
     from sqlalchemy import text
 
@@ -401,9 +398,6 @@ async def find_cross_language_neighbours(
 
     word = unicodedata.normalize("NFC", word).lower()
 
-    # 1. Look up the source word's stored vector. Sub-word fallback at the
-    #    SQL layer doesn't exist; the caller can fall back to running
-    #    `model.wv[word]` themselves and passing the vector explicitly.
     src_row = await session.execute(
         text(
             "SELECT vector FROM language_word_embeddings "
@@ -416,9 +410,6 @@ async def find_cross_language_neighbours(
         return []
     src_vector = row[0]
 
-    # 2. Cosine-search target language. Vectors are L2-normalised on
-    #    insert so cosine ≡ inner product, but pgvector's native operator
-    #    is `<=>` (cosine *distance*). Convert back at the end.
     target = await session.execute(
         text(
             """
