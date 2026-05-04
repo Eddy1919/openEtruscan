@@ -72,7 +72,14 @@ telemetry = [
     "opentelemetry-instrumentation-httpx>=0.48b0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.27",
 ]
-all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry]"]
+# FastText word-embedding stack for the Rosetta Vector Space initiative
+# (see ROADMAP.md). Phase-1 only — building monolingual clouds, no
+# alignment yet. gensim brings numpy + scipy as transitive deps.
+rosetta = [
+    "gensim>=4.3",
+    "numpy>=1.24",
+]
+all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry,rosetta]"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
