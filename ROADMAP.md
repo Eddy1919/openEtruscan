@@ -64,6 +64,74 @@ laptop-minute job, not an infrastructure problem.
 **Storage.** Each model is ~50 MB. Persist as `.bin` files in a Cloud
 Storage bucket; load lazily via `gensim.models.FastText.load`.
 
+### Phase 2a — Supervised Procrustes alignment (shipped, partial result)
+
+The unsupervised path (Phase 2 below) is parked because the corpus is
+too small. Supervised alignment using ~60 anchor pairs from the
+philological literature is now in main (`src/openetruscan/ml/alignment.py`).
+
+**Curated anchor list.** 62 Etruscan-Latin equivalences spanning
+kinship, civic/magistracies, funerary/religious, time/calendar,
+numerals, verbs, theonyms, and onomastic praenomina. Each entry has a
+confidence flag (high/medium/low) and a citation (Bonfante & Bonfante
+2002, Wallace 2008, Pallottino 1968).
+
+**The math.** Closed-form orthogonal Procrustes via SVD: given matrices
+X (Etruscan anchor vectors) and Y (Latin anchor vectors), find the
+orthogonal W minimising ‖XW − Y‖_F. Solution W = U Vᵀ where
+U S V = SVD(Xᵀ Y). The orthogonality constraint preserves cosine
+geometry across the rotation, which is what we want for nearest-
+neighbour retrieval after alignment.
+
+**Smoke test against prod.**
+
+```text
+Etruscan vocab          1306 words   (15k tokens, prod corpus)
+Synthetic Latin vocab   151 words    (hand-written demo corpus)
+Anchor pairs surviving  29 / 61      (the rest are OOV in our 15k corpus)
+Procrustes residual     4.89
+K-fold precision@1      0.000        (29 pairs is too few for held-out CV)
+K-fold precision@5      0.069        (≈2× random; signal but noisy)
+
+Qualitative IN-SAMPLE projections:
+  clan  -> filius   cosine 0.956   ← holy-grail equivalence ✓
+  avil  -> annus    cosine 0.984   ← second-most-cited ✓
+  suθi  -> deo, sacra, dedit       ← funerary/religious cluster ✓
+```
+
+**Honest read.** The math works (Procrustes converges, residual
+decreases, the rotation is verifiably orthogonal). The most secure
+philological equivalences (`clan`→`filius`, `avil`→`annus`) recover as
+top-1. K-fold precision@k is at noise level because (a) only 29 pairs
+survive OOV filtering, (b) the 151-word synthetic Latin corpus is too
+small to give realistic neighbour-density. Two next steps to make this
+publishable:
+
+1. **More in-vocab anchors.** ~32 of the 61 anchors fail vocab lookup
+   because they're rare in our 15k-token Etruscan corpus. Adding
+   inflected forms (e.g. `clenar` for `filii`, `lautni` for `lautn`)
+   that DO appear in the corpus should roughly double the surviving
+   pair count.
+2. **Real Latin embeddings.** The synthetic corpus is sufficient to
+   prove the math; it's not sufficient to prove anything about
+   meaning. Either download fasttext.cc's pretrained Latin model
+   (`cc.la.300.bin`, ~7 GB) or ingest a curated dump of
+   Perseus/PHI Latin and train against that. Phase 1b in the roadmap
+   tracks both.
+
+CLI:
+
+```bash
+# Self-contained against the synthetic Latin corpus (no downloads):
+python -m openetruscan.ml.alignment evaluate \
+    --etr-model models/etruscan.bin --synthetic-latin --k-folds 5
+
+# Against a real pretrained Latin model:
+python -m openetruscan.ml.alignment align \
+    --etr-model models/etruscan.bin --lat-model models/latin.bin \
+    --output models/etr_to_lat.npy
+```
+
 ### Phase 2 — Adversarial alignment
 
 This is where the actual research happens. Use **MUSE** (Multilingual
