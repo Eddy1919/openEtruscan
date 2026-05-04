@@ -132,6 +132,66 @@ python -m openetruscan.ml.alignment align \
     --output models/etr_to_lat.npy
 ```
 
+### Phase 2b — Multilingual Mediterranean alignment hub (shipped, populating)
+
+Phase 2a proved the math against Latin alone. To scale across the
+Mediterranean we need persistent storage for aligned vectors and a
+language-by-language honest assessment of which can actually participate.
+
+**The schema** (migration `h3c4d5e6f7a8`): one pgvector table
+`language_word_embeddings` with `(language, word, vector(300))` as the
+primary key, an HNSW index on the vector column, and an
+`alignment_source` field that records which Procrustes rotation
+produced the row (or `'native'` for the anchor language). Cross-
+language queries are a single `SELECT … WHERE language = :target ORDER
+BY vector <=> :src_vector` round-trip.
+
+**The honest language-tier registry** (`LANGUAGE_TIERS` in
+`src/openetruscan/ml/multilingual.py`):
+
+| code   | name                              | tier | deciphered | alignable | data status |
+|--------|-----------------------------------|:----:|:----------:|:---------:|---|
+| `lat`  | Latin                             | 1 | ✓ | ✓ | pretrained (fasttext.cc) |
+| `grc`  | Ancient Greek                     | 1 | ✓ | ✓ | pretrained (CLTK) |
+| `ett`  | Etruscan (anchor)                 | 2 | ✓ | ✓ | trained on this corpus |
+| `phn`  | Phoenician                        | 2 | ✓ | ✓ | KAI ingest pending |
+| `osc`  | Oscan                             | 2 | ✓ | ✓ | ImagInes ingest pending |
+| `cop`  | Coptic                            | 2 | ✓ | ✓ | CLTK pretrained |
+| `egy`  | Egyptian (Old/Middle/Late)        | 2 | ✓ | ✓ | hieroglyphic — substantial work |
+| `eus`  | Modern Basque (proxy for Aquitanian) | 2 | ✓ | ✓ | pretrained, with proxy caveat |
+| `lin_a`| Linear A / Minoan                 | 3 | ✗ | ✗ | undeciphered, structural-only |
+| `xnu`  | Nuragic / pre-Roman Sardic        | 3 | ✗ | ✗ | undeciphered, structural-only |
+| `xil`  | Illyrian                          | 3 | – | ✗ | onomastic-only, no productive corpus |
+| `xfa`  | Faliscan                          | 3 | ✓ | ✗ | corpus too small (<1k tokens) |
+
+Tier-3 entries are listed in the registry for transparency but
+`find_cross_language_neighbours` and the `/neural/rosetta` API
+*explicitly refuse* to align them. We are not going to publish "Linear
+A word X means Latin Y" on the strength of two structural manifolds
+that happen to coincide in their PCA — that's the kind of overclaim
+that destroys academic credibility.
+
+**API**:
+
+```http
+GET /neural/rosetta/languages
+GET /neural/rosetta?word=<src>&from=<lang>&to=<lang>&k=10
+```
+
+Tier-3 source or target → 400 with the registry's note as `detail`.
+
+**What's left** before this is publishable cross-language eval:
+
+- Wire each tier-1/tier-2 language's data pipeline. Latin is the
+  immediate next step (download `cc.la.300.bin`, align via Phase 2a's
+  Procrustes against the prod Etruscan model, populate the table).
+  Greek/Phoenician/Oscan follow the same shape; only the source-data
+  ingest differs.
+- Build per-language anchor pair lists for languages other than Latin.
+  Phoenician-Etruscan equivalences exist but are far fewer; transitive
+  alignment via Latin is probably the right path for everything beyond
+  Latin and Greek.
+
 ### Phase 2 — Adversarial alignment
 
 This is where the actual research happens. Use **MUSE** (Multilingual

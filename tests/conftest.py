@@ -60,6 +60,7 @@ _USER_TABLES = (
     "inscriptions",
     "data_sources",
     "provenance_audits",
+    "language_word_embeddings",
 )
 
 
@@ -159,6 +160,33 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
     async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # The multilingual `language_word_embeddings` table uses pgvector
+    # (vector(300)), which has no SQLAlchemy ORM type without an extra
+    # dep. Create it manually here so multilingual-using tests have
+    # somewhere to write — but only on a backend where the `vector`
+    # extension is actually available.
+    if not database_url.startswith("sqlite"):
+        try:
+            async with eng.begin() as conn:
+                await conn.execute(
+                    text(
+                        """
+                        CREATE TABLE IF NOT EXISTS language_word_embeddings (
+                            language          TEXT       NOT NULL,
+                            word              TEXT       NOT NULL,
+                            vector            vector(300) NOT NULL,
+                            frequency         INTEGER,
+                            source            TEXT,
+                            alignment_source  TEXT       NOT NULL DEFAULT 'native',
+                            created_at        TIMESTAMPTZ DEFAULT now(),
+                            PRIMARY KEY (language, word)
+                        )
+                        """
+                    )
+                )
+        except Exception:  # noqa: BLE001 -- pgvector may not be available
+            pass
+
     try:
         yield eng
     finally:
@@ -195,6 +223,81 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
 
     async with sessionmaker() as session:
         yield session
+
+
+# ---------------------------------------------------------------------------
+# Shared API-test fixtures
+# ---------------------------------------------------------------------------
+#
+# `client` and `sample_data` were originally defined inside test_server.py.
+# Promoted to conftest.py so other test modules (test_multilingual.py,
+# anything new) can mount the FastAPI app + a Postgres-backed repository
+# without duplicating fixture wiring. Per-test turnaround is unchanged.
+
+
+@pytest_asyncio.fixture(loop_scope="session")
+async def client(db_session):
+    """Mounted FastAPI ASGI client backed by the per-test session."""
+    from httpx import ASGITransport, AsyncClient
+    from openetruscan.api.server import app
+    from openetruscan.db.session import get_session
+
+    def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(loop_scope="session")
+async def sample_data(db_session):
+    """Three canonical inscriptions used across multiple test modules."""
+    from openetruscan.db.repository import InscriptionData, InscriptionRepository
+
+    repo = InscriptionRepository(db_session)
+    test_data = [
+        InscriptionData(
+            id="ETR_001",
+            raw_text="LARTHAL",
+            canonical="larθal",
+            findspot="Cerveteri",
+            findspot_lat=42.0,
+            findspot_lon=12.0,
+            language="etruscan",
+            classification="funerary",
+        ),
+        InscriptionData(
+            id="ETR_002",
+            raw_text="ARNTH",
+            canonical="arnθ",
+            findspot="Tarquinia",
+            findspot_lat=42.5,
+            findspot_lon=11.5,
+            language="etruscan",
+            classification="funerary",
+            # ETR_002 carries a date and TM id so the structured-query
+            # tests can exercise chronology + cross-corpus paths against
+            # the same fixture.
+            date_approx=-600,
+            trismegistos_id="TM_12345",
+        ),
+        InscriptionData(
+            id="ETR_003",
+            raw_text="TEST",
+            canonical="test",
+            findspot="Rome",
+            findspot_lat=41.9,
+            findspot_lon=12.5,
+            language="latin",
+            classification="legal",
+        ),
+    ]
+    for item in test_data:
+        await repo.add(item)
+    await db_session.commit()
+    return test_data
 
 
 def pytest_configure(config: pytest.Config) -> None:

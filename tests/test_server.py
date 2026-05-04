@@ -19,16 +19,12 @@ Tests cover:
 import os
 
 import pytest
-import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession
+from httpx import AsyncClient
 
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["ENABLE_DOCS"] = "1"
 
-from openetruscan.api.server import app
-from openetruscan.db.session import get_session
-from openetruscan.db.repository import InscriptionRepository, InscriptionData
+# `client` and `sample_data` fixtures live in tests/conftest.py.
 
 
 # All tests in this module mount the FastAPI app + a real Postgres session
@@ -37,61 +33,8 @@ from openetruscan.db.repository import InscriptionRepository, InscriptionData
 # compute (no DB). These run in the main CI path.
 
 
-@pytest_asyncio.fixture
-async def client(db_session: AsyncSession):
-    def override_get_session():
-        yield db_session
-
-    app.dependency_overrides[get_session] = override_get_session
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        yield ac
-    app.dependency_overrides.clear()
-
-
-@pytest_asyncio.fixture
-async def sample_data(db_session: AsyncSession):
-    repo = InscriptionRepository(db_session)
-    test_data = [
-        InscriptionData(
-            id="ETR_001",
-            raw_text="LARTHAL",
-            canonical="larθal",
-            findspot="Cerveteri",
-            findspot_lat=42.0,
-            findspot_lon=12.0,
-            language="etruscan",
-            classification="funerary",
-        ),
-        InscriptionData(
-            id="ETR_002",
-            raw_text="ARNTH",
-            canonical="arnθ",
-            findspot="Tarquinia",
-            findspot_lat=42.5,
-            findspot_lon=11.5,
-            language="etruscan",
-            classification="funerary",
-            # date_approx + trismegistos_id let the structured-query tests
-            # exercise the chronology / cross_corpus paths without needing
-            # a separate fixture.
-            date_approx=-600,  # archaic period
-            trismegistos_id="TM_12345",
-        ),
-        InscriptionData(
-            id="ETR_003",
-            raw_text="TEST",
-            canonical="test",
-            findspot="Rome",
-            findspot_lat=41.9,
-            findspot_lon=12.5,
-            language="latin",
-            classification="legal",
-        ),
-    ]
-    for item in test_data:
-        await repo.add(item)
-    await db_session.commit()
-    return test_data
+# `client` and `sample_data` fixtures live in tests/conftest.py so other
+# test modules can share them without duplication.
 
 
 # ============================================================================
