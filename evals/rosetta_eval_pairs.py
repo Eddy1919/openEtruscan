@@ -22,91 +22,115 @@ import unicodedata
 from dataclasses import dataclass
 
 
+VALID_CATEGORIES = (
+    "kinship",
+    "civic",
+    "religious",
+    "time",
+    "numeral",
+    "verb",
+    "theonym",
+    "onomastic",
+)
+
+
 @dataclass(frozen=True)
 class EvalPair:
-    """One Etruscan-Latin equivalence used to grade alignment quality."""
+    """One Etruscan-Latin equivalence used to grade alignment quality.
+
+    ``category`` lets the eval harness break precision@k down by semantic
+    domain. Some categories (theonyms, kinship) are easier than others
+    (numerals are notoriously contested in the philological literature),
+    and the breakdown surfaces *where* the encoder is doing well rather
+    than reporting a single global number.
+    """
 
     etr: str
     lat: str
     gloss: str
     confidence: str  # "low" | "medium" | "high"
     source: str
+    category: str = "uncategorised"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "etr", unicodedata.normalize("NFC", self.etr).lower())
         object.__setattr__(self, "lat", unicodedata.normalize("NFC", self.lat).lower())
+        if self.category not in VALID_CATEGORIES + ("uncategorised",):
+            raise ValueError(
+                f"EvalPair category {self.category!r} not in {VALID_CATEGORIES}"
+            )
 
 
 EVAL_PAIRS: list[EvalPair] = [
     # Kinship
-    EvalPair("clan", "filius", "son", "high", "Bonfante 2002 §96"),
-    EvalPair("sec", "filia", "daughter", "high", "Bonfante 2002 §97"),
-    EvalPair("ati", "mater", "mother", "high", "Wallace 2008 §3.4"),
-    EvalPair("apa", "pater", "father", "high", "Wallace 2008 §3.4"),
-    EvalPair("puia", "uxor", "wife", "high", "Bonfante 2002 §99"),
-    EvalPair("nefts", "nepos", "nephew/grandson", "high", "Bonfante 2002 §99"),
-    EvalPair("ruva", "frater", "brother", "medium", "Bonfante 2002 §99"),
-    EvalPair("papa", "avus", "grandfather", "medium", "Wallace 2008 §3.4"),
-    EvalPair("lautn", "familia", "family/lineage", "high", "Pallottino 1968 §47"),
+    EvalPair("clan", "filius", "son", "high", "Bonfante 2002 §96", "kinship"),
+    EvalPair("sec", "filia", "daughter", "high", "Bonfante 2002 §97", "kinship"),
+    EvalPair("ati", "mater", "mother", "high", "Wallace 2008 §3.4", "kinship"),
+    EvalPair("apa", "pater", "father", "high", "Wallace 2008 §3.4", "kinship"),
+    EvalPair("puia", "uxor", "wife", "high", "Bonfante 2002 §99", "kinship"),
+    EvalPair("nefts", "nepos", "nephew/grandson", "high", "Bonfante 2002 §99", "kinship"),
+    EvalPair("ruva", "frater", "brother", "medium", "Bonfante 2002 §99", "kinship"),
+    EvalPair("papa", "avus", "grandfather", "medium", "Wallace 2008 §3.4", "kinship"),
+    EvalPair("lautn", "familia", "family/lineage", "high", "Pallottino 1968 §47", "kinship"),
     # Civic / magistracies
-    EvalPair("zilaθ", "praetor", "magistrate", "high", "Bonfante 2002 §83"),
-    EvalPair("zilθ", "praetor", "magistrate", "high", "Wallace 2008 §3.5"),
-    EvalPair("maru", "magister", "magistracy title", "medium", "Bonfante 2002 §83"),
-    EvalPair("cepen", "sacerdos", "priest", "medium", "Wallace 2008 §3.5"),
-    EvalPair("spura", "civitas", "city/state", "high", "Bonfante 2002 §85"),
-    EvalPair("methlum", "civitas", "community", "medium", "Pallottino 1968 §50"),
-    EvalPair("tular", "fines", "boundaries", "high", "Bonfante 2002 §86"),
-    EvalPair("rasna", "etruscus", "Etruscan (ethnonym)", "high", "Bonfante 2002 §1"),
+    EvalPair("zilaθ", "praetor", "magistrate", "high", "Bonfante 2002 §83", "civic"),
+    EvalPair("zilθ", "praetor", "magistrate", "high", "Wallace 2008 §3.5", "civic"),
+    EvalPair("maru", "magister", "magistracy title", "medium", "Bonfante 2002 §83", "civic"),
+    EvalPair("cepen", "sacerdos", "priest", "medium", "Wallace 2008 §3.5", "civic"),
+    EvalPair("spura", "civitas", "city/state", "high", "Bonfante 2002 §85", "civic"),
+    EvalPair("methlum", "civitas", "community", "medium", "Pallottino 1968 §50", "civic"),
+    EvalPair("tular", "fines", "boundaries", "high", "Bonfante 2002 §86", "civic"),
+    EvalPair("rasna", "etruscus", "Etruscan (ethnonym)", "high", "Bonfante 2002 §1", "civic"),
     # Funerary / religious
-    EvalPair("suθi", "sepulcrum", "tomb", "high", "Bonfante 2002 §90"),
-    EvalPair("ais", "deus", "god (loanword family)", "medium", "Wallace 2008 §3.6"),
-    EvalPair("aiser", "dei", "gods", "medium", "Wallace 2008 §3.6"),
-    EvalPair("fler", "sacrum", "sacred offering", "medium", "Bonfante 2002 §93"),
-    EvalPair("flerχva", "sacra", "sacred things", "medium", "Bonfante 2002 §93"),
-    EvalPair("fanu", "fanum", "sacred place", "medium", "Wallace 2008 §3.6"),
+    EvalPair("suθi", "sepulcrum", "tomb", "high", "Bonfante 2002 §90", "religious"),
+    EvalPair("ais", "deus", "god (loanword family)", "medium", "Wallace 2008 §3.6", "religious"),
+    EvalPair("aiser", "dei", "gods", "medium", "Wallace 2008 §3.6", "religious"),
+    EvalPair("fler", "sacrum", "sacred offering", "medium", "Bonfante 2002 §93", "religious"),
+    EvalPair("flerχva", "sacra", "sacred things", "medium", "Bonfante 2002 §93", "religious"),
+    EvalPair("fanu", "fanum", "sacred place", "medium", "Wallace 2008 §3.6", "religious"),
     # Time / calendar
-    EvalPair("avil", "annus", "year", "high", "Bonfante 2002 §82"),
-    EvalPair("avils", "annorum", "of years (genitive)", "high", "Bonfante 2002 §82"),
-    EvalPair("tiur", "mensis", "month", "high", "Bonfante 2002 §82"),
-    EvalPair("usil", "sol", "sun", "high", "Bonfante 2002 §82"),
-    EvalPair("tiu", "luna", "moon", "medium", "Pallottino 1968 §52"),
+    EvalPair("avil", "annus", "year", "high", "Bonfante 2002 §82", "time"),
+    EvalPair("avils", "annorum", "of years (genitive)", "high", "Bonfante 2002 §82", "time"),
+    EvalPair("tiur", "mensis", "month", "high", "Bonfante 2002 §82", "time"),
+    EvalPair("usil", "sol", "sun", "high", "Bonfante 2002 §82", "time"),
+    EvalPair("tiu", "luna", "moon", "medium", "Pallottino 1968 §52", "time"),
     # Cardinal numerals
-    EvalPair("θu", "unus", "one", "medium", "Wallace 2008 §3.7"),
-    EvalPair("zal", "duo", "two", "high", "Bonfante 2002 §80"),
-    EvalPair("ci", "tres", "three", "high", "Bonfante 2002 §80"),
-    EvalPair("huθ", "sex", "six", "medium", "Wallace 2008 §3.7"),
-    EvalPair("śa", "quattuor", "four", "medium", "Wallace 2008 §3.7"),
-    EvalPair("maχ", "quinque", "five", "medium", "Wallace 2008 §3.7"),
-    EvalPair("semφ", "septem", "seven", "medium", "Wallace 2008 §3.7"),
-    EvalPair("cezp", "octo", "eight", "medium", "Wallace 2008 §3.7"),
-    EvalPair("nurφ", "novem", "nine", "medium", "Wallace 2008 §3.7"),
-    EvalPair("śar", "decem", "ten", "high", "Bonfante 2002 §80"),
+    EvalPair("θu", "unus", "one", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("zal", "duo", "two", "high", "Bonfante 2002 §80", "numeral"),
+    EvalPair("ci", "tres", "three", "high", "Bonfante 2002 §80", "numeral"),
+    EvalPair("huθ", "sex", "six", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("śa", "quattuor", "four", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("maχ", "quinque", "five", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("semφ", "septem", "seven", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("cezp", "octo", "eight", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("nurφ", "novem", "nine", "medium", "Wallace 2008 §3.7", "numeral"),
+    EvalPair("śar", "decem", "ten", "high", "Bonfante 2002 §80", "numeral"),
     # Verbs
-    EvalPair("turce", "dedit", "gave (votive)", "high", "Bonfante 2002 §75"),
-    EvalPair("mulvanice", "dedicavit", "dedicated", "high", "Bonfante 2002 §75"),
-    EvalPair("mulu", "dedit", "dedicated/gave", "medium", "Pallottino 1968 §57"),
-    EvalPair("ace", "fecit", "made", "high", "Bonfante 2002 §75"),
-    EvalPair("lupuce", "mortuus", "died", "high", "Bonfante 2002 §75"),
-    EvalPair("svalce", "vixit", "lived", "high", "Bonfante 2002 §75"),
-    EvalPair("ame", "est", "is/was", "medium", "Wallace 2008 §3.8"),
-    EvalPair("zinace", "scripsit", "wrote/inscribed", "medium", "Wallace 2008 §3.8"),
-    EvalPair("zich", "scribere", "to write", "medium", "Bonfante 2002 §75"),
-    EvalPair("ziχ", "scriptura", "writing/script", "medium", "Bonfante 2002 §75"),
+    EvalPair("turce", "dedit", "gave (votive)", "high", "Bonfante 2002 §75", "verb"),
+    EvalPair("mulvanice", "dedicavit", "dedicated", "high", "Bonfante 2002 §75", "verb"),
+    EvalPair("mulu", "dedit", "dedicated/gave", "medium", "Pallottino 1968 §57", "verb"),
+    EvalPair("ace", "fecit", "made", "high", "Bonfante 2002 §75", "verb"),
+    EvalPair("lupuce", "mortuus", "died", "high", "Bonfante 2002 §75", "verb"),
+    EvalPair("svalce", "vixit", "lived", "high", "Bonfante 2002 §75", "verb"),
+    EvalPair("ame", "est", "is/was", "medium", "Wallace 2008 §3.8", "verb"),
+    EvalPair("zinace", "scripsit", "wrote/inscribed", "medium", "Wallace 2008 §3.8", "verb"),
+    EvalPair("zich", "scribere", "to write", "medium", "Bonfante 2002 §75", "verb"),
+    EvalPair("ziχ", "scriptura", "writing/script", "medium", "Bonfante 2002 §75", "verb"),
     # Theonyms
-    EvalPair("tinia", "iuppiter", "Jupiter", "high", "Bonfante 2002 §93"),
-    EvalPair("uni", "iuno", "Juno", "high", "Bonfante 2002 §93"),
-    EvalPair("menrva", "minerva", "Minerva", "high", "Bonfante 2002 §93"),
-    EvalPair("aita", "dis", "Hades/Dis", "high", "Bonfante 2002 §93"),
-    EvalPair("φersipnai", "proserpina", "Persephone", "high", "Bonfante 2002 §93"),
-    EvalPair("turan", "venus", "Venus", "high", "Bonfante 2002 §93"),
-    EvalPair("turms", "mercurius", "Mercury", "high", "Bonfante 2002 §93"),
-    EvalPair("fufluns", "bacchus", "Bacchus/Dionysus", "high", "Bonfante 2002 §93"),
-    EvalPair("hercle", "hercules", "Hercules", "high", "Bonfante 2002 §93"),
-    EvalPair("nethuns", "neptunus", "Neptune", "high", "Bonfante 2002 §93"),
+    EvalPair("tinia", "iuppiter", "Jupiter", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("uni", "iuno", "Juno", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("menrva", "minerva", "Minerva", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("aita", "dis", "Hades/Dis", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("φersipnai", "proserpina", "Persephone", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("turan", "venus", "Venus", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("turms", "mercurius", "Mercury", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("fufluns", "bacchus", "Bacchus/Dionysus", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("hercle", "hercules", "Hercules", "high", "Bonfante 2002 §93", "theonym"),
+    EvalPair("nethuns", "neptunus", "Neptune", "high", "Bonfante 2002 §93", "theonym"),
     # Onomastic praenomina
-    EvalPair("avle", "aulus", "Aulus (praenomen)", "high", "Bonfante 2002 §62"),
-    EvalPair("vel", "velius", "Velius (praenomen)", "medium", "Bonfante 2002 §62"),
-    EvalPair("larθ", "lars", "Lars (praenomen)", "high", "Bonfante 2002 §62"),
+    EvalPair("avle", "aulus", "Aulus (praenomen)", "high", "Bonfante 2002 §62", "onomastic"),
+    EvalPair("vel", "velius", "Velius (praenomen)", "medium", "Bonfante 2002 §62", "onomastic"),
+    EvalPair("larθ", "lars", "Lars (praenomen)", "high", "Bonfante 2002 §62", "onomastic"),
 ]
 
 
