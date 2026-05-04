@@ -145,16 +145,28 @@ a toy demo:
   / 1,306 unique tokens after `min_count=2`** — five orders of magnitude
   smaller than MUSE's training regime. The Etruscan baseline now lives
   on prod (commit 919d9e5) and the manifold is **collapsed**: mean top-1
-  cosine ≈ 0.998, top-10 spread < 0.002 across every probe word.
+  cosine ≈ 0.998, top-10 spread ≈ 0.0028 across every probe word.
   Rankings remain meaningful (Larth-family praenomina cluster correctly,
   kinship terms cluster, magistracy vocab clusters); absolute distances
-  do not. We tried `vector_size` ∈ {30, 50, 75, 100}, more negative
-  samples (15–20), and frequent-word subsampling (`sample=1e-4`). None
-  spread the cosines materially without breaking semantic cohesion.
-  **Conclusion**: vanilla unsupervised MUSE is unlikely to work at this
-  scale. Phase 2 should pursue **supervised** alignment using the ~100
-  known Etruscan-Latin equivalences from the philological literature, or
-  augment with character-level pretraining before word-level FastText.
+  do not. Sweeps tried and rejected:
+  - `vector_size` ∈ {30, 50, 75, 100}: identical top-N spread.
+  - `negative` ∈ {5, 15, 20} + `sample=1e-4` (subsample frequent words):
+    spread cosines but destroyed semantic cohesion.
+  - **Character-level pretraining** (Word2Vec on glyph streams →
+    seed FastText word vectors → continue training): seeding succeeded
+    mechanically (1306/1306 word vectors initialised), but final spread
+    was identical to baseline (0.0028 vs 0.0028) and neighbour orderings
+    were nearly unchanged. **The collapse is data-bound, not
+    initialisation-bound** — same 15k tokens, same ceiling regardless of
+    where you start the gradient descent.
+  Tooling for the char-init path is shipped (`train_model_with_char_init`,
+  CLI `--char-init`) so future experiments can re-run it against a
+  larger corpus without rewriting the wiring. **Conclusion**: vanilla
+  unsupervised MUSE is unlikely to work at this scale. Phase 2 should
+  pursue **supervised** alignment using the ~100 known Etruscan-Latin
+  equivalences from the philological literature, or **expand the
+  corpus** by ingesting CIE volumes II-III and other epigraphic
+  sources not yet in the database.
 - **Inflection density.** Etruscan inflection patterns may break FastText's
   sub-word assumption; the language might need a custom morpheme tokeniser
   before training. This is a 1–2 week side project on its own.
