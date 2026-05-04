@@ -128,11 +128,15 @@ def extract_training_corpus(
 # Training
 # ---------------------------------------------------------------------------
 
-# Defaults tuned for an ancient-language corpus of ~50k tokens. Reasoning:
+# Defaults tuned for an ancient-language corpus of ~15k tokens. Reasoning:
 #
 # * vector_size=100 — the manifold can't support more than that at this
-#   token count without overfitting. Increase only if/when the corpus
-#   grows ≥10x.
+#   token count without overfitting. We tried 50 and 30 and they did NOT
+#   improve cosine spread (mean top-N spread 0.0013–0.0020 across all
+#   sizes); the corpus simply doesn't have enough co-occurrence data to
+#   differentiate vectors regardless of dimensionality. Keep at 100 because
+#   semantic clustering is slightly tighter there. Increase only if/when
+#   the corpus grows ≥10x.
 # * window=5 — average inscription length is short; a wider window mostly
 #   pulls noise from sentence boundaries.
 # * min_count=2 — drop hapax legomena. They hurt training (no signal to
@@ -142,6 +146,20 @@ def extract_training_corpus(
 #   units. Larger ranges blow up the n-gram dictionary.
 # * epochs=20 — small corpus, more passes. Overfitting risk is low because
 #   FastText regularises via the n-gram smoothing.
+# * sg=1 — skip-gram, better than CBOW for small corpora.
+#
+# Levers we tried and rejected:
+# * `sample=1e-4` (subsample frequent words): destroyed semantic cohesion
+#   because we can't afford to drop ANY training tokens at this scale.
+# * `negative=15+` (more negative samples): same problem — pushed unrelated
+#   words apart so aggressively that genuine co-occurrence signal got lost.
+# Both were attempts to spread cosine values out. They worked for the
+# spread metric but broke the semantics.
+#
+# The flat-cosine problem (mean top-1 cosine ≈ 0.998) is a property of the
+# corpus size, not the config. Phase 2 alignment must account for this —
+# absolute distances aren't reliable but rankings within neighbourhoods
+# remain informative.
 DEFAULT_TRAINING_PARAMS: dict[str, Any] = {
     "vector_size": 100,
     "window": 5,
@@ -150,7 +168,7 @@ DEFAULT_TRAINING_PARAMS: dict[str, Any] = {
     "max_n": 6,
     "epochs": 20,
     "workers": 2,
-    "sg": 1,  # skip-gram; better than CBOW for small corpora.
+    "sg": 1,
 }
 
 

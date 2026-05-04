@@ -140,13 +140,21 @@ multiply + nearest-neighbour lookup; sub-50 ms even on CPU.
 Honest list. These determine whether the project is publishable or just
 a toy demo:
 
-- **Corpus size.** MUSE was developed on Wikipedia-scale data
-  (≥10⁸ tokens). Etruscan has ~50 000 attested word tokens. Below some
-  size threshold the embedding manifold doesn't have enough internal
-  structure for adversarial alignment to find correspondences. If FastText
-  perplexity on Etruscan is poor, Phase 2 won't work — we'd need to
-  augment with character-level models or fall back to supervised
-  alignment using the ~100 known equivalences.
+- **Corpus size — confirmed problem.** MUSE was developed on Wikipedia-
+  scale data (≥10⁸ tokens). Our corpus yields **15,022 training tokens
+  / 1,306 unique tokens after `min_count=2`** — five orders of magnitude
+  smaller than MUSE's training regime. The Etruscan baseline now lives
+  on prod (commit 919d9e5) and the manifold is **collapsed**: mean top-1
+  cosine ≈ 0.998, top-10 spread < 0.002 across every probe word.
+  Rankings remain meaningful (Larth-family praenomina cluster correctly,
+  kinship terms cluster, magistracy vocab clusters); absolute distances
+  do not. We tried `vector_size` ∈ {30, 50, 75, 100}, more negative
+  samples (15–20), and frequent-word subsampling (`sample=1e-4`). None
+  spread the cosines materially without breaking semantic cohesion.
+  **Conclusion**: vanilla unsupervised MUSE is unlikely to work at this
+  scale. Phase 2 should pursue **supervised** alignment using the ~100
+  known Etruscan-Latin equivalences from the philological literature, or
+  augment with character-level pretraining before word-level FastText.
 - **Inflection density.** Etruscan inflection patterns may break FastText's
   sub-word assumption; the language might need a custom morpheme tokeniser
   before training. This is a 1–2 week side project on its own.
