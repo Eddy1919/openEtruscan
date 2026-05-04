@@ -50,12 +50,23 @@ class TestLanguageRegistry:
                 )
 
     def test_minoan_specifically_listed(self):
-        """The user explicitly asked for Minoan; surface it as tier 3 with a note."""
+        """The user explicitly asked for Minoan; surface it as tier 3 with
+        a note that explains the alignment refusal."""
         assert "lin_a" in LANGUAGE_TIERS
         rec = LANGUAGE_TIERS["lin_a"]
         assert rec.tier == 3
+        assert rec.deciphered is False
         assert rec.alignable is False
-        assert "undeciphered" in rec.notes.lower() or "scientifically" in rec.notes.lower()
+        # Linear A is interesting because it's NON-alignable but still has
+        # enough corpus to train within-language structural embeddings.
+        assert rec.structural_embedding_viable is True
+        # The note must explain why alignment is refused — check for any
+        # of the standard phrasings.
+        signals = (
+            "undeciphered", "no semantic ground truth", "scientifically",
+            "cross-language alignment", "not supported",
+        )
+        assert any(s in rec.notes.lower() for s in signals), rec.notes
 
     def test_basque_is_proxy_labelled(self):
         """Modern Basque is in the registry but the note must flag it as a

@@ -59,10 +59,21 @@ EMBEDDING_DIM = 300
 class LanguageRecord:
     """Metadata for one language we might store vectors for.
 
-    ``alignable`` distinguishes "can be honestly aligned to other deciphered
-    languages" (tier 1+2) from "structural embedding only — no semantic
-    alignment claim" (tier 3). The API enforces this: cross-language
-    neighbour queries refuse if either side has ``alignable=False``.
+    Two independent capability flags:
+
+    * ``alignable`` — can be honestly aligned to other deciphered languages
+      via supervised Procrustes. Tier 1+2 only. The cross-language API
+      refuses queries where either side has ``alignable=False``.
+    * ``structural_embedding_viable`` — has enough corpus / co-occurrence
+      data for FastText to learn meaningful within-language sign
+      relationships, even if cross-language alignment is impossible.
+      Linear A (undeciphered, ~1500 fragments) qualifies; Illyrian
+      (onomastic-only, no productive corpus) does not.
+
+    A tier-3 language can have ``structural_embedding_viable=True`` —
+    that means we can store its native vectors in the table for
+    within-language exploration ("which Linear A sign clusters appear in
+    similar contexts?") without claiming any cross-language meaning.
     """
 
     code: str               # ISO 639-3 where possible; otherwise project-local
@@ -74,6 +85,8 @@ class LanguageRecord:
     notes: str = ""
     expected_dim: int = EMBEDDING_DIM
     typical_source: str = ""
+    structural_embedding_viable: bool = True  # default True for the alignable languages;
+                                              # tier-3 entries set this explicitly
 
 
 LANGUAGE_TIERS: dict[str, LanguageRecord] = {
@@ -135,32 +148,51 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
               "equivalence.",
     ),
     # ── Tier 3: structural-only, NOT semantically alignable ────────────
+    # `structural_embedding_viable` differentiates "we can train within-
+    # language structural FastText" from "the corpus is too thin even
+    # for that". Cross-language semantic alignment is refused for ALL
+    # tier-3 entries regardless.
     "lin_a": LanguageRecord(
         code="lin_a", name="Linear A / Minoan", tier=3,
-        deciphered=False, alignable=False, corpus_status="undeciphered",
-        notes="~1500 fragments. No bilingual key, no glosses. Structural "
-              "embeddings can be stored (positional patterns, sign "
-              "co-occurrence) but ALIGNMENT to deciphered languages is "
-              "scientifically unsupported. The API refuses such queries.",
+        deciphered=False, alignable=False,
+        structural_embedding_viable=True,
+        corpus_status="ingest_pending",
+        typical_source="Younger's Linear A inscription database",
+        notes="~1500 fragments / ~3000 sign tokens. Enough sign-sequence "
+              "co-occurrence to train a FastText that captures structural "
+              "neighbourhoods (which sign clusters appear in similar "
+              "contexts). Cross-language alignment to deciphered languages "
+              "is NOT supported — there's no semantic ground truth.",
     ),
     "xnu": LanguageRecord(
         code="xnu", name="Nuragic / pre-Roman Sardic", tier=3,
-        deciphered=False, alignable=False, corpus_status="undeciphered",
-        notes="A handful of short inscriptions, undeciphered. Same status "
-              "as Linear A: structural only.",
+        deciphered=False, alignable=False,
+        structural_embedding_viable=False,
+        corpus_status="undeciphered",
+        notes="~30-50 short inscriptions. Below FastText viability "
+              "threshold even for structural embeddings. Move to "
+              "structural_embedding_viable=True if a larger digitisation "
+              "(e.g. all known Nuragic bronzetto inscriptions) lands.",
     ),
     "xil": LanguageRecord(
         code="xil", name="Illyrian", tier=3,
-        deciphered=False, alignable=False, corpus_status="missing",
-        notes="Predominantly onomastic data. Not a productive corpus; "
-              "FastText would learn nothing meaningful.",
+        deciphered=False, alignable=False,
+        structural_embedding_viable=False,
+        corpus_status="missing",
+        notes="Predominantly onomastic data — personal names attested in "
+              "Greek/Latin sources, no running text. FastText needs "
+              "co-occurrence context that this corpus doesn't provide.",
     ),
     "xfa": LanguageRecord(
         code="xfa", name="Faliscan", tier=3,
-        deciphered=True, alignable=False, corpus_status="missing",
+        deciphered=True, alignable=False,
+        structural_embedding_viable=False,
+        corpus_status="missing",
         notes="Deciphered (Italic, sister of Latin) but corpus is ~300 "
               "inscriptions / sub-1k tokens — below FastText viability "
-              "threshold. Move to tier 2 if a larger digitisation lands.",
+              "threshold. Move to tier 2 + alignable=True if a larger "
+              "digitisation lands; the language itself supports semantic "
+              "alignment, only the data is missing.",
     ),
 }
 
@@ -211,6 +243,12 @@ async def populate_aligned_language(
     if record is None:
         raise ValueError(
             f"Unknown language code {language!r}. Add it to LANGUAGE_TIERS first."
+        )
+    if not record.structural_embedding_viable:
+        raise ValueError(
+            f"Language {language!r} is registered as structurally non-viable "
+            f"(insufficient corpus). Refusing to populate vectors that would "
+            f"be misleading. Note: {record.notes}"
         )
 
     rows: list[dict[str, Any]] = []
