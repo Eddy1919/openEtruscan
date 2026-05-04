@@ -1346,6 +1346,17 @@ async def semantic_search(
     return {"total": results.total, "count": len(data), "results": data}
 
 
+@app.get("/genetics/samples", tags=["Genetics"])
+@limiter.limit("60/minute")
+async def get_all_genetic_samples(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> list[dict[str, Any]]:
+    """Retrieve all geotagged genetic samples for spatial mapping."""
+    repo = InscriptionRepository(session)
+    return await repo.get_genetic_samples()
+
+
 @app.get("/inscriptions/{id}/genetics", tags=["Genetics"])
 @limiter.limit("30/minute")
 async def get_genetic_matches(

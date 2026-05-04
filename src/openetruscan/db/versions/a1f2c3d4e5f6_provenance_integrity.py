@@ -80,23 +80,24 @@ def upgrade() -> None:
 
     # 1. Drop any prior CHECK constraint on the column (best-effort; some envs
     #    have a generic constraint name, others have a model-derived one).
-    op.execute(
-        sa.text(
-            """
-            DO $$
-            DECLARE c text;
-            BEGIN
-              FOR c IN
-                SELECT conname FROM pg_constraint
-                WHERE conrelid = 'public.inscriptions'::regclass
-                  AND conname ILIKE '%provenance_status%'
-              LOOP
-                EXECUTE format('ALTER TABLE inscriptions DROP CONSTRAINT %I', c);
-              END LOOP;
-            END $$;
-            """
+    if op.get_context().dialect.name == "postgresql":
+        op.execute(
+            sa.text(
+                """
+                DO $$
+                DECLARE c text;
+                BEGIN
+                  FOR c IN
+                    SELECT conname FROM pg_constraint
+                    WHERE conrelid = 'public.inscriptions'::regclass
+                      AND conname ILIKE '%provenance_status%'
+                  LOOP
+                    EXECUTE format('ALTER TABLE inscriptions DROP CONSTRAINT %I', c);
+                  END LOOP;
+                END $$;
+                """
+            )
         )
-    )
 
     # 2. Backfill. We do this in a single UPDATE: rows with a non-empty findspot
     #    move to 'acquired_documented'; rows without move to
@@ -118,18 +119,20 @@ def upgrade() -> None:
     # 3. Reaffirm the column NOT NULL (it already is per models.py, but the
     #    backfill should have left no nulls — assert that explicitly so the
     #    migration fails loudly if a row sneaked through).
-    op.execute(
-        sa.text(
-            """
-            DO $$
-            BEGIN
-              IF EXISTS (SELECT 1 FROM inscriptions WHERE provenance_status IS NULL) THEN
-                RAISE EXCEPTION 'provenance_status is null on at least one row after backfill';
-              END IF;
-            END $$;
-            """
+    if op.get_context().dialect.name == "postgresql":
+        op.execute(
+            sa.text(
+                """
+                DO $$
+                BEGIN
+                  IF EXISTS (SELECT 1 FROM inscriptions WHERE provenance_status IS NULL) THEN
+                    RAISE EXCEPTION 'provenance_status is null on at least one row after backfill';
+                  END IF;
+                END $$;
+                """
+            )
         )
-    )
+
 
     # 4. Add a CHECK constraint with the new vocabulary. Use a dedicated name
     #    so future migrations can find and modify it.

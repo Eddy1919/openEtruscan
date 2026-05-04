@@ -20,29 +20,41 @@ logger = logging.getLogger("ingest_genetics")
 
 
 def parse_date(date_str: str) -> tuple[int | None, int | None]:
-    """Parse dates like '400 BCE', '-400', '400', '800-400 BCE' into approx and uncertainty."""
+    """Parse dates like '400 BCE', '2450 BP', '400', '800-400 BCE' into approx and uncertainty."""
     if not date_str or date_str.lower() in ["..", "nodate", "nan"]:
         return None, None
 
     date_str = date_str.strip().upper()
     try:
-        # AADR format uses mean in years BCE/CE or BP
-        if "BCE" in date_str:
-            val = date_str.replace("BCE", "").strip()
+        # 1. Handle BP (Before Present, standard is 1950)
+        if "BP" in date_str:
+            val = date_str.replace("BP", "").strip()
+            if "-" in val:
+                parts = val.split("-")
+                mean_bp = (int(parts[0]) + int(parts[1])) // 2
+                unc = abs(int(parts[0]) - int(parts[1])) // 2
+                return 1950 - mean_bp, unc
+            return 1950 - int(val), 0
+
+        # 2. Handle BCE/CE
+        if "BCE" in date_str or "BC" in date_str:
+            val = date_str.replace("BCE", "").replace("BC", "").strip()
             if "-" in val:
                 parts = val.split("-")
                 mean = -(int(parts[0]) + int(parts[1])) // 2
                 unc = abs(int(parts[0]) - int(parts[1])) // 2
                 return mean, unc
             return -int(val), 0
-        if "CE" in date_str:
-            val = date_str.replace("CE", "").strip()
+        if "CE" in date_str or "AD" in date_str:
+            val = date_str.replace("CE", "").replace("AD", "").strip()
             return int(val), 0
 
-        # Raw integer
-        return int(float(date_str)), 0
+        # 3. Handle raw integer (assume BCE if negative or in the typical range for this project)
+        val_float = float(date_str)
+        return int(val_float), 0
     except (ValueError, TypeError):
         return None, None
+
 
 
 def sniff_columns(headers: list[str]) -> dict[str, str]:
@@ -50,24 +62,47 @@ def sniff_columns(headers: list[str]) -> dict[str, str]:
     mapping = {}
     for h in headers:
         hl = h.lower()
-        if ("id" in hl or "index" in hl or "sample" in hl) and "id" not in mapping:
+        # ID mapping
+        if "genetic id" in hl and "id" not in mapping:
             mapping["id"] = h
-        if "lat" in hl:
+        elif ("id" in hl or "index" in hl or "sample" in hl) and "id" not in mapping:
+            mapping["id"] = h
+
+        # Spatial mapping
+        if "latitude" in hl or "lat" == hl.strip():
             mapping["lat"] = h
-        if "lon" in hl or "long" in hl:
+        if "longitude" in hl or "lon" == hl.strip() or "long" in hl:
             mapping["lon"] = h
-        if "date" in hl and "mean" in hl or "date" in hl and "date" not in mapping:
+
+        # Temporal mapping
+        if "date mean in bp" in hl:
             mapping["date"] = h
+        elif ("date" in hl and "mean" in hl) or ("date" in hl and "bp" in hl) or ("date" in hl and "date" not in mapping):
+            mapping["date"] = h
+
+        # Genetic mapping
         if "y haplogroup" in hl or "y-haplo" in hl or "y_haplo" in hl:
             mapping["y_haplo"] = h
-        if "mt haplogroup" in hl or "mt-haplo" in hl or "mt_haplo" in hl:
+        if "mtdna haplogroup" in hl or "mt-haplo" in hl or "mt_haplo" in hl:
             mapping["mt_haplo"] = h
+
+        # Metadata mapping
         if "locality" in hl or "site" in hl or "findspot" in hl:
             mapping["findspot"] = h
-        if "publication" in hl or "source" in hl:
+        if "first publication" in hl or "source" in hl:
             mapping["source"] = h
+        if "molecular sex" in hl or "bio" in hl + "sex" in hl or "sex" == hl.strip():
+            mapping["sex"] = h
+        if "tomb" in hl:
+            mapping["tomb"] = h
+        if "group id" in hl or "context" in hl:
+            mapping["context"] = h
+        if "full date" in hl or "c14" in hl:
+            mapping["c14"] = h
 
     return mapping
+
+
 
 
 def ingest_genetics(file_path: Path, delimiter: str = "\t"):
@@ -119,11 +154,16 @@ def ingest_genetics(file_path: Path, delimiter: str = "\t"):
                 date_uncertainty=date_uncert,
                 y_haplogroup=row.get(mapping.get("y_haplo", ""), "").strip(),
                 mt_haplogroup=row.get(mapping.get("mt_haplo", ""), "").strip(),
+                biological_sex=row.get(mapping.get("sex", ""), "").strip(),
+                c14_date_range=row.get(mapping.get("c14", ""), "").strip(),
+                tomb_id=row.get(mapping.get("tomb", ""), "").strip(),
+                context_detail=row.get(mapping.get("context", ""), "").strip(),
                 source=source,
                 notes=f"Auto-ingested via scripts/ingest_genetics.py from {file_path.name}",
             )
 
             corpus.add_genetic_sample(sample)
+
             count += 1
 
             if count % 100 == 0:

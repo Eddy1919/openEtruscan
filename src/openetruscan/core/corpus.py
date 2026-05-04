@@ -192,6 +192,11 @@ class GeneticSample:
     date_uncertainty: int | None = None
     y_haplogroup: str | None = None
     mt_haplogroup: str | None = None
+    biological_sex: str | None = None
+    c14_date_range: str | None = None
+    tomb_id: str | None = None
+    context_detail: str | None = None
+    ancestry_components: str | None = None
     source: str = ""
     notes: str = ""
 
@@ -207,6 +212,11 @@ class GeneticSample:
             "date_uncertainty": self.date_uncertainty,
             "y_haplogroup": self.y_haplogroup,
             "mt_haplogroup": self.mt_haplogroup,
+            "biological_sex": self.biological_sex,
+            "c14_date_range": self.c14_date_range,
+            "tomb_id": self.tomb_id,
+            "context_detail": self.context_detail,
+            "ancestry_components": self.ancestry_components,
             "source": self.source,
             "notes": self.notes,
         }
@@ -377,6 +387,11 @@ CREATE TABLE IF NOT EXISTS genetic_samples (
     date_uncertainty INTEGER,
     y_haplogroup TEXT,
     mt_haplogroup TEXT,
+    biological_sex TEXT,
+    c14_date_range TEXT,
+    tomb_id TEXT,
+    context_detail TEXT,
+    ancestry_components TEXT,
     source TEXT DEFAULT '',
     notes TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -688,6 +703,15 @@ class Corpus:
                     "CREATE INDEX IF NOT EXISTS idx_fts_canonical "
                     "ON inscriptions USING GIN (fts_canonical);"
                 )
+
+                # Genetic samples hardening
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS biological_sex TEXT;")
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS c14_date_range TEXT;")
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS tomb_id TEXT;")
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS context_detail TEXT;")
+                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS ancestry_components TEXT;")
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_genetic_tomb ON genetic_samples(tomb_id);")
+
             self._conn.commit()
 
     def add(
@@ -1129,11 +1153,13 @@ class Corpus:
             INSERT INTO genetic_samples (
                 id, findspot, findspot_lat, findspot_lon,
                 date_approx, date_uncertainty, y_haplogroup, mt_haplogroup,
-                source, notes, geom
+                biological_sex, c14_date_range, tomb_id, context_detail,
+                ancestry_components, source, notes, geom
             ) VALUES (
                 %s, %s, %s, %s,
                 %s, %s, %s, %s,
-                %s, %s,
+                %s, %s, %s, %s,
+                %s, %s, %s,
                 ST_SetSRID(ST_MakePoint(%s, %s), 4326)
             )
             ON CONFLICT (id) DO UPDATE SET
@@ -1144,6 +1170,11 @@ class Corpus:
                 date_uncertainty = EXCLUDED.date_uncertainty,
                 y_haplogroup = EXCLUDED.y_haplogroup,
                 mt_haplogroup = EXCLUDED.mt_haplogroup,
+                biological_sex = EXCLUDED.biological_sex,
+                c14_date_range = EXCLUDED.c14_date_range,
+                tomb_id = EXCLUDED.tomb_id,
+                context_detail = EXCLUDED.context_detail,
+                ancestry_components = EXCLUDED.ancestry_components,
                 source = EXCLUDED.source,
                 notes = EXCLUDED.notes,
                 geom = EXCLUDED.geom,
@@ -1158,12 +1189,18 @@ class Corpus:
             sample.date_uncertainty,
             sample.y_haplogroup,
             sample.mt_haplogroup,
+            sample.biological_sex,
+            sample.c14_date_range,
+            sample.tomb_id,
+            sample.context_detail,
+            sample.ancestry_components,
             sample.source,
             sample.notes,
             # for MakePoint: lon, lat
             sample.findspot_lon if sample.findspot_lon is not None else 0.0,
             sample.findspot_lat if sample.findspot_lat is not None else 0.0,
         )
+
         if sample.findspot_lon is None or sample.findspot_lat is None:
             sql = sql.replace("ST_SetSRID(ST_MakePoint(%s, %s), 4326)", "NULL")
             vals = vals[:-2]
