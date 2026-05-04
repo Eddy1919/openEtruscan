@@ -1,9 +1,11 @@
 """add biological_sex and c14_date_range to genetic_samples
 
 Revision ID: g2b3c4d5e6f7
-Revises: f1a2b3c4d5e6
+Revises: e7c8d9e0f1a2
 Create Date: 2026-05-03
 
+Re-parented onto e7c8d9e0f1a2 (FTS widen) to linearise the chain after
+both migrations were authored in parallel off f1a2b3c4d5e6.
 """
 
 from collections.abc import Sequence
@@ -11,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "g2b3c4d5e6f7"
-down_revision: str | None = "f1a2b3c4d5e6"
+down_revision: str | None = "e7c8d9e0f1a2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

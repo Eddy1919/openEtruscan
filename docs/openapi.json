@@ -591,6 +591,109 @@
         ]
       }
     },
+    "/neural/rosetta/languages": {
+      "get": {
+        "tags": [
+          "Neural"
+        ],
+        "summary": "Rosetta Languages",
+        "description": "List every language registered in the Rosetta vector space.\n\nEach entry surfaces the language's tier, decipherment status, and\nwhether it can participate in cross-language semantic queries. Tier-3\nlanguages (Linear A, Nuragic, Illyrian, Faliscan) are listed for\ntransparency but the lookup endpoint refuses to use them as either\nsource or target.",
+        "operationId": "rosetta_languages_neural_rosetta_languages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Rosetta Languages Neural Rosetta Languages Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/neural/rosetta": {
+      "get": {
+        "tags": [
+          "Neural"
+        ],
+        "summary": "Rosetta Lookup",
+        "description": "Cross-language nearest-neighbour query in the shared Rosetta space.\n\nRefuses tier-3 languages (undeciphered or sub-viable corpora). Returns\nHTTP 422 if either `from` or `to` is unknown, 400 if either is\ntier-3, and an empty result list if the word has no stored vector\nin the source language (call the /neural/restore-style training\npipelines first).",
+        "operationId": "rosetta_lookup_neural_rosetta_get",
+        "parameters": [
+          {
+            "name": "word",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "title": "Word"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Source language code (see /neural/rosetta/languages)",
+              "default": "ett",
+              "title": "From"
+            },
+            "description": "Source language code (see /neural/rosetta/languages)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Target language code",
+              "default": "lat",
+              "title": "To"
+            },
+            "description": "Target language code"
+          },
+          {
+            "name": "k",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "K"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/stats/summary": {
       "get": {
         "tags": [

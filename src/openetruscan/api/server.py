@@ -1029,6 +1029,93 @@ async def restore_lacunae(
         raise HTTPException(status_code=500, detail="Internal server error during restoration")
 
 
+# ── Rosetta multilingual lookup ─────────────────────────────────────────────
+
+
+@app.get("/neural/rosetta/languages", tags=["Neural"])
+@limiter.limit("60/minute")
+async def rosetta_languages(request: Request) -> dict[str, Any]:
+    """List every language registered in the Rosetta vector space.
+
+    Each entry surfaces the language's tier, decipherment status, and
+    whether it can participate in cross-language semantic queries. Tier-3
+    languages (Linear A, Nuragic, Illyrian, Faliscan) are listed for
+    transparency but the lookup endpoint refuses to use them as either
+    source or target.
+    """
+    from openetruscan.ml.multilingual import LANGUAGE_TIERS
+
+    return {
+        "languages": [
+            {
+                "code": r.code,
+                "name": r.name,
+                "tier": r.tier,
+                "deciphered": r.deciphered,
+                "alignable": r.alignable,
+                "corpus_status": r.corpus_status,
+                "notes": r.notes,
+                "typical_source": r.typical_source,
+            }
+            for r in LANGUAGE_TIERS.values()
+        ]
+    }
+
+
+@app.get("/neural/rosetta", tags=["Neural"])
+@limiter.limit("30/minute")
+async def rosetta_lookup(
+    request: Request,
+    word: Annotated[str, Query(min_length=1, max_length=MAX_TEXT_LEN)],
+    from_lang: Annotated[
+        str,
+        Query(
+            alias="from",
+            description="Source language code (see /neural/rosetta/languages)",
+        ),
+    ] = "ett",
+    to_lang: Annotated[
+        str,
+        Query(
+            alias="to",
+            description="Target language code",
+        ),
+    ] = "lat",
+    k: Annotated[int, Query(ge=1, le=50)] = 10,
+    session: AsyncSession = Depends(get_session),
+):
+    """Cross-language nearest-neighbour query in the shared Rosetta space.
+
+    Refuses tier-3 languages (undeciphered or sub-viable corpora). Returns
+    HTTP 422 if either `from` or `to` is unknown, 400 if either is
+    tier-3, and an empty result list if the word has no stored vector
+    in the source language (call the /neural/restore-style training
+    pipelines first).
+    """
+    from openetruscan.ml.multilingual import find_cross_language_neighbours
+
+    try:
+        hits = await find_cross_language_neighbours(
+            word=word,
+            source_lang=from_lang,
+            target_lang=to_lang,
+            session=session,
+            k=k,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "query": word,
+        "from": from_lang,
+        "to": to_lang,
+        "neighbours": [
+            {"word": h.word, "language": h.language, "cosine": h.cosine}
+            for h in hits
+        ],
+    }
+
+
 @app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
 async def stats_summary(request: Request, session: AsyncSession = Depends(get_session)):
