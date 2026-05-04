@@ -22,3 +22,4 @@ __all__ = [
     "to_phonetic",
     "__version__",
 ]
+
