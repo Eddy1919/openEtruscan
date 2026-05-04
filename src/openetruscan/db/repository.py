@@ -85,11 +85,14 @@ class InscriptionRepository:
         conditions = []
 
         if text_query:
-            # PostgreSQL Full Text Search
-            # In corpus.py it was: fts_canonical @@ plainto_tsquery('simple', %s)
-            conditions.append(
-                text("fts_canonical @@ plainto_tsquery('simple', :q)").bindparams(q=text_query)
-            )
+            # PostgreSQL Full Text Search vs SQLite fallback
+            dialect_name = self.session.bind.dialect.name if self.session.bind else "postgresql"
+            if dialect_name == "sqlite":
+                conditions.append(Inscription.canonical.ilike(f"%{text_query}%"))
+            else:
+                conditions.append(
+                    text("fts_canonical @@ plainto_tsquery('simple', :q)").bindparams(q=text_query)
+                )
 
         if findspot:
             conditions.append(Inscription.findspot.ilike(f"%{findspot}%"))
@@ -709,6 +712,34 @@ class InscriptionRepository:
 
         result = await self.session.execute(stmt)
         return result.scalar()
+
+    async def get_genetic_samples(self) -> list[dict[str, Any]]:
+        """
+        Retrieve all genetic samples with spatial coordinates and basic lineage markers.
+        Used for the Explorer Map genetics layer.
+        """
+        stmt = text("""
+            SELECT id, findspot, findspot_lat, findspot_lon, y_haplogroup, mt_haplogroup, 
+                   date_approx, biological_sex, c14_date_range, tomb_id
+            FROM genetic_samples
+            WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL
+        """)
+        result = await self.session.execute(stmt)
+        return [
+            {
+                "id": r.id,
+                "findspot": r.findspot,
+                "findspot_lat": r.findspot_lat,
+                "findspot_lon": r.findspot_lon,
+                "y_haplogroup": r.y_haplogroup,
+                "mt_haplogroup": r.mt_haplogroup,
+                "date_approx": r.date_approx,
+                "biological_sex": r.biological_sex,
+                "c14_date_range": r.c14_date_range,
+                "tomb_id": r.tomb_id,
+            }
+            for r in result.fetchall()
+        ]
 
     def _to_dataclass(self, model: Inscription) -> InscriptionData:
         """

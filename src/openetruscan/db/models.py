@@ -153,6 +153,9 @@ class GeneticSample(Base):
     mt_haplogroup: Mapped[str | None] = mapped_column(Text)
     biological_sex: Mapped[str | None] = mapped_column(Text)
     c14_date_range: Mapped[str | None] = mapped_column(Text)
+    tomb_id: Mapped[str | None] = mapped_column(Text, index=True)
+    context_detail: Mapped[str | None] = mapped_column(Text)
+    ancestry_components: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str | None] = mapped_column(Text, default="")
     notes: Mapped[str | None] = mapped_column(Text, default="")
     created_at: Mapped[datetime | None] = mapped_column(
