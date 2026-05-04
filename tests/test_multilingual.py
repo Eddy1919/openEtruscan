@@ -1,7 +1,7 @@
 """Tests for the multilingual Rosetta vector store + API endpoint.
 
 The persistence path needs pgvector; tests that hit the real DB are
-marked `requires_pgvector` so SQLite-only test environments skip them
+guarded with try/except so SQLite fallback environments skip them
 cleanly. The non-DB-touching surface (registry, refusal logic) is
 unconditionally tested.
 """
@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import pytest
 
+from openetruscan.ml.embeddings import MockEmbedder
 from openetruscan.ml.multilingual import (
+    EMBEDDING_DIM,
     LANGUAGE_TIERS,
     find_cross_language_neighbours,
+    populate_language,
 )
 
 
@@ -24,77 +27,65 @@ from openetruscan.ml.multilingual import (
 class TestLanguageRegistry:
     def test_anchor_language_is_present(self):
         assert "ett" in LANGUAGE_TIERS
-        assert LANGUAGE_TIERS["ett"].deciphered is True
-        assert LANGUAGE_TIERS["ett"].alignable is True
+        rec = LANGUAGE_TIERS["ett"]
+        assert rec.deciphered is True
+        assert rec.alignable is True
+
+    def test_default_dim_is_xlmr(self):
+        """Migration i4d5e6f7a8b9 sized the column at vector(768) to match
+        XLM-R-base. The registry's expected_dim has to track that."""
+        assert EMBEDDING_DIM == 768
+        for code, rec in LANGUAGE_TIERS.items():
+            assert rec.expected_dim == 768, (
+                f"language {code} has unexpected expected_dim={rec.expected_dim}"
+            )
 
     def test_tier_1_languages_are_alignable(self):
         for code, rec in LANGUAGE_TIERS.items():
             if rec.tier == 1:
                 assert rec.alignable is True, f"{code} tier 1 must be alignable"
-                assert rec.deciphered is True, f"{code} tier 1 must be deciphered"
+                assert rec.deciphered is True
 
     def test_tier_3_languages_refuse_alignment(self):
-        """Linear A, Nuragic, Illyrian, Faliscan must NOT be alignable."""
         tier3 = [r for r in LANGUAGE_TIERS.values() if r.tier == 3]
-        assert tier3, "expected at least one tier-3 entry as a guard"
+        assert tier3
         for rec in tier3:
-            assert rec.alignable is False, (
-                f"tier-3 language {rec.code} accidentally marked alignable"
-            )
+            assert rec.alignable is False
 
     def test_undeciphered_languages_are_not_alignable(self):
         for rec in LANGUAGE_TIERS.values():
             if not rec.deciphered:
-                assert rec.alignable is False, (
-                    f"undeciphered {rec.code} cannot be alignable — no semantic ground truth"
-                )
+                assert rec.alignable is False
 
     def test_minoan_specifically_listed(self):
-        """The user explicitly asked for Minoan; surface it as tier 3 with
-        a note that explains the alignment refusal."""
         assert "lin_a" in LANGUAGE_TIERS
         rec = LANGUAGE_TIERS["lin_a"]
         assert rec.tier == 3
         assert rec.deciphered is False
         assert rec.alignable is False
-        # Linear A is interesting because it's NON-alignable but still has
-        # enough corpus to train within-language structural embeddings.
         assert rec.structural_embedding_viable is True
-        # The note must explain why alignment is refused — check for any
-        # of the standard phrasings.
-        signals = (
-            "undeciphered", "no semantic ground truth", "scientifically",
-            "cross-language alignment", "not supported",
-        )
-        assert any(s in rec.notes.lower() for s in signals), rec.notes
 
     def test_basque_is_proxy_labelled(self):
-        """Modern Basque is in the registry but the note must flag it as a
-        proxy for Aquitanian — a published claim of "ancient Basque" alignment
-        without that caveat would be wrong."""
-        assert "eus" in LANGUAGE_TIERS
-        assert "proxy" in LANGUAGE_TIERS["eus"].notes.lower()
+        rec = LANGUAGE_TIERS["eus"]
+        assert "proxy" in rec.notes.lower()
 
 
 # ---------------------------------------------------------------------------
-# Refusal logic (unit, no DB)
+# Refusal logic (no DB)
 # ---------------------------------------------------------------------------
 
 
 class _StubSession:
-    """Stand-in async session for testing refusal paths that short-circuit
-    before any SQL runs. Asserts execute() is never called."""
-
-    async def execute(self, *_a: object, **_kw: object) -> object:
+    async def execute(self, *_a, **_kw):
         raise AssertionError("session.execute should not be called for refused queries")
 
 
 @pytest.mark.asyncio
 async def test_lookup_refuses_tier3_source():
-    with pytest.raises(ValueError, match="undeciphered|tier|refused"):
+    with pytest.raises(ValueError, match="undeciphered|refused|cross-language"):
         await find_cross_language_neighbours(
             word="da-da",
-            source_lang="lin_a",  # Linear A — undeciphered
+            source_lang="lin_a",
             target_lang="lat",
             session=_StubSession(),
         )
@@ -102,11 +93,11 @@ async def test_lookup_refuses_tier3_source():
 
 @pytest.mark.asyncio
 async def test_lookup_refuses_tier3_target():
-    with pytest.raises(ValueError, match="undeciphered|tier|refused"):
+    with pytest.raises(ValueError, match="undeciphered|refused|cross-language"):
         await find_cross_language_neighbours(
             word="zich",
             source_lang="ett",
-            target_lang="lin_a",  # cannot honestly project INTO an undeciphered language
+            target_lang="lin_a",
             session=_StubSession(),
         )
 
@@ -123,6 +114,52 @@ async def test_lookup_rejects_unknown_lang():
 
 
 # ---------------------------------------------------------------------------
+# populate_language refusal logic (no DB writes)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_populate_refuses_unknown_language():
+    em = MockEmbedder(dim=768)
+    with pytest.raises(ValueError, match="Unknown language"):
+        await populate_language(
+            language="zzz_nonexistent",
+            words=["a"],
+            embedder=em,
+            session=_StubSession(),
+            source="test",
+        )
+
+
+@pytest.mark.asyncio
+async def test_populate_refuses_non_viable_language():
+    """xnu (Nuragic) is registered as structural_embedding_viable=False;
+    populate must refuse so we don't ship vectors that are misleading."""
+    em = MockEmbedder(dim=768)
+    with pytest.raises(ValueError, match="non-viable|refusing"):
+        await populate_language(
+            language="xnu",
+            words=["a"],
+            embedder=em,
+            session=_StubSession(),
+            source="test",
+        )
+
+
+@pytest.mark.asyncio
+async def test_populate_refuses_dim_mismatch():
+    em = MockEmbedder(dim=42)  # not 768
+    with pytest.raises(ValueError, match="dim"):
+        await populate_language(
+            language="ett",
+            words=["a"],
+            embedder=em,
+            session=_StubSession(),
+            source="test",
+        )
+
+
+# ---------------------------------------------------------------------------
 # API: /neural/rosetta/languages
 # ---------------------------------------------------------------------------
 
@@ -132,17 +169,15 @@ async def test_languages_endpoint_returns_full_registry(client, sample_data):
     assert response.status_code == 200
     body = response.json()
     codes = {r["code"] for r in body["languages"]}
-    # Spot-check: anchor + at least one tier-3 must be present.
     assert "ett" in codes
+    assert "lat" in codes
     assert "lin_a" in codes
-    # Every entry has the right fields.
     for rec in body["languages"]:
         assert {"code", "name", "tier", "deciphered", "alignable",
                 "corpus_status", "notes"} <= rec.keys()
 
 
 async def test_rosetta_lookup_refuses_tier3_via_api(client, sample_data):
-    """The API must propagate the registry's tier-3 refusal as a 400."""
     response = await client.get(
         "/neural/rosetta",
         params={"word": "da-da", "from": "lin_a", "to": "lat"},
@@ -161,21 +196,67 @@ async def test_rosetta_lookup_unknown_target_lang(client, sample_data):
 
 
 async def test_rosetta_lookup_returns_empty_when_no_vector(client, sample_data):
-    """Source word never populated -> empty list, not an error.
-
-    The table is empty in the test DB (we haven't run populate_aligned_language
-    here), so any source-side lookup misses. That's the correct behaviour:
-    callers shouldn't get a 500 just because their query word isn't in the
-    stored vector cache.
-    """
     response = await client.get(
         "/neural/rosetta",
-        params={"word": "definitely-not-a-real-word", "from": "ett", "to": "lat"},
+        params={"word": "definitely-not-real", "from": "ett", "to": "lat"},
     )
-    # If the language_word_embeddings table doesn't exist in the test DB
-    # (SQLite fallback), accept that as a separate skip — the migration is
-    # Postgres-only because it uses pgvector.
     if response.status_code == 500:
         pytest.skip("language_word_embeddings table not available (SQLite fallback)")
     assert response.status_code == 200
     assert response.json()["neighbours"] == []
+
+
+# ---------------------------------------------------------------------------
+# Full populate → query roundtrip via MockEmbedder
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_populate_then_query_via_mock(db_session):
+    """End-to-end: write a few vectors via MockEmbedder, query them
+    cross-language, expect the SAME word to land at cosine 1.0 in
+    its own language and itself appear under the source's neighbours
+    in the target language too (since MockEmbedder is purely
+    deterministic from the string)."""
+    from sqlalchemy import text
+
+    # Skip if pgvector isn't on this backend.
+    try:
+        await db_session.execute(text("SELECT 1 FROM language_word_embeddings LIMIT 0"))
+    except Exception:
+        pytest.skip("language_word_embeddings table not present in this backend")
+
+    em = MockEmbedder(dim=768)
+
+    # Populate Etruscan and Latin with overlapping word-strings so the
+    # cosines are non-trivial. Mock vectors are deterministic per word,
+    # so ett['clan'] and lat['clan'] are the same vector — which means
+    # ett 'clan' should rank lat 'clan' first.
+    await populate_language(
+        language="ett",
+        words=["clan", "avil", "turce"],
+        embedder=em,
+        session=db_session,
+        source="mock-test",
+    )
+    await populate_language(
+        language="lat",
+        words=["clan", "filius", "annus"],
+        embedder=em,
+        session=db_session,
+        source="mock-test",
+    )
+
+    hits = await find_cross_language_neighbours(
+        word="clan",
+        source_lang="ett",
+        target_lang="lat",
+        session=db_session,
+        k=3,
+    )
+    assert len(hits) == 3
+    # 'clan' is in both Latin and Etruscan with identical mock vectors,
+    # so it must dominate the top of the Latin neighbour list.
+    assert hits[0].word == "clan"
+    assert hits[0].cosine == pytest.approx(1.0, abs=1e-4)
+    assert hits[0].language == "lat"

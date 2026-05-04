@@ -72,14 +72,19 @@ telemetry = [
     "opentelemetry-instrumentation-httpx>=0.48b0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.27",
 ]
-# FastText word-embedding stack for the Rosetta Vector Space initiative
-# (see ROADMAP.md). Phase-1 only — building monolingual clouds, no
-# alignment yet. gensim brings numpy + scipy as transitive deps.
-rosetta = [
-    "gensim>=4.3",
+# Multilingual transformer stack for the Rosetta Vector Space (2026
+# architecture, see ROADMAP). XLM-R-base + a LoRA adapter fine-tuned
+# on Etruscan inscriptions; contextual embeddings get persisted in
+# pgvector. Heavy deps (torch, transformers) — opt-in only.
+transformers = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "peft>=0.10",
+    "datasets>=2.18",
+    "accelerate>=0.27",
     "numpy>=1.24",
 ]
-all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry,rosetta]"]
+all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry,transformers]"]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
@@ -119,6 +124,7 @@ asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "real_model: tests that load real transformer models (≈1 GB download, opt-in via 'pytest -m real_model')",
 ]
 
 [tool.ruff]

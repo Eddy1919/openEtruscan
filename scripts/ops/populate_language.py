@@ -1,111 +1,107 @@
 #!/usr/bin/env python3
 """Populate one language's word vectors into the Rosetta vector store.
 
-Three usage shapes:
+Usage shapes:
 
-  # 1. Native (anchor) population — Etruscan from this repo's corpus model.
-  #    No alignment; vectors go in as-is with alignment_source='native'.
+  # Etruscan, fine-tuned LoRA adapter on top of XLM-R-base.
   python scripts/ops/populate_language.py \\
       --language ett \\
-      --source-model models/etruscan.bin
+      --base-model xlm-roberta-base \\
+      --adapter models/etr-lora-v1 \\
+      --vocab-from-corpus
 
-  # 2. Aligned population — Latin via Procrustes against the Etruscan anchor.
-  #    Loads the anchor model + the source model, fits Procrustes on the
-  #    curated anchor pairs, projects every source word into Etruscan space,
-  #    upserts the rotated vectors.
+  # Latin, just the base XLM-R (no adapter — Latin is in the encoder's
+  # pretraining).
   python scripts/ops/populate_language.py \\
       --language lat \\
-      --source-model models/cc.la.300.bin \\
-      --align-to ett \\
-      --anchor-model models/etruscan.bin
+      --base-model xlm-roberta-base \\
+      --vocab-from-file vocabs/latin_top_100k.txt
 
-  # 3. Structural-only population — Linear A. Tier-3 languages skip the
-  #    alignment step entirely; vectors are stored for within-language
-  #    exploration only. The cross-language API still refuses queries
-  #    against them.
+  # Linear A, structural-only with a custom encoder (no LoRA, no
+  # multilingual claim).
   python scripts/ops/populate_language.py \\
       --language lin_a \\
-      --source-model models/linear_a.bin \\
-      --structural-only
+      --base-model models/linear_a-encoder \\
+      --vocab-from-file vocabs/linear_a.txt
 
 Common options:
-  --max-words N        cap the populated vocab (most-frequent-first)
-  --min-frequency F    drop any word with corpus count < F
-  --dry-run            do everything except the actual database INSERT
-  --batch-size N       UPSERT batch size (default 1000)
+  --vocab-from-corpus   pull words from the inscriptions table for that
+                        language (Etruscan uses this; the others bring
+                        their own vocab list)
+  --vocab-from-file F   newline-separated word list
+  --max-words N         cap the populated vocab
+  --dry-run             everything except the actual DB INSERT
+  --use-mock-embedder   for testing: deterministic SHA-256-derived
+                        vectors, no model download needed
 
-Refuses to run if:
-  * the language is unknown to LANGUAGE_TIERS
-  * structural_embedding_viable=False (the registry says the corpus
-    is too thin to honestly represent)
-  * --align-to is set but the language is tier-3 / not alignable
-
-The script never re-trains models — it consumes already-trained
-gensim FastText/Word2Vec .bin files. Bring your own model, persist it
-on the host where the script runs.
+Refuses:
+  * unknown language codes (must be in LANGUAGE_TIERS)
+  * structural_embedding_viable=False languages (corpus too thin)
+  * dim mismatch between embedder and the language's expected_dim
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import logging
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger("populate_language")
 
 
-def _load_model(path: str) -> Any:
-    """Load a saved FastText/Word2Vec model. Tries FastText first since
-    that's what the rest of the pipeline produces; falls back to
-    KeyedVectors for raw .bin/.vec files (which is what fasttext.cc
-    publishes — they ship native-format binaries that gensim can read
-    via load_facebook_vectors).
+def _vocab_from_file(path: Path) -> list[str]:
+    return [
+        line.strip()
+        for line in path.read_text().splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+
+async def _vocab_from_corpus(language_db_code: str) -> list[str]:
+    """Pull a vocabulary list from the inscriptions table for one language.
+
+    Returns words sorted by descending corpus frequency. The DB stores
+    inscriptions with `language` ∈ {etruscan, latin, ...}; the mapping
+    from our LANGUAGE_TIERS code (`ett`) to the DB string (`etruscan`)
+    happens here so the registry stays clean.
     """
-    p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(f"Model not found: {path}")
+    from collections import Counter
 
-    try:
-        from gensim.models import FastText
+    from sqlalchemy import select
 
-        return FastText.load(str(p))
-    except Exception as e:  # noqa: BLE001
-        logger.info(
-            "FastText.load failed (%s); trying load_facebook_vectors", e
+    from openetruscan.db.models import Inscription
+    from openetruscan.db.session import get_engine
+
+    _, session_maker = get_engine()
+    async with session_maker() as session:
+        stmt = select(Inscription.canonical).where(
+            Inscription.language == language_db_code
         )
-        from gensim.models.fasttext import load_facebook_vectors
+        result = await session.execute(stmt)
+        canonicals = [c for (c,) in result.all() if c]
 
-        kv = load_facebook_vectors(str(p))
-
-        # Wrap KeyedVectors in a minimal object that exposes `.wv` so the
-        # populate path doesn't need branching.
-        class _KVWrapper:
-            def __init__(self, kv: Any) -> None:
-                self.wv = kv
-
-        return _KVWrapper(kv)
+    counts: Counter[str] = Counter()
+    for c in canonicals:
+        for tok in c.lower().split():
+            tok = tok.strip(".,;:!?\"'()[]")
+            if tok:
+                counts[tok] += 1
+    return [w for w, _ in counts.most_common()]
 
 
-async def _do_populate(args: argparse.Namespace) -> int:
+async def _run(args: argparse.Namespace) -> int:
     from openetruscan.ml.multilingual import (
         LANGUAGE_TIERS,
-        populate_aligned_language,
+        populate_language,
     )
 
     record = LANGUAGE_TIERS.get(args.language)
     if record is None:
         print(f"Unknown language: {args.language}", file=sys.stderr)
-        return 2
-    if args.align_to and not record.alignable:
-        print(
-            f"Cannot align tier-{record.tier} language {args.language!r}; "
-            f"the registry marks it as not-alignable. "
-            f"Use --structural-only instead.",
-            file=sys.stderr,
-        )
         return 2
     if not record.structural_embedding_viable:
         print(
@@ -115,67 +111,59 @@ async def _do_populate(args: argparse.Namespace) -> int:
         )
         return 2
 
-    logger.info("Loading source model: %s", args.source_model)
-    src_model = _load_model(args.source_model)
-    src_vocab_size = len(src_model.wv)
-    logger.info("  source vocab: %d", src_vocab_size)
-
-    alignment_W = None
-    alignment_source = "native"
-    if args.align_to:
-        from openetruscan.ml.alignment import (
-            align_procrustes,
-            anchor_pairs,
-        )
-
-        if args.align_to != "ett":
+    # 1. Resolve vocabulary.
+    if args.vocab_from_corpus:
+        # Map our registry code to the DB language string. Currently
+        # only Etruscan corpus is in our DB; everything else expects
+        # --vocab-from-file.
+        if args.language != "ett":
             print(
-                f"--align-to currently only supports 'ett' (Etruscan). "
-                f"Got {args.align_to!r}. Transitive alignment is "
-                f"tracked in ROADMAP Phase 2b.",
+                f"--vocab-from-corpus only supports the Etruscan corpus today. "
+                f"For {args.language!r} use --vocab-from-file.",
                 file=sys.stderr,
             )
             return 2
-
-        if not args.anchor_model:
-            print(
-                "--align-to requires --anchor-model (path to the anchor "
-                "language's gensim model).",
-                file=sys.stderr,
-            )
-            return 2
-
-        logger.info("Loading anchor model: %s", args.anchor_model)
-        anchor = _load_model(args.anchor_model)
-
-        pairs = anchor_pairs(min_confidence=args.min_anchor_confidence)
-        # The Procrustes fitter expects (etr_model, lat_model) — pass anchor
-        # as the etr side and src as the lat side, then invert the rotation
-        # so we project FROM source space INTO anchor space.
-        # Simpler: swap the roles in the call so we get the rotation that
-        # takes source -> anchor directly.
-        result = align_procrustes(
-            etr_model=src_model,   # treat source as the rotated side
-            lat_model=anchor,      # anchor is the target space
-            pairs=pairs,
+        words = await _vocab_from_corpus("etruscan")
+    elif args.vocab_from_file:
+        words = _vocab_from_file(Path(args.vocab_from_file))
+    else:
+        print(
+            "Provide either --vocab-from-corpus or --vocab-from-file.",
+            file=sys.stderr,
         )
-        alignment_W = result.W
-        alignment_source = f"procrustes_v1_to_{args.align_to}"
-        logger.info(
-            "Procrustes: %d pairs used, %d dropped, residual=%.3f",
-            result.n_pairs_used, result.n_pairs_dropped, result.residual_norm,
+        return 2
+
+    if args.max_words is not None:
+        words = words[: args.max_words]
+    logger.info("Resolved vocabulary: %d words", len(words))
+
+    # 2. Build the embedder.
+    if args.use_mock_embedder:
+        from openetruscan.ml.embeddings import MockEmbedder
+
+        embedder = MockEmbedder(dim=record.expected_dim, model_id="mock")
+    else:
+        from openetruscan.ml.embeddings import XLMREmbedder
+
+        embedder = XLMREmbedder(
+            model_id=args.base_model,
+            adapter_path=args.adapter,
         )
 
+    info = embedder.info
+    logger.info("Embedder: %s rev=%s dim=%d", info.model_id, info.revision, info.dim)
+
+    # 3. Dry-run early-exit.
     if args.dry_run:
         print(
             json.dumps(
                 {
                     "language": args.language,
-                    "source_vocab_size": src_vocab_size,
-                    "alignment": alignment_source,
-                    "would_populate": min(
-                        args.max_words or src_vocab_size, src_vocab_size
-                    ),
+                    "n_words": len(words),
+                    "embedder": info.model_id,
+                    "embedder_revision": info.revision,
+                    "embedder_dim": info.dim,
+                    "expected_dim": record.expected_dim,
                     "dry_run": True,
                 },
                 indent=2,
@@ -183,32 +171,27 @@ async def _do_populate(args: argparse.Namespace) -> int:
         )
         return 0
 
-    # Import the session factory only when we actually need to write —
-    # this lets --dry-run succeed even when DATABASE_URL points at a
-    # remote DB the operator can't reach yet.
+    # 4. Embed + upsert.
     from openetruscan.db.session import get_engine
 
     _, session_maker = get_engine()
     async with session_maker() as session:
-        result = await populate_aligned_language(
+        result = await populate_language(
             language=args.language,
-            model=src_model,
-            alignment_W=alignment_W,
+            words=words,
+            embedder=embedder,
             session=session,
-            source=args.source_label or Path(args.source_model).name,
-            alignment_source=alignment_source,
-            max_words=args.max_words,
-            min_frequency=args.min_frequency,
+            source=args.source_label or info.model_id,
         )
-
     print(
         json.dumps(
             {
                 "language": result.language,
                 "n_inserted": result.n_inserted,
-                "n_skipped_oov": result.n_skipped_oov,
+                "n_skipped_empty": result.n_skipped_empty,
                 "skipped_examples": result.skipped_examples,
-                "alignment": alignment_source,
+                "embedder_model_id": result.embedder_model_id,
+                "embedder_revision": result.embedder_revision,
             },
             indent=2,
             ensure_ascii=False,
@@ -217,45 +200,29 @@ async def _do_populate(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--language", required=True, help="Language code (see /neural/rosetta/languages)")
-    parser.add_argument("--source-model", required=True, help="Path to the gensim FastText / .bin model")
-    parser.add_argument("--source-label", help="Human-readable source name (default: filename)")
-    parser.add_argument("--align-to", help="Anchor language code; required for non-native alignments")
-    parser.add_argument("--anchor-model", help="Path to the anchor language's model")
+    parser.add_argument("--language", required=True)
+    parser.add_argument("--base-model", default="xlm-roberta-base")
+    parser.add_argument("--adapter", help="Path to a saved LoRA / PEFT adapter directory")
+    parser.add_argument("--vocab-from-corpus", action="store_true")
+    parser.add_argument("--vocab-from-file", help="Newline-separated vocab file")
+    parser.add_argument("--max-words", type=int)
+    parser.add_argument("--source-label", help="Human-readable source string (default: model_id)")
     parser.add_argument(
-        "--min-anchor-confidence",
-        default="medium",
-        choices=["low", "medium", "high"],
-        help="Anchor-pair confidence threshold for Procrustes (default: medium)",
-    )
-    parser.add_argument("--max-words", type=int, help="Cap vocab size (most-frequent first)")
-    parser.add_argument("--min-frequency", type=int, help="Drop any word below this corpus frequency")
-    parser.add_argument(
-        "--structural-only",
+        "--use-mock-embedder",
         action="store_true",
-        help="(For tier-3 languages.) Populate vectors without alignment. "
-             "Cross-language API still refuses queries against this language.",
+        help="Use deterministic SHA-256 vectors instead of a real encoder. For tests.",
     )
-    parser.add_argument("--dry-run", action="store_true", help="Plan but don't write to the DB")
+    parser.add_argument("--dry-run", action="store_true")
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args(list(argv) if argv is not None else None)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-    if args.structural_only and args.align_to:
-        print(
-            "--structural-only and --align-to are mutually exclusive.",
-            file=sys.stderr,
-        )
-        return 2
-
-    import asyncio
-
-    return asyncio.run(_do_populate(args))
+    return asyncio.run(_run(args))
 
 
 if __name__ == "__main__":

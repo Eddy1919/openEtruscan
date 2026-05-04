@@ -161,10 +161,9 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
         await conn.run_sync(Base.metadata.create_all)
 
     # The multilingual `language_word_embeddings` table uses pgvector
-    # (vector(300)), which has no SQLAlchemy ORM type without an extra
-    # dep. Create it manually here so multilingual-using tests have
-    # somewhere to write — but only on a backend where the `vector`
-    # extension is actually available.
+    # (vector(768) — XLM-R-base hidden dim), which has no SQLAlchemy
+    # ORM type without an extra dep. Create it manually here so
+    # multilingual-using tests have somewhere to write.
     if not database_url.startswith("sqlite"):
         try:
             async with eng.begin() as conn:
@@ -174,10 +173,11 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
                         CREATE TABLE IF NOT EXISTS language_word_embeddings (
                             language          TEXT       NOT NULL,
                             word              TEXT       NOT NULL,
-                            vector            vector(300) NOT NULL,
+                            vector            vector(768) NOT NULL,
                             frequency         INTEGER,
                             source            TEXT,
-                            alignment_source  TEXT       NOT NULL DEFAULT 'native',
+                            embedder          TEXT       NOT NULL DEFAULT 'mock',
+                            embedder_revision TEXT,
                             created_at        TIMESTAMPTZ DEFAULT now(),
                             PRIMARY KEY (language, word)
                         )
