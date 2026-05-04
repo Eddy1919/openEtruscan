@@ -185,3 +185,66 @@ def test_oscan_umbrian_ingest_is_explicitly_unimplemented():
 
     with pytest.raises(NotImplementedError, match="Phase 1b"):
         list(extract_oscan_umbrian_corpus())
+
+
+# ---------------------------------------------------------------------------
+# Character-level pretraining
+# ---------------------------------------------------------------------------
+
+
+class TestCharacterModel:
+    def test_char_streams_preserve_word_boundaries(self):
+        from openetruscan.ml.rosetta import _sentences_as_char_streams
+
+        streams = _sentences_as_char_streams([["ab", "cd"], ["x"]])
+        assert streams == [["a", "b", " ", "c", "d"], ["x"]]
+
+    def test_char_model_trains(self):
+        from openetruscan.ml.rosetta import train_character_model
+
+        model = train_character_model(_synthetic_corpus(), vector_size=20, epochs=5)
+        # The character vocab should include at least the Latin letters
+        # used by the synthetic corpus, plus the space separator.
+        assert "l" in model.wv
+        assert "a" in model.wv
+        assert " " in model.wv
+
+    def test_char_model_empty_corpus_raises(self):
+        from openetruscan.ml.rosetta import train_character_model
+
+        with pytest.raises(ValueError, match="empty corpus"):
+            train_character_model([])
+
+
+class TestTrainModelWithCharInit:
+    def test_seeds_all_word_vectors(self):
+        """Every in-vocab word should be seeded from char vectors."""
+        from openetruscan.ml.rosetta import train_model_with_char_init
+
+        sentences = _synthetic_corpus()
+        model, metadata = train_model_with_char_init(sentences, epochs=10)
+        ci = metadata["char_init"]
+        assert ci["n_word_vectors_seeded"] == ci["n_word_vectors_total"]
+        assert ci["char_vocab_size"] > 0
+        assert metadata["format_version"] == 2
+
+    def test_char_init_save_reload(self, tmp_path: Path):
+        from openetruscan.ml.rosetta import train_model_with_char_init
+
+        out = tmp_path / "char_init.bin"
+        train_model_with_char_init(_synthetic_corpus(), out_path=out, epochs=10)
+        assert out.exists()
+        # Metadata file should distinguish char-init from baseline runs.
+        import json
+
+        meta = json.loads(out.with_suffix(".bin.meta.json").read_text())
+        assert meta["format_version"] == 2
+        assert "char_init" in meta
+
+    def test_char_init_morphology_still_works(self):
+        """Adding char-init shouldn't break the basic morphology pairing."""
+        from openetruscan.ml.rosetta import train_model_with_char_init
+
+        model, _ = train_model_with_char_init(_synthetic_corpus(), epochs=20)
+        top5 = {w for w, _ in nearest(model, "larθal", k=5)}
+        assert "larθa" in top5

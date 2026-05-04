@@ -243,6 +243,219 @@ def _gensim_version() -> str:
 
 
 # ---------------------------------------------------------------------------
+# Character-level pretraining
+# ---------------------------------------------------------------------------
+
+# Hypothesis: at 15k tokens the word-level co-occurrence is too sparse to
+# spread the embedding manifold. But the *character* stream has ~75k
+# characters with a vocab of ~30, so the co-occurrence matrix is dense.
+# If we pretrain a Word2Vec on character sequences and use the resulting
+# char vectors to initialise the FastText n-gram vectors (via summation),
+# the word-level model starts from a non-random manifold that already
+# encodes morphology — case endings, suffix families, glyph phonotactics.
+#
+# What we expect to see if this works:
+#   * cosine top-N spread widens (the manifold isn't collapsed at init)
+#   * semantic clusters survive (no aggressive subsampling needed)
+#   * rare-word neighbourhoods improve, because their n-gram vectors are
+#     no longer random.
+# What we expect to see if it doesn't work: same flat cosines as the
+# baseline. In that case we report the negative result and pivot Phase 2
+# to supervised alignment with known equivalences.
+
+
+def _sentences_as_char_streams(sentences: list[list[str]]) -> list[list[str]]:
+    """Convert tokenised inscriptions into character-stream sentences.
+
+    Each inscription becomes one "sentence" of characters, with a single
+    space character inserted between words to preserve word-boundary
+    information for the character co-occurrence model.
+    """
+    streams: list[list[str]] = []
+    for sent in sentences:
+        chars: list[str] = []
+        for i, word in enumerate(sent):
+            if i > 0:
+                chars.append(" ")
+            chars.extend(word)
+        if chars:
+            streams.append(chars)
+    return streams
+
+
+def train_character_model(
+    sentences: list[list[str]],
+    vector_size: int = 100,
+    window: int = 5,
+    epochs: int = 30,
+    min_count: int = 1,
+) -> Any:
+    """Train a Word2Vec on character co-occurrence within inscriptions.
+
+    Each input "sentence" is a list of characters (plus space tokens as
+    word separators). The output is a ``KeyedVectors`` of single-character
+    vectors that reflect glyph-level distributional structure.
+
+    Defaults differ from the word-level model: ``min_count=1`` because the
+    character vocab is tiny (~30 glyphs) and we don't want to drop rare
+    glyphs; more epochs because the character stream is short.
+    """
+    try:
+        from gensim.models import Word2Vec
+    except ImportError as e:
+        raise ImportError(
+            "Char-level pretraining requires the [rosetta] extra."
+        ) from e
+
+    streams = _sentences_as_char_streams(sentences)
+    if not streams:
+        raise ValueError("Refusing to train char model on an empty corpus.")
+
+    logger.info(
+        "Training char-level Word2Vec: %d streams, %d total chars, vsize=%d",
+        len(streams), sum(len(s) for s in streams), vector_size,
+    )
+    model = Word2Vec(
+        sentences=streams,
+        vector_size=vector_size,
+        window=window,
+        min_count=min_count,
+        epochs=epochs,
+        sg=1,
+        workers=2,
+    )
+    return model
+
+
+def _seed_ngrams_from_chars(word_model: Any, char_model: Any) -> int:
+    """Replace each n-gram vector in word_model with the mean of its
+    constituent character vectors from char_model.
+
+    Returns the number of n-grams that were successfully seeded. N-grams
+    whose characters aren't all in char_model.wv (rare; mostly punctuation
+    edge cases) are left at their random init.
+
+    This is the core of the character-level pretraining trick. Conceptually:
+    the FastText n-gram table starts from a structured prior derived from
+    character co-occurrence, then word-level training refines it.
+    """
+    import numpy as np
+
+    char_kv = char_model.wv
+    seeded = 0
+
+    # gensim stores n-gram vectors at `wv.vectors_ngrams` with the n-gram
+    # string itself as the lookup key. Iterate the n-gram vocabulary.
+    for ngram, idx in word_model.wv.key_to_index.items():
+        # We're seeding the WORD vectors here as "init from chars". The
+        # word vector for word w is what most_similar consumes; the
+        # bucket-hashed n-gram vectors stay at their random init and are
+        # learned during training.
+        chars = list(ngram)
+        char_vecs = [char_kv[c] for c in chars if c in char_kv]
+        if not char_vecs:
+            continue
+        word_model.wv.vectors[idx] = np.mean(char_vecs, axis=0).astype(
+            word_model.wv.vectors.dtype
+        )
+        seeded += 1
+
+    return seeded
+
+
+def train_model_with_char_init(
+    sentences: list[list[str]],
+    out_path: Path | None = None,
+    char_vector_size: int | None = None,
+    **overrides: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """Two-stage train: char-level Word2Vec, then word-level FastText
+    seeded from the char model.
+
+    The char model has the same ``vector_size`` as the word model so the
+    seeding can copy vectors directly without dimensionality reduction.
+    Pass ``char_vector_size`` to decouple them (useful for experiments).
+    """
+    try:
+        from gensim.models import FastText
+    except ImportError as e:
+        raise ImportError(
+            "Char-init training requires the [rosetta] extra."
+        ) from e
+
+    params = {**DEFAULT_TRAINING_PARAMS, **overrides}
+    if not sentences:
+        raise ValueError("Refusing to train on an empty corpus.")
+
+    word_vector_size = params["vector_size"]
+    char_size = char_vector_size or word_vector_size
+
+    # Stage 1: pretrain on character streams.
+    t0 = time.time()
+    char_model = train_character_model(
+        sentences=sentences,
+        vector_size=char_size,
+        window=5,
+        epochs=30,
+        min_count=1,
+    )
+    char_duration_s = time.time() - t0
+    logger.info(
+        "Char model trained in %.2fs (vocab=%d glyphs)",
+        char_duration_s, len(char_model.wv),
+    )
+
+    # Stage 2: build the FastText word model, but suppress its own random
+    # init by training in two phases: build_vocab then train, with our
+    # seeding happening in between.
+    t1 = time.time()
+    train_params = {k: v for k, v in params.items() if k != "epochs"}
+    word_model = FastText(**train_params)
+    word_model.build_vocab(corpus_iterable=sentences)
+    n_seeded = _seed_ngrams_from_chars(word_model, char_model)
+    logger.info(
+        "Seeded %d/%d word vectors from char model",
+        n_seeded, len(word_model.wv),
+    )
+    word_model.train(
+        corpus_iterable=sentences,
+        total_examples=len(sentences),
+        epochs=params["epochs"],
+    )
+    word_duration_s = time.time() - t1
+
+    metadata = {
+        "params": params,
+        "char_init": {
+            "char_vector_size": char_size,
+            "char_vocab_size": len(char_model.wv),
+            "char_training_duration_s": round(char_duration_s, 2),
+            "n_word_vectors_seeded": n_seeded,
+            "n_word_vectors_total": len(word_model.wv),
+        },
+        "corpus": {
+            "n_sentences": len(sentences),
+            "n_tokens": sum(len(s) for s in sentences),
+            "n_unique_tokens_seen": len(word_model.wv.key_to_index),
+        },
+        "vocab_size": len(word_model.wv),
+        "training_duration_s": round(word_duration_s, 2),
+        "gensim_version": _gensim_version(),
+        "format_version": 2,  # v2 = char-init
+    }
+
+    if out_path is not None:
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        word_model.save(str(out_path))
+        meta_path = out_path.with_suffix(out_path.suffix + ".meta.json")
+        meta_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
+        logger.info("Wrote model to %s and metadata to %s", out_path, meta_path)
+
+    return word_model, metadata
+
+
+# ---------------------------------------------------------------------------
 # Nearest-neighbour helper
 # ---------------------------------------------------------------------------
 
@@ -312,7 +525,10 @@ def _cli_train(args: argparse.Namespace) -> int:
     if not sentences:
         print(f"No {args.language} sentences found in corpus.", file=sys.stderr)
         return 1
-    _, metadata = train_model(sentences, out_path=Path(args.output))
+    if args.char_init:
+        _, metadata = train_model_with_char_init(sentences, out_path=Path(args.output))
+    else:
+        _, metadata = train_model(sentences, out_path=Path(args.output))
     print(json.dumps(metadata, indent=2, ensure_ascii=False))
     return 0
 
@@ -331,6 +547,11 @@ def main(argv: list[str] | None = None) -> int:
     p_train = sub.add_parser("train", help="Train a FastText model on the corpus")
     p_train.add_argument("--output", required=True, help="Path to write the .bin model")
     p_train.add_argument("--language", default="etruscan")
+    p_train.add_argument(
+        "--char-init",
+        action="store_true",
+        help="Pretrain a char-level Word2Vec and use it to seed the FastText word vectors.",
+    )
     p_train.set_defaults(fn=_cli_train)
 
     p_near = sub.add_parser("nearest", help="Look up nearest neighbours of a word")
