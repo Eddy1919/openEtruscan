@@ -206,7 +206,7 @@ jobs:
 
       - name: Authenticate to Google Cloud
         id: auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           # Reuses the same WIF pool/provider that .github/workflows/deploy.yml
           # already authenticates against — `github-actions` / `github-provider`,
@@ -217,13 +217,13 @@ jobs:
           service_account: gh-actions-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
