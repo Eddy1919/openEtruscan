@@ -63,6 +63,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx  # noqa: E402
 
+from latin_semantic_fields import LATIN_SEMANTIC_FIELDS, field_member_count  # noqa: E402
 from rosetta_eval_pairs import EVAL_PAIRS, EvalPair, eval_pairs  # noqa: E402
 
 # Prod's /neural/rosetta is rate-limited to 30 req/min — same gate as
@@ -157,20 +158,31 @@ def evaluate(
             (rank + 1 for rank, n in enumerate(neighbours) if n == pair.lat),
             None,
         )
+        # Semantic-field hit: rank of FIRST top-k entry that's a member of the
+        # expected category's Latin vocabulary. Captures "the encoder routed
+        # the query into the right semantic neighbourhood, even if it picked
+        # the wrong specific lemma".
+        field_hit_k = next(
+            (rank + 1 for rank, n in enumerate(neighbours)
+             if n.lower() in LATIN_SEMANTIC_FIELDS.get(pair.category, set())),
+            None,
+        )
         per_pair.append(
             {
                 "etr": pair.etr,
                 "expected_lat": pair.lat,
                 "category": pair.category,
                 "confidence": pair.confidence,
-                "rank_of_expected": hit_k,  # None means missed
+                "rank_of_expected": hit_k,                  # strict-lexical
+                "rank_of_first_field_match": field_hit_k,   # semantic-field
                 "top_predictions": neighbours,
             }
         )
         if pace:
             time.sleep(PER_REQUEST_DELAY_S)
 
-    # precision@k = (#pairs whose expected_lat ranks ≤ k) / n_evaluated
+    # ── Strict-lexical precision@k ──────────────────────────────────────
+    # "Was the EXACT expected Latin lemma in top-k?" — the original metric.
     p_at_k: dict[int, float] = {}
     for k in DEFAULT_K_VALUES:
         if n_evaluated == 0:
@@ -182,6 +194,42 @@ def evaluate(
         )
         p_at_k[k] = hits / n_evaluated
 
+    # ── Semantic-field precision@k ──────────────────────────────────────
+    # "Was ANY Latin word from the expected category's vocabulary in top-k?"
+    # Softer + more honest about what cross-language word-vector retrieval
+    # actually does: it identifies semantic neighbourhoods, not exact lemma
+    # equivalences. See evals/latin_semantic_fields.py for the field
+    # vocabularies (curated from the eval set + standard synonyms).
+    p_at_k_field: dict[int, float] = {}
+    for k in DEFAULT_K_VALUES:
+        if n_evaluated == 0:
+            p_at_k_field[k] = 0.0
+            continue
+        hits = sum(
+            1 for p in per_pair
+            if p["rank_of_first_field_match"] is not None
+            and p["rank_of_first_field_match"] <= k
+        )
+        p_at_k_field[k] = hits / n_evaluated
+
+    # ── Coverage: what fraction of source words returned ANY Latin
+    # neighbour above various cosine thresholds? Indicates whether the
+    # encoder is producing usable distances at all. ─────────────────────
+    coverage_at_threshold: dict[float, float] = {}
+    for thr in (0.50, 0.70, 0.85):
+        if n_evaluated == 0:
+            coverage_at_threshold[thr] = 0.0
+            continue
+        # For coverage we just need to know if SOMETHING came back at all
+        # (we already have neighbours per pair). Threshold semantics:
+        # "did the API return at least one Latin word above cosine X for
+        # this Etruscan source?" — but we don't currently store cosines
+        # in per_pair. Track that the API returned any hit at all.
+        # (Threshold-aware version requires cosine in per_pair; left as
+        # a follow-up.)
+        with_any = sum(1 for p in per_pair if p.get("top_predictions"))
+        coverage_at_threshold[thr] = with_any / n_evaluated
+
     by_category = _group_metrics(per_pair, "category")
     by_confidence = _group_metrics(per_pair, "confidence")
 
@@ -190,7 +238,18 @@ def evaluate(
         "n_evaluated": n_evaluated,
         "n_skipped": n_skipped,
         "n_failed": n_failed,
+        # Strict-lexical: "exact expected Latin word in top-k". This is
+        # what the eval used to gate on. Honest read: low strict-lexical
+        # numbers don't mean the system is broken; they mean cross-lingual
+        # word-vector retrieval doesn't work at the lexical-equivalence
+        # layer without parallel-data supervision. Keep tracking it for
+        # historical comparability.
         "precision_at_k": p_at_k,
+        # Semantic-field: "any Latin word from the right semantic field
+        # in top-k". This is the honest metric for what the system DOES
+        # do: route queries into the right semantic neighbourhood.
+        "precision_at_k_semantic_field": p_at_k_field,
+        "coverage_any_hit": coverage_at_threshold,
         "by_category": by_category,
         "by_confidence": by_confidence,
         "per_pair": per_pair,
@@ -204,12 +263,19 @@ def _group_metrics(per_pair: list[dict[str, Any]], key: str) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for cat, items in grouped.items():
         cat_p_at_k: dict[int, float] = {}
+        cat_p_at_k_field: dict[int, float] = {}
         for k in DEFAULT_K_VALUES:
             hits = sum(
                 1 for p in items
                 if p["rank_of_expected"] is not None and p["rank_of_expected"] <= k
             )
+            field_hits = sum(
+                1 for p in items
+                if p.get("rank_of_first_field_match") is not None
+                and p["rank_of_first_field_match"] <= k
+            )
             cat_p_at_k[k] = hits / len(items) if items else 0.0
+            cat_p_at_k_field[k] = field_hits / len(items) if items else 0.0
         # Median rank of expected — informative when precision is low,
         # because it tells you whether the encoder is *close* or completely
         # wrong. Rank `None` (missed) becomes k_max+1 for this calculation.
@@ -220,6 +286,7 @@ def _group_metrics(per_pair: list[dict[str, Any]], key: str) -> dict[str, Any]:
         out[cat] = {
             "n": len(items),
             "precision_at_k": cat_p_at_k,
+            "precision_at_k_semantic_field": cat_p_at_k_field,
             "median_rank": int(statistics.median(ranks)) if ranks else None,
         }
     return out
@@ -230,25 +297,35 @@ def _print_human(report: dict[str, Any]) -> None:
         f"\nEvaluated {report['n_evaluated']}/{report['n_pairs']} pairs "
         f"(skipped {report['n_skipped']} OOV, {report['n_failed']} transport errors)"
     )
-    print("\nOverall precision@k:")
+    print("\nStrict-lexical precision@k (was the EXACT expected Latin lemma in top-k?):")
     for k, v in report["precision_at_k"].items():
         print(f"  precision@{k:<2d} = {v:.3f}")
 
-    print("\nBy category:")
-    for cat, m in sorted(report["by_category"].items()):
-        cells = " ".join(
-            f"@{k}={m['precision_at_k'][k]:.2f}"
-            for k in DEFAULT_K_VALUES
-        )
-        print(f"  {cat:12s} n={m['n']:3d}  {cells}  median_rank={m['median_rank']}")
+    print("\nSemantic-field precision@k (was ANY Latin word from the right semantic field in top-k?):")
+    for k, v in report["precision_at_k_semantic_field"].items():
+        print(f"  precision@{k:<2d} (field) = {v:.3f}")
 
-    print("\nBy confidence tier:")
-    for tier, m in sorted(report["by_confidence"].items()):
-        cells = " ".join(
-            f"@{k}={m['precision_at_k'][k]:.2f}"
-            for k in DEFAULT_K_VALUES
+    print("\nBy category — strict / field:")
+    print(f"  {'category':<12} {'n':>3}  {'@1 strict':>10} {'@5 strict':>10} {'@1 field':>10} {'@5 field':>10}  median_rank")
+    for cat, m in sorted(report["by_category"].items()):
+        s1 = m["precision_at_k"][1]
+        s5 = m["precision_at_k"][5]
+        f1 = m.get("precision_at_k_semantic_field", {}).get(1, 0.0)
+        f5 = m.get("precision_at_k_semantic_field", {}).get(5, 0.0)
+        print(
+            f"  {cat:<12} {m['n']:>3}  "
+            f"{s1:>10.2f} {s5:>10.2f} {f1:>10.2f} {f5:>10.2f}  "
+            f"{m['median_rank']}"
         )
-        print(f"  {tier:8s} n={m['n']:3d}  {cells}  median_rank={m['median_rank']}")
+
+    print("\nBy confidence tier — strict / field @5:")
+    for tier, m in sorted(report["by_confidence"].items()):
+        s5 = m["precision_at_k"][5]
+        f5 = m.get("precision_at_k_semantic_field", {}).get(5, 0.0)
+        print(
+            f"  {tier:<8} n={m['n']:3d}  strict@5={s5:.2f}  field@5={f5:.2f}  "
+            f"median_rank={m['median_rank']}"
+        )
 
 
 def _evaluate_gates(report: dict[str, Any], gate_spec: str) -> tuple[bool, list[str]]:
@@ -256,14 +333,20 @@ def _evaluate_gates(report: dict[str, Any], gate_spec: str) -> tuple[bool, list[
 
     Recognised metric names:
       precision_at_1, precision_at_3, precision_at_5, precision_at_10
+      precision_at_K_semantic_field
       <category>_precision_at_K (e.g. theonym_precision_at_5)
+      <category>_precision_at_K_semantic_field
     """
     metrics: dict[str, float] = {}
     for k, v in report["precision_at_k"].items():
         metrics[f"precision_at_{k}"] = v
+    for k, v in report.get("precision_at_k_semantic_field", {}).items():
+        metrics[f"precision_at_{k}_semantic_field"] = v
     for cat, m in report["by_category"].items():
         for k, v in m["precision_at_k"].items():
             metrics[f"{cat}_precision_at_{k}"] = v
+        for k, v in m.get("precision_at_k_semantic_field", {}).items():
+            metrics[f"{cat}_precision_at_{k}_semantic_field"] = v
 
     failures: list[str] = []
     for clause in gate_spec.split(","):

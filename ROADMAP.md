@@ -5,6 +5,17 @@ prototype was nuked when we pivoted to the 2026 SOTA architecture below.
 
 ---
 
+> **2026-05-06 update — read [`research/`](research/) first.** The
+> "holy grail" framing in the original Rosetta section below was
+> overpromised. We now know with data what works (sub-word cognate
+> retrieval, theonym alignment, semantic-field clustering) and what
+> doesn't (lexical equivalence between unrelated surface forms —
+> `clan→filius`, `puia→uxor`, etc.). The full research narrative,
+> WBS, and forward plan are in [`research/`](research/);
+> [`research/FINDINGS.md`](research/FINDINGS.md) is the entry point.
+
+---
+
 ## The Rosetta Vector Space
 
 ### Why this is the holy grail
@@ -150,30 +161,21 @@ fine-tune (~$1–3 per training run on Lambda/Vast/Modal).
 `alignable` gates cross-language semantic queries. Tier-3 languages
 return HTTP 400 with the registry's note as `detail`.
 
-### Next steps to ship a publishable cross-language eval
+### Next steps — superseded
 
-1. **LoRA fine-tune Etruscan.** Run `scripts/ops/finetune_etruscan.py`
-   on a rented GPU (~$1–3, ~30 min). Push the adapter to Cloud Storage.
-2. **Populate Etruscan vectors.**
-   `python scripts/ops/populate_language.py --language ett --base-model xlm-roberta-base --adapter <path> --vocab-from-corpus`
-3. **Populate Latin.** No fine-tune needed — Latin is in XLM-R's
-   pretraining. Pull a vocab list (top 100k words by frequency from
-   any reasonable Latin corpus) and call populate_language with the
-   base model alone.
-4. **Run the held-out eval.** `evals/rosetta_eval_pairs.py` has the
-   62 curated equivalences from Bonfante 2002 / Wallace 2008 /
-   Pallottino 1968. After populate, query each Etruscan word and check
-   whether its known Latin equivalent lands in the top-k neighbours.
-   Target: precision@5 ≥ 0.4 (Procrustes-on-FastText was 0.07).
-5. **Add Greek + Coptic + Phoenician** the same way. Each is a
-   new vocab list + a populate run. No alignment step required because
-   they all share the encoder's pretrained space.
-6. **Discovery cron.** `scripts/ops/rosetta_discovery.py` (TODO):
-   for every Etruscan word currently classified as `unknown` or
-   appearing fewer than 3 times in the corpus, query the top-k Latin
-   neighbours and emit a CSV of the highest-confidence candidate
-   translations. The output is the artefact that turns the alignment
-   from a tool into a research finding.
+The original step list (LoRA fine-tune → populate → eval against
+Bonfante's anchors with `precision@5 ≥ 0.40` as gate) **has been
+executed**. Outcome: the system was built, the eval was run, the
+gate didn't clear, and the post-mortem is in
+[`research/FINDINGS.md`](research/FINDINGS.md). Headline:
+strict-lexical precision@10 on LaBSE = **0.071**, semantic-field
+precision@10 = **0.119**, both an improvement over the XLM-R baseline
+(0.000 across the board) but well below publication threshold.
+
+The forward plan now lives under [`research/`](research/) — see
+[`research/ROADMAP.md`](research/ROADMAP.md) for priorities and
+[`research/WBS.md`](research/WBS.md) for discrete tasks. Refer there;
+do not re-litigate from this section.
 
 ### Risks and open questions
 
