@@ -13,7 +13,8 @@ set -euo pipefail
 PROJECT_ID="${PROJECT_ID:-double-runway-465420-h9}"
 REGION="${REGION:-us-central1}"
 BUCKET="${BUCKET:-openetruscan-rosetta}"
-ADAPTER_TAG="${ADAPTER_TAG:-etr-lora-v1}"
+ADAPTER_TAG="${ADAPTER_TAG:-etr-lora-v2}"
+CORPUS_NAME="${CORPUS_NAME:-etruscan-prod-v2.jsonl}"
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
 JOB_NAME="etruscan-lora-${TIMESTAMP}"
 
@@ -52,7 +53,7 @@ workerPoolSpecs:
           set -euo pipefail
           gcloud storage cp ${GCS_CODE_URI} /tmp/train.py
           python -u /tmp/train.py \\
-            --corpus_path=/gcs/${BUCKET}/corpus/etruscan-cie-v1.jsonl \\
+            --corpus_path=/gcs/${BUCKET}/corpus/${CORPUS_NAME} \\
             --output_dir=/gcs/${BUCKET}/adapters/${ADAPTER_TAG} \\
             --base_model=xlm-roberta-base \\
             --epochs=5 \\

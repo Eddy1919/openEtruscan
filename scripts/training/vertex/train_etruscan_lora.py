@@ -59,6 +59,24 @@ def _ensure_hf_stack() -> None:
         )
 
 
+def _normalise_etruscan_dividers(text: str) -> str:
+    """Convert Etruscan word-divider punctuation to spaces.
+
+    Etruscan epigraphy (per Bonfante 2002 §10) uses `:` and `·` as word
+    dividers — many inscriptions are written with NO spaces, only colons.
+    Feeding such strings to the tokeniser as-is wastes capacity learning
+    representations for these dividers (which are pure typography). The
+    XLM-R subword tokeniser handles the resulting whitespace cleanly.
+
+    Kept as-is:
+      * `.` (period) — intra-word phonological marker, e.g. `ve.i.tule`,
+        DOES NOT separate words.
+      * `-` (hyphen) — compounding marker, e.g. `velxiti-leθes` joins
+        praenomen and gentilicium.
+    """
+    return text.translate(str.maketrans({":": " ", "·": " "}))
+
+
 def _read_corpus(path: Path) -> list[str]:
     out: list[str] = []
     with path.open("r", encoding="utf-8") as f:
@@ -68,6 +86,12 @@ def _read_corpus(path: Path) -> list[str]:
                 continue
             row = json.loads(line)
             text = (row.get("text") or "").strip()
+            if not text:
+                continue
+            text = _normalise_etruscan_dividers(text)
+            # Collapse the runs of whitespace the divider replacement may have
+            # introduced (e.g. " : " → "  ").
+            text = " ".join(text.split())
             if text:
                 out.append(text)
     return out

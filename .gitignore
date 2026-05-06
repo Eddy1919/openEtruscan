@@ -84,3 +84,7 @@ runs/
 docs/internal/
 run_wif.sh
 slow_query_policy.json
+
+# Missing local artifacts
+/models/
+cloud-sql-proxy

@@ -84,10 +84,16 @@ async def _vocab_from_corpus(language_db_code: str) -> list[str]:
         result = await session.execute(stmt)
         canonicals = [c for (c,) in result.all() if c]
 
+    # Etruscan inscriptions use `:` and `·` as word dividers (Bonfante
+    # 2002 §10) — many lines have NO spaces, only colons. Convert to
+    # whitespace BEFORE tokenising so the vocab is real word forms.
+    # `.` and `-` stay attached: `ve.i.tule` is one phonological unit;
+    # `velxiti-leθes` is one onomastic compound.
+    DIVIDERS = str.maketrans({":": " ", "·": " "})
     counts: Counter[str] = Counter()
     for c in canonicals:
-        for tok in c.lower().split():
-            tok = tok.strip(".,;:!?\"'()[]")
+        for tok in c.lower().translate(DIVIDERS).split():
+            tok = tok.strip(",;!?\"'()[]")
             if tok:
                 counts[tok] += 1
     return [w for w, _ in counts.most_common()]
