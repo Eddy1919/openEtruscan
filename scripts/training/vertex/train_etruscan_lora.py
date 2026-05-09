@@ -85,7 +85,7 @@ def _read_corpus(path: Path) -> list[str]:
             if not line:
                 continue
             row = json.loads(line)
-            text = (row.get("text") or "").strip()
+            text = (row.get("canonical_clean") or row.get("raw_text") or row.get("text") or "").strip()
             if not text:
                 continue
             text = _normalise_etruscan_dividers(text)
