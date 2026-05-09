@@ -8,13 +8,35 @@ are reproducible from the production database via the scripts in
 
 ## Files
 
+### Tracked in this repository (small reference artifacts)
+
 | File | Rows | Cols | Purpose |
 |---|---|---|---|
-| [`openetruscan_clean.csv`](openetruscan_clean.csv) | 6,567 | 10 | **The published v1 dataset.** ML-ready; cleaned, tagged, labeled, joined with Larth metadata. |
-| [`openetruscan_normalized.csv`](openetruscan_normalized.csv) | 6,567 | 7 | Intermediate before the Larth merge. Use only if you want the pre-merge step. |
 | [`openetruscan_labels.csv`](openetruscan_labels.csv) | 712 | 4 | Inscription-type labels derived by reasoning cascade. Auditable signal trail per row. |
 | [`inscription_labels.csv`](inscription_labels.csv) | 184 | 4 | Hand-labels (gold) — Claude-reasoned from full English translations only. Subset of `openetruscan_labels.csv` with `signal_source = gold`. |
 | [`eval_heldout_29.csv`](eval_heldout_29.csv) | 29 | 4 | Independent held-out evaluation set (zero training overlap). Use for any classifier benchmark. |
+
+### Published via Zenodo (large; gitignored, not in this repo)
+
+| File | Rows | Cols | Purpose |
+|---|---|---|---|
+| `openetruscan_clean.csv` | 6,567 | 10 | **The published v1 dataset.** ML-ready; cleaned, tagged, labeled, joined with Larth metadata. **Download via Zenodo DOI** — see citation section below. |
+| `openetruscan_normalized.csv` | 6,567 | 7 | Intermediate before the Larth merge. Reproducible from `openetruscan_clean.csv` minus the `translation` / `year_from` / `year_to` columns. |
+
+To regenerate the large CSVs locally from the prod DB:
+
+```bash
+# requires DATABASE_URL pointing at the OpenEtruscan prod instance
+python scripts/data_pipeline/normalize_inscriptions.py \
+    --input /tmp/etruscan-prod-rawtext-v1.jsonl \
+    --csv research/data/openetruscan_normalized.csv
+
+python scripts/data_pipeline/merge_larth_metadata.py \
+    --normalized research/data/openetruscan_normalized.csv \
+    --output research/data/openetruscan_clean.csv
+```
+
+For the published version (with frozen DOI for citation), download from Zenodo (URL in the Zenodo deposit metadata).
 
 ## Schema — `openetruscan_clean.csv`
 

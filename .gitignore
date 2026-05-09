@@ -91,3 +91,10 @@ cloud-sql-proxy
 
 # Editor / agent local state
 .claude/
+
+# Large research datasets — published via Zenodo DOI.
+# Reproducible from the prod DB via scripts/data_pipeline/normalize_inscriptions.py
+# + scripts/data_pipeline/merge_larth_metadata.py. Small reference sets
+# (labels, held-out eval) remain tracked in research/data/.
+research/data/openetruscan_clean.csv
+research/data/openetruscan_normalized.csv
