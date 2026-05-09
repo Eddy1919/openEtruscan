@@ -88,3 +88,6 @@ slow_query_policy.json
 # Missing local artifacts
 /models/
 cloud-sql-proxy
+
+# Editor / agent local state
+.claude/
