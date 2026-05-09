@@ -1,0 +1,713 @@
+id,label,confidence,signal_source
+TCa 8,dedicatory,high,gold:claude_hand_label
+Vs 1.178,funerary,high,gold:claude_hand_label
+Ta 1.35,funerary,high,gold:claude_hand_label
+Ve 6.2,ownership,high,gold:claude_hand_label
+Vs 2.40,ownership,low,gold:claude_hand_label
+Pe 5.2,funerary,high,gold:claude_hand_label
+Cl 1.147,funerary,high,gold:claude_hand_label
+Cr 1.6,funerary,high,gold:claude_hand_label
+Cr 3.18,ownership,high,gold:claude_hand_label
+Pe 8.4,legal,medium,gold:claude_hand_label
+Fa 3.1,ownership,medium,gold:claude_hand_label
+Ta 1.96,funerary,high,gold:claude_hand_label
+Cl 1.1006,funerary,high,gold:claude_hand_label
+Cr 1.5,funerary,high,gold:claude_hand_label
+Ta 1.13,funerary,high,gold:claude_hand_label
+Vt S.2,dedicatory,medium,gold:claude_hand_label
+ETP 43,funerary,high,gold:claude_hand_label
+Li 1.1,funerary,high,gold:claude_hand_label
+Ta 1.66,funerary,high,gold:claude_hand_label
+Ta 1.59,funerary,high,gold:claude_hand_label
+Cl 1.1134,funerary,high,gold:claude_hand_label
+Cl 1.2513,funerary,high,gold:claude_hand_label
+Pe 1.219,funerary,high,gold:claude_hand_label
+Ta 1.147,funerary,high,gold:claude_hand_label
+Vc 1.84,funerary,high,gold:claude_hand_label
+Vs 1.120,funerary,high,gold:claude_hand_label
+Vs 1.28,funerary,high,gold:claude_hand_label
+Vn 1.1,funerary,high,gold:claude_hand_label
+Pe 1.211,funerary,high,etr_keyword:funerary
+Cr 1.10,funerary,high,gold:claude_hand_label
+Cr 3.20,ownership,high,gold:claude_hand_label
+Sp 2.36,ownership,medium,gold:claude_hand_label
+Ta 3.2,dedicatory,high,gold:claude_hand_label
+LL 11,dedicatory,high,gold:claude_hand_label
+Vt 3.1,ownership,high,gold:claude_hand_label
+CIE 2611,funerary,high,etr_keyword:funerary
+Pe 1.948,funerary,high,gold:claude_hand_label
+Ta 1.107,funerary,high,gold:claude_hand_label
+OA 2.2,ownership,high,gold:claude_hand_label
+Cr 3.10,ownership,high,gold:claude_hand_label
+Fa 6.3,ownership,high,gold:claude_hand_label
+LL 2,dedicatory,high,gold:claude_hand_label
+Pe 3.1,dedicatory,high,gold:claude_hand_label
+AV 6.9,ownership,high,gold:claude_hand_label
+Vc 6.6,ownership,high,gold:claude_hand_label
+Vc 1.59,funerary,high,gold:claude_hand_label
+Vc 1.64,funerary,high,gold:claude_hand_label
+ETP 96,funerary,high,etr_keyword:funerary
+ETP 97,ownership,medium,etr_formula:mi+name
+ETP 98,ownership,medium,etr_formula:mi+name
+Cr 1.141,funerary,high,gold:claude_hand_label
+ETP 128,ownership,high,gold:claude_hand_label
+Ta 1.31,funerary,high,gold:claude_hand_label
+Ta 1.62,funerary,high,gold:claude_hand_label
+Vt 4.5,dedicatory,high,gold:claude_hand_label
+Cr 2.15,ownership,high,gold:claude_hand_label
+Cr 2.33,ownership,high,gold:claude_hand_label
+Cr 3.12,ownership,high,gold:claude_hand_label
+LL 5,dedicatory,high,gold:claude_hand_label
+Ta 1.182,funerary,high,gold:claude_hand_label
+Ta 1.89,funerary,high,gold:claude_hand_label
+Vs 1.86,funerary,high,gold:claude_hand_label
+Vc 7.38,funerary,medium,gold:claude_hand_label
+Ve 3.2,ownership,high,gold:claude_hand_label
+Vt 1.58,funerary,high,gold:claude_hand_label
+Ta 1.81,funerary,high,gold:claude_hand_label
+Um 1.7,funerary,medium,gold:claude_hand_label
+ETP 15,ownership,high,gold:claude_hand_label
+ETP 28,ownership,high,gold:claude_hand_label
+OA 2.20,ownership,high,gold:claude_hand_label
+Ru 5.1,funerary,high,gold:claude_hand_label
+Ve 3.13,ownership,high,gold:claude_hand_label
+Ve 3.29,dedicatory,high,gold:claude_hand_label
+ETP 29,dedicatory,medium,gold:claude_hand_label
+La 2.3,ownership,medium,gold:claude_hand_label
+AV 6.1,ownership,high,gold:claude_hand_label
+Ta S.8,dedicatory,high,etr_keyword:dedicatory_deity
+Vs 7.25,funerary,medium,gold:claude_hand_label
+Vt 4.2,dedicatory,high,gold:claude_hand_label
+ETP 79,ownership,medium,etr_formula:mi+name
+ETP 81,ownership,medium,etr_formula:mi+name
+ETP 164,ownership,medium,etr_formula:mi+name
+ETP 165,ownership,medium,etr_formula:mi+name
+ETP 166,ownership,medium,etr_formula:mi+name
+ETP 181,funerary,high,gold:claude_hand_label
+ETP 201,ownership,medium,etr_formula:mi+name
+ETP 221,ownership,medium,etr_formula:mi+name
+ETP 240,funerary,high,gold:claude_hand_label
+7435,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 261,ownership,medium,etr_formula:mi+name
+277,funerary,medium,junk_translation:kinship_list
+318,funerary,medium,junk_translation:kinship_list
+ETP 279,dedicatory,high,gold:claude_hand_label
+371,dedicatory,medium,junk_translation:deity_ref
+ETP 304,ownership,high,gold:claude_hand_label
+438,dedicatory,high,etr_keyword:dedicatory_deity
+757,funerary,high,etr_keyword:funerary
+ETP 338,ownership,medium,etr_formula:mi+name
+ETP 339,dedicatory,high,gold:claude_hand_label
+ETP 340,votive,high,gold:claude_hand_label
+ETP 341,ownership,medium,etr_formula:mi+name
+ETP 358,ownership,medium,etr_formula:mi+name
+ETP 359,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 323,ownership,high,gold:claude_hand_label
+208,funerary,medium,junk_translation:kinship_list
+1056,funerary,medium,junk_translation:kinship_list
+1154,funerary,medium,junk_translation:kinship_list
+1718,funerary,medium,junk_translation:kinship_list
+211,funerary,medium,junk_translation:kinship_list
+1915,funerary,medium,junk_translation:kinship_list
+2341,dedicatory,medium,junk_translation:deity_ref
+2342,funerary,medium,junk_translation:kinship_list
+3758,funerary,medium,junk_translation:kinship_list
+4008,funerary,medium,junk_translation:kinship_list
+4200,funerary,medium,junk_translation:kinship_list
+4543,funerary,medium,junk_translation:kinship_list
+4866,funerary,medium,junk_translation:kinship_list
+5239,funerary,high,etr_keyword:funerary
+8881,boundary,high,etr_keyword:boundary
+8927,votive,high,etr_keyword:votive_deity
+8962,ownership,low,etr_formula:mi_present
+5720,funerary,high,etr_keyword:funerary
+9183,ownership,medium,etr_formula:mi+name
+9205,ownership,medium,etr_formula:mi+name
+9243,boundary,high,etr_keyword:boundary
+9275,dedicatory,medium,junk_translation:deity_ref
+9276,dedicatory,high,etr_keyword:dedicatory_deity
+9295,ownership,medium,etr_formula:mi+name
+9343,dedicatory,high,etr_keyword:dedicatory_deity
+9446,funerary,medium,junk_translation:kinship_list
+9449,funerary,high,etr_keyword:funerary
+9474,ownership,medium,etr_formula:mi+name
+7218,funerary,high,etr_keyword:funerary
+7414,funerary,medium,junk_translation:kinship_list
+9677,funerary,medium,junk_translation:kinship_list
+7666,dedicatory,high,etr_keyword:dedicatory_deity
+7868,dedicatory,medium,junk_translation:deity_ref
+7877,dedicatory,medium,junk_translation:deity_ref
+ETP 325,ownership,high,gold:claude_hand_label
+9257,funerary,high,etr_keyword:funerary
+CIE 2691,funerary,high,etr_keyword:funerary
+2219,funerary,medium,junk_translation:kinship_list
+2251,funerary,medium,junk_translation:kinship_list
+2320,funerary,medium,junk_translation:kinship_list
+2369,funerary,medium,junk_translation:kinship_list
+2378,funerary,high,etr_keyword:funerary
+2403,dedicatory,high,etr_keyword:dedicatory_deity
+11065,funerary,medium,junk_translation:kinship_list
+2682,funerary,medium,junk_translation:kinship_list
+2767,funerary,high,etr_keyword:funerary
+12864,funerary,high,etr_keyword:funerary
+12956,funerary,medium,junk_translation:kinship_list
+2847,funerary,medium,junk_translation:kinship_list
+2850,funerary,medium,junk_translation:kinship_list
+2851,funerary,medium,junk_translation:kinship_list
+2891,funerary,medium,junk_translation:kinship_list
+3059,funerary,high,etr_keyword:funerary
+15364,dedicatory,medium,junk_translation:deity_ref
+15443,funerary,medium,junk_translation:kinship_list
+15489,dedicatory,high,etr_keyword:dedicatory_deity
+3284,funerary,high,etr_keyword:funerary
+3367,funerary,medium,junk_translation:kinship_list
+15894,funerary,medium,junk_translation:kinship_list
+16140,ownership,medium,etr_formula:mi+name
+3411,funerary,high,etr_keyword:funerary
+3471,funerary,medium,junk_translation:kinship_list
+3474,funerary,medium,junk_translation:kinship_list
+2741,funerary,medium,junk_translation:kinship_list
+3569,funerary,medium,junk_translation:kinship_list
+3574,funerary,medium,junk_translation:kinship_list
+16767,dedicatory,high,etr_keyword:dedicatory_deity
+17161,dedicatory,medium,junk_translation:deity_ref
+3676,funerary,high,etr_keyword:funerary
+17329,dedicatory,medium,junk_translation:deity_ref
+20500,dedicatory,medium,junk_translation:deity_ref
+20824,ownership,medium,etr_formula:mi+name
+21027,dedicatory,medium,junk_translation:deity_ref
+8,dedicatory,medium,junk_translation:deity_ref
+22,funerary,medium,junk_translation:kinship_list
+31,funerary,medium,junk_translation:kinship_list
+53,funerary,medium,junk_translation:kinship_list
+118,funerary,high,etr_keyword:funerary
+142,funerary,medium,junk_translation:kinship_list
+192,funerary,medium,junk_translation:kinship_list
+195,ownership,medium,etr_formula:mi+name
+200,ownership,medium,etr_formula:mi+name
+9835,dedicatory,high,etr_keyword:dedicatory_deity
+235,ownership,medium,etr_formula:mi+name
+252,funerary,medium,junk_translation:kinship_list
+303,ownership,medium,etr_formula:mi+name
+339,funerary,medium,junk_translation:kinship_list
+347,funerary,medium,junk_translation:kinship_list
+354,funerary,medium,junk_translation:kinship_list
+419,funerary,medium,junk_translation:kinship_list
+423,ownership,medium,etr_formula:mi+name
+428,funerary,medium,junk_translation:kinship_list
+579,funerary,medium,junk_translation:kinship_list
+633,funerary,medium,junk_translation:kinship_list
+Af 3.1,ownership,medium,gold:claude_hand_label
+726,funerary,medium,junk_translation:kinship_list
+742,funerary,medium,junk_translation:kinship_list
+745,funerary,medium,junk_translation:kinship_list
+873,funerary,medium,junk_translation:kinship_list
+890,funerary,medium,junk_translation:kinship_list
+895,funerary,medium,junk_translation:kinship_list
+373,funerary,medium,junk_translation:kinship_list
+982,funerary,medium,junk_translation:kinship_list
+1085,funerary,medium,junk_translation:kinship_list
+1167,funerary,medium,junk_translation:kinship_list
+1189,funerary,medium,junk_translation:kinship_list
+1215,funerary,medium,junk_translation:kinship_list
+1238,funerary,medium,junk_translation:kinship_list
+2648,funerary,medium,junk_translation:kinship_list
+3830,funerary,medium,junk_translation:kinship_list
+3833,funerary,medium,junk_translation:kinship_list
+3908,funerary,medium,junk_translation:kinship_list
+ETP 329,dedicatory,high,gold:claude_hand_label
+1305,funerary,medium,junk_translation:kinship_list
+1438,funerary,medium,junk_translation:kinship_list
+1357,funerary,medium,junk_translation:kinship_list
+1421,funerary,high,etr_keyword:funerary
+1429,funerary,medium,junk_translation:kinship_list
+1431,funerary,medium,junk_translation:kinship_list
+3960,funerary,high,etr_keyword:funerary
+1462,funerary,medium,junk_translation:kinship_list
+1468,funerary,medium,junk_translation:kinship_list
+3983,funerary,medium,junk_translation:kinship_list
+1528,funerary,medium,junk_translation:kinship_list
+1529,funerary,high,etr_keyword:funerary
+1569,funerary,medium,junk_translation:kinship_list
+1628,funerary,medium,junk_translation:kinship_list
+1650,funerary,medium,junk_translation:kinship_list
+406,ownership,medium,etr_formula:mi+name
+1736,funerary,medium,junk_translation:kinship_list
+4082,dedicatory,medium,junk_translation:deity_ref
+1830,funerary,medium,junk_translation:kinship_list
+1909,funerary,medium,junk_translation:kinship_list
+1923,funerary,medium,junk_translation:kinship_list
+1945,funerary,high,etr_keyword:funerary
+2068,funerary,medium,junk_translation:kinship_list
+2074,funerary,medium,junk_translation:kinship_list
+2078,funerary,medium,junk_translation:kinship_list
+AH 3.4,votive,high,gold:claude_hand_label
+Ar 1.3,funerary,medium,gold:claude_hand_label
+Ar 4.3,dedicatory,high,gold:claude_hand_label
+AS 1.40,funerary,high,gold:claude_hand_label
+AS 2.1,ownership,medium,gold:claude_hand_label
+AS 5.1,funerary,medium,gold:claude_hand_label
+2171,funerary,medium,junk_translation:kinship_list
+At 1.100,funerary,high,gold:claude_hand_label
+AT 1.105,funerary,high,gold:claude_hand_label
+AT 1.108,funerary,high,gold:claude_hand_label
+At 1.111,funerary,high,gold:claude_hand_label
+AT 1.15,funerary,high,gold:claude_hand_label
+AT 1.171,funerary,high,gold:claude_hand_label
+At 1.172,funerary,high,gold:claude_hand_label
+AT 1.34,funerary,high,gold:claude_hand_label
+2340,dedicatory,high,etr_keyword:dedicatory_deity
+AT 1.46,funerary,high,gold:claude_hand_label
+AT 1.47,funerary,high,gold:claude_hand_label
+2445,funerary,medium,junk_translation:kinship_list
+2489,funerary,medium,junk_translation:kinship_list
+2530,funerary,medium,junk_translation:kinship_list
+2540,funerary,medium,junk_translation:kinship_list
+2691,funerary,high,etr_keyword:funerary
+2714,funerary,medium,junk_translation:kinship_list
+3075,funerary,high,etr_keyword:funerary
+3076,funerary,high,etr_keyword:funerary
+3194,funerary,medium,junk_translation:kinship_list
+3205,funerary,medium,junk_translation:kinship_list
+3231,funerary,medium,junk_translation:kinship_list
+3258,ownership,medium,etr_formula:mi+name
+3431,funerary,medium,junk_translation:kinship_list
+3493,funerary,medium,junk_translation:kinship_list
+3500,funerary,medium,junk_translation:kinship_list
+CIE 166,ownership,medium,etr_formula:mi+name
+3628,funerary,medium,junk_translation:kinship_list
+3680,funerary,medium,junk_translation:kinship_list
+3791,funerary,high,etr_keyword:funerary
+3793,funerary,medium,junk_translation:kinship_list
+14895,funerary,medium,junk_translation:kinship_list
+3918,funerary,medium,junk_translation:kinship_list
+3929,funerary,medium,junk_translation:kinship_list
+3951,funerary,high,etr_keyword:funerary
+3966,funerary,medium,junk_translation:kinship_list
+CIE 1765,funerary,high,etr_keyword:funerary
+4034,funerary,medium,junk_translation:kinship_list
+4036,funerary,medium,junk_translation:kinship_list
+4118,funerary,medium,junk_translation:kinship_list
+CIE 1770,funerary,high,etr_keyword:funerary
+4664,funerary,medium,junk_translation:kinship_list
+4970,ownership,medium,etr_formula:mi+name
+4772,funerary,medium,junk_translation:kinship_list
+4852,funerary,medium,junk_translation:kinship_list
+4854,funerary,high,etr_keyword:funerary
+4856,funerary,medium,junk_translation:kinship_list
+4917,funerary,medium,junk_translation:kinship_list
+4945,ownership,medium,etr_formula:mi+name
+4947,ownership,medium,etr_formula:mi+name
+4966,funerary,medium,junk_translation:kinship_list
+5037,funerary,high,etr_keyword:funerary
+5060,ownership,medium,etr_formula:mi+name
+5243,funerary,medium,junk_translation:kinship_list
+5298,funerary,medium,junk_translation:kinship_list
+5315,funerary,medium,junk_translation:kinship_list
+5362,dedicatory,medium,junk_translation:deity_ref
+5401,funerary,medium,junk_translation:kinship_list
+5402,funerary,medium,junk_translation:kinship_list
+5404,funerary,medium,junk_translation:kinship_list
+5487,funerary,medium,junk_translation:kinship_list
+5503,funerary,medium,junk_translation:kinship_list
+5504,funerary,medium,junk_translation:kinship_list
+5511,funerary,medium,junk_translation:kinship_list
+CIE 1854,funerary,high,etr_keyword:funerary
+5843,funerary,medium,junk_translation:kinship_list
+CIE 1856,funerary,high,etr_keyword:funerary
+CIE 1873,funerary,high,etr_keyword:funerary
+7222,funerary,medium,junk_translation:kinship_list
+7254,ownership,medium,etr_formula:mi+name
+7296,funerary,medium,junk_translation:kinship_list
+ETP 331,ownership,high,gold:claude_hand_label
+7417,funerary,medium,junk_translation:kinship_list
+7469,votive,high,etr_keyword:votive_deity
+7551,funerary,medium,junk_translation:kinship_list
+7646,ownership,medium,etr_formula:mi+name
+7770,funerary,high,etr_keyword:funerary
+7803,funerary,high,etr_keyword:funerary
+7947,legal,high,etr_keyword:legal
+8598,funerary,medium,junk_translation:kinship_list
+8613,dedicatory,high,etr_keyword:dedicatory_deity
+8918,funerary,medium,junk_translation:kinship_list
+8949,funerary,high,etr_keyword:funerary
+9073,ownership,medium,etr_formula:mi+name
+9118,funerary,medium,junk_translation:kinship_list
+CIE 2755,funerary,high,etr_keyword:funerary
+9239,dedicatory,high,etr_keyword:dedicatory_deity
+9240,ownership,medium,etr_formula:mi+name
+9264,ownership,medium,etr_formula:mi+name
+9274,dedicatory,medium,junk_translation:deity_ref
+CIE 2757,funerary,high,etr_keyword:funerary
+9298,funerary,medium,junk_translation:kinship_list
+9392,dedicatory,high,etr_keyword:dedicatory_deity
+9506,ownership,medium,etr_formula:mi+name
+9535,funerary,medium,junk_translation:kinship_list
+9546,dedicatory,medium,junk_translation:deity_ref
+9886,boundary,high,etr_keyword:boundary
+3004,funerary,medium,junk_translation:kinship_list
+10161,ownership,medium,etr_formula:mi+name
+10686,funerary,high,etr_keyword:funerary
+10688,votive,high,etr_keyword:votive_deity
+10857,funerary,high,etr_keyword:funerary
+11025,dedicatory,high,etr_keyword:dedicatory_deity
+11155,funerary,medium,junk_translation:kinship_list
+4613,funerary,medium,junk_translation:kinship_list
+4618,ownership,medium,etr_formula:mi+name
+463,funerary,medium,junk_translation:kinship_list
+12430,funerary,medium,junk_translation:kinship_list
+12615,funerary,medium,junk_translation:kinship_list
+4680,funerary,medium,junk_translation:kinship_list
+12684,funerary,medium,junk_translation:kinship_list
+12691,votive,high,etr_keyword:votive_deity
+12759,dedicatory,medium,junk_translation:deity_ref
+12799,dedicatory,high,etr_keyword:dedicatory_deity
+12801,dedicatory,medium,junk_translation:deity_ref
+13821,funerary,medium,junk_translation:kinship_list
+13924,funerary,medium,junk_translation:kinship_list
+4851,funerary,medium,junk_translation:kinship_list
+14561,funerary,medium,junk_translation:kinship_list
+4882,funerary,medium,junk_translation:kinship_list
+14612,dedicatory,medium,junk_translation:deity_ref
+14772,funerary,medium,junk_translation:kinship_list
+14785,funerary,medium,junk_translation:kinship_list
+14811,funerary,medium,junk_translation:kinship_list
+5067,ownership,medium,etr_formula:mi+name
+5092,funerary,high,etr_keyword:funerary
+5094,legal,high,etr_keyword:legal
+14875,funerary,high,etr_keyword:funerary
+14876,funerary,high,etr_keyword:funerary
+15028,dedicatory,medium,junk_translation:deity_ref
+15157,boundary,high,etr_keyword:boundary
+5211,funerary,medium,junk_translation:kinship_list
+15268,funerary,medium,junk_translation:kinship_list
+15278,funerary,medium,junk_translation:kinship_list
+15329,funerary,medium,junk_translation:kinship_list
+15340,funerary,medium,junk_translation:kinship_list
+5237,dedicatory,medium,junk_translation:deity_ref
+15453,dedicatory,medium,junk_translation:deity_ref
+5287,funerary,medium,junk_translation:kinship_list
+15546,funerary,high,etr_keyword:funerary
+5385,legal,high,etr_keyword:legal
+5410,legal,high,etr_keyword:legal
+5423,funerary,high,etr_keyword:funerary
+5426,funerary,medium,junk_translation:kinship_list
+5430,legal,high,etr_keyword:legal
+5432,funerary,medium,junk_translation:kinship_list
+5441,funerary,medium,junk_translation:kinship_list
+15818,funerary,medium,junk_translation:kinship_list
+5459,funerary,high,etr_keyword:funerary
+5473,funerary,medium,junk_translation:kinship_list
+5493,funerary,medium,junk_translation:kinship_list
+5512,funerary,medium,junk_translation:kinship_list
+5517,funerary,medium,junk_translation:kinship_list
+15911,funerary,medium,junk_translation:kinship_list
+5521,funerary,high,etr_keyword:funerary
+16139,ownership,medium,etr_formula:mi+name
+5549,dedicatory,high,etr_keyword:dedicatory_deity
+5558,funerary,medium,junk_translation:kinship_list
+5562,funerary,medium,junk_translation:kinship_list
+5564,dedicatory,medium,junk_translation:deity_ref
+16220,funerary,medium,junk_translation:kinship_list
+16222,boundary,high,etr_keyword:boundary
+16242,dedicatory,medium,junk_translation:deity_ref
+5565,votive,high,etr_keyword:votive_deity
+5566,funerary,high,etr_keyword:funerary
+5689,funerary,medium,junk_translation:kinship_list
+16497,funerary,medium,junk_translation:kinship_list
+16509,funerary,medium,junk_translation:kinship_list
+5708,funerary,medium,junk_translation:kinship_list
+5751,funerary,medium,junk_translation:kinship_list
+5755,funerary,high,etr_keyword:funerary
+16824,boundary,high,etr_keyword:boundary
+17001,dedicatory,high,etr_keyword:dedicatory_deity
+17019,dedicatory,high,etr_keyword:dedicatory_deity
+5874,legal,high,etr_keyword:legal
+5875,funerary,medium,junk_translation:kinship_list
+6159,funerary,medium,junk_translation:kinship_list
+17296,dedicatory,medium,junk_translation:deity_ref
+17299,funerary,medium,junk_translation:kinship_list
+17300,dedicatory,medium,junk_translation:deity_ref
+17302,funerary,medium,junk_translation:kinship_list
+6283,funerary,medium,junk_translation:kinship_list
+17313,dedicatory,medium,junk_translation:deity_ref
+20822,ownership,medium,etr_formula:mi+name
+20370,dedicatory,high,etr_keyword:dedicatory_deity
+20405,ownership,medium,etr_formula:mi+name
+CODEX_LL_VII,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_LL_X,funerary,high,etr_keyword:funerary
+CODEX_PY_A_1,funerary,high,etr_keyword:funerary
+819,funerary,medium,junk_translation:kinship_list
+882,funerary,medium,junk_translation:kinship_list
+1295,funerary,medium,junk_translation:kinship_list
+1404,funerary,medium,junk_translation:kinship_list
+CIE 2785,funerary,high,etr_keyword:funerary
+1671,funerary,medium,junk_translation:kinship_list
+2103,funerary,medium,junk_translation:kinship_list
+21077,ownership,medium,etr_formula:mi+name
+CIE 142,ownership,low,etr_formula:mi_present
+2527,funerary,medium,junk_translation:kinship_list
+CIE 2835,funerary,high,etr_keyword:funerary
+CIE 3271,ownership,medium,etr_formula:mi+name
+ETP 52,funerary,high,etr_keyword:funerary
+2653,funerary,medium,junk_translation:kinship_list
+2694,funerary,high,etr_keyword:funerary
+7843,ownership,medium,etr_formula:mi+name
+7849,ownership,medium,etr_formula:mi+name
+2785,funerary,high,etr_keyword:funerary
+2790,funerary,medium,junk_translation:kinship_list
+7927,dedicatory,high,etr_keyword:dedicatory_deity
+3379,funerary,medium,junk_translation:kinship_list
+3551,funerary,medium,junk_translation:kinship_list
+CIE 247,ownership,medium,etr_formula:mi+name
+808,commercial,medium,etr_keyword:commercial
+3609,funerary,medium,junk_translation:kinship_list
+3858,funerary,medium,junk_translation:kinship_list
+3965,funerary,medium,junk_translation:kinship_list
+4065,funerary,medium,junk_translation:kinship_list
+CIE 1767,funerary,high,etr_keyword:funerary
+CIE 471,ownership,medium,etr_formula:mi+name
+CIE 1840,dedicatory,high,etr_keyword:dedicatory_deity
+CIE 2984,funerary,high,etr_keyword:funerary
+CIE 1876,funerary,high,etr_keyword:funerary
+3157,funerary,medium,junk_translation:kinship_list
+8332,funerary,medium,junk_translation:kinship_list
+CIE 3067,funerary,high,etr_keyword:funerary
+8340,funerary,medium,junk_translation:kinship_list
+12787,funerary,high,etr_keyword:funerary
+ETP 67,ownership,medium,etr_formula:mi+name
+CIE 312,ownership,medium,etr_formula:mi+name
+CIE 3121,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 68,ownership,medium,etr_formula:mi+name
+CIE 319,funerary,high,etr_keyword:funerary
+ETP 332,dedicatory,high,gold:claude_hand_label
+CIE 3283a,funerary,high,etr_keyword:funerary
+CIE 3284,funerary,high,etr_keyword:funerary
+CIE 2209,funerary,high,etr_keyword:funerary
+CIE 437,votive,high,etr_keyword:votive_deity
+CIE 438,votive,high,etr_keyword:votive_deity
+CIE 439,boundary,high,etr_keyword:boundary
+CIE 441,funerary,high,etr_keyword:funerary
+ETP 333,funerary,medium,gold:claude_hand_label
+CIE 48,legal,high,etr_keyword:legal
+CIE 50,ownership,low,etr_formula:mi_present
+CIE 51,ownership,medium,etr_formula:mi+name
+CIE 2333,funerary,high,etr_keyword:funerary
+Cl 1.1502,funerary,high,gold:claude_hand_label
+Cl 1.1645,funerary,high,gold:claude_hand_label
+Cl 1.1807,funerary,high,gold:claude_hand_label
+Cl 1.1885,funerary,high,gold:claude_hand_label
+Cl 1.2050,funerary,high,gold:claude_hand_label
+Cl 1.2261,funerary,high,gold:claude_hand_label
+Cl 1.314,funerary,high,gold:claude_hand_label
+ETP 334,funerary,high,etr_keyword:funerary
+4787,funerary,medium,junk_translation:kinship_list
+Cl 1.324,funerary,high,gold:claude_hand_label
+Cm 2.13,ownership,high,gold:claude_hand_label
+Cm 2.32,ownership,high,gold:claude_hand_label
+Cm 2.46,ownership,high,gold:claude_hand_label
+Cm 2.65,ownership,high,gold:claude_hand_label
+Co 1.3,funerary,high,gold:claude_hand_label
+Co 3.6,votive,high,gold:claude_hand_label
+Co 3.7,dedicatory,high,gold:claude_hand_label
+Co 4.1,dedicatory,high,gold:claude_hand_label
+CODEX_CP_A,legal,high,etr_keyword:legal
+CODEX_CP_B,funerary,high,etr_keyword:funerary
+CODEX_LL_IX,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_LL_VI,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 335,ownership,high,gold:claude_hand_label
+ETP 336,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_LL_VIII,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_PL_INNER,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_PL_OUTER,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 343,ownership,high,gold:claude_hand_label
+ETP 344,ownership,high,gold:claude_hand_label
+4925,ownership,medium,etr_formula:mi+name
+5819,funerary,medium,junk_translation:kinship_list
+9179,ownership,medium,etr_formula:mi+name
+9182,ownership,medium,etr_formula:mi+name
+5894,funerary,medium,junk_translation:kinship_list
+7462,dedicatory,medium,junk_translation:deity_ref
+2149,funerary,medium,junk_translation:kinship_list
+2151,funerary,medium,junk_translation:kinship_list
+12678,funerary,medium,junk_translation:kinship_list
+2956,funerary,medium,junk_translation:kinship_list
+CODEX_TC_I,dedicatory,high,etr_keyword:dedicatory_deity
+CODEX_TC_II,funerary,high,etr_keyword:funerary
+CODEX_TC_III,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 345,ownership,medium,etr_formula:mi+name
+ETP 346,commercial,medium,etr_keyword:commercial
+CODEX_TCo_A,boundary,high,etr_keyword:boundary
+CODEX_TCo_B,legal,high,etr_keyword:legal
+Cr 2.27,ownership,high,gold:claude_hand_label
+Cr 2.42,ownership,high,gold:claude_hand_label
+Cr 2.9,ownership,high,gold:claude_hand_label
+Cr 3.11,ownership,high,gold:claude_hand_label
+Cr 3.14,ownership,high,gold:claude_hand_label
+Cr 3.17,dedicatory,medium,gold:claude_hand_label
+Cr 3.7,ownership,high,gold:claude_hand_label
+Cr 3.9,ownership,high,gold:claude_hand_label
+Cr 5.2,funerary,high,gold:claude_hand_label
+Cr 5.3,funerary,high,gold:claude_hand_label
+Cr 5.4,funerary,high,gold:claude_hand_label
+ETP 102,ownership,medium,etr_formula:mi+name
+ETP 105,ownership,medium,etr_formula:mi+name
+ETP 106,ownership,high,gold:claude_hand_label
+ETP 108,ownership,medium,etr_formula:mi+name
+ETP 110,ownership,high,gold:claude_hand_label
+ETP 112,ownership,high,gold:claude_hand_label
+ETP 113,ownership,medium,etr_formula:mi+name
+ETP 117,ownership,medium,etr_formula:mi+name
+CIE 3029,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 118,ownership,high,gold:claude_hand_label
+ETP 120,ownership,medium,etr_formula:mi+name
+ETP 130,ownership,medium,etr_formula:mi+name
+ETP 133,ownership,medium,etr_formula:mi+name
+ETP 158,ownership,medium,etr_formula:mi+name
+ETP 173,ownership,medium,etr_formula:mi+name
+ETP 186,ownership,high,gold:claude_hand_label
+ETP 189,dedicatory,high,gold:claude_hand_label
+ETP 190,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 192,funerary,high,gold:claude_hand_label
+ETP 196,ownership,high,gold:claude_hand_label
+ETP 197,ownership,medium,etr_formula:mi+name
+ETP 198,ownership,medium,etr_formula:mi+name
+ETP 206,ownership,medium,etr_formula:mi+name
+ETP 208,ownership,medium,etr_formula:mi+name
+ETP 209,ownership,high,gold:claude_hand_label
+ETP 213,funerary,high,gold:claude_hand_label
+ETP 214,funerary,high,gold:claude_hand_label
+ETP 215,ownership,medium,etr_formula:mi+name
+ETP 216,ownership,medium,etr_formula:mi+name
+ETP 217,ownership,medium,etr_formula:mi+name
+ETP 219,ownership,medium,etr_formula:mi+name
+ETP 224,ownership,medium,etr_formula:mi+name
+ETP 230,funerary,high,gold:claude_hand_label
+ETP 238,dedicatory,high,gold:claude_hand_label
+ETP 239,votive,high,gold:claude_hand_label
+ETP 247,ownership,medium,etr_formula:mi+name
+ETP 251,dedicatory,high,gold:claude_hand_label
+ETP 253,dedicatory,high,gold:claude_hand_label
+ETP 257,ownership,medium,etr_formula:mi+name
+ETP 269,ownership,medium,gold:claude_hand_label
+ETP 270,ownership,medium,etr_formula:mi+name
+ETP 271,ownership,medium,etr_formula:mi+name
+ETP 273,ownership,medium,etr_formula:mi+name
+ETP 284,ownership,high,gold:claude_hand_label
+ETP 286,boundary,high,gold:claude_hand_label
+ETP 287,funerary,high,gold:claude_hand_label
+ETP 289,ownership,high,gold:claude_hand_label
+ETP 290,ownership,medium,etr_formula:mi+name
+ETP 292,ownership,medium,etr_formula:mi+name
+ETP 295,ownership,medium,etr_formula:mi+name
+ETP 303,ownership,high,gold:claude_hand_label
+ETP 306,ownership,medium,etr_formula:mi+name
+CIE 2635,funerary,high,etr_keyword:funerary
+CIE 2694,funerary,high,etr_keyword:funerary
+CIE 2847,funerary,high,etr_keyword:funerary
+CIE 2936,funerary,high,etr_keyword:funerary
+10425,dedicatory,high,etr_keyword:dedicatory_deity
+10441,ownership,medium,etr_formula:mi+name
+10007,dedicatory,high,etr_keyword:dedicatory_deity
+6312,dedicatory,high,en_phrase:dedicatory
+637,funerary,medium,junk_translation:kinship_list
+10446,dedicatory,high,etr_keyword:dedicatory_deity
+10830,funerary,high,etr_keyword:funerary
+10838,funerary,high,etr_keyword:funerary
+10886,funerary,high,etr_keyword:funerary
+1136,dedicatory,medium,junk_translation:deity_ref
+11419,dedicatory,high,etr_keyword:dedicatory_deity
+12203,ownership,medium,etr_formula:mi+name
+12789,ownership,medium,etr_formula:mi+name
+13998,funerary,medium,junk_translation:kinship_list
+140,funerary,medium,junk_translation:kinship_list
+14574,funerary,medium,junk_translation:kinship_list
+14652,dedicatory,medium,junk_translation:deity_ref
+14705,funerary,medium,junk_translation:kinship_list
+14795,funerary,medium,junk_translation:kinship_list
+14814,funerary,medium,junk_translation:kinship_list
+14928,funerary,high,etr_keyword:funerary
+14930,funerary,medium,junk_translation:kinship_list
+15261,funerary,medium,junk_translation:kinship_list
+15296,votive,high,etr_keyword:votive_deity
+15370,funerary,medium,junk_translation:kinship_list
+15459,dedicatory,high,etr_keyword:dedicatory_deity
+15515,dedicatory,high,etr_keyword:dedicatory_deity
+15601,funerary,high,etr_keyword:funerary
+15790,dedicatory,high,etr_keyword:dedicatory_deity
+15800,ownership,medium,etr_formula:mi+name
+15801,ownership,medium,etr_formula:mi+name
+15903,funerary,medium,junk_translation:kinship_list
+15904,funerary,medium,junk_translation:kinship_list
+16,ownership,medium,etr_formula:mi+name
+16019,dedicatory,medium,junk_translation:deity_ref
+16433,funerary,medium,junk_translation:kinship_list
+16474,funerary,medium,junk_translation:kinship_list
+16476,funerary,medium,junk_translation:kinship_list
+16478,funerary,medium,junk_translation:kinship_list
+16619,funerary,high,etr_keyword:funerary
+16662,dedicatory,high,etr_keyword:dedicatory_deity
+16690,funerary,high,etr_keyword:funerary
+17260,dedicatory,medium,junk_translation:deity_ref
+17323,dedicatory,medium,junk_translation:deity_ref
+1770,funerary,medium,junk_translation:kinship_list
+1936,funerary,medium,junk_translation:kinship_list
+2009,funerary,medium,junk_translation:kinship_list
+206,funerary,medium,junk_translation:kinship_list
+659,funerary,medium,junk_translation:kinship_list
+6844,dedicatory,medium,junk_translation:deity_ref
+7042,funerary,medium,junk_translation:kinship_list
+7044,funerary,medium,junk_translation:kinship_list
+7045,funerary,medium,junk_translation:kinship_list
+7126,funerary,medium,junk_translation:kinship_list
+7226,funerary,medium,junk_translation:kinship_list
+7246,funerary,medium,junk_translation:kinship_list
+735,funerary,medium,junk_translation:kinship_list
+736,funerary,medium,junk_translation:kinship_list
+CIE 2113,funerary,high,etr_keyword:funerary
+CIE 2039,ownership,low,etr_formula:mi_present
+CIE 2093,funerary,high,etr_keyword:funerary
+CIE 2097,funerary,high,etr_keyword:funerary
+14714,dedicatory,medium,junk_translation:deity_ref
+CIE 2196,funerary,high,etr_keyword:funerary
+CIE 2269,funerary,high,etr_keyword:funerary
+CIE 2440,funerary,high,etr_keyword:funerary
+CIE 2527,funerary,high,etr_keyword:funerary
+CIE 2533,funerary,high,etr_keyword:funerary
+CIE 2534,funerary,high,etr_keyword:funerary
+CIE 2550,funerary,high,etr_keyword:funerary
+ETP 352,dedicatory,high,gold:claude_hand_label
+ETP 353,ownership,high,gold:claude_hand_label
+ETP 354,dedicatory,high,etr_keyword:dedicatory_deity
+ETP 362,ownership,high,gold:claude_hand_label
+ETP 76,funerary,high,etr_keyword:funerary
+ETP 83,ownership,medium,gold:claude_hand_label
+ETP 86,ownership,medium,etr_formula:mi+name
+Fs 8.3,boundary,high,gold:claude_hand_label
+LL 4,dedicatory,high,gold:claude_hand_label
+LL 6,dedicatory,high,gold:claude_hand_label
+LL 8,dedicatory,high,gold:claude_hand_label
+LL 9,dedicatory,high,gold:claude_hand_label
+OA 3.9,dedicatory,high,gold:claude_hand_label
+Pa 4.1,dedicatory,high,etr_keyword:dedicatory_deity
+Ta 1.108,funerary,high,gold:claude_hand_label
+Ta 1.15,funerary,high,gold:claude_hand_label
+Ta 1.168,funerary,high,gold:claude_hand_label
+Ta 1.18,funerary,high,gold:claude_hand_label
+Ta 1.183,funerary,high,gold:claude_hand_label
+Ta 1.191,funerary,high,gold:claude_hand_label
+Ta 1.82,funerary,high,gold:claude_hand_label
+Ta 1.9,funerary,high,gold:claude_hand_label
+Ta 3.6,votive,high,gold:claude_hand_label
+Ta 5.5,funerary,medium,gold:claude_hand_label
+Vc 1.87,funerary,high,gold:claude_hand_label
+Ve 3.30,dedicatory,high,en_phrase:dedicatory
+Vs 1.45,funerary,high,gold:claude_hand_label
+Vs 1.55,funerary,high,gold:claude_hand_label
+Vs 1.85,funerary,high,gold:claude_hand_label
+Cr 2.20,ownership,high,gold:claude_hand_label
+Cr 2.2,ownership,high,gold:claude_hand_label
+Cr 2.18,ownership,high,gold:claude_hand_label
+Pe 3.3,dedicatory,high,gold:claude_hand_label
+Vs 4.8,votive,high,gold:claude_hand_label
+Cl 1.373,funerary,high,gold:claude_hand_label

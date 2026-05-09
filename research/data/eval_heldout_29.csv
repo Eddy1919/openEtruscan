@@ -1,0 +1,30 @@
+id,label,confidence,signal
+14518,funerary,low,name + mr- prefix (kinship-list pattern)
+14522,funerary,low,name only with mr- prefix
+14523,ownership,medium,"was-drawn suggests maker / inscription mark"
+14524,ownership,medium,"by-mr-X is maker attribution"
+14525,funerary,medium,"kinship list (mr-X mrs-Y somewoman)"
+808,commercial,medium,"presnts is in keyword vocab as weighed-unit"
+14532,funerary,medium,"kinship herself her father mr larth"
+Cr 1.138,funerary,medium,"name-only on Caere stone (Ramtha + family)"
+14559,funerary,low,"single name with ms- prefix"
+14561,funerary,high,"explicit slave mention typical on funerary"
+14567,funerary,low,short name fragment
+14570,ownership,low,"for-mr-X pattern (recipient is person not deity)"
+14574,funerary,medium,"son murdered by = death context"
+1458,funerary,low,little-larth nickname
+17057,funerary,low,single name (Thanas)
+1460,funerary,medium,kinship list
+14612,dedicatory,high,"address to deities (Turan = Venus)"
+1462,funerary,high,"explicit kinship daughter's husband"
+14630,funerary,very_low,unclear
+14651,ownership,low,for-mr-X pattern
+14652,dedicatory,high,Fufluns = Bacchus deity reference
+14658,funerary,low,single name avilu
+ETP 27,funerary,medium,"a good man eulogistic phrase"
+Ta S.8,dedicatory,medium,"deity list (Shethlans + Uni)"
+17073,funerary,low,single name only
+6688,legal,high,"zilχ = magistrate (in legal keyword vocab)"
+8177,funerary,low,single name calinos
+14682,funerary,low,single name statetius
+8200,ownership,medium,for-mr-X pattern

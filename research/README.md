@@ -14,6 +14,8 @@ research strand lives here.
 
 | File | What's in it | When you need it |
 |---|---|---|
+| [`data/`](data/) | **Published research artifacts.** The cleaned corpus CSV, label files, and held-out evaluation set. Every paper that cites OpenEtruscan should reference these files. | When citing the dataset or running benchmarks. |
+| [`experiments/`](experiments/) | Self-contained experiments (one subdir each) with `eval.py` + protocol README + headline results. | When reproducing or extending an evaluation. |
 | [`FINDINGS.md`](FINDINGS.md) | Honest writeup of what we built, what works, what doesn't, and *why* the Bonfante-anchor metric was wrong. Headline numbers from the LaBSE eval. | Start here. Also if a domain expert / collaborator wants the one-doc summary. |
 | [`ROADMAP.md`](ROADMAP.md) | Forward-looking research plan: priorities, hypotheses still worth testing, scope boundaries, what's *not* in scope. | When deciding what the next investment should be. |
 | [`WBS.md`](WBS.md) | Work-breakdown structure: every research deliverable broken down into discrete tasks with acceptance criteria, estimated effort, dependencies. | When picking up a task to actually execute. |
