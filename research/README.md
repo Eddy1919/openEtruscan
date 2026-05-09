@@ -16,7 +16,9 @@ research strand lives here.
 |---|---|---|
 | [`data/`](data/) | **Published research artifacts.** The cleaned corpus CSV, label files, and held-out evaluation set. Every paper that cites OpenEtruscan should reference these files. | When citing the dataset or running benchmarks. |
 | [`experiments/`](experiments/) | Self-contained experiments (one subdir each) with `eval.py` + protocol README + headline results. | When reproducing or extending an evaluation. |
-| [`FINDINGS.md`](FINDINGS.md) | Honest writeup of what we built, what works, what doesn't, and *why* the Bonfante-anchor metric was wrong. Headline numbers from the LaBSE eval. | Start here. Also if a domain expert / collaborator wants the one-doc summary. |
+| [`FINDINGS.md`](FINDINGS.md) | Rosetta vector-space strand: what works, what doesn't, and *why* the Bonfante-anchor metric was wrong. Headline numbers from the LaBSE eval. | For the cross-language retrieval research. |
+| [`CURATION_FINDINGS.md`](CURATION_FINDINGS.md) | Corpus-curation strand (May 7-9 2026): mirror-glyph cleaning, Old Italic regeneration, classifier data-bottleneck, ByT5 lacuna failure, etr-lora-v4 retrieval gains. | For the dataset-engineering and classifier work. |
+| [`BIBLIOGRAPHY.md`](BIBLIOGRAPHY.md) | Consolidated references: Etruscan philology, ML architectures, datasets, conventions. | When citing or following primary sources. |
 | [`ROADMAP.md`](ROADMAP.md) | Forward-looking research plan: priorities, hypotheses still worth testing, scope boundaries, what's *not* in scope. | When deciding what the next investment should be. |
 | [`WBS.md`](WBS.md) | Work-breakdown structure: every research deliverable broken down into discrete tasks with acceptance criteria, estimated effort, dependencies. | When picking up a task to actually execute. |
 | [`notes/`](notes/) | Topic-specific deep-dives that don't yet warrant promotion to a top-level doc. | When you want to know what was tried for a sub-problem. |
