@@ -2,7 +2,7 @@
 
 The Rosetta Vector Space's persistence + query layer.
 
-Architecture (2026 SOTA — see ROADMAP):
+Architecture (see ROADMAP):
   * A multilingual transformer encoder (XLM-RoBERTa by default) produces
     contextual word vectors. The encoder's pretraining covers 100+
     languages so cross-language retrieval is implicit — no Procrustes

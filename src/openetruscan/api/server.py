@@ -71,7 +71,7 @@ def _configure_logging():
         logging.basicConfig(
             level=log_level,
             format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            # In a real SOTA implementation, we'd use structlog or python-json-logger
+            # In a production implementation, we'd use structlog or python-json-logger
             # e.g. using pythonjsonlogger.jsonlogger.JsonFormatter
         )
     else:

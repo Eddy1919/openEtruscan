@@ -1,7 +1,7 @@
 """Multilingual contextual embeddings for the Rosetta Vector Space.
 
 This module replaces the previous FastText + Procrustes pipeline with a
-2026-SOTA architecture: a multilingual transformer encoder (XLM-RoBERTa
+Architecture: a multilingual transformer encoder (XLM-RoBERTa
 by default) optionally augmented with a LoRA adapter fine-tuned on
 Etruscan inscriptions. The encoder's hidden states already share a
 vector space across the 100+ languages it was pretrained on, so

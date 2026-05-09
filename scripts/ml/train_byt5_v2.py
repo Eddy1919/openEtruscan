@@ -10,7 +10,7 @@ import psycopg2
 from typing import Any, Dict, List
 from sklearn.model_selection import train_test_split
 
-# HuggingFace & SOTA
+# HuggingFace ecosystem
 from transformers import (
     AutoTokenizer, 
     AutoModelForSeq2SeqLM, 

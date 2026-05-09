@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Benchmark SOTA Epigraphic ML Pipelines.
+Benchmark Epigraphic ML Pipelines.
 Runs comparative benchmarks on Classification and Lacunae Restoration.
 
 Usage:
-    python scripts/ml/benchmark_sota.py
+    python scripts/ml/benchmark_pipelines.py
 """
 import os
 import sys

@@ -6,7 +6,7 @@ Three analysis modules:
   2. Dialect clustering          — cosine-distance Ward clustering + PCA projection
   3. Dating heuristics           — rule-based chronological classification
 
-Uses numpy/scipy for SOTA statistical methods on the OpenEtruscan corpus.
+Uses numpy/scipy for modern statistical methods on the OpenEtruscan corpus.
 
 Usage:
     from openetruscan.core.statistics import (
@@ -810,7 +810,7 @@ def bayesian_date(
     using calibrated likelihood tables and a uniform prior over 13
     50-year time bins from 700 to 50 BCE.
 
-    This is the SOTA replacement for ``estimate_date()``, providing true
+    This is the modern replacement for ``estimate_date()``, providing true
     probabilistic date estimates rather than descriptive period labels.
 
     Args:

@@ -23,7 +23,7 @@ def enrich_cie():
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     
-    # 1. Add SOTA Columns
+    # 1. Add Epigraphic Provenance Columns
     new_columns = [
         ("canonical", "TEXT"),
         ("phonetic", "TEXT"),

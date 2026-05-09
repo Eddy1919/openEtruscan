@@ -1,7 +1,7 @@
 # OpenEtruscan engineering roadmap
 
 Forward-looking plan, not a history log. The previous FastText + Procrustes
-prototype was nuked when we pivoted to the 2026 SOTA architecture below.
+prototype was nuked when we pivoted to the modern architecture below.
 
 ---
 
@@ -36,7 +36,7 @@ coordinate?* For words with strong philological consensus the geometry
 *confirms* the consensus (high-confidence sanity check); for contested
 words it produces a ranked candidate list with quantified uncertainty.
 
-### Architecture (2026 SOTA)
+### Architecture
 
 A multilingual transformer encoder — **XLM-RoBERTa-base** by default,
 with optional **LoRA-adapter fine-tuning** on the Etruscan corpus —

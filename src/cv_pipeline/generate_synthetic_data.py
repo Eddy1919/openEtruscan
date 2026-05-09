@@ -1,6 +1,6 @@
 """
 Synthetic Data Generator for Etruscan Epigraphy
-Creates SOTA YOLO datasets by rendering Old Italic glyphs onto simulated stone textures.
+Creates YOLO datasets by rendering Old Italic glyphs onto simulated stone textures.
 
 Usage:
     poetry run python src/cv_pipeline/generate_synthetic_data.py

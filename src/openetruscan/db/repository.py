@@ -170,7 +170,7 @@ class InscriptionRepository:
         total = total_result.scalar_one() or 0
 
         # Convert ORM models to dataclasses for API compatibility (temporary bridge)
-        # In a full SOTA app, we'd use Pydantic models directly from ORM
+        # In a fully Pydantic-native app, we'd use models directly from ORM
         return SearchResults(inscriptions=[self._to_dataclass(row) for row in rows], total=total)
 
     async def search_radius(

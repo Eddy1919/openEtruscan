@@ -1,6 +1,6 @@
 """LoRA fine-tuning of the multilingual encoder on Etruscan inscriptions.
 
-This is the second half of the 2026-SOTA Rosetta architecture:
+This is the second half of the Rosetta architecture:
 
   Phase A (this file): take a pretrained multilingual encoder
   (XLM-R-base by default), continue masked-LM pretraining on the

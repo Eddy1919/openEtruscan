@@ -1,5 +1,5 @@
 """
-State-of-the-Art (SOTA) YOLO11n Computer Vision Pipeline for Etruscan Glyph Detection
+YOLO11n Computer Vision Pipeline for Etruscan Glyph Detection
 
 This pipeline handles:
 1. Connecting to the database to extract epigraphic images and bounding box annotations
@@ -89,7 +89,7 @@ def push_to_huggingface(onnx_path: str):
             path_or_fileobj=onnx_path,
             path_in_repo="glyph_detector.onnx",
             repo_id=HF_REPO_ID,
-            commit_message="Update SOTA ONNX model for OpenEtruscan frontend inference"
+            commit_message="Update ONNX model for OpenEtruscan frontend inference"
         )
         logger.info("🚀 Successfully pushed to Hugging Face!")
     except Exception as e:
