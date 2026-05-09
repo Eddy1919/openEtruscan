@@ -44,8 +44,22 @@ logging.basicConfig(
 )
 log = logging.getLogger("embed")
 
+from itertools import cycle
+
 # ── Gemini Embedding API ──────────────────────────────────────
-API_KEY = os.getenv("GEMINI_API_KEY")
+# Collect all GEMINI_API_KEY* variables to round-robin
+API_KEYS = []
+for k, v in os.environ.items():
+    if k.startswith("GEMINI_API_KEY") and v.strip():
+        API_KEYS.append(v.strip())
+
+if not API_KEYS:
+    log.error("No GEMINI_API_KEY environment variables found")
+    sys.exit(1)
+
+log.info("Loaded %d Gemini API keys for embedding", len(API_KEYS))
+key_cycle = cycle(API_KEYS)
+
 EMBED_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent"
 )
@@ -66,7 +80,7 @@ def embed_single(text: str, retries: int = 3) -> list[float] | None:
         try:
             resp = requests.post(
                 EMBED_URL,
-                params={"key": API_KEY},
+                params={"key": next(key_cycle)},
                 json={"content": {"parts": [{"text": text[:2048]}]}},
                 timeout=30,
             )
@@ -112,7 +126,7 @@ def embed_batch(texts: list[str], retries: int = 3) -> list[list[float] | None]:
         try:
             resp = requests.post(
                 BATCH_EMBED_URL,
-                params={"key": API_KEY},
+                params={"key": next(key_cycle)},
                 json={"requests": requests_list},
                 timeout=60,
             )
@@ -208,8 +222,8 @@ def main():
     parser.add_argument("--force", action="store_true", help="Re-embed even if already present")
     args = parser.parse_args()
 
-    if not API_KEY:
-        log.error("GEMINI_API_KEY not set")
+    if not API_KEYS:
+        log.error("No GEMINI_API_KEYs configured")
         sys.exit(1)
 
     import psycopg2

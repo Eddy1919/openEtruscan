@@ -447,7 +447,7 @@ def load_training_data(
         cur.execute(
             "SELECT canonical, classification FROM inscriptions"
             " WHERE canonical != ''"
-            " AND provenance_status = 'verified'"
+            " AND classification != 'unknown'"
         )
         rows = cur.fetchall()
     conn.close()
@@ -561,6 +561,19 @@ class NeuralClassifier:
             raise ValueError(
                 f"Only {len(texts)} labeled samples found. Need at least 20 for training."
             )
+
+        # Filter out classes with < 2 samples to allow stratified split
+        from collections import Counter
+        counts = Counter(labels)
+        valid_indices = [i for i, lbl in enumerate(labels) if counts[lbl] >= 2]
+        
+        if len(valid_indices) < len(texts):
+            if verbose:
+                removed = set(lbl for lbl, c in counts.items() if c < 2)
+                print(f"  Warning: Dropping classes with < 2 samples: {removed}")
+            texts = [texts[i] for i in valid_indices]
+            labels = [labels[i] for i in valid_indices]
+            contexts = [contexts[i] for i in valid_indices]
 
         # Stratified split
         x_train, x_val, y_train, y_val, c_train, c_val = train_test_split(
