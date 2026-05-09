@@ -77,6 +77,16 @@ class Inscription(Base):
     phonetic: Mapped[str] = mapped_column(Text, nullable=False)
     old_italic: Mapped[str] = mapped_column(Text, nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    # NLP & Clean Data Columns
+    canonical_clean: Mapped[str | None] = mapped_column(Text)
+    old_italic_v2: Mapped[str | None] = mapped_column(Text)
+    data_quality: Mapped[str | None] = mapped_column(Text)
+    translation: Mapped[str | None] = mapped_column(Text)
+    canonical_words_only: Mapped[str | None] = mapped_column(Text)
+    year_from: Mapped[int | None] = mapped_column(Integer)
+    year_to: Mapped[int | None] = mapped_column(Integer)
+    intact_token_ratio: Mapped[float | None] = mapped_column(Float)
     findspot: Mapped[str | None] = mapped_column(Text, default="", index=True)
     findspot_lat: Mapped[float | None] = mapped_column(Float)
     findspot_lon: Mapped[float | None] = mapped_column(Float)
@@ -101,7 +111,7 @@ class Inscription(Base):
     )
     provenance_flags: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
-    # SOTA Epigraphic Provenance
+    # Epigraphic Provenance
     source_code: Mapped[str] = mapped_column(Text, nullable=False, default="unknown", index=True)
     source_detail: Mapped[str | None] = mapped_column(Text)
     original_script_entry: Mapped[str | None] = mapped_column(Text)
