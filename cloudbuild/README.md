@@ -16,8 +16,9 @@ off GitHub Actions and onto Cloud Build for three reasons:
 
 | Project | Role |
 |---|---|
-| **`double-runway-465420-h9`** | **Where all Cloud Build runs execute.** Default Cloud Build SA, Secret Manager, and the GitHub App connection live here. |
-| **`long-facet-427508-j2`** | Hosts the prod GCE VM `openetruscan-eu` and the Artifact Registry repo `openetruscan/api`. The Cloud Build SA in double-runway impersonates `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com` for any operation that needs to touch this project. |
+| **`long-facet-427508-j2`** | **Where all Cloud Build runs execute, alongside the deploy target.** Project number `19927826393`. Hosts the prod GCE VM `openetruscan-eu`, the Artifact Registry repo `openetruscan/api`, the GitHub App connection, the build secrets, and the deploy SA `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com`. Builds run as that SA directly — no cross-project impersonation. |
+| **`long-facet-427508-j2`** | **Batch jobs only** (occasional Vertex training submissions, scheduled cron). Not in the CI/CD critical path; do NOT point `cloudbuild/*.yaml` at this project. |
+| **`openetruscan-rosetta`** | AI workload storage (`gs://openetruscan-rosetta/` for adapters, embeddings, corpus). Read-only from Cloud Build steps that need the v4 JSONL etc. |
 
 ## Files
 
@@ -39,7 +40,7 @@ every trigger is self-serving from these YAMLs.
 Install the **Cloud Build GitHub App** on `Eddy1919/openEtruscan`:
 <https://github.com/apps/google-cloud-build>
 
-In the Cloud Build console for `double-runway-465420-h9`:
+In the Cloud Build console for `long-facet-427508-j2`:
 
 ```
 Settings → Connections → Connect repository → GitHub (Cloud Build GitHub App)
@@ -47,54 +48,45 @@ Settings → Connections → Connect repository → GitHub (Cloud Build GitHub A
 
 Pick the openEtruscan repo. This is what makes commit statuses post back to PRs.
 
-### 2. Grant the Cloud Build SA the IAM roles it needs
+### 2. Grant the deploy SA the build-runner role
 
-The default Cloud Build SA is
-`<PROJECT_NUMBER>@cloudbuild.gserviceaccount.com` — for
-`double-runway-465420-h9` (project number `27914760876`), that's
-`27914760876@cloudbuild.gserviceaccount.com`.
-
-Roles to grant in `double-runway-465420-h9` (the build project):
+The triggers below are configured to run as
+`gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com`,
+which already has IAP-Tunnel + GCE-SSH + Artifact-Registry-write +
+Secret-Manager-read roles from the GH-Actions era. The only thing it
+typically lacks is `roles/cloudbuild.builds.builder` (needed when an
+SA runs a Cloud Build, not just submits one):
 
 ```bash
-PROJECT=double-runway-465420-h9
-CB_SA=27914760876@cloudbuild.gserviceaccount.com
+PROJECT=long-facet-427508-j2
+SA=gh-actions-deployer@${PROJECT}.iam.gserviceaccount.com
 
 for ROLE in \
   roles/cloudbuild.builds.builder \
-  roles/secretmanager.secretAccessor \
-  roles/storage.objectAdmin ; do
+  roles/logging.logWriter \
+  roles/secretmanager.secretAccessor ; do
     gcloud projects add-iam-policy-binding $PROJECT \
-      --member="serviceAccount:$CB_SA" \
+      --member="serviceAccount:$SA" \
       --role="$ROLE" --condition=None
 done
 ```
 
-Roles to grant in `long-facet-427508-j2` (the deploy project) so the
-build SA can impersonate `gh-actions-deployer`:
-
-```bash
-DEPLOY_PROJECT=long-facet-427508-j2
-DEPLOYER_SA=gh-actions-deployer@${DEPLOY_PROJECT}.iam.gserviceaccount.com
-
-# Build SA can mint impersonation tokens for the deployer SA.
-gcloud iam service-accounts add-iam-policy-binding $DEPLOYER_SA \
-  --project=$DEPLOY_PROJECT \
-  --member="serviceAccount:$CB_SA" \
-  --role="roles/iam.serviceAccountTokenCreator"
-```
-
-The deployer SA already has IAP-Tunnel + GCE SSH + Artifact Registry
-write roles in long-facet from the GH-Actions era — no new grants
-needed on that side.
+If you prefer to run builds as the default Cloud Build SA
+(`19927826393@cloudbuild.gserviceaccount.com`) instead, grant the
+default SA the same three roles plus `roles/iap.tunnelResourceAccessor`
+and `roles/compute.osLogin` on the VM. The trigger commands below
+default to running as `gh-actions-deployer` since it's simpler.
 
 ### 3. Create the secrets in Secret Manager
 
 ```bash
+PROJECT=long-facet-427508-j2
+
 # Only one new secret is needed: the PyPI API token for the release
-# workflow. Everything else (oe-database-url, etc.) already exists.
+# workflow. Other deploy-time secrets (oe-database-url, etc.) already
+# exist in this project.
 echo -n "<your PyPI API token>" | gcloud secrets create pypi-api-token \
-  --project=double-runway-465420-h9 \
+  --project=$PROJECT \
   --replication-policy=automatic --data-file=-
 ```
 
@@ -103,10 +95,11 @@ becomes unnecessary — see the comment in [`pypi.yaml`](pypi.yaml).
 
 ### 4. Create the triggers
 
-Run these from your local shell with `gcloud config set project double-runway-465420-h9` first.
+Run these from your local shell with `gcloud config set project long-facet-427508-j2` first.
 
 ```bash
-PROJECT=double-runway-465420-h9
+PROJECT=long-facet-427508-j2
+SA=projects/$PROJECT/serviceAccounts/gh-actions-deployer@${PROJECT}.iam.gserviceaccount.com
 REPO=openEtruscan
 OWNER=Eddy1919
 
@@ -117,6 +110,7 @@ gcloud builds triggers create github \
   --repo-owner=$OWNER --repo-name=$REPO \
   --pull-request-pattern="^main$" \
   --build-config=cloudbuild/ci.yaml \
+  --service-account=$SA \
   --description="Fast PR lane: lint + py3.12 tests + types + openapi"
 
 # 4b. Push-to-main matrix (ci-matrix.yaml)
@@ -126,6 +120,7 @@ gcloud builds triggers create github \
   --repo-owner=$OWNER --repo-name=$REPO \
   --branch-pattern="^main$" \
   --build-config=cloudbuild/ci-matrix.yaml \
+  --service-account=$SA \
   --description="Full Python matrix (3.10–3.13) on main pushes only"
 
 # 4c. Deploy on main pushes when relevant paths change
@@ -135,6 +130,7 @@ gcloud builds triggers create github \
   --repo-owner=$OWNER --repo-name=$REPO \
   --branch-pattern="^main$" \
   --build-config=cloudbuild/deploy.yaml \
+  --service-account=$SA \
   --included-files="src/**,Dockerfile,docker-compose.yml,nginx.conf,pyproject.toml,data/**,alembic.ini,scripts/ops/fetch-env-from-sm.sh" \
   --description="Build image + IAP SSH rotate to openetruscan-eu"
 
@@ -145,10 +141,11 @@ gcloud builds triggers create github \
   --repo-owner=$OWNER --repo-name=$REPO \
   --branch-pattern="^main$" \
   --build-config=cloudbuild/security.yaml \
+  --service-account=$SA \
   --description="Gitleaks secret detection"
 
 # 4e. Weekly security scan via Cloud Scheduler hitting the trigger's webhook
-#     (no Cloud Build native cron; use Scheduler → run-build invoker)
+#     (Cloud Build has no native cron; use Scheduler → triggers.run)
 gcloud scheduler jobs create http openetruscan-security-weekly \
   --project=$PROJECT \
   --location=europe-west4 \
@@ -156,7 +153,7 @@ gcloud scheduler jobs create http openetruscan-security-weekly \
   --uri="https://cloudbuild.googleapis.com/v1/projects/$PROJECT/triggers/openetruscan-security:run" \
   --http-method=POST \
   --message-body='{"branchName":"main"}' \
-  --oauth-service-account-email=$CB_SA
+  --oauth-service-account-email=gh-actions-deployer@${PROJECT}.iam.gserviceaccount.com
 
 # 4f. PyPI publish on release tags
 gcloud builds triggers create github \
@@ -165,6 +162,7 @@ gcloud builds triggers create github \
   --repo-owner=$OWNER --repo-name=$REPO \
   --tag-pattern="^v[0-9]+\.[0-9]+\.[0-9]+.*$" \
   --build-config=cloudbuild/pypi.yaml \
+  --service-account=$SA \
   --description="Publish to PyPI on tagged releases"
 ```
 
@@ -187,7 +185,7 @@ From the Cloud Build console, or:
 
 ```bash
 gcloud builds triggers run openetruscan-ci-pr \
-  --project=double-runway-465420-h9 \
+  --project=long-facet-427508-j2 \
   --branch=feature/whatever
 ```
 
@@ -195,7 +193,7 @@ gcloud builds triggers run openetruscan-ci-pr \
 
 ```bash
 gcloud builds list \
-  --project=double-runway-465420-h9 \
+  --project=long-facet-427508-j2 \
   --filter='source.repoSource.repoName=github_Eddy1919_openEtruscan' \
   --limit=10
 ```
@@ -203,7 +201,7 @@ gcloud builds list \
 ### Debug a failing build
 
 The build's stderr is logged to Cloud Logging under
-`logName="projects/double-runway-465420-h9/logs/cloudbuild"`. Filter
+`logName="projects/long-facet-427508-j2/logs/cloudbuild"`. Filter
 on the build ID printed in the trigger output.
 
 ## What's intentionally different from the GH-Actions era

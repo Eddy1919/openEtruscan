@@ -6,7 +6,7 @@
 # push-to-main via `ci-matrix.yaml` — anyone who needs an older-Python check
 # on a PR can run it locally.
 #
-# Project: double-runway-465420-h9 (where all Cloud Build runs execute).
+# Project: long-facet-427508-j2 (where all Cloud Build runs execute).
 # Trigger setup: see cloudbuild/README.md.
 #
 # Steps share a docker network ("cloudbuild") so the test step can reach

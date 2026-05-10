@@ -5,36 +5,25 @@
 # data/** changes (path filter configured on the trigger; see
 # cloudbuild/README.md).
 #
-# Two GCP projects involved on purpose:
-#   * BUILD project:  double-runway-465420-h9
-#                     Cloud Build itself runs here; Secret Manager + service
-#                     account live here. The default Cloud Build SA is
-#                     `<PROJECT_NUMBER>@cloudbuild.gserviceaccount.com`.
-#   * DEPLOY project: long-facet-427508-j2
-#                     The GCE VM `openetruscan-eu` lives here. Image registry
-#                     (`europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan/api`)
-#                     also here.
-#
-# How auth works:
-#   1. Cloud Build's default SA in double-runway authenticates to GCP natively.
-#   2. For anything that needs long-facet permissions (Artifact Registry push,
-#      IAP-SSH to the VM), we impersonate
-#      `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com` —
-#      the SA that already has the right roles from the GH-Actions era.
-#   3. The Cloud Build SA needs `roles/iam.serviceAccountTokenCreator` on the
-#      gh-actions-deployer SA. One-time grant; see cloudbuild/README.md.
+# Single GCP project: long-facet-427508-j2.
+# Build, Artifact Registry, GCE VM `openetruscan-eu` all live here. The
+# trigger is configured to run the build as
+# `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com`
+# (set on the trigger via `--service-account`, not in this file), which
+# already has roles for IAP-Tunnel, GCE SSH, AR write, and SM access
+# from the GH-Actions era. No cross-project impersonation, no token
+# minting; the build SA is the deploy SA.
 #
 # Pipeline:
-#   1. Build the API image (using the same Dockerfile the GH-Actions workflow
-#      used).
-#   2. Push to Artifact Registry in long-facet.
-#   3. IAP SSH into openetruscan-eu, refresh .env from SM, run alembic
-#      migrations, rotate compose services. Same script as before, transcribed
-#      verbatim — we are NOT redesigning the on-VM deploy here.
+#   1. Lint (ruff).
+#   2. Build the API image with the same Dockerfile as before.
+#   3. Push to Artifact Registry (`europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan/api`).
+#   4. IAP SSH into openetruscan-eu, refresh .env from SM, run alembic
+#      migrations, rotate compose services. Same script as before,
+#      transcribed verbatim — we are NOT redesigning the on-VM deploy.
 
 substitutions:
-  _DEPLOY_PROJECT: long-facet-427508-j2
-  _DEPLOY_SA: gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com
+  _PROJECT: long-facet-427508-j2
   _AR_LOCATION: europe-west4
   _AR_REPO: openetruscan
   _IMAGE_NAME: api
@@ -65,7 +54,7 @@ steps:
         ruff check .
 
   # ───────────────────────────────────────────────────────────────
-  # 2. Build the image. Tag with both `sha-${SHORT_SHA}` and `latest`.
+  # 2. Build the image and tag it for AR.
   # ───────────────────────────────────────────────────────────────
   - id: build
     name: gcr.io/cloud-builders/docker
@@ -73,35 +62,29 @@ steps:
     args:
       - build
       - -t
-      - ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:sha-${SHORT_SHA}
+      - ${_AR_LOCATION}-docker.pkg.dev/${_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:sha-${SHORT_SHA}
       - -t
-      - ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:latest
+      - ${_AR_LOCATION}-docker.pkg.dev/${_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:latest
       - .
 
   # ───────────────────────────────────────────────────────────────
-  # 3. Push to Artifact Registry. Image pushes from the build SA via
-  #    impersonation of gh-actions-deployer (the SA with AR write
-  #    perms in long-facet).
+  # 3. Push to Artifact Registry. Same-project push — the build SA
+  #    (gh-actions-deployer, set on the trigger) already has AR write
+  #    perms; no impersonation needed.
   # ───────────────────────────────────────────────────────────────
   - id: push
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    name: gcr.io/cloud-builders/docker
     waitFor: [build]
-    entrypoint: bash
     args:
-      - -c
-      - |
-        set -euo pipefail
-        gcloud auth configure-docker ${_AR_LOCATION}-docker.pkg.dev --quiet \
-          --impersonate-service-account=${_DEPLOY_SA}
-        # docker uses the gcloud helper for AR; the impersonation flag is
-        # already wired up by `gcloud auth configure-docker --impersonate`.
-        docker push ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:sha-${SHORT_SHA}
-        docker push ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:latest
+      - push
+      - --all-tags
+      - ${_AR_LOCATION}-docker.pkg.dev/${_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}
 
   # ───────────────────────────────────────────────────────────────
-  # 4. IAP SSH into the GCE VM and run the deploy script. Same body
-  #    as the old deploy.yml `Execute Remote SSH Commands via IAP`
-  #    step, transcribed.
+  # 4. IAP SSH into the GCE VM and run the on-VM deploy script.
+  #    Same body as the old deploy.yml `Execute Remote SSH Commands
+  #    via IAP` step, transcribed. No --impersonate-service-account
+  #    here either — the build SA is already gh-actions-deployer.
   # ───────────────────────────────────────────────────────────────
   - id: deploy
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -113,9 +96,8 @@ steps:
         set -euo pipefail
         gcloud compute ssh ${_VM_NAME} \
           --zone=${_VM_ZONE} \
-          --project=${_DEPLOY_PROJECT} \
+          --project=${_PROJECT} \
           --tunnel-through-iap \
-          --impersonate-service-account=${_DEPLOY_SA} \
           --quiet \
           --ssh-flag="-o ServerAliveInterval=30" \
           --ssh-flag="-o ServerAliveCountMax=120" \
@@ -129,9 +111,7 @@ steps:
             sudo bash -c "cd $REPO_DIR && git -c safe.directory=\"*\" fetch --all && git -c safe.directory=\"*\" reset --hard origin/main"
 
             # 2. Refresh .env from Secret Manager so we never deploy with a
-            # stale/manually-edited .env. fetch-env-from-sm.sh now also
-            # derives DB_HOST/PORT/USER/PASSWORD/NAME from DATABASE_URL so
-            # the pgbouncer service can parse them cleanly.
+            # stale/manually-edited .env. The script is the only writer.
             if [ -f $REPO_DIR/scripts/ops/fetch-env-from-sm.sh ]; then
               sudo bash $REPO_DIR/scripts/ops/fetch-env-from-sm.sh
             fi

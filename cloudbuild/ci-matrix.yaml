@@ -6,7 +6,7 @@
 # don't ship unnoticed.
 #
 # Wall clock: ~3-5 min (all four lanes run in parallel; testdb is shared).
-# Project: double-runway-465420-h9.
+# Project: long-facet-427508-j2.
 # Trigger setup: see cloudbuild/README.md.
 
 substitutions: {}

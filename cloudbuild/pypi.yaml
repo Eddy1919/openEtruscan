@@ -10,7 +10,7 @@
 # is to fetch a PyPI API token from Secret Manager — uncomment the relevant
 # block below.
 #
-# Project: double-runway-465420-h9.
+# Project: long-facet-427508-j2.
 
 options:
   machineType: E2_HIGHCPU_8
@@ -38,7 +38,7 @@ steps:
   # 2. Publish to PyPI.
   #
   # Option A — Secret Manager token (default, simplest):
-  #   the secret `pypi-api-token` lives in double-runway-465420-h9 and
+  #   the secret `pypi-api-token` lives in long-facet-427508-j2 and
   #   is mounted as an env var by Cloud Build's `availableSecrets`.
   #
   # Option B — Trusted publishing (preferred long-term, requires PyPI
@@ -67,5 +67,5 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/double-runway-465420-h9/secrets/pypi-api-token/versions/latest
+    - versionName: projects/long-facet-427508-j2/secrets/pypi-api-token/versions/latest
       env: PYPI_API_TOKEN
