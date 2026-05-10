@@ -10,12 +10,9 @@ with merge_and_unload(), and forces fp32 + greedy decoding.
 """
 import os
 import random
-import json
-import sys
 from pathlib import Path
 
 import editdistance
-import numpy as np
 import psycopg2
 from psycopg2.extras import DictCursor
 from dotenv import load_dotenv

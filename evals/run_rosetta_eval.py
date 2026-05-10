@@ -63,7 +63,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx  # noqa: E402
 
-from latin_semantic_fields import LATIN_SEMANTIC_FIELDS, field_member_count  # noqa: E402
+from latin_semantic_fields import LATIN_SEMANTIC_FIELDS  # noqa: E402
 from rosetta_eval_pairs import EVAL_PAIRS, EvalPair, eval_pairs  # noqa: E402
 
 # Prod's /neural/rosetta is rate-limited to 30 req/min — same gate as

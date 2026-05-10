@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import torch
 import psycopg2
 from psycopg2.extras import DictCursor
 from scipy.spatial.distance import cdist
@@ -52,7 +51,8 @@ def main():
     print("Preparing v3 embeddings (from DB)...")
     import json
     def parse_vec(v):
-        if isinstance(v, str): return np.array(json.loads(v), dtype=np.float32)
+        if isinstance(v, str):
+            return np.array(json.loads(v), dtype=np.float32)
         return np.array(v, dtype=np.float32)
 
     v3_corpus_vecs = np.array([parse_vec(r["emb_combined"]) for r in corpus])
@@ -82,7 +82,7 @@ def main():
         v3_dists = cdist([v3_query_vecs[i]], v3_corpus_vecs, metric="cosine")[0]
         v3_topk = np.argsort(v3_dists)[1:6] # Skip 0 which is self if present
         
-        print(f"  --- v3 Neighbors ---")
+        print("  --- v3 Neighbors ---")
         for idx in v3_topk:
             print(f"    (dist: {v3_dists[idx]:.3f}) {corpus[idx]['canonical_clean']}")
 
@@ -90,7 +90,7 @@ def main():
         v4_dists = cdist([v4_query_vecs[i]], v4_corpus_vecs, metric="cosine")[0]
         v4_topk = np.argsort(v4_dists)[1:6]
         
-        print(f"  --- v4 Neighbors ---")
+        print("  --- v4 Neighbors ---")
         for idx in v4_topk:
             print(f"    (dist: {v4_dists[idx]:.3f}) {corpus[idx]['canonical_clean']}")
 

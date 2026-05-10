@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List, Tuple, Optional
 
 import torch
 import torch.nn as nn
@@ -57,7 +56,7 @@ class LacunaRestorer:
         self.device = device
         
         # Load metadata
-        with open(self.model_dir / "metadata.json", "r") as f:
+        with open(self.model_dir / "metadata.json") as f:
             self.meta = json.load(f)
             
         self.char_set = self.meta.get("char_set", list(ETRUSCAN_CHARS))
@@ -95,7 +94,7 @@ class LacunaRestorer:
         text: str,
         mask_pos: int,
         top_k: int = 5
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Predict the character at mask_pos in the given text.
 
         Args:
@@ -129,5 +128,5 @@ class LacunaRestorer:
         
         return [
             (self.id_to_char[int(tid)], float(tprob))
-            for tid, tprob in zip(topk_ids, topk_probs)
+            for tid, tprob in zip(topk_ids, topk_probs, strict=True)
         ]

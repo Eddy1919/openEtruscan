@@ -136,8 +136,7 @@ LATIN_SEMANTIC_FIELDS: dict[str, set[str]] = {
     },
     "onomastic": {
         # Roman praenomina commonly attested in Etruscan-Latin equation
-        "aulus", "auli", "auli",
-        "lars", "lartis",
+        "aulus", "auli", "lars", "lartis",
         "uelius", "velius", "uelii", "velii",
         "marcus", "marci", "marco",
         "lucius", "lucii", "lucio",
