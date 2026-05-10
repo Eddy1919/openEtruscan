@@ -129,12 +129,35 @@ def _embed_with_adapter(words: list[str], base_model: str, adapter_path: Path,
     return out
 
 
+def _download_gcs_uri(uri: str, dest_dir: Path, is_dir: bool = False) -> Path:
+    """Download a gs:// URI using gcloud storage. Returns local path."""
+    if not uri.startswith("gs://"):
+        return Path(uri)
+    import subprocess
+    import tempfile
+    
+    local_path = dest_dir / uri.split("/")[-1]
+    if is_dir:
+        local_path.mkdir(parents=True, exist_ok=True)
+        print(f"Downloading {uri} to {local_path} ...", file=sys.stderr)
+        subprocess.check_call(["gcloud", "storage", "cp", "-r", f"{uri}/*", str(local_path)])
+    else:
+        print(f"Downloading {uri} to {local_path} ...", file=sys.stderr)
+        subprocess.check_call(["gcloud", "storage", "cp", uri, str(local_path)])
+    return local_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--corpus_path", required=True)
-    parser.add_argument("--adapter_path", required=True)
-    parser.add_argument("--output_path", required=True)
+    # Backwards compatibility and new arguments
+    parser.add_argument("--corpus_path", help="Local path to corpus JSONL")
+    parser.add_argument("--corpus-uri", default="gs://openetruscan-rosetta/corpus/etruscan-prod-v2.jsonl", help="GCS URI to corpus JSONL")
+    parser.add_argument("--adapter_path", help="Local path to adapter dir")
+    parser.add_argument("--adapter-uri", help="GCS URI to adapter dir")
+    parser.add_argument("--output_path", help="Legacy output path")
+    parser.add_argument("--output", help="Output path")
     parser.add_argument("--base_model", default="xlm-roberta-base")
+    parser.add_argument("--limit", type=int, help="Limit number of words to embed (for dry runs)")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO,
@@ -143,23 +166,48 @@ def main() -> int:
 
     _ensure_hf_stack()
 
-    words = _read_etruscan_vocab(Path(args.corpus_path), log)
-    if not words:
-        raise ValueError(f"Empty vocabulary from {args.corpus_path}")
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        
+        # Resolve corpus path
+        corpus = args.corpus_path
+        if not corpus:
+            corpus = _download_gcs_uri(args.corpus_uri, tmp_path, is_dir=False)
+        else:
+            corpus = Path(corpus)
 
-    vectors = _embed_with_adapter(
-        words, args.base_model, Path(args.adapter_path), log,
-    )
+        # Resolve adapter path
+        adapter = args.adapter_path
+        if not adapter:
+            if not args.adapter_uri:
+                raise ValueError("Must provide --adapter_path or --adapter-uri")
+            adapter = _download_gcs_uri(args.adapter_uri, tmp_path, is_dir=True)
+        else:
+            adapter = Path(adapter)
 
-    output_path = Path(args.output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
-        for w, v in zip(words, vectors, strict=True):
-            f.write(json.dumps(
-                {"language": "ett", "word": w, "vector": v},
-                ensure_ascii=False,
-            ) + "\n")
-    log.info("Wrote %d Etruscan embeddings to %s", len(words), output_path)
+        output_path = Path(args.output or args.output_path)
+
+        words = _read_etruscan_vocab(corpus, log)
+        if not words:
+            raise ValueError(f"Empty vocabulary from {corpus}")
+
+        if args.limit:
+            log.info("Limiting to first %d words", args.limit)
+            words = words[:args.limit]
+
+        vectors = _embed_with_adapter(
+            words, args.base_model, adapter, log,
+        )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            for w, v in zip(words, vectors, strict=True):
+                f.write(json.dumps(
+                    {"language": "ett", "word": w, "vector": v},
+                    ensure_ascii=False,
+                ) + "\n")
+        log.info("Wrote %d Etruscan embeddings to %s", len(words), output_path)
     return 0
 
 
