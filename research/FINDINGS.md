@@ -206,11 +206,9 @@ Acknowledging where we still fall short of publishable rigour:
    `make eval` reproducer script that pulls the right adapter +
    embeddings + runs the eval end-to-end. Worth landing.
 
-5. **Coverage metric is a stub.** `coverage_any_hit` currently just
-   reports "did the API return *any* result", because cosines aren't
-   exposed in `per_pair`. Should track "fraction of source words for
+5. **Coverage metric.** `coverage_at_threshold` tracks "fraction of source words for
    which top-k contains at least one neighbour above cosine X" for
-   X ∈ {0.5, 0.7, 0.85}. Easy fix in next harness pass.
+   X ∈ {0.5, 0.7, 0.85}. (Added in T1.4.)
 
 ---
 
