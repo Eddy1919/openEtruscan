@@ -1,0 +1,77 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "OpenEtruscan",
+  "description": "Open-source digital corpus platform for Etruscan epigraphy. Unifies the Etruscan epigraphic record into a computationally accessible corpus (6,633 inscriptions), publishes it as Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with Etruscan-side LoRA) that places Etruscan and Latin lexicons in a shared vector space. Includes a frozen reference benchmark (rosetta-eval-v1) with random, Levenshtein, and model baselines plus a reproducibility manifest.",
+  "identifier": "https://doi.org/10.5281/zenodo.20075836",
+  "version": "0.5.0",
+  "dateCreated": "2025-04-09",
+  "dateModified": "2026-05-10",
+  "datePublished": "2026-05-10",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "codeRepository": "https://github.com/Eddy1919/openEtruscan",
+  "url": "https://www.openetruscan.com",
+  "issueTracker": "https://github.com/Eddy1919/openEtruscan/issues",
+  "programmingLanguage": [
+    "Python",
+    "TypeScript",
+    "SQL"
+  ],
+  "runtimePlatform": "Python 3.12+",
+  "operatingSystem": "Linux",
+  "softwareRequirements": [
+    "Python >= 3.10",
+    "PostgreSQL + pgvector",
+    "Docker (deployment)"
+  ],
+  "keywords": [
+    "etruscan",
+    "epigraphy",
+    "ancient-languages",
+    "digital-humanities",
+    "low-resource-nlp",
+    "cross-lingual-embeddings",
+    "linked-open-data",
+    "LaBSE",
+    "XLM-R",
+    "LoRA"
+  ],
+  "applicationCategory": "Digital Humanities / Computational Linguistics",
+  "developmentStatus": "active",
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "OpenEtruscan Contributors",
+      "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
+    }
+  ],
+  "maintainer": {
+    "@type": "Organization",
+    "name": "OpenEtruscan Contributors",
+    "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
+  },
+  "sameAs": "https://doi.org/10.5281/zenodo.20075836",
+  "isPartOf": {
+    "@type": "ResearchProject",
+    "name": "OpenEtruscan",
+    "url": "https://www.openetruscan.com"
+  },
+  "referencePublication": [
+    {
+      "@type": "Dataset",
+      "name": "OpenEtruscan corpus v1 — unified Etruscan inscriptions",
+      "description": "ML-ready cleaned corpus of 6,567 unified Etruscan inscriptions. Derived from Larth Dataset (Vico & Spanakis 2023) and CIE Vol. I.",
+      "url": "https://www.openetruscan.com/data"
+    },
+    {
+      "@type": "Dataset",
+      "name": "Larth Dataset",
+      "author": [
+        {"@type": "Person", "givenName": "A.", "familyName": "Vico"},
+        {"@type": "Person", "givenName": "G.", "familyName": "Spanakis"}
+      ],
+      "datePublished": "2023"
+    }
+  ],
+  "funding": "Self-funded research project."
+}

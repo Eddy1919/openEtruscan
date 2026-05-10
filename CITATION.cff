@@ -1,0 +1,82 @@
+# Machine-readable citation metadata.
+# Schema: https://citation-file-format.github.io/
+# GitHub renders this automatically — the "Cite this repository" button
+# on the repo page reads from here.
+#
+# When tagging a release: mint a Zenodo deposit (Zenodo's GitHub
+# integration picks up `.zenodo.json` automatically), then paste the
+# DOI string into the `doi:` field below and bump `version:` + `date-released:`.
+cff-version: 1.2.0
+title: "OpenEtruscan — open-source digital corpus platform for Etruscan epigraphy"
+message: "If you use this software or the OpenEtruscan corpus, please cite both this software entry and the dataset deposit (see preferred-citation)."
+type: software
+authors:
+  - name: "OpenEtruscan Contributors"
+    # When personal authors are added, prefer one entry per person with
+    # given-names / family-names / orcid fields, per CFF schema.
+repository-code: "https://github.com/Eddy1919/openEtruscan"
+url: "https://www.openetruscan.com"
+license: MIT
+keywords:
+  - etruscan
+  - epigraphy
+  - ancient-languages
+  - digital-humanities
+  - low-resource-nlp
+  - cross-lingual-embeddings
+  - linked-open-data
+  - LaBSE
+  - XLM-R
+abstract: >-
+  OpenEtruscan unifies the Etruscan epigraphic record into a
+  computationally accessible corpus (6,633 inscriptions), exposes it as
+  Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with
+  Etruscan-side LoRA) that places Etruscan and Latin lexicons in a shared
+  vector space. The repository includes a frozen reference benchmark
+  (`rosetta-eval-v1`) with random / Levenshtein / model baselines, a
+  reproducibility manifest, and a published v1 dataset.
+version: "0.5.0"
+date-released: "2026-05-10"
+# Zenodo concept-DOI (resolves to the latest version). Each tagged release
+# also mints its own version-specific DOI; this all-versions identifier is
+# the right one to cite when meaning "the project" rather than "this exact
+# snapshot".
+doi: "10.5281/zenodo.20075836"
+preferred-citation:
+  type: dataset
+  title: "OpenEtruscan corpus v1 — unified Etruscan inscriptions"
+  authors:
+    - name: "OpenEtruscan Contributors"
+  year: 2026
+  url: "https://www.openetruscan.com/data"
+  doi: "10.5281/zenodo.20075836"
+  notes: >-
+    Dataset is derived from the Larth Dataset (Vico & Spanakis 2023) and
+    the Corpus Inscriptionum Etruscarum (Vol. I extractions). See
+    research/BIBLIOGRAPHY.md for the full provenance chain.
+references:
+  - type: software
+    title: "Larth Dataset"
+    authors:
+      - family-names: Vico
+        given-names: A.
+      - family-names: Spanakis
+        given-names: G.
+    year: 2023
+    notes: "Primary source for ~71% of the unified corpus rows."
+  - type: book
+    title: "The Etruscan Language: An Introduction"
+    authors:
+      - family-names: Bonfante
+        given-names: Giuliano
+      - family-names: Bonfante
+        given-names: Larissa
+    year: 2002
+    edition: "2nd"
+  - type: article
+    title: "LaBSE: Language-agnostic BERT Sentence Embedding"
+    authors:
+      - family-names: Feng
+        given-names: Fangxiaoyu
+    year: 2020
+    notes: "Cross-lingual encoder used as the default in the rosetta-eval-v1 model column."
