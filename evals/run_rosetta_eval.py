@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import statistics
 import sys
 import time
@@ -181,7 +182,7 @@ def _query_neighbours_levenshtein(
         sim = 1.0 - distance / max_len if max_len > 0 else 1.0
         out.append((v, sim))
     return out
-import math
+
 
 def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[str, Any]:
     """Compute the analytical expected precision@k under uniform random retrieval.
