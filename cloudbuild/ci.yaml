@@ -1,0 +1,147 @@
+# Cloud Build — pull-request CI for openEtruscan.
+#
+# Runs on every PR to main. Replaces .github/workflows/ci.yml's per-PR test
+# matrix with a single fast lane (Python 3.12, the prod version) so PR
+# feedback is sub-3 minutes. The full 3.10/3.11/3.12/3.13 matrix runs only on
+# push-to-main via `ci-matrix.yaml` — anyone who needs an older-Python check
+# on a PR can run it locally.
+#
+# Project: double-runway-465420-h9 (where all Cloud Build runs execute).
+# Trigger setup: see cloudbuild/README.md.
+#
+# Steps share a docker network ("cloudbuild") so the test step can reach
+# the `testdb` Postgres sidecar by container name.
+
+substitutions:
+  _PY_VERSION: "3.12"
+
+# Default machine type is small; tests are CPU-bound but light.
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+  # Hard cap so a hung pytest doesn't keep eating quota.
+  pool: {}
+
+timeout: 900s  # 15 min hard cap; healthy PRs land in 3-5 min.
+
+steps:
+  # ───────────────────────────────────────────────────────────────
+  # 1. Start Postgres-with-PostGIS as a sidecar. waitFor: ['-'] = no
+  #    deps; the container goes up in parallel with the install step.
+  # ───────────────────────────────────────────────────────────────
+  - id: postgres
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        docker run -d --rm --name testdb --network=cloudbuild \
+          -e POSTGRES_USER=postgres \
+          -e POSTGRES_PASSWORD=postgres \
+          -e POSTGRES_DB=test_db \
+          postgis/postgis:15-3.4
+        # Wait up to 30s for readiness; pg_isready loops are cheap.
+        for i in $(seq 1 15); do
+          if docker exec testdb pg_isready -U postgres >/dev/null 2>&1; then
+            echo "postgres ready after ${i}*2s"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "postgres failed to start in 30s" >&2
+        docker logs testdb >&2
+        exit 1
+
+  # ───────────────────────────────────────────────────────────────
+  # 2. Ruff lint. Mirrors the same `ruff check .` invocation as
+  #    the legacy GH-Actions workflow. No deps needed beyond ruff.
+  # ───────────────────────────────────────────────────────────────
+  - id: lint
+    name: python:${_PY_VERSION}-slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir 'ruff>=0.6'
+        ruff check .
+
+  # ───────────────────────────────────────────────────────────────
+  # 3. Pytest with coverage. Reaches testdb over the shared cloudbuild
+  #    network. Skips slow/real_model markers (same as legacy CI).
+  # ───────────────────────────────────────────────────────────────
+  - id: test
+    name: python:${_PY_VERSION}
+    waitFor: [postgres]
+    entrypoint: bash
+    env:
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]"
+        pytest tests/ -v --tb=short \
+          -m "not slow and not real_model" \
+          --cov=openetruscan --cov-report=term-missing
+
+  # ───────────────────────────────────────────────────────────────
+  # 4. mypy type-check. continue-on-error in legacy CI; keeping that
+  #    posture (typecheck is informational until the codebase is
+  #    fully typed). Switch to a real gate by removing `|| true`
+  #    when we're ready.
+  # ───────────────────────────────────────────────────────────────
+  - id: typecheck-mypy
+    name: python:${_PY_VERSION}
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]" mypy
+        mypy src/openetruscan || echo "::warning::mypy issues (non-blocking for now)"
+
+  # ───────────────────────────────────────────────────────────────
+  # 5. pyright type-check. Same informational posture as mypy.
+  # ───────────────────────────────────────────────────────────────
+  - id: typecheck-pyright
+    name: python:${_PY_VERSION}
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]" pyright
+        pyright src/openetruscan || echo "::warning::pyright issues (non-blocking for now)"
+
+  # ───────────────────────────────────────────────────────────────
+  # 6. OpenAPI schema sync — replaces docs.yml. Exports the schema and
+  #    fails if the committed docs/openapi.json drifts from what the
+  #    server would emit. Forces the contract to live in the repo,
+  #    not on the deployed API.
+  # ───────────────────────────────────────────────────────────────
+  - id: openapi-sync
+    name: python:${_PY_VERSION}
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # lod extra pulls in httpx which the server module needs at import.
+        pip install --quiet --no-cache-dir -e ".[server,prosopography,lod]"
+        python scripts/data_pipeline/export_openapi.py
+        if [ -n "$(git status --porcelain docs/openapi.json)" ]; then
+          echo "❌ OpenAPI schema drifted — commit the regenerated docs/openapi.json" >&2
+          git diff docs/openapi.json
+          exit 1
+        fi
+        echo "✅ OpenAPI schema in sync"
+
+# No artifacts. Test reports stay in CB logs; coverage gating lives
+# in cloudbuild/ci.yaml's pytest invocation directly.

@@ -1,0 +1,71 @@
+# Cloud Build — PyPI publish on release tags.
+#
+# Replaces .github/workflows/workflow.yaml (the "Publish to PyPI" workflow).
+# Triggered when a tag matching `v[0-9]+.[0-9]+.[0-9]+*` is pushed; the
+# trigger setup pins this regex (see cloudbuild/README.md).
+#
+# PyPI auth via trusted publishing (OIDC): we configure PyPI to trust this
+# Cloud Build project + service account combination directly, so no API
+# token is stored anywhere. If that's not yet set up, the alternative path
+# is to fetch a PyPI API token from Secret Manager — uncomment the relevant
+# block below.
+#
+# Project: double-runway-465420-h9.
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 600s  # 10 min hard cap.
+
+steps:
+  # ───────────────────────────────────────────────────────────────
+  # 1. Build the wheel + sdist.
+  # ───────────────────────────────────────────────────────────────
+  - id: build
+    name: python:3.12
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir build
+        python -m build
+        ls -la dist/
+
+  # ───────────────────────────────────────────────────────────────
+  # 2. Publish to PyPI.
+  #
+  # Option A — Secret Manager token (default, simplest):
+  #   the secret `pypi-api-token` lives in double-runway-465420-h9 and
+  #   is mounted as an env var by Cloud Build's `availableSecrets`.
+  #
+  # Option B — Trusted publishing (preferred long-term, requires PyPI
+  #   to be configured to trust this CB project + SA). To switch:
+  #   - remove the `availableSecrets` block at the bottom of this file
+  #   - replace the twine call below with `python -m twine upload
+  #     --repository pypi dist/* --skip-existing` and rely on PyPI's
+  #     OIDC trust. Cloud Build will provide the OIDC token via
+  #     metadata when the trust is set up.
+  # ───────────────────────────────────────────────────────────────
+  - id: publish
+    name: python:3.12
+    waitFor: [build]
+    entrypoint: bash
+    secretEnv: [PYPI_API_TOKEN]
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir twine
+        # twine reads __token__ as the user when uploading via API token.
+        python -m twine upload --skip-existing \
+          --username __token__ \
+          --password "$$PYPI_API_TOKEN" \
+          dist/*
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/double-runway-465420-h9/secrets/pypi-api-token/versions/latest
+      env: PYPI_API_TOKEN

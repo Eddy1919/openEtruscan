@@ -1,0 +1,37 @@
+# Cloud Build — security scan (Gitleaks).
+#
+# Replaces .github/workflows/security.yml. The user decision was to KEEP
+# Gitleaks (real value — catches credentials before they leak) and DROP
+# Bandit + Semgrep + pip-audit (chronic false positives, red CI for months).
+#
+# Triggered on push-to-main and on a weekly cron (Monday 03:00 UTC). PR
+# builds skip this — Gitleaks is cheap but secret-detection failures on a
+# PR are noisy when the actual leak is on a branch nobody intends to merge.
+#
+# Project: double-runway-465420-h9.
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 600s  # 10 min hard cap; healthy scans run in under 60 s.
+
+steps:
+  - id: gitleaks
+    name: zricethezav/gitleaks:latest
+    waitFor: ['-']
+    entrypoint: gitleaks
+    args:
+      - detect
+      - --source=/workspace
+      - --verbose
+      - --redact
+      - --report-format=json
+      - --report-path=/workspace/gitleaks-report.json
+      - --no-banner
+
+artifacts:
+  objects:
+    location: gs://double-runway-465420-h9_cloudbuild/security-reports/
+    paths:
+      - gitleaks-report.json
