@@ -62,30 +62,24 @@ services:
         exec /jena-fuseki/fuseki-server --loc /fuseki/databases/openetruscan /openetruscan
       '
 
-  pgbouncer:
-    image: edoburu/pgbouncer:latest
-    restart: unless-stopped
-    # edoburu/pgbouncer's auto-config script can't handle DATABASE_URL with
-    # a `?ssl=require` querystring — it writes the raw path component
-    # (`corpus?ssl=require`) as the [databases] section key, and pgbouncer
-    # fails with "syntax error in configuration (pgbouncer.ini:3)" on every
-    # start. Pass the components explicitly instead. The values are derived
-    # from `oe-database-url` by `scripts/ops/fetch-env-from-sm.sh` at
-    # deploy time; no new SM secrets needed.
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT:-5432}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - AUTH_TYPE=scram-sha-256
-      - SERVER_TLS_SSLMODE=require
-      - POOL_MODE=transaction
-      - MAX_CLIENT_CONN=100
-      - DEFAULT_POOL_SIZE=20
-      - MAX_DB_CONNECTIONS=20
-    ports:
-      - "6432:5432"
+  # NOTE: pgbouncer is intentionally absent.
+  #
+  # An earlier compose definition included an edoburu/pgbouncer:latest
+  # service, but nothing in the live stack actually used it — the api
+  # container's DATABASE_URL points at Cloud SQL's private IP directly
+  # (10.50.0.3:5432), bypassing pgbouncer entirely. Meanwhile the
+  # edoburu auto-config kept restart-looping on the `?ssl=require`
+  # querystring in DATABASE_URL, polluting logs every 60 s.
+  #
+  # When connection pooling is actually needed:
+  #   1. Re-add this service with a config that handles the
+  #      Cloud-SQL-style URL cleanly (likely an explicit
+  #      `command:` that pre-processes DATABASE_URL before invoking
+  #      pgbouncer, OR a custom-built image with a hand-written ini).
+  #   2. Repoint the api container's DATABASE_URL at `pgbouncer:5432`
+  #      inside the compose network.
+  #   3. Add a smoke test against the actual pooled path before
+  #      declaring it production-ready.
 
 volumes:
   fuseki_data:
