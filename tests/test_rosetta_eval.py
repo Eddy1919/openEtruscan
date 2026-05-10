@@ -410,3 +410,85 @@ class TestEvaluateGates:
         )
         assert not ok
         assert "kinship_precision_at_1" in failures[0]
+
+
+# ---------------------------------------------------------------------------
+# Frozen benchmark presets (T1.5)
+# ---------------------------------------------------------------------------
+
+
+class TestBenchmarkPreset:
+    """The --benchmark switch must lock split/min_confidence/category to a
+    pinned tuple so that two runs of the same label are directly comparable.
+
+    These tests guard the *contract* of the rosetta-eval-v1 spec: any change
+    that moves the pinned values is a benchmark-breaking change and must
+    rename the label (rosetta-eval-v2).
+    """
+
+    def test_rosetta_eval_v1_is_registered(self):
+        assert "rosetta-eval-v1" in run_rosetta_eval.BENCHMARK_PRESETS
+
+    def test_rosetta_eval_v1_pinned_values(self):
+        preset = run_rosetta_eval.BENCHMARK_PRESETS["rosetta-eval-v1"]
+        assert preset["split"] == "test"
+        assert preset["min_confidence"] == "medium"
+        assert preset["category"] is None
+
+    def test_benchmark_locks_split_and_min_confidence(self, monkeypatch, capsys):
+        """--benchmark=rosetta-eval-v1 --split=train should override back to test.
+
+        Drives main() through a mocked HTTP layer; we only care that the
+        resulting run uses the test split, not the user-supplied train.
+        """
+        # Stub _query_neighbours so we don't hit the network.
+        monkeypatch.setattr(
+            run_rosetta_eval, "_query_neighbours",
+            lambda *args, **kwargs: [("dummy", 0.5)],
+        )
+        monkeypatch.setattr(run_rosetta_eval, "PER_REQUEST_DELAY_S", 0.0)
+
+        # main() parses argv and prints "Split: test (N pairs)" — assert N matches
+        # the test-split count, not the train-split count.
+        rc = run_rosetta_eval.main([
+            "--api-url", "https://test",
+            "--benchmark", "rosetta-eval-v1",
+            "--split", "train",          # should be overridden
+            "--min-confidence", "low",   # should be overridden
+            "--no-pace",
+            "--json",
+        ])
+        assert rc == 0
+
+        err = capsys.readouterr().err
+        assert "Benchmark: rosetta-eval-v1" in err
+        assert "WARN" in err  # the override warning fires
+        # Expected test-split count is in [20, 24] per the T1.3 contract.
+        # Match the "Split: test (N pairs)" line.
+        import re
+        m = re.search(r"Split: test \((\d+) pairs\)", err)
+        assert m is not None, f"split line not found in stderr: {err!r}"
+        n_pairs = int(m.group(1))
+        assert 20 <= n_pairs <= 24, (
+            f"benchmark used wrong split: got {n_pairs} pairs, expected 20-24 (test)"
+        )
+
+    def test_benchmark_does_not_warn_when_defaults_match(self, monkeypatch, capsys):
+        """No override warning if the user didn't pass conflicting flags."""
+        monkeypatch.setattr(
+            run_rosetta_eval, "_query_neighbours",
+            lambda *args, **kwargs: [("dummy", 0.5)],
+        )
+        monkeypatch.setattr(run_rosetta_eval, "PER_REQUEST_DELAY_S", 0.0)
+
+        rc = run_rosetta_eval.main([
+            "--api-url", "https://test",
+            "--benchmark", "rosetta-eval-v1",
+            "--no-pace",
+            "--json",
+        ])
+        assert rc == 0
+        err = capsys.readouterr().err
+        assert "Benchmark: rosetta-eval-v1" in err
+        # No WARN line because we didn't pass any overrides.
+        assert "WARN" not in err
