@@ -1,0 +1,97 @@
+# Cloud Build — Python-matrix test, push-to-main only.
+#
+# The PR lane (cloudbuild/ci.yaml) tests Python 3.12 alone for speed.
+# This lane is the safety net: when a commit lands on main, run pytest
+# against 3.10/3.11/3.12/3.13 in parallel so version-specific regressions
+# don't ship unnoticed.
+#
+# Wall clock: ~3-5 min (all four lanes run in parallel; testdb is shared).
+# Project: double-runway-465420-h9.
+# Trigger setup: see cloudbuild/README.md.
+
+substitutions: {}
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s  # 30 min hard cap.
+
+steps:
+  # One shared Postgres sidecar; all four python lanes hit it.
+  - id: postgres
+    name: gcr.io/cloud-builders/docker
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        docker run -d --rm --name testdb --network=cloudbuild \
+          -e POSTGRES_USER=postgres \
+          -e POSTGRES_PASSWORD=postgres \
+          -e POSTGRES_DB=test_db \
+          postgis/postgis:15-3.4
+        for i in $(seq 1 15); do
+          if docker exec testdb pg_isready -U postgres >/dev/null 2>&1; then
+            echo "postgres ready"; exit 0
+          fi
+          sleep 2
+        done
+        echo "postgres failed to start" >&2
+        docker logs testdb >&2; exit 1
+
+  # ── Test lanes (parallel; all waitFor: [postgres]) ──────────────
+  - id: test-py3.10
+    name: python:3.10
+    waitFor: [postgres]
+    entrypoint: bash
+    env:
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]"
+        pytest tests/ -v --tb=short -m "not slow and not real_model"
+
+  - id: test-py3.11
+    name: python:3.11
+    waitFor: [postgres]
+    entrypoint: bash
+    env:
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]"
+        pytest tests/ -v --tb=short -m "not slow and not real_model"
+
+  - id: test-py3.12
+    name: python:3.12
+    waitFor: [postgres]
+    entrypoint: bash
+    env:
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]"
+        # Only 3.12 also produces coverage; other lanes skip it for speed.
+        pytest tests/ -v --tb=short -m "not slow and not real_model" \
+          --cov=openetruscan --cov-report=term-missing
+
+  - id: test-py3.13
+    name: python:3.13
+    waitFor: [postgres]
+    entrypoint: bash
+    env:
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -e ".[dev]"
+        pytest tests/ -v --tb=short -m "not slow and not real_model"

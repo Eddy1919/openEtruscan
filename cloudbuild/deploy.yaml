@@ -1,0 +1,164 @@
+# Cloud Build — production deploy.
+#
+# Replaces .github/workflows/deploy.yml. Triggered on push-to-main when
+# any of src/**, Dockerfile, docker-compose.yml, nginx.conf, pyproject.toml,
+# data/** changes (path filter configured on the trigger; see
+# cloudbuild/README.md).
+#
+# Two GCP projects involved on purpose:
+#   * BUILD project:  double-runway-465420-h9
+#                     Cloud Build itself runs here; Secret Manager + service
+#                     account live here. The default Cloud Build SA is
+#                     `<PROJECT_NUMBER>@cloudbuild.gserviceaccount.com`.
+#   * DEPLOY project: long-facet-427508-j2
+#                     The GCE VM `openetruscan-eu` lives here. Image registry
+#                     (`europe-west4-docker.pkg.dev/long-facet-427508-j2/openetruscan/api`)
+#                     also here.
+#
+# How auth works:
+#   1. Cloud Build's default SA in double-runway authenticates to GCP natively.
+#   2. For anything that needs long-facet permissions (Artifact Registry push,
+#      IAP-SSH to the VM), we impersonate
+#      `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com` —
+#      the SA that already has the right roles from the GH-Actions era.
+#   3. The Cloud Build SA needs `roles/iam.serviceAccountTokenCreator` on the
+#      gh-actions-deployer SA. One-time grant; see cloudbuild/README.md.
+#
+# Pipeline:
+#   1. Build the API image (using the same Dockerfile the GH-Actions workflow
+#      used).
+#   2. Push to Artifact Registry in long-facet.
+#   3. IAP SSH into openetruscan-eu, refresh .env from SM, run alembic
+#      migrations, rotate compose services. Same script as before, transcribed
+#      verbatim — we are NOT redesigning the on-VM deploy here.
+
+substitutions:
+  _DEPLOY_PROJECT: long-facet-427508-j2
+  _DEPLOY_SA: gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com
+  _AR_LOCATION: europe-west4
+  _AR_REPO: openetruscan
+  _IMAGE_NAME: api
+  _VM_NAME: openetruscan-eu
+  _VM_ZONE: europe-west4-a
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
+
+timeout: 1800s  # 30 min hard cap; healthy deploys land in 5-8 min.
+
+steps:
+  # ───────────────────────────────────────────────────────────────
+  # 1. Lint gate — match the deploy.yml `lint` job. If ruff fails, no
+  #    deploy.
+  # ───────────────────────────────────────────────────────────────
+  - id: lint
+    name: python:3.12-slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir 'ruff>=0.6'
+        ruff check .
+
+  # ───────────────────────────────────────────────────────────────
+  # 2. Build the image. Tag with both `sha-${SHORT_SHA}` and `latest`.
+  # ───────────────────────────────────────────────────────────────
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    waitFor: [lint]
+    args:
+      - build
+      - -t
+      - ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:sha-${SHORT_SHA}
+      - -t
+      - ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:latest
+      - .
+
+  # ───────────────────────────────────────────────────────────────
+  # 3. Push to Artifact Registry. Image pushes from the build SA via
+  #    impersonation of gh-actions-deployer (the SA with AR write
+  #    perms in long-facet).
+  # ───────────────────────────────────────────────────────────────
+  - id: push
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [build]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        gcloud auth configure-docker ${_AR_LOCATION}-docker.pkg.dev --quiet \
+          --impersonate-service-account=${_DEPLOY_SA}
+        # docker uses the gcloud helper for AR; the impersonation flag is
+        # already wired up by `gcloud auth configure-docker --impersonate`.
+        docker push ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:sha-${SHORT_SHA}
+        docker push ${_AR_LOCATION}-docker.pkg.dev/${_DEPLOY_PROJECT}/${_AR_REPO}/${_IMAGE_NAME}:latest
+
+  # ───────────────────────────────────────────────────────────────
+  # 4. IAP SSH into the GCE VM and run the deploy script. Same body
+  #    as the old deploy.yml `Execute Remote SSH Commands via IAP`
+  #    step, transcribed.
+  # ───────────────────────────────────────────────────────────────
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [push]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        gcloud compute ssh ${_VM_NAME} \
+          --zone=${_VM_ZONE} \
+          --project=${_DEPLOY_PROJECT} \
+          --tunnel-through-iap \
+          --impersonate-service-account=${_DEPLOY_SA} \
+          --quiet \
+          --ssh-flag="-o ServerAliveInterval=30" \
+          --ssh-flag="-o ServerAliveCountMax=120" \
+          --ssh-flag="-n" \
+          --command='
+            set -e
+            REPO_DIR=$(sudo find /home -maxdepth 2 -name "openEtruscan" -type d -print -quit)
+            if [ -z "$REPO_DIR" ]; then echo "Repository not found"; exit 1; fi
+
+            # 1. Pull the new code.
+            sudo bash -c "cd $REPO_DIR && git -c safe.directory=\"*\" fetch --all && git -c safe.directory=\"*\" reset --hard origin/main"
+
+            # 2. Refresh .env from Secret Manager so we never deploy with a
+            # stale/manually-edited .env. fetch-env-from-sm.sh now also
+            # derives DB_HOST/PORT/USER/PASSWORD/NAME from DATABASE_URL so
+            # the pgbouncer service can parse them cleanly.
+            if [ -f $REPO_DIR/scripts/ops/fetch-env-from-sm.sh ]; then
+              sudo bash $REPO_DIR/scripts/ops/fetch-env-from-sm.sh
+            fi
+
+            # 3. Build the new image locally on the VM (kept for parity
+            # with the GH-Actions flow; we could swap to `docker pull`
+            # against AR once the migration settles).
+            sudo docker run --rm -e DOCKER_BUILDKIT=1 -e BUILDKIT_PROGRESS=plain -v /var/run/docker.sock:/var/run/docker.sock -v "$REPO_DIR:$REPO_DIR" -w="$REPO_DIR" docker:cli docker compose build api
+
+            # 4. Run alembic migrations BEFORE rotating containers. --user 0
+            # is needed because pydantic-settings reads .env on import and
+            # the default appuser cannot read the 600-perms file.
+            sudo docker run --rm --user 0 --network openetruscan_default --env-file $REPO_DIR/.env -v "$REPO_DIR:$REPO_DIR" -w "$REPO_DIR" openetruscan-api alembic upgrade head || {
+              echo "::error::Alembic migration failed. Deploy aborted, old api container still serving traffic."
+              exit 1
+            }
+
+            # 5. Rotate compose services onto the new image. Sweep any
+            # stale temp-renamed containers compose v2 leaves behind when
+            # a prior --force-recreate was interrupted.
+            sudo docker ps -a --filter name=openetruscan --format "{{.ID}}" | xargs -r sudo docker rm -f
+            sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$REPO_DIR:$REPO_DIR" -w="$REPO_DIR" docker:cli docker compose up -d --force-recreate --remove-orphans
+
+            sudo docker image prune -f
+          '
+
+# We don't declare `images:` because we push manually via the gcloud-helper
+# auth in step `push`. (Declaring `images:` triggers a second push attempt
+# without impersonation, which fails since the Cloud Build SA has no AR
+# write role in long-facet.)
