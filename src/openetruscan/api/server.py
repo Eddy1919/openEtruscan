@@ -1134,6 +1134,8 @@ async def rosetta_vocab(
     from sqlalchemy import text
     
     now = time.time()
+    # TODO(T2.3): The cache key needs the embedder dimension or partition once we
+    # introduce the v4 embedding partition, so `lat` isn't cached across both.
     if lang in _VOCAB_CACHE:
         expires_at, words = _VOCAB_CACHE[lang]
         if now < expires_at:
@@ -1142,7 +1144,7 @@ async def rosetta_vocab(
             _VOCAB_CACHE.pop(lang, None)
             
     stmt = text(
-        "SELECT word FROM language_word_embeddings WHERE language = :lang LIMIT 50000"
+        "SELECT word FROM language_word_embeddings WHERE language = :lang ORDER BY word LIMIT 50000"
     )
     result = await session.execute(stmt, {"lang": lang})
     words = [row[0] for row in result.fetchall()]
