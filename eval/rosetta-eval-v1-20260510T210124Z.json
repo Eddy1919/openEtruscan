@@ -1,0 +1,1182 @@
+{
+  "benchmark": "rosetta-eval-v1",
+  "generated_at_utc": "2026-05-10T21:01:24Z",
+  "api_url": "https://api.openetruscan.com",
+  "random": {
+    "n_pairs": 22,
+    "n_evaluated": 22,
+    "n_skipped": 0,
+    "n_failed": 0,
+    "precision_at_k": {
+      "1": 2e-05,
+      "3": 6e-05,
+      "5": 0.0001,
+      "10": 0.0002
+    },
+    "precision_at_k_semantic_field": {
+      "1": 0.0008163636363636453,
+      "3": 0.002446990399254001,
+      "5": 0.004074820633494503,
+      "10": 0.008132194022168844
+    },
+    "coverage_at_threshold": {
+      "0.5": 0.0,
+      "0.7": 0.0,
+      "0.85": 0.0
+    },
+    "by_category": {},
+    "by_confidence": {},
+    "per_pair": []
+  },
+  "levenshtein": {
+    "n_pairs": 22,
+    "n_evaluated": 22,
+    "n_skipped": 0,
+    "n_failed": 0,
+    "precision_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "precision_at_k_semantic_field": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0,
+      "10": 0.0
+    },
+    "coverage_at_threshold": {
+      "0.5": 0.9545454545454546,
+      "0.7": 0.2727272727272727,
+      "0.85": 0.09090909090909091
+    },
+    "by_category": {
+      "kinship": {
+        "n": 4,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "civic": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "religious": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "time": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "numeral": {
+        "n": 4,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "verb": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "theonym": {
+        "n": 4,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "onomastic": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      }
+    },
+    "by_confidence": {
+      "high": {
+        "n": 13,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "medium": {
+        "n": 9,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      }
+    },
+    "per_pair": [
+      {
+        "etr": "ati",
+        "expected_lat": "mater",
+        "category": "kinship",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "abi",
+          "aci",
+          "acti",
+          "adi",
+          "agi",
+          "ai",
+          "aki",
+          "ali",
+          "alti",
+          "ami"
+        ],
+        "top1_cosine": 0.6666666666666667
+      },
+      {
+        "etr": "apa",
+        "expected_lat": "pater",
+        "category": "kinship",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "apa",
+          "aa",
+          "aaa",
+          "aba",
+          "ada",
+          "aga",
+          "aha",
+          "aia",
+          "aka",
+          "ala"
+        ],
+        "top1_cosine": 1.0
+      },
+      {
+        "etr": "papa",
+        "expected_lat": "avus",
+        "category": "kinship",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "apa",
+          "aa",
+          "aaa",
+          "aba",
+          "ada",
+          "aga",
+          "aha",
+          "aia",
+          "aka",
+          "ala"
+        ],
+        "top1_cosine": 0.75
+      },
+      {
+        "etr": "lautn",
+        "expected_lat": "familia",
+        "category": "kinship",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "aut",
+          "auto",
+          "bauen",
+          "bauten",
+          "bautz",
+          "caute",
+          "faut",
+          "haut",
+          "haute",
+          "aalen"
+        ],
+        "top1_cosine": 0.6
+      },
+      {
+        "etr": "zilθ",
+        "expected_lat": "praetor",
+        "category": "civic",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "bild",
+          "bill",
+          "bily",
+          "cil",
+          "dil",
+          "dili",
+          "dill",
+          "fil",
+          "fila",
+          "file"
+        ],
+        "top1_cosine": 0.5
+      },
+      {
+        "etr": "methlum",
+        "expected_lat": "civitas",
+        "category": "civic",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "aemulum",
+          "aeolum",
+          "aetatum",
+          "attalum",
+          "bellum",
+          "bethleem",
+          "catulum",
+          "ceterum",
+          "cetium",
+          "cetum"
+        ],
+        "top1_cosine": 0.5714285714285714
+      },
+      {
+        "etr": "suθi",
+        "expected_lat": "sepulcrum",
+        "category": "religious",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "audi",
+          "auli",
+          "auri",
+          "ausi",
+          "busi",
+          "cubi",
+          "cudi",
+          "cui",
+          "cusi",
+          "cuti"
+        ],
+        "top1_cosine": 0.5
+      },
+      {
+        "etr": "flerχva",
+        "expected_lat": "sacra",
+        "category": "religious",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "blera",
+          "cerva",
+          "cierva",
+          "faleria",
+          "falerna",
+          "fera",
+          "feria",
+          "ferra",
+          "ferrea",
+          "ferula"
+        ],
+        "top1_cosine": 0.5714285714285714
+      },
+      {
+        "etr": "tiur",
+        "expected_lat": "mensis",
+        "category": "time",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "iur",
+          "ainur",
+          "air",
+          "amur",
+          "aur",
+          "azur",
+          "baur",
+          "bier",
+          "bir",
+          "bur"
+        ],
+        "top1_cosine": 0.75
+      },
+      {
+        "etr": "tiu",
+        "expected_lat": "luna",
+        "category": "time",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "diu",
+          "iu",
+          "jiu",
+          "abu",
+          "acu",
+          "ai",
+          "aia",
+          "aid",
+          "aim",
+          "ain"
+        ],
+        "top1_cosine": 0.6666666666666667
+      },
+      {
+        "etr": "θu",
+        "expected_lat": "unus",
+        "category": "numeral",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "au",
+          "bu",
+          "cu",
+          "du",
+          "eu",
+          "fu",
+          "gu",
+          "hu",
+          "iu",
+          "ju"
+        ],
+        "top1_cosine": 0.5
+      },
+      {
+        "etr": "zal",
+        "expected_lat": "duo",
+        "category": "numeral",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "al",
+          "bal",
+          "cal",
+          "dal",
+          "gal",
+          "hal",
+          "kal",
+          "aa",
+          "aaa",
+          "aan"
+        ],
+        "top1_cosine": 0.6666666666666667
+      },
+      {
+        "etr": "huθ",
+        "expected_lat": "sex",
+        "category": "numeral",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "hu",
+          "hua",
+          "hub",
+          "huc",
+          "hue",
+          "hug",
+          "hui",
+          "hum",
+          "hun",
+          "hur"
+        ],
+        "top1_cosine": 0.6666666666666667
+      },
+      {
+        "etr": "nurφ",
+        "expected_lat": "novem",
+        "category": "numeral",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "anura",
+          "aur",
+          "aura",
+          "aure",
+          "auri",
+          "auro",
+          "bur",
+          "bure",
+          "burg",
+          "burm"
+        ],
+        "top1_cosine": 0.6
+      },
+      {
+        "etr": "turce",
+        "expected_lat": "dedit",
+        "category": "verb",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "arce",
+          "aure",
+          "bure",
+          "burke",
+          "circe",
+          "curae",
+          "cure",
+          "curie",
+          "curre",
+          "curse"
+        ],
+        "top1_cosine": 0.6
+      },
+      {
+        "etr": "ziχ",
+        "expected_lat": "scriptura",
+        "category": "verb",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "ai",
+          "aia",
+          "aid",
+          "aim",
+          "ain",
+          "air",
+          "ais",
+          "ait",
+          "aix",
+          "aziz"
+        ],
+        "top1_cosine": 0.33333333333333337
+      },
+      {
+        "etr": "aita",
+        "expected_lat": "dis",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "acta",
+          "aia",
+          "aida",
+          "aieta",
+          "ait",
+          "alta",
+          "amita",
+          "anita",
+          "anta",
+          "apta"
+        ],
+        "top1_cosine": 0.75
+      },
+      {
+        "etr": "turms",
+        "expected_lat": "mercurius",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "arms",
+          "auras",
+          "aures",
+          "auris",
+          "burks",
+          "burm",
+          "burma",
+          "burns",
+          "curas",
+          "cures"
+        ],
+        "top1_cosine": 0.6
+      },
+      {
+        "etr": "hercle",
+        "expected_lat": "hercules",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "hercle",
+          "cercle",
+          "hercule",
+          "cherche",
+          "circle",
+          "ercole",
+          "hecale",
+          "hecla",
+          "helle",
+          "heraclea"
+        ],
+        "top1_cosine": 1.0
+      },
+      {
+        "etr": "nethuns",
+        "expected_lat": "neptunus",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "aethusa",
+          "aetius",
+          "anthus",
+          "athens",
+          "béthune",
+          "cechus",
+          "cetus",
+          "ethan",
+          "ethics",
+          "ethne"
+        ],
+        "top1_cosine": 0.5714285714285714
+      },
+      {
+        "etr": "avle",
+        "expected_lat": "aulus",
+        "category": "onomastic",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "able",
+          "ale",
+          "alle",
+          "avae",
+          "ave",
+          "aalen",
+          "abbe",
+          "abe",
+          "abele",
+          "ace"
+        ],
+        "top1_cosine": 0.75
+      },
+      {
+        "etr": "vel",
+        "expected_lat": "velius",
+        "category": "onomastic",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "bel",
+          "cel",
+          "del",
+          "eel",
+          "el",
+          "fel",
+          "abel",
+          "adel",
+          "ae",
+          "aed"
+        ],
+        "top1_cosine": 0.6666666666666667
+      }
+    ]
+  },
+  "model": {
+    "n_pairs": 22,
+    "n_evaluated": 16,
+    "n_skipped": 6,
+    "n_failed": 0,
+    "precision_at_k": {
+      "1": 0.0,
+      "3": 0.0,
+      "5": 0.0625,
+      "10": 0.0625
+    },
+    "precision_at_k_semantic_field": {
+      "1": 0.0,
+      "3": 0.125,
+      "5": 0.125,
+      "10": 0.1875
+    },
+    "coverage_at_threshold": {
+      "0.5": 1.0,
+      "0.7": 1.0,
+      "0.85": 0.6875
+    },
+    "by_category": {
+      "kinship": {
+        "n": 3,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.3333333333333333,
+          "10": 0.3333333333333333
+        },
+        "median_rank": 11
+      },
+      "religious": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "time": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "numeral": {
+        "n": 3,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "verb": {
+        "n": 1,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "median_rank": 11
+      },
+      "theonym": {
+        "n": 3,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.3333333333333333,
+          "10": 0.3333333333333333
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.3333333333333333,
+          "5": 0.3333333333333333,
+          "10": 0.3333333333333333
+        },
+        "median_rank": 11
+      },
+      "onomastic": {
+        "n": 2,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.5
+        },
+        "median_rank": 11
+      }
+    },
+    "by_confidence": {
+      "high": {
+        "n": 10,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.1,
+          "10": 0.1
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.1,
+          "5": 0.1,
+          "10": 0.2
+        },
+        "median_rank": 11
+      },
+      "medium": {
+        "n": 6,
+        "precision_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0,
+          "10": 0.0
+        },
+        "precision_at_k_semantic_field": {
+          "1": 0.0,
+          "3": 0.16666666666666666,
+          "5": 0.16666666666666666,
+          "10": 0.16666666666666666
+        },
+        "median_rank": 11
+      }
+    },
+    "per_pair": [
+      {
+        "etr": "apa",
+        "expected_lat": "pater",
+        "category": "kinship",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "apa",
+          "nini",
+          "quoi",
+          "what",
+          "qué",
+          "kio",
+          "what's",
+          "quid",
+          "cosa",
+          "quidnam"
+        ],
+        "top1_cosine": 0.999999940395341
+      },
+      {
+        "etr": "papa",
+        "expected_lat": "avus",
+        "category": "kinship",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": 3,
+        "top_predictions": [
+          "papa",
+          "daddy",
+          "pater",
+          "tata",
+          "padre",
+          "papas",
+          "father",
+          "vader",
+          "père",
+          "patrem"
+        ],
+        "top1_cosine": 1.0
+      },
+      {
+        "etr": "lautn",
+        "expected_lat": "familia",
+        "category": "kinship",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "laute",
+          "lautum",
+          "lahn",
+          "laon",
+          "lasn",
+          "lautus",
+          "lalanne",
+          "ladin",
+          "larsen",
+          "laet"
+        ],
+        "top1_cosine": 0.8891155719757333
+      },
+      {
+        "etr": "suθi",
+        "expected_lat": "sepulcrum",
+        "category": "religious",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "suā",
+          "sumi",
+          "sui",
+          "sugie",
+          "sumit",
+          "suebi",
+          "sinti"
+        ],
+        "top1_cosine": 0.7998437284492055
+      },
+      {
+        "etr": "flerχva",
+        "expected_lat": "sacra",
+        "category": "religious",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "plurimo",
+          "pluribusve",
+          "plurimorum",
+          "multiple",
+          "multiforme",
+          "plurima",
+          "pluresve",
+          "pluria",
+          "plure",
+          "plutarque"
+        ],
+        "top1_cosine": 0.8469163726868801
+      },
+      {
+        "etr": "tiur",
+        "expected_lat": "mensis",
+        "category": "time",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "tyri",
+          "tyras",
+          "tylor",
+          "itur",
+          "tyrum",
+          "tyrus",
+          "tiuelis",
+          "tyro",
+          "thur",
+          "tibure"
+        ],
+        "top1_cosine": 0.8312844820526859
+      },
+      {
+        "etr": "tiu",
+        "expected_lat": "luna",
+        "category": "time",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "taj",
+          "dieser",
+          "diese",
+          "hori",
+          "dit",
+          "cette",
+          "quella",
+          "tuo",
+          "celui",
+          "tuos"
+        ],
+        "top1_cosine": 0.8833550065562462
+      },
+      {
+        "etr": "θu",
+        "expected_lat": "unus",
+        "category": "numeral",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "tu",
+          "hú",
+          "tuo",
+          "te"
+        ],
+        "top1_cosine": 0.801889240742009
+      },
+      {
+        "etr": "zal",
+        "expected_lat": "duo",
+        "category": "numeral",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "zal",
+          "will",
+          "sal",
+          "akan",
+          "bo",
+          "shall",
+          "será",
+          "estos",
+          "would",
+          "bodo"
+        ],
+        "top1_cosine": 1.0
+      },
+      {
+        "etr": "huθ",
+        "expected_lat": "sex",
+        "category": "numeral",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "hú",
+          "hu",
+          "hutt",
+          "hough",
+          "heu",
+          "huc",
+          "ht",
+          "hoet",
+          "heß",
+          "huff"
+        ],
+        "top1_cosine": 0.8561808381189647
+      },
+      {
+        "etr": "turce",
+        "expected_lat": "dedit",
+        "category": "verb",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "turcis",
+          "turcz",
+          "turci",
+          "turcico",
+          "turco",
+          "türkay",
+          "turcus",
+          "turcice",
+          "turca",
+          "turk"
+        ],
+        "top1_cosine": 0.9762222837739355
+      },
+      {
+        "etr": "aita",
+        "expected_lat": "dis",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "vader",
+          "father",
+          "oca",
+          "patre",
+          "père",
+          "padre",
+          "daddy",
+          "pater",
+          "patrem",
+          "tata"
+        ],
+        "top1_cosine": 0.8798182535064445
+      },
+      {
+        "etr": "turms",
+        "expected_lat": "mercurius",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "turmis",
+          "turrem",
+          "turrim",
+          "thermus",
+          "turres",
+          "tursium",
+          "tarsum",
+          "tergum",
+          "turris",
+          "turdus"
+        ],
+        "top1_cosine": 0.8992004126548839
+      },
+      {
+        "etr": "hercle",
+        "expected_lat": "hercules",
+        "category": "theonym",
+        "confidence": "high",
+        "rank_of_expected": 5,
+        "rank_of_first_field_match": 3,
+        "top_predictions": [
+          "hercle",
+          "hercule",
+          "herculem",
+          "heracleum",
+          "hercules",
+          "herculis",
+          "herculi",
+          "herculeum",
+          "heracleae",
+          "heraclea"
+        ],
+        "top1_cosine": 0.9999999701976772
+      },
+      {
+        "etr": "avle",
+        "expected_lat": "aulus",
+        "category": "onomastic",
+        "confidence": "high",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": 7,
+        "top_predictions": [
+          "avella",
+          "ávila",
+          "fale",
+          "waal",
+          "vail",
+          "avae",
+          "auli",
+          "avila",
+          "avum",
+          "aliyev"
+        ],
+        "top1_cosine": 0.8182858174187619
+      },
+      {
+        "etr": "vel",
+        "expected_lat": "velius",
+        "category": "onomastic",
+        "confidence": "medium",
+        "rank_of_expected": null,
+        "rank_of_first_field_match": null,
+        "top_predictions": [
+          "vel",
+          "well",
+          "bien",
+          "bene",
+          "ondo",
+          "ben",
+          "dobre",
+          "wohl",
+          "uel",
+          "labi"
+        ],
+        "top1_cosine": 0.9999999701976736
+      }
+    ]
+  }
+}
