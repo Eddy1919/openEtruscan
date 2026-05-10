@@ -132,7 +132,7 @@ def _query_neighbours_levenshtein(
     k: int,
     *,
     timeout_s: float = 15.0,
-) -> list[str] | None:
+) -> list[tuple[str, float]] | None:
     try:
         vocab = _get_vocab(api_url, to_lang)
     except Exception as exc:
@@ -159,10 +159,16 @@ def _query_neighbours_levenshtein(
         
     scored = [(dist(v), v) for v in vocab]
     scored.sort()
-    return [v for _, v in scored[:k]]
+    
+    out = []
+    for distance, v in scored[:k]:
+        max_len = max(len(word), len(v))
+        sim = 1.0 - distance / max_len if max_len > 0 else 1.0
+        out.append((v, sim))
+    return out
 import math
 
-def _random_baseline_metrics(vocab_size: int, eval_pairs: list[EvalPair]) -> dict[str, Any]:
+def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[str, Any]:
     """Compute the analytical expected precision@k under uniform random retrieval.
     
     For strict-lexical precision@k, the expected chance of finding the single expected 
@@ -177,6 +183,12 @@ def _random_baseline_metrics(vocab_size: int, eval_pairs: list[EvalPair]) -> dic
     p_at_k: dict[int, float] = {}
     p_at_k_field: dict[int, float] = {}
     
+    try:
+        vocab_size = len(_get_vocab(api_url, "lat"))
+    except Exception as exc:
+        print(f"  SKIP random baseline vocab fetch: {exc}", file=sys.stderr)
+        vocab_size = 100000
+
     if not eval_pairs or vocab_size <= 0:
         for k in DEFAULT_K_VALUES:
             p_at_k[k] = 0.0
@@ -239,7 +251,7 @@ def evaluate(
     n_failed = 0
 
     if baseline == "random":
-        metrics = _random_baseline_metrics(100000, pairs)
+        metrics = _random_baseline_metrics(api_url, pairs)
         return {
             "n_pairs": len(pairs),
             "n_evaluated": len(pairs),
@@ -247,7 +259,7 @@ def evaluate(
             "n_failed": 0,
             "precision_at_k": metrics["precision_at_k"],
             "precision_at_k_semantic_field": metrics["precision_at_k_semantic_field"],
-            "coverage_any_hit": {thr: 1.0 for thr in (0.50, 0.70, 0.85)},
+            "coverage_at_threshold": {0.5: 0.0, 0.7: 0.0, 0.85: 0.0},
             "by_category": {},
             "by_confidence": {},
             "per_pair": [],

@@ -254,6 +254,22 @@ class TestEvaluate:
         assert report["per_pair"][0]["rank_of_expected"] == 1
 
 
+    def test_levenshtein_pipeline_end_to_end(self, monkeypatch):
+        """Test Levenshtein integration with coverage_at_threshold."""
+        pairs = [EvalPair("fanu", "fanu", "sanctuary", "high", "test", "religious")]
+
+        def fake_get_vocab(api_url, to_lang):
+            return ["other", "unrelated", "fanu", "fanaticus"]
+
+        monkeypatch.setattr(run_rosetta_eval, "_get_vocab", fake_get_vocab)
+
+        report = run_rosetta_eval.evaluate(
+            api_url="https://test", pairs=pairs, pace=False, baseline="levenshtein"
+        )
+        assert report["n_evaluated"] == 1
+        assert "coverage_at_threshold" in report
+        assert 0.5 in report["coverage_at_threshold"]
+        assert report["coverage_at_threshold"][0.5] >= 0.0
 # ---------------------------------------------------------------------------
 # Random baseline (analytical)
 # ---------------------------------------------------------------------------
@@ -262,13 +278,15 @@ class TestEvaluate:
 class TestRandomBaseline:
     """Verify _random_baseline_metrics matches hand-computed expectations."""
 
-    def test_strict_and_field_at_known_values(self):
+    def test_strict_and_field_at_known_values(self, monkeypatch):
         """With vocab_size=1000, field_size=10, k=5:
         strict = 5/1000 = 0.005
         field  = 1 - C(990,5)/C(1000,5) ≈ 0.0491
         """
         import math
         from unittest.mock import patch
+        
+        monkeypatch.setattr(run_rosetta_eval, "_get_vocab", lambda *args: ["x"] * 1000)
 
         # Use a valid category but override the field to exactly 10 members.
         fake_fields = {"kinship": set(f"word{i}" for i in range(10))}
@@ -278,7 +296,7 @@ class TestRandomBaseline:
         ]
 
         with patch.object(run_rosetta_eval, "LATIN_SEMANTIC_FIELDS", fake_fields):
-            result = run_rosetta_eval._random_baseline_metrics(1000, pairs)
+            result = run_rosetta_eval._random_baseline_metrics("https://test", pairs)
 
         # strict@5 = 5/1000 = 0.005
         assert result["precision_at_k"][5] == pytest.approx(0.005)
