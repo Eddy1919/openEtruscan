@@ -43,12 +43,43 @@ class TestEvalPairs:
     def test_eval_pairs_filter_by_confidence(self):
         from rosetta_eval_pairs import eval_pairs
 
-        all_pairs = eval_pairs(min_confidence="low")
-        med = eval_pairs(min_confidence="medium")
-        high = eval_pairs(min_confidence="high")
+        all_pairs = eval_pairs(min_confidence="low", split=None)
+        med = eval_pairs(min_confidence="medium", split=None)
+        high = eval_pairs(min_confidence="high", split=None)
         assert len(all_pairs) >= len(med) >= len(high)
         assert all(p.confidence == "high" for p in high)
         assert all(p.confidence in {"high", "medium"} for p in med)
+
+    def test_split_balance(self):
+        """Each category has ≥1 train AND ≥1 test example."""
+        from rosetta_eval_pairs import EVAL_PAIRS
+        from collections import defaultdict
+
+        cat_splits = defaultdict(lambda: defaultdict(int))
+        for p in EVAL_PAIRS:
+            cat_splits[p.category][p.split] += 1
+
+        for cat, splits in cat_splits.items():
+            assert splits.get("train", 0) >= 1, f"{cat} has no train pairs"
+            assert splits.get("test", 0) >= 1, f"{cat} has no test pairs"
+
+    def test_no_overlap(self):
+        """train ∩ test = ∅ on the (etr, lat) key."""
+        from rosetta_eval_pairs import EVAL_PAIRS
+
+        train_keys = {(p.etr, p.lat) for p in EVAL_PAIRS if p.split == "train"}
+        test_keys = {(p.etr, p.lat) for p in EVAL_PAIRS if p.split == "test"}
+        overlap = train_keys & test_keys
+        assert overlap == set(), f"Overlap: {overlap}"
+
+    def test_split_size(self):
+        """len(test) ∈ [20, 24] and len(train) ∈ [38, 42]."""
+        from rosetta_eval_pairs import EVAL_PAIRS
+
+        train = [p for p in EVAL_PAIRS if p.split == "train"]
+        test = [p for p in EVAL_PAIRS if p.split == "test"]
+        assert 38 <= len(train) <= 42, f"train={len(train)}"
+        assert 20 <= len(test) <= 24, f"test={len(test)}"
 
 
 # ---------------------------------------------------------------------------

@@ -403,15 +403,24 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip the 2.05 s between-request delay (use only against local APIs)",
     )
+    parser.add_argument(
+        "--split",
+        choices=["train", "test", "all"],
+        default="test",
+        help="Which split to evaluate (default: test = held-out pairs only)",
+    )
 
     args = parser.parse_args(argv)
 
-    pairs = eval_pairs(min_confidence=args.min_confidence)
+    split_arg = None if args.split == "all" else args.split
+    pairs = eval_pairs(min_confidence=args.min_confidence, split=split_arg)
     if args.category:
         pairs = [p for p in pairs if p.category == args.category]
     if not pairs:
         print("No eval pairs match the filters.", file=sys.stderr)
         return 2
+
+    print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
 
     report = evaluate(args.api_url, pairs, pace=not args.no_pace)
 
