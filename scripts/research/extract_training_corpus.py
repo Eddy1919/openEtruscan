@@ -27,7 +27,7 @@ import psycopg2
 def main() -> int:
     db_url = os.environ.get(
         "DATABASE_URL",
-        "postgresql://corpus_reader:REDACTED_DB_PASSWORD@127.0.0.1:5434/corpus",
+        "postgresql://user:password@localhost:5432/corpus",
     )
 
     conn = psycopg2.connect(db_url)
