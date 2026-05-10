@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "name": "OpenEtruscan",
   "description": "Open-source digital corpus platform for Etruscan epigraphy. Unifies the Etruscan epigraphic record into a computationally accessible corpus (6,633 inscriptions), publishes it as Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with Etruscan-side LoRA) that places Etruscan and Latin lexicons in a shared vector space. Includes a frozen reference benchmark (rosetta-eval-v1) with random, Levenshtein, and model baselines plus a reproducibility manifest.",
-  "identifier": "openetruscan",
+  "identifier": "https://doi.org/10.5281/zenodo.20075836",
   "version": "0.5.0",
   "dateCreated": "2025-04-09",
   "dateModified": "2026-05-10",
@@ -50,7 +50,7 @@
     "name": "OpenEtruscan Contributors",
     "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
   },
-  "_zenodo_doi_comment": "TODO(zenodo): once the Zenodo deposit is published for the next tagged release, set sameAs to the DOI URL (e.g. https://doi.org/10.5281/zenodo.NNNNNNN). Until then, the field is omitted.",
+  "sameAs": "https://doi.org/10.5281/zenodo.20075836",
   "isPartOf": {
     "@type": "ResearchProject",
     "name": "OpenEtruscan",

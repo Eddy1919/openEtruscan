@@ -4,6 +4,7 @@
 
 **Open-source digital corpus platform for Etruscan epigraphy**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20075836.svg)](https://doi.org/10.5281/zenodo.20075836)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Data: CC0](https://img.shields.io/badge/data-CC0-green.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 [![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -181,17 +182,21 @@ If you use OpenEtruscan or the OpenEtruscan corpus in your research, please cite
 - [`codemeta.json`](codemeta.json) — schema.org-compatible (used by Zenodo, ORCID, OpenAlex).
 - [`.zenodo.json`](.zenodo.json) — controls the auto-deposit on each tagged GitHub release.
 
-A minimal BibTeX entry (the `doi` fields populate automatically once the next tagged release lands on Zenodo):
+A minimal BibTeX entry:
 
 ```bibtex
 @software{openetruscan_2026,
-  author  = {OpenEtruscan Contributors},
-  title   = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
-  year    = {2026},
-  url     = {https://github.com/Eddy1919/openEtruscan},
-  version = {0.5.0}
+  author    = {OpenEtruscan Contributors},
+  title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
+  year      = {2026},
+  version   = {0.5.0},
+  doi       = {10.5281/zenodo.20075836},
+  url       = {https://doi.org/10.5281/zenodo.20075836},
+  publisher = {Zenodo}
 }
 ```
+
+`10.5281/zenodo.20075836` is the **concept DOI** (resolves to the latest version). Each tagged release also mints its own version-specific DOI; cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot.
 
 The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md). The research-grade roadmap is in [`research/SOTA_ROADMAP.md`](research/SOTA_ROADMAP.md).
 

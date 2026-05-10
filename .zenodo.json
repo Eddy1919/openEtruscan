@@ -34,6 +34,11 @@
       "relation": "isPartOf",
       "identifier": "https://www.openetruscan.com",
       "resource_type": "other"
+    },
+    {
+      "relation": "isVersionOf",
+      "identifier": "10.5281/zenodo.20075836",
+      "resource_type": "software"
     }
   ],
   "notes": "Companion dataset (the 6,567-row cleaned corpus CSV) is deposited separately on Zenodo and cross-linked via related_identifiers in that deposit's metadata. The corpus is derived from the Larth Dataset (Vico & Spanakis 2023) and the Corpus Inscriptionum Etruscarum (Vol. I extractions); see research/BIBLIOGRAPHY.md for the full provenance chain."

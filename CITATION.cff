@@ -37,11 +37,11 @@ abstract: >-
   reproducibility manifest, and a published v1 dataset.
 version: "0.5.0"
 date-released: "2026-05-10"
-# TODO(zenodo): paste the minted Zenodo DOI here once the deposit is
-# published. Format: 10.5281/zenodo.NNNNNNN. The Zenodo GitHub integration
-# will assign one automatically on the next tagged release; until then,
-# `doi: ""` is valid CFF.
-doi: ""
+# Zenodo concept-DOI (resolves to the latest version). Each tagged release
+# also mints its own version-specific DOI; this all-versions identifier is
+# the right one to cite when meaning "the project" rather than "this exact
+# snapshot".
+doi: "10.5281/zenodo.20075836"
 preferred-citation:
   type: dataset
   title: "OpenEtruscan corpus v1 — unified Etruscan inscriptions"
@@ -49,8 +49,7 @@ preferred-citation:
     - name: "OpenEtruscan Contributors"
   year: 2026
   url: "https://www.openetruscan.com/data"
-  # TODO(zenodo): the published-dataset DOI lives here.
-  doi: ""
+  doi: "10.5281/zenodo.20075836"
   notes: >-
     Dataset is derived from the Larth Dataset (Vico & Spanakis 2023) and
     the Corpus Inscriptionum Etruscarum (Vol. I extractions). See
