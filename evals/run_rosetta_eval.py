@@ -73,6 +73,21 @@ PER_REQUEST_DELAY_S = 2.05
 RETRY_AFTER_429_S = 30.0
 DEFAULT_K_VALUES = (1, 3, 5, 10)
 
+# ── Frozen reference benchmarks ─────────────────────────────────────────
+# A "benchmark" pins the eval parameters so that a single label
+# ("rosetta-eval-v1") reproduces *exactly* one numeric table. The model
+# under test is still pulled from --api-url, so the benchmark grades a
+# *protocol*, not a specific model checkpoint — drop in a new API URL
+# and the same benchmark spec produces a comparable number for that
+# model. See research/notes/reproduce-rosetta-eval-v1.md.
+BENCHMARK_PRESETS: dict[str, dict[str, Any]] = {
+    "rosetta-eval-v1": {
+        "split": "test",
+        "min_confidence": "medium",
+        "category": None,
+    },
+}
+
 
 def _query_neighbours(
     api_url: str,
@@ -537,8 +552,45 @@ def main(argv: list[str] | None = None) -> int:
         default="none",
         help="Use a baseline algorithm instead of cross-lingual word-vector retrieval",
     )
+    parser.add_argument(
+        "--benchmark",
+        choices=sorted(BENCHMARK_PRESETS),
+        help=(
+            "Apply a frozen benchmark preset. Locks --split, --min-confidence, "
+            "and --category to the pinned values. CLI overrides are ignored "
+            "(with a warning) so the same benchmark label always grades the "
+            "same protocol. See research/notes/reproduce-rosetta-eval-v1.md."
+        ),
+    )
 
     args = parser.parse_args(argv)
+
+    # ── Benchmark preset locks eval parameters ──────────────────────────
+    # The split/min_confidence/category combination defines the benchmark.
+    # If the user passes a non-default value alongside --benchmark, warn
+    # but keep the preset — the whole point is that "rosetta-eval-v1"
+    # numbers from two runs are directly comparable. The model under test
+    # is still parameterised via --api-url.
+    if args.benchmark:
+        preset = BENCHMARK_PRESETS[args.benchmark]
+        overrides = []
+        if args.split != "test":
+            overrides.append(f"--split={args.split} → {preset['split']}")
+        if args.min_confidence != "medium":
+            overrides.append(
+                f"--min-confidence={args.min_confidence} → {preset['min_confidence']}"
+            )
+        if args.category is not None and preset["category"] is None:
+            overrides.append(f"--category={args.category} → (none)")
+        if overrides:
+            print(
+                f"WARN  --benchmark={args.benchmark} locks: "
+                + ", ".join(overrides),
+                file=sys.stderr,
+            )
+        args.split = preset["split"]
+        args.min_confidence = preset["min_confidence"]
+        args.category = preset["category"]
 
     split_arg = None if args.split == "all" else args.split
     pairs = eval_pairs(min_confidence=args.min_confidence, split=split_arg)
@@ -548,6 +600,13 @@ def main(argv: list[str] | None = None) -> int:
         print("No eval pairs match the filters.", file=sys.stderr)
         return 2
 
+    if args.benchmark:
+        print(
+            f"Benchmark: {args.benchmark} "
+            f"(split={args.split}, min_confidence={args.min_confidence}, "
+            f"baseline={args.baseline}, api={args.api_url})",
+            file=sys.stderr,
+        )
     print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
 
 
@@ -572,7 +631,16 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # Re-export for the test module.
-__all__ = ["evaluate", "_query_neighbours", "_query_neighbours_levenshtein", "_evaluate_gates", "EVAL_PAIRS", "asdict", "_random_baseline_metrics"]
+__all__ = [
+    "evaluate",
+    "_query_neighbours",
+    "_query_neighbours_levenshtein",
+    "_evaluate_gates",
+    "EVAL_PAIRS",
+    "asdict",
+    "_random_baseline_metrics",
+    "BENCHMARK_PRESETS",
+]
 
 
 if __name__ == "__main__":
