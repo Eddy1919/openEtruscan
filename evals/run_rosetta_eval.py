@@ -160,6 +160,54 @@ def _query_neighbours_levenshtein(
     scored = [(dist(v), v) for v in vocab]
     scored.sort()
     return [v for _, v in scored[:k]]
+import math
+
+def _random_baseline_metrics(vocab_size: int, eval_pairs: list[EvalPair]) -> dict[str, Any]:
+    """Compute the analytical expected precision@k under uniform random retrieval.
+    
+    For strict-lexical precision@k, the expected chance of finding the single expected 
+    target lemma in a random sample of k items from V items is simply k / V.
+    
+    For semantic-field precision@k, the expected chance of finding AT LEAST ONE 
+    member of the semantic field in a random sample of k items is:
+    1 - (chance of finding ZERO members)
+    = 1 - C(V-F, k) / C(V, k)
+    where F is the size of the semantic field.
+    """
+    p_at_k: dict[int, float] = {}
+    p_at_k_field: dict[int, float] = {}
+    
+    if not eval_pairs or vocab_size <= 0:
+        for k in DEFAULT_K_VALUES:
+            p_at_k[k] = 0.0
+            p_at_k_field[k] = 0.0
+        return {"precision_at_k": p_at_k, "precision_at_k_semantic_field": p_at_k_field}
+        
+    for k in DEFAULT_K_VALUES:
+        strict_sum = 0.0
+        field_sum = 0.0
+        
+        for pair in eval_pairs:
+            # Strict-lexical: exactly 1 target lemma
+            strict_sum += min(1.0, k / vocab_size)
+            
+            # Semantic-field: F target lemmas
+            F = len(LATIN_SEMANTIC_FIELDS.get(pair.category, set()))
+            if vocab_size <= F or vocab_size < k:
+                field_sum += 1.0
+            elif vocab_size - F < k:
+                field_sum += 1.0
+            else:
+                chance_zero = math.comb(vocab_size - F, k) / math.comb(vocab_size, k)
+                field_sum += 1.0 - chance_zero
+                
+        p_at_k[k] = strict_sum / len(eval_pairs)
+        p_at_k_field[k] = field_sum / len(eval_pairs)
+        
+    return {
+        "precision_at_k": p_at_k,
+        "precision_at_k_semantic_field": p_at_k_field,
+    }
 
 
 def evaluate(
@@ -189,6 +237,21 @@ def evaluate(
     n_evaluated = 0
     n_skipped = 0
     n_failed = 0
+
+    if baseline == "random":
+        metrics = _random_baseline_metrics(100000, pairs)
+        return {
+            "n_pairs": len(pairs),
+            "n_evaluated": len(pairs),
+            "n_skipped": 0,
+            "n_failed": 0,
+            "precision_at_k": metrics["precision_at_k"],
+            "precision_at_k_semantic_field": metrics["precision_at_k_semantic_field"],
+            "coverage_any_hit": {thr: 1.0 for thr in (0.50, 0.70, 0.85)},
+            "by_category": {},
+            "by_confidence": {},
+            "per_pair": [],
+        }
 
     for pair in pairs:
         if baseline == "levenshtein":
@@ -462,7 +525,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--baseline",
-        choices=["none", "levenshtein"],
+        choices=["none", "levenshtein", "random"],
         default="none",
         help="Use a baseline algorithm instead of cross-lingual word-vector retrieval",
     )
@@ -478,6 +541,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
+
 
     report = evaluate(args.api_url, pairs, pace=not args.no_pace, baseline=args.baseline)
 
@@ -500,7 +564,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # Re-export for the test module.
-__all__ = ["evaluate", "_query_neighbours", "_query_neighbours_levenshtein", "_evaluate_gates", "EVAL_PAIRS", "asdict"]
+__all__ = ["evaluate", "_query_neighbours", "_query_neighbours_levenshtein", "_evaluate_gates", "EVAL_PAIRS", "asdict", "_random_baseline_metrics"]
 
 
 if __name__ == "__main__":
