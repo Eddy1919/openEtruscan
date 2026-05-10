@@ -82,8 +82,8 @@ def _query_neighbours(
     k: int,
     *,
     timeout_s: float = 15.0,
-) -> list[str] | None:
-    """Hit /neural/rosetta and return the top-k target-language words.
+) -> list[tuple[str, float]] | None:
+    """Hit /neural/rosetta and return the top-k target-language words and cosines.
 
     Returns None on transport-level failures (so the caller can decide
     whether to skip or fail). Returns an empty list when the endpoint
@@ -108,7 +108,7 @@ def _query_neighbours(
             body = resp.json()
             # The endpoint always returns a `neighbours` array; an empty
             # list means "source word has no stored vector".
-            return [n["word"] for n in body.get("neighbours", [])]
+            return [(n["word"], n["cosine"]) for n in body.get("neighbours", [])]
         except Exception as exc:
             print(f"  SKIP  {word!r}: {exc}", file=sys.stderr)
             return None
@@ -268,8 +268,10 @@ def evaluate(
             continue
 
         n_evaluated += 1
+        top_words = [w for w, _ in neighbours]
+        top1_cosine = neighbours[0][1] if neighbours else None
         hit_k = next(
-            (rank + 1 for rank, n in enumerate(neighbours) if n == pair.lat),
+            (rank + 1 for rank, n in enumerate(top_words) if n == pair.lat),
             None,
         )
         # Semantic-field hit: rank of FIRST top-k entry that's a member of the
@@ -277,7 +279,7 @@ def evaluate(
         # the query into the right semantic neighbourhood, even if it picked
         # the wrong specific lemma".
         field_hit_k = next(
-            (rank + 1 for rank, n in enumerate(neighbours)
+            (rank + 1 for rank, n in enumerate(top_words)
              if n.lower() in LATIN_SEMANTIC_FIELDS.get(pair.category, set())),
             None,
         )
@@ -289,7 +291,8 @@ def evaluate(
                 "confidence": pair.confidence,
                 "rank_of_expected": hit_k,                  # strict-lexical
                 "rank_of_first_field_match": field_hit_k,   # semantic-field
-                "top_predictions": neighbours,
+                "top_predictions": top_words,
+                "top1_cosine": top1_cosine,
             }
         )
         if pace:
@@ -326,7 +329,7 @@ def evaluate(
         )
         p_at_k_field[k] = hits / n_evaluated
 
-    # ── Coverage: what fraction of source words returned ANY Latin
+    # ── Coverage: what fraction of source words returned a top-1 Latin
     # neighbour above various cosine thresholds? Indicates whether the
     # encoder is producing usable distances at all. ─────────────────────
     coverage_at_threshold: dict[float, float] = {}
@@ -334,15 +337,8 @@ def evaluate(
         if n_evaluated == 0:
             coverage_at_threshold[thr] = 0.0
             continue
-        # For coverage we just need to know if SOMETHING came back at all
-        # (we already have neighbours per pair). Threshold semantics:
-        # "did the API return at least one Latin word above cosine X for
-        # this Etruscan source?" — but we don't currently store cosines
-        # in per_pair. Track that the API returned any hit at all.
-        # (Threshold-aware version requires cosine in per_pair; left as
-        # a follow-up.)
-        with_any = sum(1 for p in per_pair if p.get("top_predictions"))
-        coverage_at_threshold[thr] = with_any / n_evaluated
+        with_thr = sum(1 for p in per_pair if p.get("top1_cosine") is not None and p["top1_cosine"] >= thr)
+        coverage_at_threshold[thr] = with_thr / n_evaluated
 
     by_category = _group_metrics(per_pair, "category")
     by_confidence = _group_metrics(per_pair, "confidence")
@@ -363,7 +359,7 @@ def evaluate(
         # in top-k". This is the honest metric for what the system DOES
         # do: route queries into the right semantic neighbourhood.
         "precision_at_k_semantic_field": p_at_k_field,
-        "coverage_any_hit": coverage_at_threshold,
+        "coverage_at_threshold": coverage_at_threshold,
         "by_category": by_category,
         "by_confidence": by_confidence,
         "per_pair": per_pair,

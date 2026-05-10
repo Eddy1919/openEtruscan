@@ -87,14 +87,22 @@ class TestEvalPairs:
 # ---------------------------------------------------------------------------
 
 
-def _patched_query(monkeypatch, responses: dict[str, list[str]]):
+def _patched_query(monkeypatch, responses: dict[str, list | None]):
     """Patch run_rosetta_eval._query_neighbours to return canned responses
     keyed on the queried Etruscan word. ``None`` ⇒ transport failure;
     ``[]`` ⇒ source word OOV.
     """
 
     def fake(api_url, word, from_lang, to_lang, k, **_kw):
-        return responses.get(word, [])
+        res = responses.get(word, [])
+        if res is None:
+            return None
+        if not res:
+            return []
+        if isinstance(res[0], str):
+            # Auto-generate fake decreasing cosines
+            return [(w, 0.9 - i * 0.01) for i, w in enumerate(res)]
+        return res
 
     monkeypatch.setattr(run_rosetta_eval, "_query_neighbours", fake)
 
@@ -193,7 +201,7 @@ class TestEvaluate:
         def fake(api_url, word, from_lang, to_lang, k, **_kw):
             if word == "avil":
                 return None  # transport failure
-            return ["filius"]
+            return [("filius", 0.9)]
 
         monkeypatch.setattr(run_rosetta_eval, "_query_neighbours", fake)
 
@@ -226,6 +234,7 @@ class TestEvaluate:
         assert report["by_category"]["kinship"]["precision_at_k"][1] == 0.5
         assert report["by_category"]["theonym"]["n"] == 1
         assert report["by_category"]["theonym"]["precision_at_k"][1] == 1.0
+
 
     def test_levenshtein_baseline_self_match(self, monkeypatch):
         """The Levenshtein baseline should rank an exact match first."""
@@ -298,6 +307,38 @@ class TestRandomBaseline:
         assert report["precision_at_k"][10] == pytest.approx(1e-4)
         # field must be strictly greater than strict
         assert report["precision_at_k_semantic_field"][10] > report["precision_at_k"][10]
+
+    def test_coverage_metric(self, monkeypatch):
+        """Coverage tracks the fraction of eval pairs whose top-1 hit has a
+        cosine above 0.5, 0.7, 0.85."""
+        pairs = [
+            EvalPair("p1", "w", "t", "high", "test", "kinship"),  # hits 0.9
+            EvalPair("p2", "w", "t", "high", "test", "kinship"),  # hits 0.8
+            EvalPair("p3", "w", "t", "high", "test", "kinship"),  # hits 0.6
+            EvalPair("p4", "w", "t", "high", "test", "kinship"),  # hits 0.4
+            EvalPair("p5", "w", "t", "high", "test", "kinship"),  # OOV (skipped)
+            EvalPair("p6", "w", "t", "high", "test", "kinship"),  # Failed
+        ]
+        _patched_query(
+            monkeypatch,
+            {
+                "p1": [("w", 0.90)],
+                "p2": [("w", 0.80)],
+                "p3": [("w", 0.60)],
+                "p4": [("w", 0.40)],
+                "p5": [],
+                "p6": None,
+            },
+        )
+        report = run_rosetta_eval.evaluate(
+            api_url="https://test", pairs=pairs, pace=False,
+        )
+        assert report["n_evaluated"] == 4
+        cov = report["coverage_at_threshold"]
+        assert cov[0.85] == 1 / 4  # only p1 >= 0.85
+        assert cov[0.70] == 2 / 4  # p1, p2 >= 0.70
+        assert cov[0.50] == 3 / 4  # p1, p2, p3 >= 0.50
+
 
 
 # ---------------------------------------------------------------------------
