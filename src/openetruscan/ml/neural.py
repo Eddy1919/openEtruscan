@@ -888,98 +888,150 @@ class NeuralClassifier:
 
 
 # ---------------------------------------------------------------------------
-# Lacunae Restorer (MLM interface)
+# Lacunae Restorer
 # ---------------------------------------------------------------------------
+#
+# Production restorer is the XLM-R + char-prediction-head model from
+# research/experiments/lacuna_restoration/ (38.0% top-1 / 60.6% top-3
+# on held-out masked positions; see CURATION_FINDINGS.md Finding 9).
+#
+# The restorer accepts Leiden bracket notation `lar[..]i` (where each
+# `.` is one missing character of known width) and returns a per-mask
+# probability distribution over the Etruscan character vocabulary.
+# Unbounded lacunae `[...]` are rejected — width must be explicit for
+# a per-position MLM.
+
+
+_LACUNA_MODEL_PATHS = {
+    "local://default": ("data/models/lora-char-head-v1", "data/models/v4"),
+    "local://lora-char-head-v1": ("data/models/lora-char-head-v1", "data/models/v4"),
+}
 
 
 class LacunaeRestorer:
-    """
-    Interface for Probabilistic Lacunae Restoration using CharMLM.
+    """XLM-R + char-prediction-head Etruscan lacuna restorer.
+
+    Uses the etr-lora-v4-warm-started encoder + a small MLP head over
+    the ~50-class Etruscan character vocabulary. For each `[..]`
+    bracket-notation mask in the input, replaces the bracketed span
+    with the encoder's native ``<mask>`` token (one mask per missing
+    character) and returns top-k character predictions per position.
     """
 
     def __init__(self, model_uri: str = "local://default", max_len: int = 128) -> None:
-        """Initialize the MLM-based lacunae restorer with fixed context window and model URI."""
         _require_torch()
-        self.max_len = max_len
         self.model_uri = model_uri
-        self.vocab: CharVocab | None = None
-        self.model: CharMLM | None = None
-        self._trained = False
-        
-        self._load_from_registry()
-        
-    def _load_from_registry(self) -> None:
-        """Resolve the model_uri from the model registry and load it."""
-        # For a full implementation, this would fetch from S3 or local disk based on URI scheme.
-        if self.model_uri != "local://default":
-            # For example: path = self.model_uri.replace("local://", "data/models/")
-            pass
+        self.max_len = max_len
 
-    def _tokenize_lacunae(self, text: str) -> tuple[list[str], list[int]]:
-        """Identify [..] mask markers and convert text into tokenized sequences with mask indices."""
+        if model_uri not in _LACUNA_MODEL_PATHS:
+            raise ValueError(
+                f"Unknown lacunae model_uri {model_uri!r}. "
+                f"Known: {list(_LACUNA_MODEL_PATHS)}"
+            )
+        head_dir, adapter_dir = _LACUNA_MODEL_PATHS[model_uri]
+
+        from transformers import AutoModel, AutoTokenizer
+        from peft import PeftModel
+
+        head_path = Path(head_dir)
+        meta_path = head_path / "metadata.json"
+        if not meta_path.exists():
+            raise FileNotFoundError(
+                f"Lacunae model not found at {head_path}. Sync from "
+                f"gs://openetruscan-rosetta/models/lora-char-head-v1 first."
+            )
+        meta = json.loads(meta_path.read_text())
+
+        self.char_set: list[str] = meta["char_set"]
+        self.id_to_char = {i: c for i, c in enumerate(self.char_set)}
+        self.num_classes = meta["num_classes"]
+        self.hidden_dim = meta["hidden_dim"]
+
+        self.tokenizer = AutoTokenizer.from_pretrained(meta["encoder"])
+        base = AutoModel.from_pretrained(meta["encoder"])
+        encoder = PeftModel.from_pretrained(base, adapter_dir)
+        self.encoder = encoder.merge_and_unload()
+        self.encoder.eval()
+
+        self.head = nn.Sequential(
+            nn.Dropout(0.1),
+            nn.Linear(self.hidden_dim, 256),
+            nn.GELU(),
+            nn.LayerNorm(256),
+            nn.Linear(256, self.num_classes),
+        )
+        self.head.load_state_dict(
+            torch.load(head_path / "char_head_best.pt", map_location="cpu", weights_only=True)
+        )
+        self.head.eval()
+
+    def _expand_lacunae(self, text: str) -> tuple[str, list[int]]:
+        """Replace each `[.+]` span with one ``<mask>`` per dot.
+
+        Returns the expanded text and a list of original-string indices
+        (relative to the cleaned text, with masks counted as one char
+        each) for every mask, so callers can map predictions back to
+        their input positions.
+        """
         import re
 
         if "[...]" in text:
             raise ValueError(
-                "Cannot predict unbounded lacunae `[...]` with MLM. Use explicit widths like `[..]`."
+                "Cannot predict unbounded lacunae `[...]`. Specify width with `[..]`."
             )
 
-        tokens = []
-        mask_indices = []
+        out_chars: list[str] = []
+        mask_positions: list[int] = []
         i = 0
         while i < len(text):
-            match = re.match(r"\[(\.+)\]", text[i:])
-            if match:
-                dots = match.group(1)
-                for _ in dots:
-                    if len(tokens) < self.max_len:
-                        tokens.append("[MASK]")
-                        mask_indices.append(len(tokens) - 1)
-                i += match.end()
-                continue
-
-            if len(tokens) < self.max_len:
-                tokens.append(text[i])
-            i += 1
-
-        return tokens, mask_indices
+            m = re.match(r"\[(\.+)\]", text[i:])
+            if m:
+                for _ in m.group(1):
+                    mask_positions.append(len(out_chars))
+                    out_chars.append("\x00")  # placeholder, swapped to <mask> at lookup
+                i += m.end()
+            else:
+                out_chars.append(text[i])
+                i += 1
+        return "".join(out_chars), mask_positions
 
     def predict(self, text_with_lacunae: str, top_k: int = 5) -> list[dict]:
-        """
-        Predict missing characters marked by Leiden bracket notation (e.g. `lar[..]i`).
-        Returns probability distributions for each mask.
-        """
+        """Return top-k char distributions for every `[..]`-marked position."""
         _require_torch()
-        if not self._trained or self.model is None or self.vocab is None:
-            # We construct a dummy model logic if not strictly trained for local use, or raise error.
-            # In a real app we'd load pre-trained. We will allow this to run untrained just to demonstrate architectural paths.
-            if not self.vocab:
-                self.vocab = CharVocab.build([text_with_lacunae])
-            if not self.model:
-                self.model = CharMLM(vocab_size=len(self.vocab), max_len=self.max_len)
-                self.model.eval()
-
-        tokens, mask_indices = self._tokenize_lacunae(text_with_lacunae)
-        if not mask_indices:
+        expanded, mask_positions = self._expand_lacunae(text_with_lacunae)
+        if not mask_positions:
             return []
 
-        x = torch.tensor([self.vocab.encode(tokens, self.max_len)], dtype=torch.long)
+        results: list[dict] = []
+        mask_token = self.tokenizer.mask_token  # "<mask>"
 
-        self.model.eval()
-        with torch.no_grad():
-            logits = self.model(x)[0]  # [seq_len, vocab_size]
+        for pos in mask_positions:
+            # Replace exactly the target placeholder with <mask>; leave
+            # other placeholders as-is so we predict one position at a
+            # time conditioned on the surrounding visible context.
+            chars = list(expanded)
+            chars[pos] = mask_token
+            # Other placeholders are unknown to the model — strip them
+            # so they don't poison the context.
+            masked = "".join(c for c in chars if c != "\x00")
+
+            encoded = self.tokenizer(masked, return_tensors="pt", truncation=True, max_length=self.max_len)
+            mask_idx_tensor = (encoded.input_ids[0] == self.tokenizer.mask_token_id).nonzero(as_tuple=True)[0]
+            if len(mask_idx_tensor) == 0:
+                results.append({"position": pos, "predictions": {}})
+                continue
+            mask_idx = mask_idx_tensor[0].item()
+
+            with torch.no_grad():
+                hidden = self.encoder(**encoded).last_hidden_state
+                logits = self.head(hidden[0, mask_idx])
             probs = F.softmax(logits, dim=-1)
+            top_probs, top_ids = torch.topk(probs, min(top_k, self.num_classes))
 
-        results = []
-        for idx in mask_indices:
-            mask_probs = probs[idx]
-            # Get top_k probabilities
-            top_probs, top_indices = torch.topk(mask_probs, top_k)
-            char_dist = {}
-            for p, i in zip(top_probs, top_indices, strict=False):
-                if i.item() > 2:  # exclude PAD, UNK, MASK
-                    char = self.vocab.idx_to_char.get(i.item(), "")
-                    char_dist[char] = round(p.item(), 4)
-            results.append({"position": idx, "predictions": char_dist})
+            char_dist = {
+                self.id_to_char[int(i)]: round(float(p), 4)
+                for p, i in zip(top_probs, top_ids, strict=False)
+            }
+            results.append({"position": pos, "predictions": char_dist})
 
         return results

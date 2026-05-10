@@ -9,7 +9,8 @@ own README for details and reproduction.
 
 | Experiment | Question | Headline result |
 |---|---|---|
-| [`byt5_v4_vs_v5/`](byt5_v4_vs_v5/) | Did corpus cleaning improve ByT5 lacuna restoration? | TBD — script ready, run pending |
+| [`byt5_v4_vs_v5/`](byt5_v4_vs_v5/) | Did corpus cleaning improve ByT5 lacuna restoration? | Both fail to converge — sentinel-token learning collapse (negative baseline) |
+| [`lacuna_restoration/`](lacuna_restoration/) | Which post-ByT5 architecture works for character-level lacuna restoration? | XLM-R + char head: **38.0% top-1 / 60.6% top-3**. Char-MLM-from-scratch: 10.0% top-1 (negative baseline). |
 | [`etr_lora_v3_vs_v4_retrieval/`](etr_lora_v3_vs_v4_retrieval/) | Did corpus cleaning improve XLM-RoBERTa+LoRA embedding retrieval? | Qualitative wins on sibilant convergence, structural patterns, abbreviation handling |
 | [`classifier_data_bottleneck/`](classifier_data_bottleneck/) | What is the labeled-data threshold for Etruscan inscription typology? | macro F1 0.16 (n=184) → 0.28 (n=712, CNN); embedding-head fails at 0.075 due to curse-of-dimensionality |
 
