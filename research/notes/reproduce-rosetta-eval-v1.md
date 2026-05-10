@@ -90,7 +90,7 @@ is committed to `eval/`.
 
 | Date (UTC) | Operator | API URL | Latin vocab size | Output file | Notes |
 |---|---|---|---|---|---|
-| _to be filled in on first frozen run_ | | | | | |
+| 2026-05-10T21:01:24Z | edoardo | <https://api.openetruscan.com> | 50,000 | [`eval/rosetta-eval-v1-20260510T210124Z.json`](../../eval/rosetta-eval-v1-20260510T210124Z.json) | First frozen run. v0.5.0 / LaBSE column only (v4 not yet ingested). model.field@10=0.1875 on 16/22 evaluated (6 OOV). Pre-flight: stamped prod `alembic_version j5e6f7a8b9c0→a6d56926ff21` to reconcile a phantom revision blocking redeploy. |
 
 ## Update checklist (per quarterly refresh)
 
