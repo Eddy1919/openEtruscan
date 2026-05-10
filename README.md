@@ -173,6 +173,28 @@ Push directly to the live production site and SPARQL endpoint:
 npx vercel --prod -y
 ```
 
+## Citing this work
+
+If you use OpenEtruscan or the OpenEtruscan corpus in your research, please cite both this software repository and the dataset deposit. Machine-readable citation metadata lives in:
+
+- [`CITATION.cff`](CITATION.cff) — GitHub's *Cite this repository* button reads from here.
+- [`codemeta.json`](codemeta.json) — schema.org-compatible (used by Zenodo, ORCID, OpenAlex).
+- [`.zenodo.json`](.zenodo.json) — controls the auto-deposit on each tagged GitHub release.
+
+A minimal BibTeX entry (the `doi` fields populate automatically once the next tagged release lands on Zenodo):
+
+```bibtex
+@software{openetruscan_2026,
+  author  = {OpenEtruscan Contributors},
+  title   = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
+  year    = {2026},
+  url     = {https://github.com/Eddy1919/openEtruscan},
+  version = {0.5.0}
+}
+```
+
+The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md). The research-grade roadmap is in [`research/SOTA_ROADMAP.md`](research/SOTA_ROADMAP.md).
+
 ## Licence
 
 - **Code:** MIT

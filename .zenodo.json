@@ -1,0 +1,40 @@
+{
+  "_comment": "Zenodo's GitHub integration reads this file at release time. When you tag a new release on GitHub (e.g. v0.6.0), Zenodo automatically creates a deposit with the metadata below. Edit version/upload_type/keywords here, not in the Zenodo UI, so the metadata stays version-controlled.",
+  "title": "OpenEtruscan — open-source digital corpus platform for Etruscan epigraphy",
+  "description": "OpenEtruscan unifies the Etruscan epigraphic record into a computationally accessible corpus (6,633 inscriptions), publishes it as Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with Etruscan-side LoRA) that places Etruscan and Latin lexicons in a shared vector space. Includes the frozen reference benchmark rosetta-eval-v1 with random, Levenshtein, and model baselines plus a full reproducibility manifest. See research/FINDINGS.md for the headline results and research/notes/reproduce-rosetta-eval-v1.md for the replication instructions.",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "OpenEtruscan Contributors",
+      "affiliation": "Independent research project"
+    }
+  ],
+  "access_right": "open",
+  "license": "MIT",
+  "keywords": [
+    "etruscan",
+    "epigraphy",
+    "ancient-languages",
+    "digital-humanities",
+    "low-resource-NLP",
+    "cross-lingual embeddings",
+    "linked open data",
+    "LaBSE",
+    "XLM-R",
+    "LoRA"
+  ],
+  "communities": [],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/Eddy1919/openEtruscan",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isPartOf",
+      "identifier": "https://www.openetruscan.com",
+      "resource_type": "other"
+    }
+  ],
+  "notes": "Companion dataset (the 6,567-row cleaned corpus CSV) is deposited separately on Zenodo and cross-linked via related_identifiers in that deposit's metadata. The corpus is derived from the Larth Dataset (Vico & Spanakis 2023) and the Corpus Inscriptionum Etruscarum (Vol. I extractions); see research/BIBLIOGRAPHY.md for the full provenance chain."
+}
