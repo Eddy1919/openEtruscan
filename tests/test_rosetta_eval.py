@@ -246,6 +246,61 @@ class TestEvaluate:
 
 
 # ---------------------------------------------------------------------------
+# Random baseline (analytical)
+# ---------------------------------------------------------------------------
+
+
+class TestRandomBaseline:
+    """Verify _random_baseline_metrics matches hand-computed expectations."""
+
+    def test_strict_and_field_at_known_values(self):
+        """With vocab_size=1000, field_size=10, k=5:
+        strict = 5/1000 = 0.005
+        field  = 1 - C(990,5)/C(1000,5) ≈ 0.0491
+        """
+        import math
+        from unittest.mock import patch
+
+        # Use a valid category but override the field to exactly 10 members.
+        fake_fields = {"kinship": set(f"word{i}" for i in range(10))}
+        pairs = [
+            EvalPair("a", "b", "test", "high", "ref", "kinship"),
+            EvalPair("c", "d", "test", "high", "ref", "kinship"),
+        ]
+
+        with patch.object(run_rosetta_eval, "LATIN_SEMANTIC_FIELDS", fake_fields):
+            result = run_rosetta_eval._random_baseline_metrics(1000, pairs)
+
+        # strict@5 = 5/1000 = 0.005
+        assert result["precision_at_k"][5] == pytest.approx(0.005)
+
+        # field@5 = 1 - C(990,5)/C(1000,5)
+        expected_field = 1.0 - math.comb(990, 5) / math.comb(1000, 5)
+        assert result["precision_at_k_semantic_field"][5] == pytest.approx(
+            expected_field, rel=1e-6
+        )
+        # Sanity: field > strict (semantic field is broader)
+        assert result["precision_at_k_semantic_field"][5] > result["precision_at_k"][5]
+
+    def test_random_baseline_via_evaluate(self):
+        """--baseline=random through evaluate() produces correct report shape."""
+        pairs = [
+            EvalPair("clan", "filius", "son", "high", "test", "kinship"),
+            EvalPair("avil", "annus", "year", "high", "test", "time"),
+        ]
+        report = run_rosetta_eval.evaluate(
+            api_url="https://test", pairs=pairs, pace=False, baseline="random",
+        )
+        assert report["n_evaluated"] == 2
+        assert report["n_skipped"] == 0
+        assert report["n_failed"] == 0
+        # strict@10 for vocab=100000 is 10/100000 = 0.0001
+        assert report["precision_at_k"][10] == pytest.approx(1e-4)
+        # field must be strictly greater than strict
+        assert report["precision_at_k_semantic_field"][10] > report["precision_at_k"][10]
+
+
+# ---------------------------------------------------------------------------
 # Gate parsing
 # ---------------------------------------------------------------------------
 
