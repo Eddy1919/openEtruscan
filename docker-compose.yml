@@ -65,8 +65,21 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:latest
     restart: unless-stopped
+    # edoburu/pgbouncer's auto-config script can't handle DATABASE_URL with
+    # a `?ssl=require` querystring — it writes the raw path component
+    # (`corpus?ssl=require`) as the [databases] section key, and pgbouncer
+    # fails with "syntax error in configuration (pgbouncer.ini:3)" on every
+    # start. Pass the components explicitly instead. The values are derived
+    # from `oe-database-url` by `scripts/ops/fetch-env-from-sm.sh` at
+    # deploy time; no new SM secrets needed.
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - AUTH_TYPE=scram-sha-256
+      - SERVER_TLS_SSLMODE=require
       - POOL_MODE=transaction
       - MAX_CLIENT_CONN=100
       - DEFAULT_POOL_SIZE=20
