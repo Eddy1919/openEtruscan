@@ -115,12 +115,60 @@ def _query_neighbours(
     return None
 
 
+_VOCAB_CACHE: dict[str, list[str]] = {}
+
+def _get_vocab(api_url: str, lang: str) -> list[str]:
+    if lang not in _VOCAB_CACHE:
+        resp = httpx.get(f"{api_url.rstrip('/')}/neural/rosetta/vocab", params={"lang": lang}, timeout=30.0)
+        resp.raise_for_status()
+        _VOCAB_CACHE[lang] = resp.json().get("words", [])
+    return _VOCAB_CACHE[lang]
+
+def _query_neighbours_levenshtein(
+    api_url: str,
+    word: str,
+    from_lang: str,
+    to_lang: str,
+    k: int,
+    *,
+    timeout_s: float = 15.0,
+) -> list[str] | None:
+    try:
+        vocab = _get_vocab(api_url, to_lang)
+    except Exception as exc:
+        print(f"  SKIP  {word!r}: {exc}", file=sys.stderr)
+        return None
+        
+    if not vocab:
+        return []
+        
+    def dist(v: str) -> int:
+        m, n = len(word), len(v)
+        dp = list(range(n + 1))
+        for i in range(1, m + 1):
+            prev = dp[0]
+            dp[0] = i
+            for j in range(1, n + 1):
+                temp = dp[j]
+                if word[i - 1] == v[j - 1]:
+                    dp[j] = prev
+                else:
+                    dp[j] = 1 + min(dp[j], dp[j - 1], prev)
+                prev = temp
+        return dp[n]
+        
+    scored = [(dist(v), v) for v in vocab]
+    scored.sort()
+    return [v for _, v in scored[:k]]
+
+
 def evaluate(
     api_url: str,
     pairs: list[EvalPair],
     *,
     k_max: int = max(DEFAULT_K_VALUES),
     pace: bool = True,
+    baseline: str = "none",
 ) -> dict[str, Any]:
     """Run the eval. Returns a structured report.
 
@@ -143,9 +191,12 @@ def evaluate(
     n_failed = 0
 
     for pair in pairs:
-        neighbours = _query_neighbours(
-            api_url, pair.etr, "ett", "lat", k_max
-        )
+        if baseline == "levenshtein":
+            neighbours = _query_neighbours_levenshtein(api_url, pair.etr, "ett", "lat", k_max)
+        else:
+            neighbours = _query_neighbours(
+                api_url, pair.etr, "ett", "lat", k_max
+            )
         if neighbours is None:
             n_failed += 1
             continue
@@ -409,6 +460,12 @@ def main(argv: list[str] | None = None) -> int:
         default="test",
         help="Which split to evaluate (default: test = held-out pairs only)",
     )
+    parser.add_argument(
+        "--baseline",
+        choices=["none", "levenshtein"],
+        default="none",
+        help="Use a baseline algorithm instead of cross-lingual word-vector retrieval",
+    )
 
     args = parser.parse_args(argv)
 
@@ -422,7 +479,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
 
-    report = evaluate(args.api_url, pairs, pace=not args.no_pace)
+    report = evaluate(args.api_url, pairs, pace=not args.no_pace, baseline=args.baseline)
 
     if args.json:
         # asdict via the per_pair dicts (already JSON-friendly).
@@ -443,7 +500,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # Re-export for the test module.
-__all__ = ["evaluate", "_query_neighbours", "_evaluate_gates", "EVAL_PAIRS", "asdict"]
+__all__ = ["evaluate", "_query_neighbours", "_query_neighbours_levenshtein", "_evaluate_gates", "EVAL_PAIRS", "asdict"]
 
 
 if __name__ == "__main__":

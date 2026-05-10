@@ -1116,6 +1116,44 @@ async def rosetta_lookup(
     }
 
 
+_VOCAB_CACHE: dict[str, tuple[float, list[str]]] = {}
+_VOCAB_TTL_SECONDS = 3600
+
+@app.get("/neural/rosetta/vocab", tags=["Neural"])
+@limiter.limit("60/minute")
+async def rosetta_vocab(
+    request: Request,
+    lang: Annotated[
+        str,
+        Query(description="Language code (e.g. 'lat', 'ett')"),
+    ],
+    session: AsyncSession = Depends(get_session),
+):
+    """Retrieve up to 50k vocabulary words for a given language. Cached for 1 hour."""
+    import time
+    from sqlalchemy import text
+    
+    now = time.time()
+    # TODO(T2.3): The cache key needs the embedder dimension or partition once we
+    # introduce the v4 embedding partition, so `lat` isn't cached across both.
+    if lang in _VOCAB_CACHE:
+        expires_at, words = _VOCAB_CACHE[lang]
+        if now < expires_at:
+            return {"words": words}
+        else:
+            _VOCAB_CACHE.pop(lang, None)
+            
+    stmt = text(
+        "SELECT word FROM language_word_embeddings WHERE language = :lang ORDER BY word LIMIT 50000"
+    )
+    result = await session.execute(stmt, {"lang": lang})
+    words = [row[0] for row in result.fetchall()]
+    
+    _VOCAB_CACHE[lang] = (now + _VOCAB_TTL_SECONDS, words)
+    return {"words": words}
+
+
+
 @app.get("/stats/summary", tags=["Statistics"])
 @limiter.limit("30/minute")
 async def stats_summary(request: Request, session: AsyncSession = Depends(get_session)):

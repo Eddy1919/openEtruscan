@@ -227,6 +227,23 @@ class TestEvaluate:
         assert report["by_category"]["theonym"]["n"] == 1
         assert report["by_category"]["theonym"]["precision_at_k"][1] == 1.0
 
+    def test_levenshtein_baseline_self_match(self, monkeypatch):
+        """The Levenshtein baseline should rank an exact match first."""
+        pairs = [EvalPair("fanu", "fanu", "sanctuary", "high", "test", "religious")]
+
+        def fake_get_vocab(api_url, to_lang):
+            return ["other", "unrelated", "fanu", "fanaticus"]
+
+        monkeypatch.setattr(run_rosetta_eval, "_get_vocab", fake_get_vocab)
+
+        report = run_rosetta_eval.evaluate(
+            api_url="https://test", pairs=pairs, pace=False, baseline="levenshtein"
+        )
+        assert report["n_evaluated"] == 1
+        assert report["n_skipped"] == 0
+        assert report["precision_at_k"][1] == 1.0
+        assert report["per_pair"][0]["rank_of_expected"] == 1
+
 
 # ---------------------------------------------------------------------------
 # Gate parsing
