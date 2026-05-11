@@ -32,6 +32,7 @@
     "low-resource-nlp",
     "cross-lingual-embeddings",
     "linked-open-data",
+    "pelagios-network",
     "LaBSE",
     "XLM-R",
     "LoRA"
@@ -51,11 +52,19 @@
     "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
   },
   "sameAs": "https://doi.org/10.5281/zenodo.20075836",
-  "isPartOf": {
-    "@type": "ResearchProject",
-    "name": "OpenEtruscan",
-    "url": "https://www.openetruscan.com"
-  },
+  "isPartOf": [
+    {
+      "@type": "ResearchProject",
+      "name": "OpenEtruscan",
+      "url": "https://www.openetruscan.com"
+    },
+    {
+      "@type": "ResearchProject",
+      "name": "Pelagios Network",
+      "url": "https://pelagios.org/",
+      "description": "International network of linked open data for the ancient world. OpenEtruscan contributes to the People, Place, and Registry working groups; aligns findspots with Pleiades and prosopography with the Pelagios People graph."
+    }
+  ],
   "referencePublication": [
     {
       "@type": "Dataset",
