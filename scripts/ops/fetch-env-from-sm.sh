@@ -54,31 +54,10 @@ HF=$(fetch oe-hf-token)
 GEM=$(fetch oe-gemini-api-key)
 ADM=$(fetch oe-admin-token)
 
-# Derive DB_HOST/PORT/USER/PASSWORD/NAME from DATABASE_URL so that services
-# which don't speak URL-with-querystring (looking at you, edoburu/pgbouncer:
-# its auto-config script writes the raw path component including
-# `?ssl=require` as the [databases] section key, which pgbouncer then fails
-# to parse with "syntax error at line 3"). Anyone adding such a service
-# points it at DB_HOST/USER/etc, not DATABASE_URL. Single source of truth
-# stays `oe-database-url` in Secret Manager — these are derived, not new
-# secrets.
-DB_COMPONENTS=$(DB_URL_VAL="$DB_URL" python3 - <<'PY'
-import os
-from urllib.parse import urlparse, unquote
-u = urlparse(os.environ["DB_URL_VAL"])
-print(f"DB_HOST={u.hostname or ''}")
-print(f"DB_PORT={u.port or 5432}")
-print(f"DB_USER={unquote(u.username or '')}")
-print(f"DB_PASSWORD={unquote(u.password or '')}")
-print(f"DB_NAME={(u.path or '/').lstrip('/')}")
-PY
-)
-
 umask 077
 tmp=$(mktemp)
 {
   printf 'DATABASE_URL=%s\n' "$DB_URL"
-  printf '%s\n' "$DB_COMPONENTS"
   printf 'HF_TOKEN=%s\n'     "$HF"
   printf 'GEMINI_API_KEY=%s\n' "$GEM"
   printf 'ADMIN_TOKEN=%s\n'  "$ADM"
