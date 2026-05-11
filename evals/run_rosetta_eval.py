@@ -335,6 +335,14 @@ def evaluate(
         # what the bi-encoder thinks of its own best candidate, NOT what
         # the cross-encoder thinks).
         pre_rerank_top1_cosine = neighbours[0][1] if neighbours else None
+        # Margin = top1 - top2. T5.2 calibration signal: a large margin
+        # means the bi-encoder is confident in its top choice; a tight
+        # cluster (small margin) is anisotropy / no clear winner.
+        # Computed BEFORE rerank for the same reason as top1_cosine.
+        pre_rerank_margin = (
+            neighbours[0][1] - neighbours[1][1]
+            if len(neighbours) >= 2 else None
+        )
         if rerank:
             try:
                 from rerank import rerank_candidates  # lazy import
@@ -349,6 +357,7 @@ def evaluate(
         n_evaluated += 1
         top_words = [w for w, _ in neighbours]
         top1_cosine = pre_rerank_top1_cosine
+        top1_margin = pre_rerank_margin
         hit_k = next(
             (rank + 1 for rank, n in enumerate(top_words) if n == pair.lat),
             None,
@@ -372,6 +381,7 @@ def evaluate(
                 "rank_of_first_field_match": field_hit_k,   # semantic-field
                 "top_predictions": top_words,
                 "top1_cosine": top1_cosine,
+                "top1_margin": top1_margin,                 # T5.2 calibration signal
             }
         )
         if pace:
@@ -419,6 +429,81 @@ def evaluate(
         with_thr = sum(1 for p in per_pair if p.get("top1_cosine") is not None and p["top1_cosine"] >= thr)
         coverage_at_threshold[thr] = with_thr / n_evaluated
 
+    # ── T5.2 calibration curve ───────────────────────────────────────────
+    # Empirical precision-at-k stratified by `margin = top1 - top2`, the
+    # cleaner confidence signal than raw cosine (anisotropy crushes raw
+    # cosines into a useless band but margins stay interpretable).
+    #
+    # The curve also reports a `loanword_filtered` variant where the top-1
+    # is dropped from rank consideration when it equals the source word
+    # (case-insensitive). This is the T5.4 dual-track preview: source-
+    # word doppelgängers (`apa → apa`, `papa → papa`, `hercle → hercle`)
+    # dominate the high-margin band and crush precision-at-1 to zero
+    # because the EVAL expects the *translation*, not the loanword.
+    # Filtering them surfaces what the second candidate would have been —
+    # which is what a "give me the semantic neighbour, not the
+    # surface-form match" API caller actually wants.
+    #
+    # Output: { τ: { n_at_or_above, retention, precision_at_{1,5}_field,
+    #          loanword_filtered: { precision_at_{1,5}_field } } }
+    # for τ ∈ {0.00, 0.02, 0.05, 0.10, 0.20}. Clients pick a τ based on
+    # the precision they need and the fraction they can afford to discard
+    # via `retention`.
+    #
+    # At small n this is descriptive, not a fitted calibrator — fitting
+    # Platt or isotonic regression needs n ≫ 30. The intent is to surface
+    # the curve so the route layer's `?min_confidence=` knob (T5.3) and
+    # the dual-track API (T5.4) have empirically-justified options.
+    def _field_rank_loanword_filtered(p: dict[str, Any]) -> int | None:
+        """Re-compute the semantic-field rank as if top-1 were skipped
+        when it matches the source word case-insensitively."""
+        category = p.get("category", "")
+        field = LATIN_SEMANTIC_FIELDS.get(category, set())
+        src = p["etr"].lower()
+        for rank, word in enumerate(p["top_predictions"], start=1):
+            if rank == 1 and word.lower() == src:
+                continue  # skip the loanword match
+            if word.lower() in field:
+                # Return the EFFECTIVE rank (1-indexed after skip).
+                return rank - 1 if p["top_predictions"][0].lower() == src else rank
+        return None
+
+    calibration_curve: dict[float, dict[str, Any]] = {}
+    if n_evaluated > 0:
+        for tau in (0.0, 0.02, 0.05, 0.10, 0.20):
+            qualifying = [
+                p for p in per_pair
+                if p.get("top1_margin") is not None and p["top1_margin"] >= tau
+            ]
+            n_above = len(qualifying)
+
+            def _at_k(items: list[dict], k: int, *, filtered: bool = False) -> float:
+                if not items:
+                    return 0.0
+                if not filtered:
+                    return sum(
+                        1 for p in items
+                        if p["rank_of_first_field_match"] is not None
+                        and p["rank_of_first_field_match"] <= k
+                    ) / len(items)
+                hits = 0
+                for p in items:
+                    eff = _field_rank_loanword_filtered(p)
+                    if eff is not None and eff <= k:
+                        hits += 1
+                return hits / len(items)
+
+            calibration_curve[tau] = {
+                "n_at_or_above": n_above,
+                "retention": n_above / n_evaluated,
+                "precision_at_1_field":      _at_k(qualifying, 1),
+                "precision_at_5_field":      _at_k(qualifying, 5),
+                "loanword_filtered": {
+                    "precision_at_1_field":  _at_k(qualifying, 1, filtered=True),
+                    "precision_at_5_field":  _at_k(qualifying, 5, filtered=True),
+                },
+            }
+
     by_category = _group_metrics(per_pair, "category")
     by_confidence = _group_metrics(per_pair, "confidence")
 
@@ -439,6 +524,7 @@ def evaluate(
         # do: route queries into the right semantic neighbourhood.
         "precision_at_k_semantic_field": p_at_k_field,
         "coverage_at_threshold": coverage_at_threshold,
+        "calibration_curve": calibration_curve,
         "by_category": by_category,
         "by_confidence": by_confidence,
         "per_pair": per_pair,

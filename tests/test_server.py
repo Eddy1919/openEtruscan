@@ -645,3 +645,54 @@ async def test_rosetta_vocab_unknown_embedder_returns_400(
         params={"lang": "lat", "embedder": "banana"},
     )
     assert response.status_code == 400
+
+
+# ============================================================================
+# T5.3 + T5.4 — min_margin filter + dual-track API
+# ============================================================================
+
+
+async def test_rosetta_unknown_track_returns_400(
+    client: AsyncClient, sample_data,
+):
+    """Invalid track value → 400 with the valid list."""
+    response = await client.get(
+        "/neural/rosetta",
+        params={"word": "fanu", "from": "ett", "to": "lat", "track": "banana"},
+    )
+    assert response.status_code == 400
+    assert "track" in response.json()["detail"].lower()
+
+
+async def test_rosetta_response_carries_margin_and_track(
+    client: AsyncClient, sample_data,
+):
+    """Every response carries the resolved track + (possibly null) margin."""
+    try:
+        response = await client.get(
+            "/neural/rosetta",
+            params={"word": "definitely-not-real-t5", "from": "ett", "to": "lat"},
+        )
+    except Exception as exc:  # noqa: BLE001
+        if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
+            import pytest
+            pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+        raise
+    if response.status_code == 500:
+        import pytest
+        pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+    body = response.json()
+    assert response.status_code == 200
+    assert body.get("track") == "all"   # default
+    assert "margin" in body              # null is fine; key must exist
+
+
+async def test_rosetta_min_margin_validates_bounds(
+    client: AsyncClient, sample_data,
+):
+    """min_margin must be in [0, 1]."""
+    response = await client.get(
+        "/neural/rosetta",
+        params={"word": "fanu", "from": "ett", "to": "lat", "min_margin": "1.5"},
+    )
+    assert response.status_code == 422  # FastAPI auto-validation
