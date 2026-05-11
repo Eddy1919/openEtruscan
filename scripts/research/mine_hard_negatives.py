@@ -73,14 +73,16 @@ USAGE
 -----
 
 ```bash
-# Mine top-20 hard negatives per anchor against prod API:
-python scripts/research/mine_hard_negatives.py
+# (A) API mode (preferred — only works when the source words are in
+#     the prod inscriptions vocab; for literary anchors falls back to
+#     0 negatives. See the KNOWN LIMITATION note above.):
+python scripts/research/mine_hard_negatives.py --mode api
 
-# Use a different anchor file or a different API:
-python scripts/research/mine_hard_negatives.py \
-  --anchors research/anchors/attested.jsonl \
-  --api-url https://api.openetruscan.com \
-  --k 30
+# (B) Offline-GCS mode (the path that actually works for the 17
+#     attested anchors; streams labse-v1.jsonl from GCS, filters to
+#     lat+grc rows, loads sentence-transformers/LaBSE locally, encodes
+#     the source words, computes cosines, writes negatives):
+python scripts/research/mine_hard_negatives.py --mode offline-gcs --k 20
 ```
 
 The output lands at `research/anchors/hard_negatives.jsonl` by default.
@@ -91,6 +93,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -137,11 +140,128 @@ def _query_neighbours(
     return [(n["word"], float(n["similarity"])) for n in neighbours]
 
 
+def _stream_gcs_vocab(
+    gcs_path: str,
+    keep_languages: set[str],
+) -> dict[str, dict[str, np.ndarray]]:
+    """Stream a LaBSE-v1 embeddings JSONL from GCS via ``gsutil cat``,
+    filter to ``keep_languages``, return a per-language
+    ``{word: 768-d numpy array}`` dict.
+
+    Streaming avoids materialising the full ~3.3 GiB file on disk.
+    """
+    import numpy as np  # local-import — only needed for offline mode
+
+    vocab: dict[str, dict[str, np.ndarray]] = {lang: {} for lang in keep_languages}
+    proc = subprocess.Popen(
+        ["gsutil", "cat", gcs_path],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    n_total = 0
+    n_kept = 0
+    assert proc.stdout is not None
+    try:
+        for line in proc.stdout:
+            line = line.strip()
+            if not line:
+                continue
+            n_total += 1
+            row = json.loads(line)
+            lang = row.get("language")
+            if lang not in keep_languages:
+                continue
+            word = row.get("word")
+            vec = np.asarray(row.get("vector"), dtype=np.float32)
+            # LaBSE outputs are L2-normalised by sentence-transformers
+            # already; re-normalise defensively in case the GCS row
+            # wasn't post-processed.
+            n = float(np.linalg.norm(vec))
+            if n > 0:
+                vec = vec / n
+            vocab[lang][word] = vec
+            n_kept += 1
+            if n_total % 50000 == 0:
+                logger.info("  streamed %d rows, kept %d (%s)", n_total, n_kept, dict(
+                    (k, len(v)) for k, v in vocab.items()
+                ))
+    finally:
+        proc.stdout.close()
+        proc.wait()
+    logger.info("streamed %d rows total; kept %d across %s", n_total, n_kept, dict(
+        (k, len(v)) for k, v in vocab.items()
+    ))
+    return vocab
+
+
+def _offline_mine_one_anchor(
+    encoder: Any,
+    etr_word: str,
+    positive: str,
+    to_lang: str,
+    vocab: dict[str, dict[str, np.ndarray]],
+    k: int,
+) -> tuple[list[str], list[float]]:
+    """Encode the Etruscan source word locally with LaBSE, dot-product
+    against the prod ``to_lang`` partition, take top-k, drop the
+    positive.
+
+    Returns (negative_words, negative_cosines), both in descending-
+    similarity order, length ≤ k.
+    """
+    import numpy as np
+
+    if to_lang not in vocab or not vocab[to_lang]:
+        return [], []
+
+    # Encode source word.
+    src_vec = encoder.encode(
+        [etr_word], normalize_embeddings=True, show_progress_bar=False
+    )[0].astype(np.float32)
+
+    # Stack the partition vectors into one matrix and dot.
+    words = list(vocab[to_lang].keys())
+    mat = np.stack([vocab[to_lang][w] for w in words], axis=0)  # (N, 768)
+    sims = mat @ src_vec  # (N,) cosines because both L2-normalised
+    idx = np.argsort(-sims)[: k + 1]  # +1 because we may drop the positive
+
+    pos_norm = positive.strip().lower()
+    neg_words: list[str] = []
+    neg_cosines: list[float] = []
+    for i in idx:
+        w = words[i]
+        if w.strip().lower() == pos_norm:
+            continue
+        neg_words.append(w)
+        neg_cosines.append(float(sims[i]))
+        if len(neg_words) >= k:
+            break
+    return neg_words, neg_cosines
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--anchors", type=Path, default=DEFAULT_ANCHORS)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--api-url", default=DEFAULT_API)
+    parser.add_argument(
+        "--mode",
+        choices=["api", "offline-gcs"],
+        default="offline-gcs",
+        help="api: query prod /neural/rosetta (only works for in-vocab source words). "
+             "offline-gcs: stream labse-v1.jsonl from GCS + local LaBSE encode (works for all anchors).",
+    )
+    parser.add_argument("--api-url", default=DEFAULT_API,
+                        help="Used only when --mode=api.")
+    parser.add_argument(
+        "--gcs-path",
+        default="gs://openetruscan-rosetta/embeddings/labse-v1.jsonl",
+        help="Used only when --mode=offline-gcs.",
+    )
+    parser.add_argument(
+        "--labse-model",
+        default="sentence-transformers/LaBSE",
+        help="Used only when --mode=offline-gcs.",
+    )
     parser.add_argument(
         "--k",
         type=int,
@@ -151,13 +271,13 @@ def main() -> int:
     parser.add_argument(
         "--from-lang",
         default="ett",
-        help="Source language for the API query (default ett).",
+        help="Source language for the API query (default ett). Only used in --mode=api.",
     )
     parser.add_argument(
         "--rate-sleep",
         type=float,
         default=2.1,
-        help="Seconds between API requests (default 2.1, matches the eval harness's polite pacing).",
+        help="Seconds between API requests (default 2.1, matches the eval harness's polite pacing). Only used in --mode=api.",
     )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -179,9 +299,15 @@ def main() -> int:
                 continue
             anchors.append(json.loads(line))
 
-    logger.info("mining hard negatives for %d anchors via %s", len(anchors), args.api_url)
+    logger.info("mining hard negatives for %d anchors via mode=%s", len(anchors), args.mode)
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
+    if args.mode == "offline-gcs":
+        return _run_offline_gcs(args, anchors)
+    return _run_api(args, anchors)
+
+
+def _run_api(args: argparse.Namespace, anchors: list[dict[str, Any]]) -> int:
     n_written = 0
     n_skipped = 0
     with args.output.open("w", encoding="utf-8") as out:
@@ -222,6 +348,54 @@ def main() -> int:
             time.sleep(args.rate_sleep)
 
     logger.info("wrote %d rows → %s (%d skipped)", n_written, args.output, n_skipped)
+    return 0
+
+
+def _run_offline_gcs(args: argparse.Namespace, anchors: list[dict[str, Any]]) -> int:
+    """Offline-GCS mode: stream the LaBSE embeddings JSONL, load LaBSE locally,
+    encode each anchor's Etruscan source word, take top-k cosines against the
+    target-language partition, drop the positive, write JSONL."""
+    # Lazy heavy imports
+    logger.info("loading LaBSE model: %s", args.labse_model)
+    from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]
+
+    encoder = SentenceTransformer(args.labse_model)
+    logger.info("LaBSE loaded")
+
+    target_langs = {a["equivalent_language"] for a in anchors}
+    logger.info("streaming GCS vocab for languages: %s", sorted(target_langs))
+    vocab = _stream_gcs_vocab(args.gcs_path, target_langs)
+    sizes = {lang: len(v) for lang, v in vocab.items()}
+    logger.info("vocab loaded: %s", sizes)
+
+    n_written = 0
+    with args.output.open("w", encoding="utf-8") as out:
+        for i, anchor in enumerate(anchors, 1):
+            etr = anchor["etruscan_word"]
+            pos = anchor["equivalent"]
+            to_lang = anchor["equivalent_language"]
+            neg_words, neg_cosines = _offline_mine_one_anchor(
+                encoder, etr, pos, to_lang, vocab, args.k
+            )
+            row = {
+                "etruscan_word": etr,
+                "positive_equivalent": pos,
+                "positive_language": to_lang,
+                "hard_negatives": neg_words,
+                "hard_negative_cosines": neg_cosines,
+                "n_negatives": len(neg_words),
+                "source": anchor.get("source", ""),
+                "passage_index": anchor.get("passage_index"),
+            }
+            out.write(json.dumps(row, ensure_ascii=False) + "\n")
+            n_written += 1
+            preview = ", ".join(neg_words[:3])
+            logger.info(
+                "%d/%d  %s → POS=%s  k=%d  top3=[%s]",
+                i, len(anchors), etr, pos, len(neg_words), preview,
+            )
+
+    logger.info("wrote %d rows → %s", n_written, args.output)
     return 0
 
 
