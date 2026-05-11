@@ -262,7 +262,12 @@ async def restore(req: RestoreRequest):
     for i, seq in enumerate(outputs.sequences):
         decoded = _tokenizer.decode(seq, skip_special_tokens=True)
         # Reconstruct the full text
-        restored = req.text.replace("[---]", decoded.strip())
+        # Match the SAME regex used to mask the input so Leiden dotted-bracket
+        # markers ([.], [..], [...]) are substituted on the way out, not just
+        # [---]. The previous .replace("[---]", ...) silently no-op'd on the
+        # variable-dot notation the frontend actually sends, so users got
+        # back their original text with the lacuna markers intact.
+        restored = re.sub(r"\[(\.+|\-+)\]", decoded.strip(), req.text)
         # Use sequence score as confidence proxy
         score = 1.0 / (i + 1)  # fallback ranking score
         predictions.append({"restored": restored, "score": round(score, 4)})
