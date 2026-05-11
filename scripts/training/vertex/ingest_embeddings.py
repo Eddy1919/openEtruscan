@@ -4,16 +4,28 @@ Run from a host that can reach the prod Postgres (e.g. inside the
 openetruscan-eu VM via IAP — same path you used for the inscriptions
 dump). Reads ``{language, word, vector}`` JSONL, upserts in batches.
 
-Usage::
+Usage (v3 + v4-style coexist after T2.3 lands)::
 
+    # Original v3 ingest path (still works):
     python scripts/training/vertex/ingest_embeddings.py \\
         --gcs-uri gs://openetruscan-rosetta/embeddings/lat-grc-xlmr-v3.jsonl \\
         --gcs-uri gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v3.jsonl \\
-        --etr-embedder-tag "xlm-roberta-base+etr-lora-v3"
+        --etr-embedder-tag "xlm-roberta-base+etr-lora-v3" \\
+        --revision v3
 
-Idempotent: ``ON CONFLICT (language, word) DO UPDATE`` so re-runs replace
-prior vectors. Accepts both ``language`` and ``lang`` JSON keys for
-compat with the older v2 file format.
+    # T2.3 v4 ingest path (ett-only file, new embedder partition):
+    python scripts/training/vertex/ingest_embeddings.py \\
+        --gcs-uri gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v4.jsonl \\
+        --embedder xlmr-lora --revision v4
+
+Idempotent on the new 4-column PK: ``ON CONFLICT (language, word,
+embedder, embedder_revision) DO UPDATE``. Re-running this script with
+identical args replaces just the v4 partition's vectors; LaBSE rows are
+untouched.
+
+If you see ``RuntimeError: PRIMARY KEY does not yet include (embedder,
+embedder_revision)``, run alembic upgrade head first (migration
+``b7e6f7a8b9c1_extend_embedding_pk``).
 """
 
 from __future__ import annotations
@@ -60,6 +72,31 @@ def _vector_to_pgvector(vec: list[float]) -> str:
     return "[" + ",".join(f"{x:.6f}" for x in vec) + "]"
 
 
+async def _assert_extended_pk(session_maker) -> None:
+    """Fail fast if the table still has the pre-T2.3 (language, word) PK.
+
+    Without the extended PK, ``ON CONFLICT (language, word, embedder,
+    embedder_revision)`` would silently do nothing on existing
+    (language, word) hits and the ingest would *partially* succeed —
+    new rows go in, conflicting ones get clobbered through a fallback.
+    Surface the missing migration loudly instead.
+    """
+    check = text(
+        "SELECT array_length(conkey, 1) "
+        "FROM pg_constraint "
+        "WHERE conrelid = 'language_word_embeddings'::regclass "
+        "  AND contype = 'p'"
+    )
+    async with session_maker() as session:
+        n_pk_cols = (await session.execute(check)).scalar()
+    if n_pk_cols != 4:
+        raise RuntimeError(
+            "PRIMARY KEY does not yet include (embedder, embedder_revision); "
+            f"current PK has {n_pk_cols} column(s). Run alembic upgrade head "
+            "(migration b7e6f7a8b9c1) before invoking this ingest."
+        )
+
+
 async def _ingest_one_file(
     session_maker,
     uri: str,
@@ -75,11 +112,9 @@ async def _ingest_one_file(
             (language, word, vector, source, embedder, embedder_revision)
         VALUES
             (:language, :word, :vector, :source, :embedder, :embedder_revision)
-        ON CONFLICT (language, word) DO UPDATE SET
+        ON CONFLICT (language, word, embedder, embedder_revision) DO UPDATE SET
             vector = EXCLUDED.vector,
-            source = EXCLUDED.source,
-            embedder = EXCLUDED.embedder,
-            embedder_revision = EXCLUDED.embedder_revision
+            source = EXCLUDED.source
         """
     )
 
@@ -130,9 +165,16 @@ async def main() -> int:
         help="Stored as `embedder` for lat/grc rows (vanilla XLM-R)",
     )
     parser.add_argument(
+        "--embedder", default=None,
+        help="Stored as `embedder` for ett rows. T2.3+ canonical flag. "
+             "Set to e.g. 'xlmr-lora' for the v4 ingest. If unset, falls "
+             "back to --etr-embedder-tag.",
+    )
+    parser.add_argument(
         "--etr-embedder-tag", default="xlm-roberta-base+etr-lora-v3",
-        help="Stored as `embedder` for ett rows so the eval can tell "
-             "adapter-vs-base apart in the same table",
+        help="DEPRECATED: pre-T2.3 alias for --embedder. Kept for "
+             "backward compat with the v3 ingest invocation. Prefer "
+             "--embedder for new work.",
     )
     parser.add_argument("--revision", default="v3")
     parser.add_argument("--chunk-size", type=int, default=500)
@@ -141,14 +183,26 @@ async def main() -> int:
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s")
 
+    # Resolve the ett-side embedder label: --embedder wins, falling back to
+    # --etr-embedder-tag for compat. Surface the resolution so audit logs
+    # are unambiguous about what label went into the DB.
+    etr_embedder_resolved = args.embedder or args.etr_embedder_tag
+    logger.info(
+        "ett-embedder=%r  base-embedder=%r  revision=%r",
+        etr_embedder_resolved, args.base_embedder, args.revision,
+    )
+
     _, session_maker = get_engine()
+
+    # Fail fast if the alembic migration b7e6f7a8b9c1 hasn't run.
+    await _assert_extended_pk(session_maker)
 
     grand_total: dict[str, int] = {}
     for uri in args.gcs_uri:
         logger.info("Streaming %s", uri)
         per_file = await _ingest_one_file(
             session_maker, uri,
-            args.base_embedder, args.etr_embedder_tag,
+            args.base_embedder, etr_embedder_resolved,
             args.revision, args.chunk_size,
         )
         for k, v in per_file.items():
