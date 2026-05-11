@@ -40,13 +40,13 @@ python scripts/research/llm_extract_anchors.py
 
 # Resume after interruption: re-run with the same output path; the
 # script reads it back at start, skips passages already processed.
-python scripts/research/llm_extract_anchors.py --output data/extracted/llm_anchors_raw.jsonl
+python scripts/research/llm_extract_anchors.py --output research/anchors/llm_anchors_raw.jsonl
 ```
 
 OUTPUT SCHEMA
 -------------
 
-`data/extracted/llm_anchors_raw.jsonl` — one JSON object per emitted
+`research/anchors/llm_anchors_raw.jsonl` — one JSON object per emitted
 gloss, with the shape:
 
     {
@@ -84,7 +84,7 @@ from collections.abc import Iterator
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_INPUT = REPO_ROOT / "data" / "extracted" / "etruscan_passages.jsonl"
-DEFAULT_OUTPUT = REPO_ROOT / "data" / "extracted" / "llm_anchors_raw.jsonl"
+DEFAULT_OUTPUT = REPO_ROOT / "research" / "anchors" / "llm_anchors_raw.jsonl"
 
 DEFAULT_MODEL = "gemini-2.5-pro"
 DEFAULT_PROJECT = "double-runway-465420-h9"
