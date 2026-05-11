@@ -212,7 +212,16 @@ async def restore(req: RestoreRequest):
         )
 
     try:
-        _ensure_model()
+        # _ensure_model() is a blocking 25-45s CPU/IO call (PyTorch +
+        # transformers + byt5-small). If we call it directly from this
+        # async handler it freezes the entire event loop, and every other
+        # queued request (Cloud Run can dispatch many to the same
+        # container under default concurrency=80) times out before the
+        # model finishes loading. Offload to a thread so uvicorn keeps
+        # answering healthchecks + can fail other concurrent requests
+        # fast instead of hanging them.
+        import asyncio
+        await asyncio.to_thread(_ensure_model)
     except Exception as exc:
         logger.exception("Model load failed")
         raise HTTPException(
