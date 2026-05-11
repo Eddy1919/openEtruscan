@@ -98,6 +98,7 @@ def _query_neighbours(
     k: int,
     *,
     timeout_s: float = 15.0,
+    embedder: str | None = None,
 ) -> list[tuple[str, float]] | None:
     """Hit /neural/rosetta and return the top-k target-language words and cosines.
 
@@ -105,12 +106,19 @@ def _query_neighbours(
     whether to skip or fail). Returns an empty list when the endpoint
     succeeded but the source word has no stored vector — distinguishable
     from None.
+
+    `embedder` (when not None) forwards as ``?embedder=`` to the API so
+    the eval can grade a specific partition (LaBSE/v1 by default; the
+    T2.3 v4 partition with ``embedder="xlmr-lora-v4"``).
     """
+    params = {"word": word, "from": from_lang, "to": to_lang, "k": k}
+    if embedder:
+        params["embedder"] = embedder
     for attempt in (1, 2):
         try:
             resp = httpx.get(
                 f"{api_url.rstrip('/')}/neural/rosetta",
-                params={"word": word, "from": from_lang, "to": to_lang, "k": k},
+                params=params,
                 timeout=timeout_s,
             )
             if resp.status_code == 429 and attempt == 1:
@@ -131,14 +139,28 @@ def _query_neighbours(
     return None
 
 
-_VOCAB_CACHE: dict[str, list[str]] = {}
+_VOCAB_CACHE: dict[tuple[str, str | None], list[str]] = {}
 
-def _get_vocab(api_url: str, lang: str) -> list[str]:
-    if lang not in _VOCAB_CACHE:
-        resp = httpx.get(f"{api_url.rstrip('/')}/neural/rosetta/vocab", params={"lang": lang}, timeout=30.0)
+def _get_vocab(api_url: str, lang: str, embedder: str | None = None) -> list[str]:
+    """Fetch the vocabulary for one (language, embedder partition).
+
+    The cache key is the (lang, embedder) tuple so the LaBSE-default
+    partition's vocab and the xlmr-lora-v4 partition's vocab don't
+    clobber each other when both columns of the head-to-head eval run
+    back-to-back.
+    """
+    cache_key = (lang, embedder)
+    if cache_key not in _VOCAB_CACHE:
+        params: dict[str, str] = {"lang": lang}
+        if embedder:
+            params["embedder"] = embedder
+        resp = httpx.get(
+            f"{api_url.rstrip('/')}/neural/rosetta/vocab",
+            params=params, timeout=30.0,
+        )
         resp.raise_for_status()
-        _VOCAB_CACHE[lang] = resp.json().get("words", [])
-    return _VOCAB_CACHE[lang]
+        _VOCAB_CACHE[cache_key] = resp.json().get("words", [])
+    return _VOCAB_CACHE[cache_key]
 
 def _query_neighbours_levenshtein(
     api_url: str,
@@ -148,9 +170,10 @@ def _query_neighbours_levenshtein(
     k: int,
     *,
     timeout_s: float = 15.0,
+    embedder: str | None = None,
 ) -> list[tuple[str, float]] | None:
     try:
-        vocab = _get_vocab(api_url, to_lang)
+        vocab = _get_vocab(api_url, to_lang, embedder=embedder)
     except Exception as exc:
         print(f"  SKIP  {word!r}: {exc}", file=sys.stderr)
         return None
@@ -245,6 +268,7 @@ def evaluate(
     k_max: int = max(DEFAULT_K_VALUES),
     pace: bool = True,
     baseline: str = "none",
+    embedder: str | None = None,
 ) -> dict[str, Any]:
     """Run the eval. Returns a structured report.
 
@@ -283,10 +307,12 @@ def evaluate(
 
     for pair in pairs:
         if baseline == "levenshtein":
-            neighbours = _query_neighbours_levenshtein(api_url, pair.etr, "ett", "lat", k_max)
+            neighbours = _query_neighbours_levenshtein(
+                api_url, pair.etr, "ett", "lat", k_max, embedder=embedder,
+            )
         else:
             neighbours = _query_neighbours(
-                api_url, pair.etr, "ett", "lat", k_max
+                api_url, pair.etr, "ett", "lat", k_max, embedder=embedder,
             )
         if neighbours is None:
             n_failed += 1
@@ -563,6 +589,16 @@ def main(argv: list[str] | None = None) -> int:
             "same protocol. See research/notes/reproduce-rosetta-eval-v1.md."
         ),
     )
+    parser.add_argument(
+        "--embedder",
+        default=None,
+        help=(
+            "Forward as ?embedder= on each /neural/rosetta and "
+            "/neural/rosetta/vocab call. Default (omitted) grades the "
+            "LaBSE/v1 partition; pass 'xlmr-lora-v4' for the T2.3 v4 "
+            "head-to-head column."
+        ),
+    )
 
     args = parser.parse_args(argv)
 
@@ -611,7 +647,12 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
 
 
-    report = evaluate(args.api_url, pairs, pace=not args.no_pace, baseline=args.baseline)
+    report = evaluate(
+        args.api_url, pairs,
+        pace=not args.no_pace,
+        baseline=args.baseline,
+        embedder=args.embedder,
+    )
 
     if args.json:
         # asdict via the per_pair dicts (already JSON-friendly).

@@ -240,7 +240,7 @@ class TestEvaluate:
         """The Levenshtein baseline should rank an exact match first."""
         pairs = [EvalPair("fanu", "fanu", "sanctuary", "high", "test", "religious")]
 
-        def fake_get_vocab(api_url, to_lang):
+        def fake_get_vocab(api_url, to_lang, **_kw):
             return ["other", "unrelated", "fanu", "fanaticus"]
 
         monkeypatch.setattr(run_rosetta_eval, "_get_vocab", fake_get_vocab)
@@ -258,7 +258,7 @@ class TestEvaluate:
         """Test Levenshtein integration with coverage_at_threshold."""
         pairs = [EvalPair("fanu", "fanu", "sanctuary", "high", "test", "religious")]
 
-        def fake_get_vocab(api_url, to_lang):
+        def fake_get_vocab(api_url, to_lang, **_kw):
             return ["other", "unrelated", "fanu", "fanaticus"]
 
         monkeypatch.setattr(run_rosetta_eval, "_get_vocab", fake_get_vocab)

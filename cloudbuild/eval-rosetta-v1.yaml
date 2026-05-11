@@ -1,0 +1,74 @@
+# Cloud Build — rosetta-eval-v1 batch job.
+#
+# Runs the full 4-column head-to-head eval (random / levenshtein / labse / v4)
+# against the prod API, writes a timestamped JSON to a GCS bucket, and
+# optionally appends a run-log row to the repo.
+#
+# Project: double-runway-465420-h9 (per the project's batch-jobs-only convention).
+# Submit with:
+#   gcloud builds submit --project=double-runway-465420-h9 \
+#     --config=cloudbuild/eval-rosetta-v1.yaml \
+#     --substitutions=_API_URL=https://api.openetruscan.com,_GCS_BUCKET=double-runway-465420-h9_cloudbuild .
+#
+# Or wire as a Cloud Scheduler-triggered job for nightly drift detection.
+
+substitutions:
+  _API_URL: https://api.openetruscan.com
+  _GCS_BUCKET: double-runway-465420-h9_cloudbuild  # default Cloud Build artifacts bucket
+  _OUTPUT_PREFIX: rosetta-eval-v1
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s  # 30 min hard cap; healthy runs land in ~4 min.
+
+steps:
+  # ───────────────────────────────────────────────────────────────
+  # 1. Run the orchestrator. Each of random / levenshtein / labse /
+  #    v4 columns runs sequentially via the same harness against the
+  #    prod API.
+  # ───────────────────────────────────────────────────────────────
+  - id: eval
+    name: python:3.12
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir httpx
+        # The orchestrator drops a JSON onto stdout if --output is unset.
+        # We capture it for the upload step.
+        bash evals/rosetta_eval_v1.sh --api-url ${_API_URL} > /workspace/eval.json
+        echo "Eval JSON size: $$(wc -c < /workspace/eval.json) bytes"
+        # Print headline numbers so the build log is self-documenting.
+        python <<'PY'
+        import json
+        d = json.load(open("/workspace/eval.json"))
+        f = lambda col, key: d[col]["precision_at_k_semantic_field"][key]
+        s = lambda col, key: d[col]["precision_at_k"][key]
+        print(f"random  field@10  = {f('random', '10'):.4f}")
+        print(f"lev     field@10  = {f('levenshtein', '10'):.4f}")
+        print(f"labse   strict@10 = {s('labse', '10'):.4f}  field@10 = {f('labse', '10'):.4f}")
+        print(f"v4      strict@10 = {s('v4', '10'):.4f}  field@10 = {f('v4', '10'):.4f}")
+        print(f"v4      n_evaluated = {d['v4']['n_evaluated']}  n_skipped = {d['v4']['n_skipped']}")
+        PY
+
+  # ───────────────────────────────────────────────────────────────
+  # 2. Upload the JSON to GCS with a UTC-timestamped key. The build
+  #    runs as the default Cloud Build SA in double-runway, which
+  #    has implicit write to its own _cloudbuild bucket.
+  # ───────────────────────────────────────────────────────────────
+  - id: upload
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [eval]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        DEST="gs://${_GCS_BUCKET}/${_OUTPUT_PREFIX}-$$TS.json"
+        gcloud storage cp /workspace/eval.json "$$DEST"
+        echo "Wrote $$DEST"

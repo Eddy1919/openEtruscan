@@ -91,6 +91,7 @@ is committed to `eval/`.
 | Date (UTC) | Operator | API URL | Latin vocab size | Output file | Notes |
 |---|---|---|---|---|---|
 | 2026-05-10T21:01:24Z | edoardo | <https://api.openetruscan.com> | 50,000 | [`eval/rosetta-eval-v1-20260510T210124Z.json`](../../eval/rosetta-eval-v1-20260510T210124Z.json) | First frozen run. v0.5.0 / LaBSE column only (v4 not yet ingested). model.field@10=0.1875 on 16/22 evaluated (6 OOV). Pre-flight: stamped prod `alembic_version j5e6f7a8b9c0→a6d56926ff21` to reconcile a phantom revision blocking redeploy. |
+| 2026-05-11T07:15:32Z | edoardo | <https://api.openetruscan.com> | 50,000 | [`eval/rosetta-eval-v1-20260511T071620Z.json`](../../eval/rosetta-eval-v1-20260511T071620Z.json) | First **head-to-head** run (T2.4) after T2.3 ingest. Schema: 4 columns `{random, levenshtein, labse, v4}`. LaBSE column reproduces the prior run exactly (strict@10=0.0625, field@10=0.1875). **v4 column = all-zero**: 8,905 ett v4 vectors ingested but 0 lat v4 vectors (T2.2 was Etruscan-only). All 22 source words are skipped because the target partition is empty. v4 numbers become meaningful once Latin is re-embedded under `(xlmr-lora, v4)` — tracked in memory note `t2-3-latin-half-missing`. |
 
 ## Update checklist (per quarterly refresh)
 
