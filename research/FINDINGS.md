@@ -112,6 +112,68 @@ once that file lands; intermediate JSONL files are in
 
 ---
 
+## Headline — rosetta-eval-v1, 4-column head-to-head
+
+The frozen `rosetta-eval-v1` benchmark (held-out 22-pair test split;
+`min_confidence=medium`; full methodology in
+[`research/notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md))
+landed on 2026-05-11 with this table:
+
+| Metric @10 | random | levenshtein | LaBSE (default) | v4 (xlmr-lora) |
+|---|---:|---:|---:|---:|
+| `precision_at_k` (strict-lexical) | 0.0002 | 0.0000 | **0.0625** | 0.0000 |
+| `precision_at_k_semantic_field` | 0.0081 | 0.0000 | **0.1875** | 0.0625 |
+| `coverage_at_threshold` (cos ≥ 0.85) | — | — | 0.6875 | 1.0000 |
+| `n_evaluated` / 22 | 22 | 22 | 16 | 16 |
+
+Source: [`eval/rosetta-eval-v1-20260511T080032Z.json`](../eval/rosetta-eval-v1-20260511T080032Z.json).
+Earlier rows of the run-log (LaBSE-only) reproduce this LaBSE column
+to four decimal places.
+
+### What this table actually says
+
+1. **LaBSE wins on the metric that matters (semantic-field@10).** 3× the
+   v4 column (0.1875 vs 0.0625) and ~23× the random baseline (0.0081).
+   The translation-ranking pre-training does the work; nothing else
+   gets close.
+
+2. **v4's high coverage@0.85 is misleading, not impressive.** v4
+   returns Latin neighbours above cosine 0.85 for 100% of evaluated
+   source words — but those neighbours are morphological
+   rhymes (`fanu → mateu, effectu, flatu, turnu, fluxu`, all
+   `-u`-suffixed Latin nouns), not semantic matches. The high
+   cosines reflect XLM-R-base's known anisotropy — without contrastive
+   training, all vectors crowd into a narrow cone of the embedding
+   space, so "cosine 0.99" is essentially noise.
+
+3. **Levenshtein returns nothing.** Edit-distance between Etruscan and
+   Latin orthographies is uncorrelated with meaning. The expected
+   baseline is exactly zero at every metric; the eval confirms it.
+   (Strict-lexical Levenshtein@10 = 0 means no expected Latin lemma
+   sits within the top-10 edit-closest Latin words for any
+   Etruscan source.)
+
+4. **The v4 design hypothesis (LoRA on Etruscan + base XLM-R on Latin)
+   failed.** The hope was that adapter fine-tuning on the Etruscan
+   corpus would teach the encoder enough Etruscan-side structure that
+   the existing XLM-R Latin vectors would line up. They don't — XLM-R
+   was never trained with cross-lingual alignment in mind, and a
+   monolingual adapter doesn't bridge that gap.
+
+### Decision per the WBS decision tree
+
+```text
+P3 (FINDINGS table) → look at v4 vs LaBSE field@10 number
+  ├── v4 closes the gap (≥0.18)     → ship v4, skip P5+P4
+  └── gap remains                   → P5
+```
+
+v4 field@10 = 0.0625 < 0.18. **Gap remains; proceed to P5** (cheap
+interventions: cross-encoder rerank, cosine→confidence calibration,
+dual-track loanword/semantic API). LaBSE stays the production default.
+
+---
+
 ## Why the strict-lexical metric was wrong
 
 The original eval gate was `precision_at_5 ≥ 0.40` against the 62
@@ -182,16 +244,16 @@ that strict-lexical missed.
 
 Acknowledging where we still fall short of publishable rigour:
 
-1. **No held-out anchor split.** Even with the new metric we'd
-   want a 30/32 train-test split of the 62 anchors before any
-   contrastive fine-tune.
+1. ~~**No held-out anchor split.**~~ **Addressed in T1.3.** The 62
+   anchors are now stratified 40/22 by `(category, confidence)` with a
+   reproducible deterministic seed. The default eval grades the
+   held-out 22-pair test split only.
 
-2. **No baseline comparison.** We haven't computed Levenshtein-only
-   retrieval or random-baseline performance on the same eval. Without
-   those numbers we don't know whether LaBSE's 0.119 field@10 is
-   actually beating "just rank Latin words by edit distance".
-   (Estimated work: ~1 hour to add both baselines as `--baseline`
-   modes in the eval.)
+2. ~~**No baseline comparison.**~~ **Addressed in T1.1, T1.2, T2.4.**
+   The 4-column head-to-head table above includes random (analytical),
+   Levenshtein (edit distance against the full Latin vocab), LaBSE,
+   and v4 (xlmr-lora). LaBSE beats Levenshtein by an unambiguous
+   margin (`field@10` 0.1875 vs 0.0000).
 
 3. **No qualitative evaluation pipeline.** The system's value for
    *novel* hypothesis generation can only be assessed by domain
@@ -200,15 +262,25 @@ Acknowledging where we still fall short of publishable rigour:
    a minimal "philologist review" tool plus arrange for ~50-100 Etruscan
    words to be reviewed.
 
-4. **Reproducibility.** Code and data are versioned; intermediate
-   JSONLs are in GCS; pinned model versions are in
-   `scripts/training/vertex/embed_*.py`. **But** there's no single
-   `make eval` reproducer script that pulls the right adapter +
-   embeddings + runs the eval end-to-end. Worth landing.
+4. ~~**Reproducibility.**~~ **Addressed in T1.5 + T3.2.**
+   [`bash evals/rosetta_eval_v1.sh --api-url ... --output auto`](../evals/rosetta_eval_v1.sh)
+   is the single reproducer; the manifest in
+   [`research/notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md)
+   pins commit hashes, GCS object md5s, alembic head, and the
+   per-run-log entries that produced every committed `eval/*.json`.
 
-5. **Coverage metric.** `coverage_at_threshold` tracks "fraction of source words for
-   which top-k contains at least one neighbour above cosine X" for
-   X ∈ {0.5, 0.7, 0.85}. (Added in T1.4.)
+5. ~~**Coverage metric.**~~ **Addressed in T1.4.** `coverage_at_threshold`
+   reports the fraction of source words whose top-1 neighbour clears
+   cosine ∈ {0.5, 0.7, 0.85}. Note the v4-column finding above: a high
+   coverage@0.85 doesn't imply quality if the underlying space is
+   collapsed.
+
+6. **No statistical-significance test.** The head-to-head table
+   compares point estimates on n=16 evaluated pairs. A paired
+   bootstrap (10k resamples) would let us put a p-value on
+   "LaBSE > v4 at field@10". Scoped in
+   [`research/SOTA_ROADMAP.md`](SOTA_ROADMAP.md) as RG.8; not blocking
+   for the P5 work but should land before any external publication.
 
 ---
 
