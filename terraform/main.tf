@@ -233,14 +233,28 @@ resource "google_monitoring_alert_policy" "slow_sql" {
 
 # 7. Cloud Run: byt5 restorer (imported from existing)
 #
-# Currently running the `gcr.io/cloudrun/hello` placeholder image \xe2\x80\x94 the
-# `byt5-restorer` image referenced below has not been built into Artifact
-# Registry yet. Terraform tracks the service so the URL stays stable;
-# `ignore_changes` keeps it from trying to replace the running placeholder
-# with a not-yet-built image and breaking the URL until the image lands.
+# As of 2026-05-11 this serves the real `services/byt5-restorer/main.py`
+# (FastAPI + transformers + google/byt5-small, ~1.5GB image). Built and
+# deployed via `gcloud run deploy --source` which pushes to the
+# `cloud-run-source-deploy` Artifact Registry repo (not the `openetruscan`
+# repo referenced below). `ignore_changes = all` keeps terraform from
+# fighting the actually-deployed image URI on every plan.
 #
-# When the real image is built and pushed, remove the ignore_changes block
-# and re-apply to roll out the actual restorer.
+# To redeploy after editing services/byt5-restorer/:
+#
+#   gcloud run deploy openetruscan-byt5 \
+#     --source services/byt5-restorer \
+#     --region europe-west4 \
+#     --project long-facet-427508-j2 \
+#     --allow-unauthenticated \
+#     --min-instances 0 \
+#     --max-instances 2 \
+#     --cpu 1 --memory 2Gi --timeout 120s \
+#     --build-service-account=projects/long-facet-427508-j2/serviceAccounts/cb-trigger-runner@long-facet-427508-j2.iam.gserviceaccount.com
+#
+# (the explicit --build-service-account is needed because the default
+# 19927826393-compute@developer.gserviceaccount.com SA isn't provisioned
+# in this project.)
 resource "google_cloud_run_v2_service" "byt5" {
   name     = "openetruscan-byt5"
   location = var.region
@@ -248,14 +262,14 @@ resource "google_cloud_run_v2_service" "byt5" {
   template {
     scaling {
       min_instance_count = 0
-      max_instance_count = 10
+      max_instance_count = 2
     }
     containers {
       image = "europe-west4-docker.pkg.dev/${var.project_id}/openetruscan/byt5-restorer:latest"
       resources {
         limits = {
           cpu    = "1"
-          memory = "1Gi"
+          memory = "2Gi"
         }
       }
     }
