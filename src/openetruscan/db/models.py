@@ -9,11 +9,13 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     Text,
@@ -271,3 +273,53 @@ class ProvenanceAudit(Base):
     )
 
     inscription: Mapped[Optional["Inscription"]] = relationship()
+
+
+class ProposedAnchor(Base):
+    """Community-submitted candidate Etruscan↔Latin/Greek gloss equivalence.
+
+    Sits in a moderation queue until an admin marks `status` as
+    `approved` (row gets appended to `research/anchors/attested.jsonl`
+    via a separate data-refresh pipeline), `rejected`, or `duplicate`.
+
+    See `research/notes/community-curation-design.md` for the workflow.
+    """
+
+    __tablename__ = "proposed_anchors"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    etruscan_word: Mapped[str] = mapped_column(Text, nullable=False)
+    equivalent: Mapped[str] = mapped_column(Text, nullable=False)
+    equivalent_language: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_quote: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    submitter_email: Mapped[str] = mapped_column(Text, nullable=False)
+    submitter_orcid: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, nullable=False, server_default="pending")
+    reviewer: Mapped[str | None] = mapped_column(Text)
+    review_note: Mapped[str | None] = mapped_column(Text)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "equivalent_language IN ('lat', 'grc')",
+            name="ck_proposed_anchors_equivalent_language",
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'approved', 'rejected', 'duplicate')",
+            name="ck_proposed_anchors_status",
+        ),
+        CheckConstraint(
+            "char_length(evidence_quote) >= 10",
+            name="ck_proposed_anchors_evidence_quote_min_length",
+        ),
+        CheckConstraint(
+            "char_length(source) >= 3",
+            name="ck_proposed_anchors_source_min_length",
+        ),
+        Index("ix_proposed_anchors_status_created", "status", "created_at"),
+        Index("ix_proposed_anchors_etr_word", "etruscan_word"),
+    )

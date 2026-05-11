@@ -1592,15 +1592,37 @@
           "Anchors"
         ],
         "summary": "Propose Anchor",
-        "description": "Submit a candidate Etruscan\u2194Latin/Greek equivalence to the\nmoderation queue.\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C. See\n[`research/notes/community-curation-design.md`](https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md)\nfor the contract this endpoint will satisfy once the\n`proposed_anchors` migration lands and the moderation queue is wired.",
+        "description": "Submit a candidate Etruscan\u2194Latin/Greek gloss equivalence to the\nmoderation queue.\n\nThree dedup gates before the row is queued:\n\n  1. Already in `attested.jsonl` \u2192 returns ``status: \"already_attested\"``\n     with the existing source.\n  2. Already pending under the same `(etruscan_word, equivalent,\n     equivalent_language)` triple \u2192 returns ``status: \"duplicate\"``\n     with the existing id.\n  3. New submission \u2192 inserted with ``status: \"pending\"``.\n\nRate-limited at 10 submissions per hour per IP via the existing\nslowapi limiter. The 100-per-day-per-email rule from the design\ndoc is enforced server-side via a query against this table.",
         "operationId": "propose_anchor_anchors_propose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeAnchorRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
                   "title": "Response Propose Anchor Anchors Propose Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1614,15 +1636,104 @@
           "Anchors"
         ],
         "summary": "Anchors Queue",
-        "description": "List pending anchor submissions (admin-only).\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C.",
+        "description": "List pending anchor submissions in oldest-first order.\n\nAuth: Bearer ``settings.admin_token`` (same gate as\n``promote_provenance``). The endpoint is intentionally small \u2014\npagination via ``limit`` (max 200); the queue is short by design.",
         "operationId": "anchors_queue_anchors_queue_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Anchors Queue Anchors Queue Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anchors/{anchor_id}/promote": {
+      "post": {
+        "tags": [
+          "Anchors"
+        ],
+        "summary": "Promote Anchor",
+        "description": "Admin: approve / reject / mark-duplicate a pending submission.\n\nOn ``approve``: status moves to ``approved``. The row does NOT get\nauto-appended to ``research/anchors/attested.jsonl`` from this\nhandler \u2014 that's done out-of-band by a Cloud Build job that polls\nthe table, rebuilds the JSONL, and opens a data-refresh PR. This\navoids granting the API server git-push permissions, which would\nbe a serious security boundary violation.",
+        "operationId": "promote_anchor_anchors__anchor_id__promote_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "anchor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Anchor Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteAnchorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Promote Anchor Anchors  Anchor Id  Promote Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1636,7 +1747,7 @@
           "Anchors"
         ],
         "summary": "Anchors Attested",
-        "description": "Public-read attested equivalences for an Etruscan word, sourced\nfrom `research/anchors/attested.jsonl` joined to the prod corpus.\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C. The first\noperational version reads from the committed JSONL; the\ncommunity-curation extension reads from the\n`proposed_anchors` Postgres table after submissions are promoted.",
+        "description": "Public-read attested equivalences for an Etruscan word.\n\nSources the canonical `research/anchors/attested.jsonl` shipped in\nthe repo image. When `word` is omitted, returns all 17 attested\nanchors (small fixed set; no pagination needed). With `word`,\nreturns the subset whose `etruscan_word` matches case-insensitively.",
         "operationId": "anchors_attested_anchors_attested_get",
         "parameters": [
           {
@@ -1662,6 +1773,8 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Anchors Attested Anchors Attested Get"
                 }
               }
@@ -2520,6 +2633,33 @@
         "title": "InscriptionModel",
         "description": "Data model representing a single Etruscan inscription for API output."
       },
+      "PromoteAnchorRequest": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "pattern": "^(approve|reject|duplicate)$",
+            "title": "Action"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "PromoteAnchorRequest",
+        "description": "Body for `POST /anchors/{id}/promote`."
+      },
       "PromoteProvenanceRequest": {
         "properties": {
           "new_status": {
@@ -2592,6 +2732,68 @@
           "audit_id"
         ],
         "title": "PromoteProvenanceResponse"
+      },
+      "ProposeAnchorRequest": {
+        "properties": {
+          "etruscan_word": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Etruscan Word"
+          },
+          "equivalent": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Equivalent"
+          },
+          "equivalent_language": {
+            "type": "string",
+            "pattern": "^(lat|grc)$",
+            "title": "Equivalent Language"
+          },
+          "evidence_quote": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Evidence Quote"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Source"
+          },
+          "submitter_email": {
+            "type": "string",
+            "maxLength": 320,
+            "pattern": "^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$",
+            "title": "Submitter Email"
+          },
+          "submitter_orcid": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitter Orcid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "etruscan_word",
+          "equivalent",
+          "equivalent_language",
+          "evidence_quote",
+          "source",
+          "submitter_email"
+        ],
+        "title": "ProposeAnchorRequest",
+        "description": "Body for `POST /anchors/propose`. Server-side validation rules\nmatch the `proposed_anchors` table CHECK constraints; the Pydantic\nlayer fails-fast with a clear error before the DB does."
       },
       "ProvenanceAuditEntry": {
         "properties": {
