@@ -269,6 +269,8 @@ def evaluate(
     pace: bool = True,
     baseline: str = "none",
     embedder: str | None = None,
+    rerank: str | None = None,
+    rerank_top_n: int = 50,
 ) -> dict[str, Any]:
     """Run the eval. Returns a structured report.
 
@@ -305,14 +307,19 @@ def evaluate(
             "per_pair": [],
         }
 
+    # When reranking, fetch a wider candidate pool (top-N) so the
+    # cross-encoder has more material to reorder. We slice back to k_max
+    # for metrics after rerank.
+    fetch_k = rerank_top_n if rerank else k_max
+
     for pair in pairs:
         if baseline == "levenshtein":
             neighbours = _query_neighbours_levenshtein(
-                api_url, pair.etr, "ett", "lat", k_max, embedder=embedder,
+                api_url, pair.etr, "ett", "lat", fetch_k, embedder=embedder,
             )
         else:
             neighbours = _query_neighbours(
-                api_url, pair.etr, "ett", "lat", k_max, embedder=embedder,
+                api_url, pair.etr, "ett", "lat", fetch_k, embedder=embedder,
             )
         if neighbours is None:
             n_failed += 1
@@ -321,9 +328,27 @@ def evaluate(
             n_skipped += 1
             continue
 
+        # ── Optional cross-encoder rerank ──────────────────────────────
+        # Replaces neighbours with the rerank-ordered subset. The
+        # bi-encoder cosine is preserved on the surviving top-1 so the
+        # coverage_at_threshold metric stays interpretable (it indexes
+        # what the bi-encoder thinks of its own best candidate, NOT what
+        # the cross-encoder thinks).
+        pre_rerank_top1_cosine = neighbours[0][1] if neighbours else None
+        if rerank:
+            try:
+                from rerank import rerank_candidates  # lazy import
+                neighbours = rerank_candidates(
+                    pair.etr, neighbours, model_name=rerank, top_k=k_max,
+                )
+            except Exception as exc:  # noqa: BLE001 — surface the import/load failure
+                print(f"  RERANK FAIL  {pair.etr!r}: {exc}", file=sys.stderr)
+                # Fall back to bi-encoder order, sliced to k_max.
+                neighbours = neighbours[:k_max]
+
         n_evaluated += 1
         top_words = [w for w, _ in neighbours]
-        top1_cosine = neighbours[0][1] if neighbours else None
+        top1_cosine = pre_rerank_top1_cosine
         hit_k = next(
             (rank + 1 for rank, n in enumerate(top_words) if n == pair.lat),
             None,
@@ -599,6 +624,26 @@ def main(argv: list[str] | None = None) -> int:
             "head-to-head column."
         ),
     )
+    parser.add_argument(
+        "--rerank",
+        nargs="?",
+        const="BAAI/bge-reranker-v2-m3",
+        default=None,
+        help=(
+            "Enable cross-encoder rerank (T5.1). Pass with no value to "
+            "use the default multilingual reranker, or pass a HF "
+            "model id (e.g. --rerank cross-encoder/ms-marco-MiniLM-L-6-v2). "
+            "Bi-encoder fetches `--rerank-top-n` candidates; the cross-"
+            "encoder reorders them; metrics are then computed over the "
+            "top-k_max."
+        ),
+    )
+    parser.add_argument(
+        "--rerank-top-n",
+        type=int,
+        default=50,
+        help="How many bi-encoder candidates to feed the rerank pass (default 50).",
+    )
 
     args = parser.parse_args(argv)
 
@@ -652,6 +697,8 @@ def main(argv: list[str] | None = None) -> int:
         pace=not args.no_pace,
         baseline=args.baseline,
         embedder=args.embedder,
+        rerank=args.rerank,
+        rerank_top_n=args.rerank_top_n,
     )
 
     if args.json:
