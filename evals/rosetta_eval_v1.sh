@@ -88,17 +88,24 @@ trap 'rm -rf "$WORKDIR"' EXIT
 
 RANDOM_JSON="$WORKDIR/random.json"
 LEV_JSON="$WORKDIR/levenshtein.json"
-MODEL_JSON="$WORKDIR/model.json"
+LABSE_JSON="$WORKDIR/labse.json"
+V4_JSON="$WORKDIR/v4.json"
 
 run_column() {
+    # $1 = display label
+    # $2 = --baseline arg (one of random / levenshtein / none)
+    # $3 = output JSON path
+    # $4 = optional --embedder alias (default: omitted → LaBSE)
     local label="$1"
     local baseline="$2"
     local out="$3"
-    echo "▶ ${label}  (baseline=${baseline})" >&2
+    local embedder="${4-}"
+    echo "▶ ${label}  (baseline=${baseline}${embedder:+, embedder=${embedder}})" >&2
     python "$HARNESS" \
         --api-url "$API_URL" \
         --benchmark rosetta-eval-v1 \
         --baseline "$baseline" \
+        ${embedder:+--embedder "$embedder"} \
         --json \
         $NO_PACE \
         > "$out"
@@ -108,22 +115,32 @@ run_column() {
 run_column "random      " random       "$RANDOM_JSON"
 # levenshtein pulls /neural/rosetta/vocab once, then computes locally
 run_column "levenshtein " levenshtein  "$LEV_JSON"
-# model under test — full /neural/rosetta traffic, paced
-run_column "model       " none         "$MODEL_JSON"
+# model under test (default partition — LaBSE/v1) — full /neural/rosetta traffic, paced
+run_column "labse       " none         "$LABSE_JSON"
+# T2.3 head-to-head column: same harness against the xlmr-lora-v4 partition.
+# If the v4 partition is incomplete on the target language (e.g. T2.3 only
+# ingested ett but not lat), this column may show empty neighbours — that
+# is itself a publishable finding, not an error.
+run_column "v4          " none         "$V4_JSON"  "xlmr-lora-v4"
 
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# Combine the three reports into one. python -c (not jq) so we don't add
-# a dependency the rest of the repo doesn't already need.
+# Combine the four reports into one. python -c (not jq) so we don't add
+# a dependency the rest of the repo doesn't already need. Both `model` and
+# `labse` carry the LaBSE numbers — `model` is preserved as the historical
+# key from the pre-T2.4 schema so older consumers keep working.
 python <<PY > "$WORKDIR/combined.json"
 import json
+labse = json.load(open("$LABSE_JSON"))
 out = {
     "benchmark": "rosetta-eval-v1",
     "generated_at_utc": "$GENERATED_AT",
     "api_url": "$API_URL",
     "random": json.load(open("$RANDOM_JSON")),
     "levenshtein": json.load(open("$LEV_JSON")),
-    "model": json.load(open("$MODEL_JSON")),
+    "labse": labse,
+    "model": labse,
+    "v4": json.load(open("$V4_JSON")),
 }
 json.dump(out, __import__("sys").stdout, indent=2, ensure_ascii=False, default=str)
 PY
