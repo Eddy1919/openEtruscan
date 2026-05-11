@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenEtruscan Corpus API",
     "description": "REST API for querying the OpenEtruscan dataset.",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "paths": {
     "/health": {
@@ -670,6 +670,111 @@
               "default": 10,
               "title": "K"
             }
+          },
+          {
+            "name": "embedder",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Embedder partition to query. Default (omitted) routes to the LaBSE/v1 partition the API has served since launch. Pass 'xlmr-lora-v4' for the T2.3 v4 partition once ingested.",
+              "title": "Embedder"
+            },
+            "description": "Embedder partition to query. Default (omitted) routes to the LaBSE/v1 partition the API has served since launch. Pass 'xlmr-lora-v4' for the T2.3 v4 partition once ingested."
+          },
+          {
+            "name": "min_margin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "description": "T5.3 calibration knob. Returns an empty neighbour list if (top1.cosine - top2.cosine) < this threshold \u2014 i.e. the bi-encoder isn't confident the top candidate stands out from the rest. Default 0.0 = no filtering. The eval in eval/p5-experiments/t5-2-calibration-curve-*.json characterises the precision/retention trade-off.",
+              "default": 0.0,
+              "title": "Min Margin"
+            },
+            "description": "T5.3 calibration knob. Returns an empty neighbour list if (top1.cosine - top2.cosine) < this threshold \u2014 i.e. the bi-encoder isn't confident the top candidate stands out from the rest. Default 0.0 = no filtering. The eval in eval/p5-experiments/t5-2-calibration-curve-*.json characterises the precision/retention trade-off."
+          },
+          {
+            "name": "track",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "T5.4 dual-track filter. 'all' (default) returns every candidate. 'semantic' drops the source word if it appears in the target vocab as a surface-form match (e.g. ett 'fanu' \u2192 lat 'fanu' is a loanword, not a translation). 'loanword' returns only that surface-form match, empty otherwise.",
+              "default": "all",
+              "title": "Track"
+            },
+            "description": "T5.4 dual-track filter. 'all' (default) returns every candidate. 'semantic' drops the source word if it appears in the target vocab as a surface-form match (e.g. ett 'fanu' \u2192 lat 'fanu' is a loanword, not a translation). 'loanword' returns only that surface-form match, empty otherwise."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/neural/rosetta/vocab": {
+      "get": {
+        "tags": [
+          "Neural"
+        ],
+        "summary": "Rosetta Vocab",
+        "description": "Retrieve up to 50k vocabulary words for a given language + embedder\npartition. Cached for 1 hour per (lang, embedder) tuple.",
+        "operationId": "rosetta_vocab_neural_rosetta_vocab_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language code (e.g. 'lat', 'ett')",
+              "title": "Lang"
+            },
+            "description": "Language code (e.g. 'lat', 'ett')"
+          },
+          {
+            "name": "embedder",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Embedder partition to query. Default routes to LaBSE/v1. Pass 'xlmr-lora-v4' for the v4 partition.",
+              "title": "Embedder"
+            },
+            "description": "Embedder partition to query. Default routes to LaBSE/v1. Pass 'xlmr-lora-v4' for the v4 partition."
           }
         ],
         "responses": {
