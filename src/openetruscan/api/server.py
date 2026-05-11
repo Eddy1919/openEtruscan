@@ -1731,6 +1731,77 @@ async def date_estimate(
     return result.to_dict()
 
 
+# ────────────────────────────────────────────────────────────────────
+# Community-curation surfaces (WBS P4 Option C) — placeholder routes.
+# Each returns 501 Not Implemented with a pointer at the design doc;
+# the actual handlers land in a follow-up PR once the
+# `proposed_anchors` alembic migration ships. See
+# research/notes/community-curation-design.md for the contract.
+# ────────────────────────────────────────────────────────────────────
+
+
+@app.post("/anchors/propose", tags=["Anchors"])
+async def propose_anchor(request: Request) -> Any:
+    """Submit a candidate Etruscan↔Latin/Greek equivalence to the
+    moderation queue.
+
+    **Not implemented** — placeholder for WBS P4 Option C. See
+    [`research/notes/community-curation-design.md`](https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md)
+    for the contract this endpoint will satisfy once the
+    `proposed_anchors` migration lands and the moderation queue is wired.
+    """
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        status_code=501,
+        content={
+            "error": "Not Implemented",
+            "message": "Community curation is in design phase. See research/notes/community-curation-design.md for the contract.",
+            "design_doc": "https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md",
+        },
+    )
+
+
+@app.get("/anchors/queue", tags=["Anchors"])
+async def anchors_queue(request: Request) -> Any:
+    """List pending anchor submissions (admin-only).
+
+    **Not implemented** — placeholder for WBS P4 Option C.
+    """
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        status_code=501,
+        content={
+            "error": "Not Implemented",
+            "message": "Community curation is in design phase. See research/notes/community-curation-design.md.",
+            "design_doc": "https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md",
+        },
+    )
+
+
+@app.get("/anchors/attested", tags=["Anchors"])
+async def anchors_attested(request: Request, word: str | None = None) -> Any:
+    """Public-read attested equivalences for an Etruscan word, sourced
+    from `research/anchors/attested.jsonl` joined to the prod corpus.
+
+    **Not implemented** — placeholder for WBS P4 Option C. The first
+    operational version reads from the committed JSONL; the
+    community-curation extension reads from the
+    `proposed_anchors` Postgres table after submissions are promoted.
+    """
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        status_code=501,
+        content={
+            "error": "Not Implemented",
+            "message": "Community curation is in design phase. See research/notes/community-curation-design.md.",
+            "design_doc": "https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md",
+        },
+    )
+
+
 @app.get("/pelagios.jsonld", tags=["Linked Data"])
 @limiter.limit("5/minute")
 async def pelagios_feed(request: Request, session: AsyncSession = Depends(get_session)) -> Any:
