@@ -61,6 +61,7 @@ _USER_TABLES = (
     "data_sources",
     "provenance_audits",
     "language_word_embeddings",
+    "proposed_anchors",
 )
 
 
