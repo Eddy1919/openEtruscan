@@ -295,6 +295,11 @@ class ProposedAnchor(Base):
     source: Mapped[str] = mapped_column(Text, nullable=False)
     submitter_email: Mapped[str] = mapped_column(Text, nullable=False)
     submitter_orcid: Mapped[str | None] = mapped_column(Text)
+    # Optional corpus ID of the inscription the submitter was reading
+    # when they filed the proposal. Threaded in by the frontend's
+    # `?from=` search param on /propose/<word>. NOT a FK — see the
+    # migration docstring for the loose-coupling rationale.
+    source_inscription_id: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text, nullable=False, server_default="pending")
     reviewer: Mapped[str | None] = mapped_column(Text)
     review_note: Mapped[str | None] = mapped_column(Text)
@@ -322,6 +327,12 @@ class ProposedAnchor(Base):
         CheckConstraint(
             "length(source) >= 3",
             name="ck_proposed_anchors_source_min_length",
+        ),
+        # Empty string would be confusing semantics for "I had no inscription
+        # context" — force NULL in that case. Upper bound is a paste-bomb guard.
+        CheckConstraint(
+            "source_inscription_id IS NULL OR (length(source_inscription_id) BETWEEN 1 AND 64)",
+            name="ck_proposed_anchors_source_inscription_id_shape",
         ),
         Index("ix_proposed_anchors_status_created", "status", "created_at"),
         Index("ix_proposed_anchors_etr_word", "etruscan_word"),
