@@ -967,9 +967,16 @@ class RestoreRequest(BaseModel):
 async def restore_lacunae(
     request: Request,
     body: RestoreRequest,
-    _auth: HTTPAuthorizationCredentials = Depends(verify_admin),
 ):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i).
+
+    **Public** endpoint — this is the inference path the frontend `/lacunae`
+    page calls directly from the browser, so the previous `verify_admin`
+    gate was an outright UX bug (the page silently fell back to "demo
+    predictions" because every real call returned 401). Rate-limiting at
+    60 req/min/IP (via the slowapi decorator above) is what stops abuse.
+    The model is read-only and the input is rejected if it's longer than
+    the model's max sequence, so there's no privileged data path to guard.
 
     Two modes:
       * **Remote** — if ``settings.byt5_service_url`` is set we proxy the request
