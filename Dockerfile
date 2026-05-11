@@ -36,10 +36,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy pre-built Python packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application source (no tests, scripts, data, frontend) and the alembic
+# Copy application source (no tests, scripts, frontend) and the alembic
 # config so the same image can run `alembic upgrade head` during deploys.
 COPY src/ src/
 COPY alembic.ini ./
+
+# Ship ONLY the canonical attested-anchors JSONL — not the whole
+# research/anchors/ directory. server.py's _load_attested_jsonl() looks
+# at /app/research/anchors/attested.jsonl as a fallback path; without
+# this COPY the /anchors/attested endpoint returns {"items": [], "count": 0}
+# in prod and the frontend ProposeCard can't render its "attested" status
+# ticks. The sibling files (hard_negatives.jsonl from offline mining,
+# llm_anchors_raw* from the T4.2 LLM extraction, agent_decisions.tsv,
+# README.md) are training-time artefacts; they have no runtime consumer
+# and stay out of the image to keep the layer small.
+COPY research/anchors/attested.jsonl research/anchors/attested.jsonl
 
 # Create non-root user
 RUN groupadd --system appuser && useradd --system --gid appuser appuser
