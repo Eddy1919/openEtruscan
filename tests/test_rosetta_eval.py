@@ -492,3 +492,70 @@ class TestBenchmarkPreset:
         assert "Benchmark: rosetta-eval-v1" in err
         # No WARN line because we didn't pass any overrides.
         assert "WARN" not in err
+
+
+# ---------------------------------------------------------------------------
+# T5.1 — cross-encoder rerank (mocked CrossEncoder)
+# ---------------------------------------------------------------------------
+
+
+class TestRerank:
+    """The rerank pass must reorder candidates by the cross-encoder's
+    score and leave coverage_at_threshold unchanged (cosine is from the
+    bi-encoder, not the cross-encoder)."""
+
+    def test_rerank_reorders_by_score(self, monkeypatch):
+        """Construct a fake CrossEncoder that returns scores inversely
+        proportional to the candidate's bi-encoder rank — so the rerank
+        pass should swap the order."""
+        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        import rerank as rerank_mod
+
+        class _FakeCrossEncoder:
+            def __init__(self, name): self.name = name
+            def predict(self, pairs):
+                # Reverse the order: the LAST candidate is most relevant
+                return [float(i) for i in range(len(pairs))]
+
+        # Clear the cache so our fake gets loaded fresh
+        rerank_mod._RERANK_MODEL_CACHE.clear()
+        monkeypatch.setattr(rerank_mod, "CrossEncoder", _FakeCrossEncoder, raising=False)
+        # The actual import is `from sentence_transformers import CrossEncoder`
+        # inside the function, so patch the module level too.
+        import sys as _sys
+        fake_module = type(_sys)("sentence_transformers")
+        fake_module.CrossEncoder = _FakeCrossEncoder  # type: ignore[attr-defined]
+        monkeypatch.setitem(_sys.modules, "sentence_transformers", fake_module)
+
+        candidates = [("first", 0.99), ("second", 0.95), ("third", 0.80)]
+        out = rerank_mod.rerank_candidates("query", candidates, top_k=3)
+        assert [w for w, _ in out] == ["third", "second", "first"]
+
+    def test_rerank_empty_candidates(self, monkeypatch):
+        """Empty input returns empty output without touching the model."""
+        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        import rerank as rerank_mod
+        rerank_mod._RERANK_MODEL_CACHE.clear()
+        out = rerank_mod.rerank_candidates("query", [])
+        assert out == []
+
+    def test_rerank_top_k_truncates(self, monkeypatch):
+        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        import rerank as rerank_mod
+
+        class _FakeCE:
+            def __init__(self, name): pass
+            def predict(self, pairs): return [1.0 - i * 0.1 for i in range(len(pairs))]
+
+        rerank_mod._RERANK_MODEL_CACHE.clear()
+        import sys as _sys
+        fake_module = type(_sys)("sentence_transformers")
+        fake_module.CrossEncoder = _FakeCE  # type: ignore[attr-defined]
+        monkeypatch.setitem(_sys.modules, "sentence_transformers", fake_module)
+
+        candidates = [(f"w{i}", 0.9 - i * 0.01) for i in range(10)]
+        out = rerank_mod.rerank_candidates("q", candidates, top_k=3)
+        assert len(out) == 3
+        # The fake returns DESCENDING scores by input order, so the first
+        # 3 inputs win.
+        assert [w for w, _ in out] == ["w0", "w1", "w2"]
