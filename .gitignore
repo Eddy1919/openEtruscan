@@ -120,3 +120,10 @@ bandit.json
 
 # Local SQLite scratch DB (created by tests when no Postgres is around).
 local_test.db
+
+# Paper drafts — kept private until the manuscript ships. The published
+# narrative on the same material lives in research/FINDINGS.md (which
+# IS tracked). Once a draft is submission-ready, copy it to
+# research/papers/<venue>-<year>/ and add a targeted negative pattern
+# below to whitelist it; never !-include the whole directory.
+/research/paper/
