@@ -1118,6 +1118,21 @@ def _resolve_embedder(alias: str | None, language: str) -> tuple[str, str]:
     )
 
 
+# Valid track values for the T5.4 dual-track API:
+#   "all"       — no filtering (legacy default; what /neural/rosetta has
+#                 always returned).
+#   "semantic"  — drop top-1 if it equals the source word case-
+#                 insensitively (the loanword / surface-form match) so
+#                 the response leads with the next-best candidate.
+#                 Useful for "give me the meaning-translation, not the
+#                 loanword" call sites.
+#   "loanword"  — return only the top-1 if it equals the source word,
+#                 empty otherwise. The dual of "semantic"; useful for
+#                 "is this word also in the target vocab as a direct
+#                 surface match?" queries.
+_VALID_TRACKS = ("all", "semantic", "loanword")
+
+
 @app.get("/neural/rosetta", tags=["Neural"])
 @limiter.limit("30/minute")
 async def rosetta_lookup(
@@ -1148,6 +1163,33 @@ async def rosetta_lookup(
             ),
         ),
     ] = None,
+    min_margin: Annotated[
+        float,
+        Query(
+            ge=0.0, le=1.0,
+            description=(
+                "T5.3 calibration knob. Returns an empty neighbour list "
+                "if (top1.cosine - top2.cosine) < this threshold — i.e. "
+                "the bi-encoder isn't confident the top candidate stands "
+                "out from the rest. Default 0.0 = no filtering. The eval "
+                "in eval/p5-experiments/t5-2-calibration-curve-*.json "
+                "characterises the precision/retention trade-off."
+            ),
+        ),
+    ] = 0.0,
+    track: Annotated[
+        str,
+        Query(
+            description=(
+                "T5.4 dual-track filter. 'all' (default) returns every "
+                "candidate. 'semantic' drops the source word if it appears "
+                "in the target vocab as a surface-form match (e.g. ett "
+                "'fanu' → lat 'fanu' is a loanword, not a translation). "
+                "'loanword' returns only that surface-form match, empty "
+                "otherwise."
+            ),
+        ),
+    ] = "all",
     session: AsyncSession = Depends(get_session),
 ):
     """Cross-language nearest-neighbour query in the shared Rosetta space.
@@ -1160,6 +1202,12 @@ async def rosetta_lookup(
     """
     from openetruscan.ml.multilingual import find_cross_language_neighbours
 
+    if track not in _VALID_TRACKS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown track {track!r}; valid: {list(_VALID_TRACKS)}",
+        )
+
     # Resolve the alias separately for source and target languages.
     # For aliases like "xlmr-lora-v4" the two halves may live in
     # different DB partitions (ett under (xlmr-lora, v4); lat under
@@ -1170,13 +1218,18 @@ async def rosetta_lookup(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    # When filtering by margin or track, fetch a wider pool so we have
+    # candidates left after dropping. Cap at 50 (the route's documented
+    # upper bound) so memory pressure stays bounded.
+    fetch_k = min(50, max(k * 2, 10)) if (min_margin > 0 or track != "all") else k
+
     try:
         hits = await find_cross_language_neighbours(
             word=word,
             source_lang=from_lang,
             target_lang=to_lang,
             session=session,
-            k=k,
+            k=fetch_k,
             source_embedder=src_emb_id,
             source_embedder_revision=src_emb_rev,
             target_embedder=tgt_emb_id,
@@ -1184,6 +1237,23 @@ async def rosetta_lookup(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    # ── T5.3: min_margin filter ─────────────────────────────────────────
+    margin: float | None = None
+    if len(hits) >= 2:
+        margin = float(hits[0].cosine - hits[1].cosine)
+    margin_pass = margin is None or margin >= min_margin
+    if min_margin > 0 and not margin_pass:
+        hits = []  # below threshold ⇒ explicit empty, "not confident enough"
+
+    # ── T5.4: dual-track filter ─────────────────────────────────────────
+    if hits and track != "all":
+        src_lower = word.lower()
+        is_loanword = hits[0].word.lower() == src_lower
+        if track == "semantic" and is_loanword:
+            hits = hits[1:]
+        elif track == "loanword":
+            hits = hits[:1] if is_loanword else []
 
     return {
         "query": word,
@@ -1194,9 +1264,13 @@ async def rosetta_lookup(
         # uses this to assert the right column was queried in the
         # head-to-head rosetta-eval-v1 run.
         "embedder": embedder if embedder is not None else "LaBSE",
+        "track": track,
+        # T5.3 surfaces the bi-encoder margin so clients can post-filter
+        # their own way too; null when fewer than 2 candidates existed.
+        "margin": margin,
         "neighbours": [
             {"word": h.word, "language": h.language, "cosine": h.cosine}
-            for h in hits
+            for h in hits[:k]   # slice back to the requested k after filtering
         ],
     }
 
