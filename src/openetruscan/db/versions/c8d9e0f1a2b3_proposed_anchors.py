@@ -83,12 +83,15 @@ def upgrade() -> None:
             "status IN ('pending', 'approved', 'rejected', 'duplicate')",
             name="ck_proposed_anchors_status",
         ),
+        # `length()` (not `char_length()`) so the constraint emits on both
+        # Postgres and SQLite — the test fallback uses SQLite, which has no
+        # `char_length`. For text values both functions are equivalent.
         sa.CheckConstraint(
-            "char_length(evidence_quote) >= 10",
+            "length(evidence_quote) >= 10",
             name="ck_proposed_anchors_evidence_quote_min_length",
         ),
         sa.CheckConstraint(
-            "char_length(source) >= 3",
+            "length(source) >= 3",
             name="ck_proposed_anchors_source_min_length",
         ),
     )
