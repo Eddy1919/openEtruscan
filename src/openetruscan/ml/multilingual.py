@@ -379,6 +379,10 @@ async def find_cross_language_neighbours(
     k: int = 10,
     embedder: str | None = None,
     embedder_revision: str | None = None,
+    source_embedder: str | None = None,
+    source_embedder_revision: str | None = None,
+    target_embedder: str | None = None,
+    target_embedder_revision: str | None = None,
 ) -> list[CrossLanguageHit]:
     """For ``word`` in ``source_lang``, return the top-k nearest words in
     ``target_lang`` (cosine similarity in the shared multilingual space).
@@ -390,12 +394,19 @@ async def find_cross_language_neighbours(
     Parameters
     ----------
     embedder, embedder_revision : str | None
-        Filter on the ``(embedder, embedder_revision)`` partition of
-        ``language_word_embeddings``. Both default to the canonical
-        LaBSE/v1 partition that the API has served since launch; pass
-        explicit values (e.g. ``embedder='xlmr-lora', embedder_revision='v4'``)
-        to query a different partition. Source word and target neighbours
-        are filtered consistently to the same partition.
+        Symmetric partition filter — applies to both source and target.
+        Defaults to ``DEFAULT_EMBEDDER`` / ``DEFAULT_EMBEDDER_REVISION``
+        (the canonical LaBSE/v1 the API has served since launch).
+    source_embedder, source_embedder_revision : str | None
+        Per-side override. When set, filters the source-language lookup
+        independently from the target. Used by the alias system in
+        server.py so a single client-facing alias (e.g. "xlmr-lora-v4")
+        can map to different DB partitions for ett vs lat — Etruscan
+        went through a LoRA adapter (labelled ``xlmr-lora``), Latin did
+        not (labelled ``xlm-roberta-base``). Falls back to the symmetric
+        ``embedder`` / ``embedder_revision`` if unset.
+    target_embedder, target_embedder_revision : str | None
+        Same idea for the target side.
     """
     from sqlalchemy import text
 
@@ -418,10 +429,14 @@ async def find_cross_language_neighbours(
         )
 
     word = unicodedata.normalize("NFC", word).lower()
-    embedder = embedder if embedder is not None else DEFAULT_EMBEDDER
-    embedder_revision = (
+    base_embedder = embedder if embedder is not None else DEFAULT_EMBEDDER
+    base_revision = (
         embedder_revision if embedder_revision is not None else DEFAULT_EMBEDDER_REVISION
     )
+    src_emb = source_embedder if source_embedder is not None else base_embedder
+    src_rev = source_embedder_revision if source_embedder_revision is not None else base_revision
+    tgt_emb = target_embedder if target_embedder is not None else base_embedder
+    tgt_rev = target_embedder_revision if target_embedder_revision is not None else base_revision
 
     src_row = await session.execute(
         text(
@@ -432,8 +447,8 @@ async def find_cross_language_neighbours(
         {
             "lang": source_lang,
             "word": word,
-            "embedder": embedder,
-            "embedder_revision": embedder_revision,
+            "embedder": src_emb,
+            "embedder_revision": src_rev,
         },
     )
     row = src_row.first()
@@ -455,8 +470,8 @@ async def find_cross_language_neighbours(
         {
             "src": src_vector,
             "target": target_lang,
-            "embedder": embedder,
-            "embedder_revision": embedder_revision,
+            "embedder": tgt_emb,
+            "embedder_revision": tgt_rev,
             "k": k,
         },
     )
