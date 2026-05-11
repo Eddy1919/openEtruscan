@@ -155,7 +155,13 @@ def _ensure_model():
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_URI)
-    _model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_URI)
+    # `low_cpu_mem_usage=False` forces the weights to materialise on CPU
+    # instead of being kept on the `meta` device. Newer
+    # transformers + torch combos default to meta-device lazy loading,
+    # which then explodes at generate() time with:
+    #   RuntimeError: Tensor on device cpu is not on the expected device meta!
+    # Explicit `.to("cpu")` is a belt-and-braces second guarantee.
+    _model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_URI, low_cpu_mem_usage=False).to("cpu")
     _model.eval()
 
     logger.info("Model loaded in %.1fs", time.time() - t0)
