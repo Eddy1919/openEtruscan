@@ -174,6 +174,67 @@ dual-track loanword/semantic API). LaBSE stays the production default.
 
 ---
 
+## P5 results so far
+
+### T5.1 — Cross-encoder rerank (negative result)
+
+Per the WBS decision tree, gap-remains pushed us into P5. The first
+P5 lever is cross-encoder rerank: fetch top-N candidates from the
+bi-encoder (LaBSE), reorder them with a transformer that scores
+`(query, document)` pairs jointly, return top-k. The hope:
+re-rank-aware retrieval beats pure cosine.
+
+**Result:** rerank made `field@10` WORSE.
+
+| Metric @10 | LaBSE (pure) | LaBSE + bge-reranker-v2-m3 |
+|---|---:|---:|
+| strict-lexical | 0.0625 | 0.0625 |
+| **semantic-field** | **0.1875** | **0.1250** ↓ |
+
+Source: [`eval/p5-experiments/t5-1-labse-rerank-20260511.json`](../eval/p5-experiments/t5-1-labse-rerank-20260511.json).
+
+Rerank model: `BAAI/bge-reranker-v2-m3`, the SOTA multilingual
+reranker as of mid-2025. Top-50 bi-encoder candidates fed to
+cross-encoder; top-10 retained for metrics.
+
+#### Why it failed (per-pair forensic)
+
+Sampling the rerank-promoted top-1s:
+
+| Etruscan | Expected Latin | Rerank top-3 |
+|---|---|---|
+| `apa` (father) | pater | apa, **what**, wat |
+| `papa` (grandfather) | avus | papa, papas, papam |
+| `lautn` (family) | familia | laute, lahn, lautus |
+| `suθi` (tomb) | sepulcrum | sui, suebi, sugie |
+| `flerχva` (sacred things) | sacra | plure, multi, pluresve |
+
+The cross-encoder is treating the Etruscan source word as a sequence
+of Latin-script characters and matching against orthographic
+near-neighbours. It can't know `apa` is Etruscan for "father" — that
+language pairing is absent from its training distribution. The
+fallback behaviour is surface-form similarity, which is the opposite
+of useful here: it actively promotes phonetic doppelgängers over the
+semantic matches LaBSE had already retrieved.
+
+#### What this is evidence of
+
+Off-the-shelf multilingual cross-encoders **cannot** help low-resource
+ancient-language retrieval where neither the source nor target language
+sits in the cross-encoder's training distribution. The bi-encoder
+gets cross-lingual signal "for free" from translation-pair
+pre-training (LaBSE's strength); the cross-encoder needs supervised
+examples of the specific language pair, which we don't have and the
+field doesn't have for Etruscan-Latin specifically.
+
+Implication for P5 sequencing: the *calibration* and *dual-track*
+levers (T5.2 / T5.3 / T5.4) are still on the table — they don't
+require cross-encoder supervision. Pivot there. T5.1's negative
+result is itself publishable: "off-the-shelf MNL rerank does NOT
+transfer to ancient-language IR" is a useful contribution.
+
+---
+
 ## Why the strict-lexical metric was wrong
 
 The original eval gate was `precision_at_5 ≥ 0.40` against the 62
