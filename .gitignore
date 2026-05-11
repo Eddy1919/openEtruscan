@@ -105,3 +105,18 @@ cloud-sql-proxy
 # (labels, held-out eval) remain tracked in research/data/.
 research/data/openetruscan_clean.csv
 research/data/openetruscan_normalized.csv
+
+# YOLO pretrained weights — pulled lazily by ultralytics when training
+# starts. They are not deterministic to the source tree (the upstream
+# model can update under the same filename) and at 5.4 MB each they
+# bloat git history. The training script downloads on first run.
+yolo11n.pt
+yolo*.pt
+
+# Bandit scan output — generated locally + by CI, never used as a
+# committed artefact. The Cloud Build security trigger writes its own
+# transient report at /workspace/bandit.json.
+bandit.json
+
+# Local SQLite scratch DB (created by tests when no Postgres is around).
+local_test.db
