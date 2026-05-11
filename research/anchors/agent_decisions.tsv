@@ -1,0 +1,28 @@
+passage_index	etruscan_word	action	equivalent_override	note
+9	ἰταλὸν	k		canonical Etruscan→Greek "bull" etymology; explicit verb ἐκάλεσαν with Τυρρηνοί as subject
+167	τύρσεις	k		Dionysius glosses Tyrrhenian τύρσις as "walled dwellings" with explicit ὀνομάζονται
+430	Τάρχων	s		Lycophron appositive metaphor "Tarchon and Tyrsenos, fiery wolves"; no naming verb
+430	Τυρσηνός	s		same appositive metaphor as above (extraction picked the second proper noun)
+616	χαῖρε	k		Strabo's Caere/Cisra renaming etymology; "δεξάμενοι τὸν οἰωνὸν οἱ Τυρρηνοὶ ... μετωνόμασαν"
+627	Κύπραν	k		Strabo: "τὴν δ' Ἥραν ἐκεῖνοι Κύπραν καλοῦσιν" — explicit verb + Tyrrhenian subject
+644	ἀρίμους	k		Strabo: "τοὺς πιθήκους ... παρὰ τοῖς Τυρρηνοῖς ἀρίμους καλεῖσθαι"
+702	deteriores	s		Cicero glosses Latin "deteriores" with Latin "perditae"; no Etruscan word on either side
+702	repvlsos	s		same passage; "repvlsos" is Latin, not Etruscan
+954	Nortia	k		Juvenal: Etruscan goddess Nortia ≈ Roman Fortuna; canonical equivalence
+970	Tages	s		Lucan: "sed conditor artis ... Tages" — "conditor artis" is an epithet, not a gloss; no naming verb structure
+1020	Rumina	s		Ovid: "Rumina ficus" / "Romula ficus" — both Latin; etymology Latin-Latin, not Etruscan
+1026	Bellona	s		Ovid: Bellona and old-Latin "duello" — both Latin; archaic form, no Etruscan word
+1030	Tagen	s		Ovid: "indigenae dixere Tagen" — "indigenae" is the SUBJECT of "called", not the gloss
+1034	Tagen	s		duplicate of idx=1030 from a different passage; same false-positive shape
+1089	ossifragam	k		Pliny: "Tusci vero ossifragam" naming the Etruscan term for the bearded vulture
+1130	nomen	s		Propertius garbled extraction: "nomen → formas unus vertebar in omnis"; no clean gloss
+1176	Asilos	k		Silius Italicus: Aesis river → Asilos populus naming — Etruscan toponymic etymology
+1199	aesar	k		Suetonius Aug. 97 — THE canonical aesar→deus gloss; "Etrusca lingua deus uocaretur"
+1375	ister	k		Livy: "ister Tusco verbo ludio vocabatur" — classic histrio/ister etymology
+1504	Celeres	k		Livy: Etruscan-origin name for Romulus's mounted bodyguard; "quos Celeres appellauit"
+1516	Luceres	k		Livy: one of the three antiqua tribus (Ramnes, Titienses, Luceres) — Etruscan-origin tribal name
+1528	Camars	k		Livy: "Clusium, quod Camars olim appellabant" — Etruscan name for Clusium
+1552	Camars	k		duplicate of idx=1528 from a parallel passage; second attestation, keep both for source diversity
+1735	ister	k		duplicate of idx=1375; second attestation of the ister/ludio gloss
+1757	Materinam	k		Livy: "plaga una — Materinam ipsi appellant" — Etruscan name for a region
+1780	hister	k		Valerius Maximus: "ludius apud eos hister appellabatur" — the histrio etymology in Val. Max. form
