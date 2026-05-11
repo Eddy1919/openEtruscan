@@ -1586,6 +1586,100 @@
         }
       }
     },
+    "/anchors/propose": {
+      "post": {
+        "tags": [
+          "Anchors"
+        ],
+        "summary": "Propose Anchor",
+        "description": "Submit a candidate Etruscan\u2194Latin/Greek equivalence to the\nmoderation queue.\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C. See\n[`research/notes/community-curation-design.md`](https://github.com/Eddy1919/openEtruscan/blob/main/research/notes/community-curation-design.md)\nfor the contract this endpoint will satisfy once the\n`proposed_anchors` migration lands and the moderation queue is wired.",
+        "operationId": "propose_anchor_anchors_propose_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Propose Anchor Anchors Propose Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anchors/queue": {
+      "get": {
+        "tags": [
+          "Anchors"
+        ],
+        "summary": "Anchors Queue",
+        "description": "List pending anchor submissions (admin-only).\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C.",
+        "operationId": "anchors_queue_anchors_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Anchors Queue Anchors Queue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anchors/attested": {
+      "get": {
+        "tags": [
+          "Anchors"
+        ],
+        "summary": "Anchors Attested",
+        "description": "Public-read attested equivalences for an Etruscan word, sourced\nfrom `research/anchors/attested.jsonl` joined to the prod corpus.\n\n**Not implemented** \u2014 placeholder for WBS P4 Option C. The first\noperational version reads from the committed JSONL; the\ncommunity-curation extension reads from the\n`proposed_anchors` Postgres table after submissions are promoted.",
+        "operationId": "anchors_attested_anchors_attested_get",
+        "parameters": [
+          {
+            "name": "word",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Word"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Anchors Attested Anchors Attested Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/pelagios.jsonld": {
       "get": {
         "tags": [
