@@ -159,3 +159,77 @@ async def test_propose_anchor_detects_already_attested(client):
     body = response.json()
     assert body.get("status") == "already_attested"
     assert "existing_source" in body
+
+
+@pytest.mark.asyncio
+@pytest.mark.requires_postgres
+async def test_propose_anchor_persists_source_inscription_id(client, db_session):
+    """A submission carrying `source_inscription_id` must store it verbatim
+    and surface it on `/anchors/queue` for the editorial reviewer UI.
+
+    This is the round-trip the frontend ProposeCard relies on: chip click on
+    /inscription/ETR_001 → /propose/aesar?from=ETR_001 → POST with
+    `source_inscription_id: "ETR_001"` → reviewer sees the provenance in
+    /review without anyone re-parsing the source citation text.
+    """
+    from sqlalchemy import select
+
+    from openetruscan.db.models import ProposedAnchor
+
+    payload = {
+        "etruscan_word": "lasa",
+        "equivalent": "dea",
+        "equivalent_language": "lat",
+        "evidence_quote": "Lasa as a category of Etruscan female divinity, per de Grummond 2006",
+        "source": "de Grummond 2006 §5.2",
+        "submitter_email": "from-inscription@example.edu",
+        "source_inscription_id": "ETR_TEST_001",
+    }
+    r = await client.post("/anchors/propose", json=payload)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["status"] == "pending"
+    new_id = body["id"]
+
+    # 1. Persisted on the row itself — verbatim, including the case.
+    stmt = select(ProposedAnchor).where(ProposedAnchor.id == new_id)
+    row = (await db_session.execute(stmt)).scalar_one()
+    assert row.source_inscription_id == "ETR_TEST_001"
+
+    # 2. Surfaced on the admin queue endpoint.
+    queue_resp = await client.get(
+        "/anchors/queue",
+        headers={"Authorization": "Bearer test-admin-token"},
+    )
+    if queue_resp.status_code == 200:
+        items = queue_resp.json().get("items", [])
+        ours = next((i for i in items if i["id"] == new_id), None)
+        assert ours is not None, "newly-proposed anchor should appear in queue"
+        assert ours["source_inscription_id"] == "ETR_TEST_001"
+
+
+@pytest.mark.asyncio
+@pytest.mark.requires_postgres
+async def test_propose_anchor_accepts_omitted_source_inscription_id(client, db_session):
+    """Hand-typing /propose/aesar (no inscription context) must still work —
+    the column is optional. Verifies NULL is stored, not the empty string."""
+    from sqlalchemy import select
+
+    from openetruscan.db.models import ProposedAnchor
+
+    payload = {
+        "etruscan_word": "thuva",
+        "equivalent": "templum",
+        "equivalent_language": "lat",
+        "evidence_quote": "Standalone proposal not derived from any specific inscription record.",
+        "source": "Hypothetical 2026 §1",
+        "submitter_email": "no-source-insc@example.edu",
+    }
+    r = await client.post("/anchors/propose", json=payload)
+    assert r.status_code == 201, r.text
+    new_id = r.json()["id"]
+
+    row = (
+        await db_session.execute(select(ProposedAnchor).where(ProposedAnchor.id == new_id))
+    ).scalar_one()
+    assert row.source_inscription_id is None

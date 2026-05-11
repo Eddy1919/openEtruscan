@@ -2781,6 +2781,18 @@
               }
             ],
             "title": "Submitter Orcid"
+          },
+          "source_inscription_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Inscription Id"
           }
         },
         "type": "object",

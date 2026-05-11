@@ -1764,6 +1764,12 @@ class ProposeAnchorRequest(BaseModel):
         max_length=320,
     )
     submitter_orcid: str | None = Field(default=None, max_length=64)
+    # Optional corpus ID of the inscription the submitter was reading
+    # when they filed the proposal. The frontend's ProposeCard chip row
+    # threads it in via `?from=<id>` on /propose/<word>. Stored
+    # verbatim — we do not validate that the ID exists in the
+    # inscriptions table; see the migration's "no FK" rationale.
+    source_inscription_id: str | None = Field(default=None, max_length=64)
 
 
 class PromoteAnchorRequest(BaseModel):
@@ -1873,7 +1879,9 @@ async def propose_anchor(
             detail=f"Daily submission cap reached ({daily_count}/100) for {payload.submitter_email}. Try tomorrow.",
         )
 
-    # Insert.
+    # Insert. Empty `source_inscription_id` stripped to None to satisfy the
+    # CHECK constraint that rejects empty-but-not-NULL inscription IDs.
+    src_ins = (payload.source_inscription_id or "").strip() or None
     new_row = ProposedAnchor(
         etruscan_word=payload.etruscan_word.strip(),
         equivalent=payload.equivalent.strip(),
@@ -1882,6 +1890,7 @@ async def propose_anchor(
         source=payload.source.strip(),
         submitter_email=payload.submitter_email,
         submitter_orcid=payload.submitter_orcid,
+        source_inscription_id=src_ins,
         status="pending",
     )
     session.add(new_row)
@@ -1944,6 +1953,10 @@ async def anchors_queue(
             "source": r.source,
             "submitter_email": r.submitter_email,
             "submitter_orcid": r.submitter_orcid,
+            # Surface the inscription provenance to the reviewer UI. Frontend
+            # /review page can render this as a "from inscription <id>" chip
+            # that deep-links back to the inscription detail page.
+            "source_inscription_id": r.source_inscription_id,
             "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows
