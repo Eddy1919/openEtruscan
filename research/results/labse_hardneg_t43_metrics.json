@@ -1,0 +1,781 @@
+{
+  "n_folds": 17,
+  "n_aborted": 0,
+  "p_at_1_mean": 0.0,
+  "p_at_5_mean": 0.0,
+  "p_at_10_mean": 0.0,
+  "baseline_labse_p_at_5": "TBD — compare to a no-fine-tune baseline run with the same eval candidates",
+  "args": {
+    "anchors_path": "gs://openetruscan-rosetta/anchors/attested.jsonl",
+    "negatives_path": "gs://openetruscan-rosetta/anchors/hard_negatives.jsonl",
+    "output_dir": "gs://openetruscan-rosetta/adapters/labse-attested-v1",
+    "base_model": "sentence-transformers/LaBSE",
+    "epochs": 3,
+    "lr": 2e-06,
+    "batch_size": 4,
+    "lora_r": 2,
+    "lora_alpha": 4,
+    "lora_dropout": 0.1,
+    "lora_layers": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "max_seq_length": 64,
+    "temperature": 0.05,
+    "regression_threshold": 0.02,
+    "seed": 42,
+    "no_loo": false
+  },
+  "fold_results": [
+    {
+      "fold": 0,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.632389307022095,
+          "on_diag_mean_cosine": 0.5247159004211426,
+          "off_diag_mean_cosine": 0.46844959259033203,
+          "regression_delta": 1.806020736694336e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.738260507583618,
+          "on_diag_mean_cosine": 0.5247335433959961,
+          "off_diag_mean_cosine": 0.4684683680534363,
+          "regression_delta": 3.6835670471191406e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.467502236366272,
+          "on_diag_mean_cosine": 0.5247509479522705,
+          "off_diag_mean_cosine": 0.4684869050979614,
+          "regression_delta": 5.537271499633789e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "ἰταλὸν",
+      "held_out_positive": "ταῦρον",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "ιταλ",
+        "ίταλο",
+        "ιτάλια"
+      ],
+      "held_out_top3_cosines": [
+        0.8845226764678955,
+        0.8718475103378296,
+        0.8667375445365906
+      ]
+    },
+    {
+      "fold": 1,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.585694074630737,
+          "on_diag_mean_cosine": 0.5305122137069702,
+          "off_diag_mean_cosine": 0.47205835580825806,
+          "regression_delta": 1.817941665649414e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.630463242530823,
+          "on_diag_mean_cosine": 0.5305294990539551,
+          "off_diag_mean_cosine": 0.47207698225975037,
+          "regression_delta": 3.680586814880371e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.442256569862366,
+          "on_diag_mean_cosine": 0.5305466055870056,
+          "off_diag_mean_cosine": 0.47209542989730835,
+          "regression_delta": 5.525350570678711e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "τύρσεις",
+      "held_out_positive": "αἱ ἐντείχιοι καὶ στεγαναὶ οἰκήσεις",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "ορύγματα",
+        "τροχιές",
+        "κτερίσματα"
+      ],
+      "held_out_top3_cosines": [
+        0.9052102565765381,
+        0.9031166434288025,
+        0.9021224975585938
+      ]
+    },
+    {
+      "fold": 2,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.553992986679077,
+          "on_diag_mean_cosine": 0.5199500322341919,
+          "off_diag_mean_cosine": 0.4659266769886017,
+          "regression_delta": 1.817941665649414e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.5452011823654175,
+          "on_diag_mean_cosine": 0.5199679136276245,
+          "off_diag_mean_cosine": 0.46594545245170593,
+          "regression_delta": 3.695487976074219e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.6460942029953,
+          "on_diag_mean_cosine": 0.5199857950210571,
+          "off_diag_mean_cosine": 0.4659644067287445,
+          "regression_delta": 5.5909156799316406e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "χαῖρε",
+      "held_out_positive": "Καῖρε",
+      "held_out_positive_rank": 16,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "χαῖρε",
+        "χαίρε",
+        "αγαπητέ"
+      ],
+      "held_out_top3_cosines": [
+        1.0,
+        0.8651207685470581,
+        0.8642085194587708
+      ]
+    },
+    {
+      "fold": 3,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 6.834806442260742,
+          "on_diag_mean_cosine": 0.5696557760238647,
+          "off_diag_mean_cosine": 0.5025491118431091,
+          "regression_delta": 1.8775463104248047e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 6.675787568092346,
+          "on_diag_mean_cosine": 0.5696732401847839,
+          "off_diag_mean_cosine": 0.5025683045387268,
+          "regression_delta": 3.796815872192383e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 6.704969763755798,
+          "on_diag_mean_cosine": 0.5696905851364136,
+          "off_diag_mean_cosine": 0.5025872588157654,
+          "regression_delta": 5.692243576049805e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Κύπραν",
+      "held_out_positive": "Ἥραν",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "κουπρέν",
+        "κύπρον",
+        "κύπριο"
+      ],
+      "held_out_top3_cosines": [
+        0.874077558517456,
+        0.8498840928077698,
+        0.8476980924606323
+      ]
+    },
+    {
+      "fold": 4,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.4947415590286255,
+          "on_diag_mean_cosine": 0.5331782698631287,
+          "off_diag_mean_cosine": 0.46899986267089844,
+          "regression_delta": 1.8209218978881836e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.615459442138672,
+          "on_diag_mean_cosine": 0.5331953763961792,
+          "off_diag_mean_cosine": 0.46901848912239075,
+          "regression_delta": 3.6835670471191406e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.637360572814941,
+          "on_diag_mean_cosine": 0.5332126021385193,
+          "off_diag_mean_cosine": 0.4690374732017517,
+          "regression_delta": 5.581974983215332e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "ἀρίμους",
+      "held_out_positive": "πιθήκους",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "ακρίτες",
+        "αμαθούς",
+        "αμαρτωλούς"
+      ],
+      "held_out_top3_cosines": [
+        0.9418008923530579,
+        0.9385403990745544,
+        0.9259436726570129
+      ]
+    },
+    {
+      "fold": 5,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.268525123596191,
+          "on_diag_mean_cosine": 0.5344048738479614,
+          "off_diag_mean_cosine": 0.4840606153011322,
+          "regression_delta": 1.7940998077392578e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.2645896673202515,
+          "on_diag_mean_cosine": 0.5344223976135254,
+          "off_diag_mean_cosine": 0.48407918214797974,
+          "regression_delta": 3.650784492492676e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.806864500045776,
+          "on_diag_mean_cosine": 0.5344399809837341,
+          "off_diag_mean_cosine": 0.4840976595878601,
+          "regression_delta": 5.498528480529785e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Nortia",
+      "held_out_positive": "Fortuna",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "norway",
+        "norvegia",
+        "novaria"
+      ],
+      "held_out_top3_cosines": [
+        0.8118221759796143,
+        0.7918103337287903,
+        0.7887946367263794
+      ]
+    },
+    {
+      "fold": 6,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.3378212451934814,
+          "on_diag_mean_cosine": 0.5381357669830322,
+          "off_diag_mean_cosine": 0.4728107750415802,
+          "regression_delta": 1.8268823623657227e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.588345050811768,
+          "on_diag_mean_cosine": 0.5381527543067932,
+          "off_diag_mean_cosine": 0.4728294312953949,
+          "regression_delta": 3.692507743835449e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.447376012802124,
+          "on_diag_mean_cosine": 0.5381696820259094,
+          "off_diag_mean_cosine": 0.4728480279445648,
+          "regression_delta": 5.552172660827637e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "ossifragam",
+      "held_out_positive": "barbatam",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "ossum",
+        "ossium",
+        "oryzam"
+      ],
+      "held_out_top3_cosines": [
+        0.8133135437965393,
+        0.8071907758712769,
+        0.7948592901229858
+      ]
+    },
+    {
+      "fold": 7,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.473363518714905,
+          "on_diag_mean_cosine": 0.5300555229187012,
+          "off_diag_mean_cosine": 0.4717276692390442,
+          "regression_delta": 1.8715858459472656e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.576886177062988,
+          "on_diag_mean_cosine": 0.5300727486610413,
+          "off_diag_mean_cosine": 0.4717462956905365,
+          "regression_delta": 3.7342309951782227e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.523473262786865,
+          "on_diag_mean_cosine": 0.5300900340080261,
+          "off_diag_mean_cosine": 0.4717648923397064,
+          "regression_delta": 5.59389591217041e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Asilos",
+      "held_out_positive": "Aesis",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "asyli",
+        "asylo",
+        "asylum"
+      ],
+      "held_out_top3_cosines": [
+        0.8624112606048584,
+        0.8302661180496216,
+        0.7973313331604004
+      ]
+    },
+    {
+      "fold": 8,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.380032420158386,
+          "on_diag_mean_cosine": 0.5368914008140564,
+          "off_diag_mean_cosine": 0.474051833152771,
+          "regression_delta": 1.874566078186035e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.358958125114441,
+          "on_diag_mean_cosine": 0.5369085669517517,
+          "off_diag_mean_cosine": 0.4740704894065857,
+          "regression_delta": 3.740191459655762e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.368710279464722,
+          "on_diag_mean_cosine": 0.5369256138801575,
+          "off_diag_mean_cosine": 0.4740891456604004,
+          "regression_delta": 5.605816841125488e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "aesar",
+      "held_out_positive": "deus",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "iasser",
+        "assara",
+        "aes"
+      ],
+      "held_out_top3_cosines": [
+        0.8683675527572632,
+        0.8414667844772339,
+        0.8396954536437988
+      ]
+    },
+    {
+      "fold": 9,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.353319406509399,
+          "on_diag_mean_cosine": 0.5376191735267639,
+          "off_diag_mean_cosine": 0.47215741872787476,
+          "regression_delta": 1.856684684753418e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.223736643791199,
+          "on_diag_mean_cosine": 0.5376358032226562,
+          "off_diag_mean_cosine": 0.4721757769584656,
+          "regression_delta": 3.692507743835449e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.274716377258301,
+          "on_diag_mean_cosine": 0.5376524329185486,
+          "off_diag_mean_cosine": 0.47219398617744446,
+          "regression_delta": 5.513429641723633e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "ister",
+      "held_out_positive": "ludio",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "wants",
+        "quer",
+        "vult"
+      ],
+      "held_out_top3_cosines": [
+        0.9345058798789978,
+        0.9311381578445435,
+        0.9227725267410278
+      ]
+    },
+    {
+      "fold": 10,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.1829447746276855,
+          "on_diag_mean_cosine": 0.550014317035675,
+          "off_diag_mean_cosine": 0.4828612208366394,
+          "regression_delta": 1.913309097290039e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.134044289588928,
+          "on_diag_mean_cosine": 0.5500311255455017,
+          "off_diag_mean_cosine": 0.4828798174858093,
+          "regression_delta": 3.7729740142822266e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.347600221633911,
+          "on_diag_mean_cosine": 0.5500481724739075,
+          "off_diag_mean_cosine": 0.4828985631465912,
+          "regression_delta": 5.647540092468262e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Celeres",
+      "held_out_positive": "armatos ad custodiam corporis",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "ceres",
+        "sollers",
+        "ceresole"
+      ],
+      "held_out_top3_cosines": [
+        0.808836817741394,
+        0.8010393381118774,
+        0.7905796766281128
+      ]
+    },
+    {
+      "fold": 11,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.103911280632019,
+          "on_diag_mean_cosine": 0.5454188585281372,
+          "off_diag_mean_cosine": 0.47660037875175476,
+          "regression_delta": 1.811981201171875e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.137272119522095,
+          "on_diag_mean_cosine": 0.5454358458518982,
+          "off_diag_mean_cosine": 0.47661909461021423,
+          "regression_delta": 3.6835670471191406e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.240028619766235,
+          "on_diag_mean_cosine": 0.5454527735710144,
+          "off_diag_mean_cosine": 0.47663775086402893,
+          "regression_delta": 5.549192428588867e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Luceres",
+      "held_out_positive": "tribus",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "lucenses",
+        "lucere",
+        "lucens"
+      ],
+      "held_out_top3_cosines": [
+        0.8287370204925537,
+        0.8081334829330444,
+        0.8047237992286682
+      ]
+    },
+    {
+      "fold": 12,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.206358313560486,
+          "on_diag_mean_cosine": 0.5412383675575256,
+          "off_diag_mean_cosine": 0.47910135984420776,
+          "regression_delta": 1.7404556274414062e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 6.996638298034668,
+          "on_diag_mean_cosine": 0.5412548780441284,
+          "off_diag_mean_cosine": 0.4791194498538971,
+          "regression_delta": 3.549456596374512e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.15755558013916,
+          "on_diag_mean_cosine": 0.5412715077400208,
+          "off_diag_mean_cosine": 0.47913751006126404,
+          "regression_delta": 5.3554773330688477e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Camars",
+      "held_out_positive": "Clusium",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "cammarus",
+        "cameris",
+        "camateri"
+      ],
+      "held_out_top3_cosines": [
+        0.7954418659210205,
+        0.7887603044509888,
+        0.778448760509491
+      ]
+    },
+    {
+      "fold": 13,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.206358313560486,
+          "on_diag_mean_cosine": 0.5412383675575256,
+          "off_diag_mean_cosine": 0.47910135984420776,
+          "regression_delta": 1.7404556274414062e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 6.996638298034668,
+          "on_diag_mean_cosine": 0.5412548780441284,
+          "off_diag_mean_cosine": 0.4791194498538971,
+          "regression_delta": 3.549456596374512e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.15755558013916,
+          "on_diag_mean_cosine": 0.5412715077400208,
+          "off_diag_mean_cosine": 0.47913751006126404,
+          "regression_delta": 5.3554773330688477e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Camars",
+      "held_out_positive": "Clusium",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "cammarus",
+        "cameris",
+        "camateri"
+      ],
+      "held_out_top3_cosines": [
+        0.7954418659210205,
+        0.7887603044509888,
+        0.778448760509491
+      ]
+    },
+    {
+      "fold": 14,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.164766550064087,
+          "on_diag_mean_cosine": 0.5376185178756714,
+          "off_diag_mean_cosine": 0.47215622663497925,
+          "regression_delta": 1.7404556274414062e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 6.956929683685303,
+          "on_diag_mean_cosine": 0.5376347899436951,
+          "off_diag_mean_cosine": 0.47217413783073425,
+          "regression_delta": 3.5315752029418945e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.078153729438782,
+          "on_diag_mean_cosine": 0.5376511216163635,
+          "off_diag_mean_cosine": 0.4721921682357788,
+          "regression_delta": 5.334615707397461e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "ister",
+      "held_out_positive": "ludio",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "wants",
+        "quer",
+        "vult"
+      ],
+      "held_out_top3_cosines": [
+        0.9345059394836426,
+        0.9311383962631226,
+        0.9227726459503174
+      ]
+    },
+    {
+      "fold": 15,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.126433491706848,
+          "on_diag_mean_cosine": 0.5455120801925659,
+          "off_diag_mean_cosine": 0.4785991907119751,
+          "regression_delta": 1.8030405044555664e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.319320321083069,
+          "on_diag_mean_cosine": 0.5455288887023926,
+          "off_diag_mean_cosine": 0.4786175787448883,
+          "regression_delta": 3.641843795776367e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.13579249382019,
+          "on_diag_mean_cosine": 0.5455456376075745,
+          "off_diag_mean_cosine": 0.47863611578941345,
+          "regression_delta": 5.4955482482910156e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "Materinam",
+      "held_out_positive": "plaga",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "matianum",
+        "martanum",
+        "maternum"
+      ],
+      "held_out_top3_cosines": [
+        0.7934200763702393,
+        0.7844428420066833,
+        0.7584639191627502
+      ]
+    },
+    {
+      "fold": 16,
+      "history": [
+        {
+          "epoch": 1,
+          "loss_per_batch": 7.132441401481628,
+          "on_diag_mean_cosine": 0.5312420129776001,
+          "off_diag_mean_cosine": 0.46765756607055664,
+          "regression_delta": 1.767277717590332e-05
+        },
+        {
+          "epoch": 2,
+          "loss_per_batch": 7.488934516906738,
+          "on_diag_mean_cosine": 0.5312584042549133,
+          "off_diag_mean_cosine": 0.46767547726631165,
+          "regression_delta": 3.55839729309082e-05
+        },
+        {
+          "epoch": 3,
+          "loss_per_batch": 7.253060460090637,
+          "on_diag_mean_cosine": 0.5312750339508057,
+          "off_diag_mean_cosine": 0.4676936864852905,
+          "regression_delta": 5.379319190979004e-05
+        }
+      ],
+      "aborted": false,
+      "held_out_etruscan_word": "hister",
+      "held_out_positive": "ludius",
+      "held_out_positive_rank": 21,
+      "held_out_n_candidates": 21,
+      "p_at_1": 0.0,
+      "p_at_5": 0.0,
+      "p_at_10": 0.0,
+      "held_out_top3_words": [
+        "histriam",
+        "hysteria",
+        "histria"
+      ],
+      "held_out_top3_cosines": [
+        0.933224081993103,
+        0.9268568754196167,
+        0.8938641548156738
+      ]
+    }
+  ]
+}

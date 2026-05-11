@@ -44,11 +44,21 @@ workerPoolSpecs:
       env:
         - name: PYTHONUNBUFFERED
           value: "1"
+        # Vertex's pytorch-gpu.2-2 image ships torch_xla preinstalled and
+        # auto-imports it; without a PJRT device set, it segfaults the
+        # process the moment training starts (SIGSEGV at runtime.cc:25).
+        # We are pure-CUDA — point torch_xla at CPU so its init succeeds
+        # and stays out of the way.
+        - name: PJRT_DEVICE
+          value: "CPU"
       command:
         - bash
         - -c
         - |
           set -euo pipefail
+          # Belt-and-braces: also remove torch_xla so nothing tries to
+          # touch the TPU runtime even if some library imports it.
+          pip uninstall -y torch_xla 2>/dev/null || true
           gcloud storage cp ${GCS_CODE_URI} /tmp/finetune_labse_hardneg.py
           python -u /tmp/finetune_labse_hardneg.py \\
             --anchors_path=${ANCHORS} \\

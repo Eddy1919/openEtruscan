@@ -734,7 +734,18 @@ jq '.source' research/anchors/attested.jsonl | sort -u  # source diversity
 
 ---
 
-### T4.3 — Conditional contrastive LaBSE fine-tune
+### T4.3 — Conditional contrastive LaBSE fine-tune — ✅ CLOSED (negative)
+
+> **Result (2026-05-11):** Closed with a documented negative result. T4.2
+> yielded 17 anchors (below the 30-pair gate), so we ran the experiment
+> in its "last-resort Option B" form anyway — offline hard-negative
+> mining + 17-fold LOO LoRA fine-tune on Vertex T4. 17 / 17 folds
+> finished with precision@5 = 0.0; the regression guard stayed quiet
+> throughout. Spend ≈ $0.10. Full writeup +per-fold metrics:
+> [research/results/labse_hardneg_t43_FINDINGS.md](results/labse_hardneg_t43_FINDINGS.md).
+> Vertex job: `4733299958738845696`. Adapter on GCS at
+> `gs://openetruscan-rosetta/adapters/labse-attested-v1/` as audit
+> artefact, NOT promoted to a versioned vocab partition.
 
 **Goal:** **only if** T4.2 yielded ≥ 30 train-eligible attested pairs,
 fine-tune LaBSE with `MultipleNegativesRankingLoss` and re-embed prod
@@ -779,7 +790,16 @@ curl -sf 'https://api.openetruscan.com/neural/rosetta?word=aesar&from=ett&to=lat
 
 ---
 
-### T4.4 — Re-eval against `rosetta-eval-v1`
+### T4.4 — Re-eval against `rosetta-eval-v1` — ✅ CLOSED (subsumed by T4.3)
+
+> **Result (2026-05-11):** Because T4.3 produced no adapter worth
+> promoting (LoRA was effectively a no-op against the 17-anchor /
+> 24,576-trainable-param budget), there is no `labse-attested` column
+> to add to the head-to-head. The negative is already recorded in
+> T4.3's findings doc. The `rosetta_eval_v1.sh` harness is unchanged
+> and remains the canonical comparison for future adapter candidates
+> once the anchor corpus grows (e.g. after Option C community curation
+> lands meaningful contributions).
 
 **Goal:** add a fifth column (`labse-attested`) to the head-to-head
 table; declare success or honest negative result.
@@ -880,8 +900,8 @@ as follows:
 | **P4 — Primary-source mining (proceeding because gap remains)** | | | |
 | T4.1 LLM-as-parser | `scripts/research/llm_extract_anchors.py` using Gemini 2.5 Pro on Vertex (`double-runway`). **Result:** 27 raw glosses from 1,795 passages, 9 hallucination-drops, $4.46 (under $5 gate). Substituted Gemini for Claude because Anthropic-on-Vertex isn't enabled in the project. | [#45](https://github.com/Eddy1919/openEtruscan/pull/45) | ✅ |
 | **T4.2 Anchor review + dedup** | Hand-curated `attested.jsonl` from the 27 raw rows (rough triage suggests ~13 solid + ~5 plausible + ~9 reject) | TBD | 🟡 **NEXT** |
-| T4.3 Conditional contrastive LaBSE fine-tune | Only if T4.2 yields ≥ 30 train-eligible pairs (current rough triage: ~13–18 likely to survive). May skip. | TBD | ⏸ blocked-on T4.2 |
-| T4.4 Re-eval against rosetta-eval-v1 | 5th column (`labse-attested`) in the head-to-head; ≥ 1.5× field@5 lift = ship, otherwise negative result | TBD | ⏸ blocked-on T4.3 |
+| T4.3 Conditional contrastive LaBSE fine-tune | Ran as "Option B last-resort" with 17 anchors + offline-mined hard negs; 17/17 LOO folds p@5=0.0; adapter on GCS as audit artefact only | ~$0.10 (T4, 2m01s) | ✅ closed-negative (2026-05-11) |
+| T4.4 Re-eval against rosetta-eval-v1 | Subsumed by T4.3 — no adapter worth promoting; harness unchanged for future adapter candidates | n/a | ✅ closed-negative (2026-05-11) |
 
 ### Infrastructure side-quests (completed during this WBS)
 
