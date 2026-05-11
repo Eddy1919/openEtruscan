@@ -1062,6 +1062,34 @@ async def rosetta_languages(request: Request) -> dict[str, Any]:
     }
 
 
+# ── Embedder partition aliases ────────────────────────────────────────────
+# Public-facing `?embedder=` values map to the (embedder, embedder_revision)
+# tuple stored in language_word_embeddings. Adding a partition: append
+# one entry here, no other changes. Unknown values get a 400 with the
+# valid list so clients self-discover.
+#
+# The default (None) MUST match the canonical labels already in prod
+# (`sentence-transformers/LaBSE` / `v1`) — see DEFAULT_EMBEDDER in
+# multilingual.py for the same constants. Drift between this map and
+# those constants would silently return empty result sets.
+_EMBEDDER_ALIASES: dict[str | None, tuple[str, str]] = {
+    None:           ("sentence-transformers/LaBSE",       "v1"),
+    "LaBSE":        ("sentence-transformers/LaBSE",       "v1"),
+    "xlmr-lora-v4": ("xlmr-lora",                          "v4"),
+}
+
+
+def _resolve_embedder(alias: str | None) -> tuple[str, str]:
+    """Translate a public `?embedder=` value to the (embedder, embedder_revision)
+    partition stored on disk. Raises ValueError for unknown aliases."""
+    if alias not in _EMBEDDER_ALIASES:
+        valid = sorted(k for k in _EMBEDDER_ALIASES if k is not None)
+        raise ValueError(
+            f"Unknown embedder alias {alias!r}; valid: {valid}"
+        )
+    return _EMBEDDER_ALIASES[alias]
+
+
 @app.get("/neural/rosetta", tags=["Neural"])
 @limiter.limit("30/minute")
 async def rosetta_lookup(
@@ -1082,6 +1110,16 @@ async def rosetta_lookup(
         ),
     ] = "lat",
     k: Annotated[int, Query(ge=1, le=50)] = 10,
+    embedder: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Embedder partition to query. Default (omitted) routes to "
+                "the LaBSE/v1 partition the API has served since launch. "
+                "Pass 'xlmr-lora-v4' for the T2.3 v4 partition once ingested."
+            ),
+        ),
+    ] = None,
     session: AsyncSession = Depends(get_session),
 ):
     """Cross-language nearest-neighbour query in the shared Rosetta space.
@@ -1095,12 +1133,19 @@ async def rosetta_lookup(
     from openetruscan.ml.multilingual import find_cross_language_neighbours
 
     try:
+        emb_id, emb_rev = _resolve_embedder(embedder)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
         hits = await find_cross_language_neighbours(
             word=word,
             source_lang=from_lang,
             target_lang=to_lang,
             session=session,
             k=k,
+            embedder=emb_id,
+            embedder_revision=emb_rev,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -1109,6 +1154,11 @@ async def rosetta_lookup(
         "query": word,
         "from": from_lang,
         "to": to_lang,
+        # Echo the resolved embedder alias (or "LaBSE" when default) so
+        # clients can confirm which partition served them. The eval harness
+        # uses this to assert the right column was queried in the
+        # head-to-head rosetta-eval-v1 run.
+        "embedder": embedder if embedder is not None else "LaBSE",
         "neighbours": [
             {"word": h.word, "language": h.language, "cosine": h.cosine}
             for h in hits
@@ -1116,7 +1166,10 @@ async def rosetta_lookup(
     }
 
 
-_VOCAB_CACHE: dict[str, tuple[float, list[str]]] = {}
+# Cache key is (lang, embedder_alias) so the v4 partition's vocab doesn't
+# leak into the LaBSE caller's response. The TTL is per-key — each
+# partition warms its cache independently on first hit.
+_VOCAB_CACHE: dict[tuple[str, str | None], tuple[float, list[str]]] = {}
 _VOCAB_TTL_SECONDS = 3600
 
 @app.get("/neural/rosetta/vocab", tags=["Neural"])
@@ -1127,29 +1180,49 @@ async def rosetta_vocab(
         str,
         Query(description="Language code (e.g. 'lat', 'ett')"),
     ],
+    embedder: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Embedder partition to query. Default routes to "
+                "LaBSE/v1. Pass 'xlmr-lora-v4' for the v4 partition."
+            ),
+        ),
+    ] = None,
     session: AsyncSession = Depends(get_session),
 ):
-    """Retrieve up to 50k vocabulary words for a given language. Cached for 1 hour."""
+    """Retrieve up to 50k vocabulary words for a given language + embedder
+    partition. Cached for 1 hour per (lang, embedder) tuple."""
     import time
     from sqlalchemy import text
-    
+
+    try:
+        emb_id, emb_rev = _resolve_embedder(embedder)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     now = time.time()
-    # TODO(T2.3): The cache key needs the embedder dimension or partition once we
-    # introduce the v4 embedding partition, so `lat` isn't cached across both.
-    if lang in _VOCAB_CACHE:
-        expires_at, words = _VOCAB_CACHE[lang]
+    cache_key = (lang, embedder)
+    if cache_key in _VOCAB_CACHE:
+        expires_at, words = _VOCAB_CACHE[cache_key]
         if now < expires_at:
             return {"words": words}
         else:
-            _VOCAB_CACHE.pop(lang, None)
-            
+            _VOCAB_CACHE.pop(cache_key, None)
+
     stmt = text(
-        "SELECT word FROM language_word_embeddings WHERE language = :lang ORDER BY word LIMIT 50000"
+        "SELECT word FROM language_word_embeddings "
+        "WHERE language = :lang "
+        "  AND embedder = :embedder AND embedder_revision = :embedder_revision "
+        "ORDER BY word LIMIT 50000"
     )
-    result = await session.execute(stmt, {"lang": lang})
+    result = await session.execute(
+        stmt,
+        {"lang": lang, "embedder": emb_id, "embedder_revision": emb_rev},
+    )
     words = [row[0] for row in result.fetchall()]
-    
-    _VOCAB_CACHE[lang] = (now + _VOCAB_TTL_SECONDS, words)
+
+    _VOCAB_CACHE[cache_key] = (now + _VOCAB_TTL_SECONDS, words)
     return {"words": words}
 
 

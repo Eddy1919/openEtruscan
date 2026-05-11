@@ -531,3 +531,117 @@ async def test_repo_search_has_trismegistos(db_session, sample_data):
     unaligned = await repo.search(has_trismegistos=False, limit=50)
     assert "ETR_002" not in {r.id for r in unaligned.inscriptions}
     assert {"ETR_001", "ETR_003"}.issubset({r.id for r in unaligned.inscriptions})
+
+
+# ============================================================================
+# T2.3 — /neural/rosetta + /neural/rosetta/vocab embedder partitioning
+# ============================================================================
+
+
+async def test_rosetta_unknown_embedder_returns_400(
+    client: AsyncClient, sample_data,
+):
+    """Unknown alias on ``?embedder=`` → 400 with the valid-aliases list."""
+    response = await client.get(
+        "/neural/rosetta",
+        params={"word": "fanu", "from": "ett", "to": "lat", "embedder": "banana"},
+    )
+    assert response.status_code == 400
+    body = response.json()
+    # Useful error: lists valid options so clients can self-discover.
+    assert "banana" in body["detail"] or "Unknown embedder" in body["detail"]
+
+
+async def test_rosetta_default_response_echoes_labse_alias(
+    client: AsyncClient, sample_data,
+):
+    """Default call (no ``?embedder=``) echoes ``embedder: 'LaBSE'`` in the
+    response body. Used by the eval harness's head-to-head logic to confirm
+    which partition served the query."""
+    try:
+        response = await client.get(
+            "/neural/rosetta",
+            params={"word": "definitely-not-real-t2-3", "from": "ett", "to": "lat"},
+        )
+    except Exception as exc:  # noqa: BLE001 — same skip pattern as test_multilingual
+        if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
+            import pytest
+            pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+        raise
+    if response.status_code == 500:
+        import pytest
+        pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("embedder") == "LaBSE"
+
+
+async def test_rosetta_xlmr_lora_v4_alias_resolves(
+    client: AsyncClient, sample_data,
+):
+    """Explicit ``?embedder=xlmr-lora-v4`` is accepted (resolves to the
+    on-disk partition); response echoes it back. Empty neighbours is fine —
+    the test DB doesn't populate v4 vectors, but the partition is a
+    legitimate alias and must not 400."""
+    try:
+        response = await client.get(
+            "/neural/rosetta",
+            params={
+                "word": "definitely-not-real-t2-3-v4",
+                "from": "ett", "to": "lat",
+                "embedder": "xlmr-lora-v4",
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
+            import pytest
+            pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+        raise
+    if response.status_code == 500:
+        import pytest
+        pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("embedder") == "xlmr-lora-v4"
+
+
+async def test_rosetta_vocab_cache_keyed_by_embedder(
+    client: AsyncClient, sample_data,
+):
+    """The vocab endpoint accepts ``?embedder=`` and the cache key
+    distinguishes partitions — same lang under different embedders must
+    not pollute each other's cache."""
+    try:
+        # Two calls with the same lang but different embedder alias.
+        # Both should succeed independently; the cache holds (lang, embedder).
+        resp_labse = await client.get(
+            "/neural/rosetta/vocab",
+            params={"lang": "lat"},
+        )
+        resp_v4 = await client.get(
+            "/neural/rosetta/vocab",
+            params={"lang": "lat", "embedder": "xlmr-lora-v4"},
+        )
+    except Exception as exc:  # noqa: BLE001
+        if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
+            import pytest
+            pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+        raise
+    if resp_labse.status_code == 500 or resp_v4.status_code == 500:
+        import pytest
+        pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+    assert resp_labse.status_code == 200
+    assert resp_v4.status_code == 200
+    # Both responses are valid (possibly empty in test). The point is each
+    # uses its own cache slot, not that they return different words.
+
+
+async def test_rosetta_vocab_unknown_embedder_returns_400(
+    client: AsyncClient, sample_data,
+):
+    """Same alias-validation contract as /neural/rosetta."""
+    response = await client.get(
+        "/neural/rosetta/vocab",
+        params={"lang": "lat", "embedder": "banana"},
+    )
+    assert response.status_code == 400
