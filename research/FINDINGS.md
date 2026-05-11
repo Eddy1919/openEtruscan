@@ -301,6 +301,146 @@ that strict-lexical missed.
 
 ---
 
+## P4 results so far
+
+### T4.1 + T4.2 — primary-source anchor mining yield
+
+Per the WBS decision tree, the gap-still-remains verdict after P5
+pushed us into P4: mine the ~1,800 classical-author passages that
+mention the Etruscans for *verbatim* bilingual gloss attestations
+the LLM-as-parser pipeline can extract under hallucination-defence.
+
+**Pipeline:** [`scripts/research/llm_extract_anchors.py`](../scripts/research/llm_extract_anchors.py)
+on Gemini 2.5 Pro via Vertex AI (billed to `double-runway-465420-h9`),
+followed by [`scripts/research/review_anchors.py`](../scripts/research/review_anchors.py)
+for keep/skip/edit triage + dedup against the rosetta-eval-v1 test
+split. Originally specified for Claude Sonnet via Anthropic-on-Vertex
+but the publisher hasn't been enabled in the project (manual
+Terms-of-Service click) — Gemini 2.5 Pro substituted cleanly.
+
+**Pipeline stats:**
+
+| Stage | Stat | Value |
+| --- | --- | ---: |
+| T4.1 extract | passages processed | 1,795 / 1,795 |
+| T4.1 extract | raw glosses kept (post verbatim-substring check) | **27** |
+| T4.1 extract | hallucinated-quote drops | 9 |
+| T4.1 extract | wall time | 62.3 min |
+| T4.1 extract | cost (USD) | **$4.46** |
+| T4.2 review | kept (`attested.jsonl`) | **17** |
+| T4.2 review | rejected (skip) | 10 |
+| T4.2 review | test-split collisions (`attested_eval_overlap.jsonl`) | 0 |
+
+**Yield breakdown by author:**
+
+* Livy (*Ab urbe condita* + variants): 7
+* Strabo (*Geography*): 3
+* Apollodorus (*Library*): 1
+* Dionysius of Halicarnassus (*Antiquitates Romanae*): 1
+* Juvenal (*Saturae*): 1
+* Pliny the Elder (*Naturalis Historia*): 1
+* Silius Italicus (*Punica*): 1
+* Suetonius (*Divus Augustus*): 1
+* Valerius Maximus (*Facta et Dicta Memorabilia*): 1
+
+Equivalent-language split: 12 Latin, 5 Greek.
+
+**Anchors kept** (chronologically by passage_index):
+
+```text
+ἰταλόν   → ταῦρον   (Apollodorus)            "Etruscans called the bull `italos`"
+τύρσεις  → ἐντείχιοι οἰκήσεις (Dionysius)    "Etruscan name for walled dwellings"
+χαῖρε    → Καῖρε    (Strabo)                 Caere/Cisra renaming etymology
+Κύπραν   → Ἥραν     (Strabo)                 Cupra ≈ Hera
+ἀρίμους  → πιθήκους (Strabo)                 Etruscan for "monkeys"
+Nortia   → Fortuna  (Juvenal)                Etruscan goddess Nortia ≈ Fortuna
+ossifragam → barbatam (Pliny)                Etruscan for "bearded vulture"
+Asilos   → Aesis    (Silius)                 Aesis river → Asilos populus toponym
+aesar    → deus     (Suetonius)              THE canonical Etruscan→Latin gloss
+ister    → ludio    (Livy ×2 + Val. Max.)    histrio/hister actor etymology
+Celeres  → bodyguards (Livy)                 Romulus's mounted bodyguard
+Luceres  → tribus   (Livy)                   antiqua tribus name
+Camars   → Clusium  (Livy ×2)                old Etruscan name for Clusium
+Materinam → plaga   (Livy)                   Etruscan name for a region
+```
+
+### Gate check — T4.3 status
+
+The WBS T4.3 spec requires **≥ 30 train-eligible attested pairs**
+before the conditional contrastive LaBSE fine-tune runs. Current
+yield is **17** — well below the gate. Per the decision tree:
+
+```text
+P4 → conditional contrastive fine-tune
+  ├── yield ≥30 attested anchors AND fine-tune ≥1.5× field@5 → ship, publish
+  ├── yield ≥30 but fine-tune <1.5× → publishable negative result
+  └── yield <30 → documented data-limitation, hard-negative-mining
+                  last-resort experiment  ← we are here
+```
+
+**This is itself a publishable result.** Two thousand years of
+classical-literature treatment of the Etruscans yields **17 verbatim
+bilingual gloss attestations** (and that with a state-of-the-art LLM
+combing every passage exhaustively for the strict pattern). Etruscan
+isn't *under-attested* — it's *unattested* in the bilingual-gloss
+register Latin and Greek authors used for Greek loanwords or
+technical terms. The Roman literary record knows Etruscan ritual
+practice deeply but barely names a dozen Etruscan *words*.
+
+### What's actually in the 17 anchors
+
+Of the 17 train-eligible pairs, three structural patterns dominate:
+
+1. **Proper-noun renamings (~7 pairs).** Etruscan place / tribe /
+   goddess names that Roman authors gloss with Latin equivalents
+   (Camars→Clusium, Materinam→plaga, Cupra↔Hera, Caere etymology).
+   These contribute almost nothing to the *common-vocabulary*
+   retrieval task that `rosetta-eval-v1` measures.
+
+2. **Loanword etymologies (~5 pairs).** The canonical *aesar*, *ister*
+   / *hister* → *ludio* / *ludius* (the actor etymology, repeated
+   across Livy and Valerius Maximus), Nortia → Fortuna. These are the
+   "real" Etruscan→Latin / Greek attestations the literature is
+   famous for.
+
+3. **Topographic / institutional names (~5 pairs).** Asilos / Aesis,
+   Celeres bodyguard, Luceres tribe — Etruscan-origin proper nouns
+   that the Roman state inherited.
+
+Group 2 (the 5 etymological pairs) is what the WBS fine-tune
+*wanted* to amplify. With LaBSE already returning *aesar* → *deus*
+in its top-5 (the canonical case), the leverage from contrastive
+fine-tuning on 5 examples — at most 5 — is unlikely to move the
+top-line `field@10` enough to clear the 0.20 publish gate.
+
+### Implication for sequencing
+
+T4.3 is **gated-off**. The path forward per the decision tree is:
+
+* **(option A) Publish the negative result.** Three lines of evidence
+  now point in the same direction: P3 found v4 LoRA didn't beat LaBSE;
+  P5 found cross-encoder rerank made things worse; P4 found
+  primary-source mining cannot supply the data fine-tuning would
+  need. Together that's a strong contribution to the
+  ancient-language IR literature: the standard interventions all
+  fail in low-resource settings for principled, characterisable
+  reasons.
+* **(option B) Hard-negative-mining last-resort.** The WBS leaves the
+  door open for this — manufacture contrastive negatives from
+  near-orthographic mismatches in the existing corpus and fine-tune
+  on those. Cheap, but high risk of overfitting to surface form.
+* **(option C) Active learning + qualitative-review track.** Document
+  the 17 anchors as the seed for a community-curated extension and
+  pivot the system to support **review-and-extend** workflows rather
+  than translation. This aligns with the M2 qualitative-review track
+  flagged in the WBS "out of scope" footnote.
+
+T4.4 (re-eval against rosetta-eval-v1) is mechanically blocked-on
+T4.3 producing a new model, so it's also out of scope until we
+escalate via option B or pivot via option C.
+
+---
+
 ## What's still missing — scientific rigour gaps
 
 Acknowledging where we still fall short of publishable rigour:
