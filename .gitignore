@@ -127,3 +127,9 @@ local_test.db
 # research/papers/<venue>-<year>/ and add a targeted negative pattern
 # below to whitelist it; never !-include the whole directory.
 /research/paper/
+
+# OpenTofu / Terraform
+terraform/.terraform/
+terraform/tofu_*.zip
+*.tfstate
+*.tfstate.backup

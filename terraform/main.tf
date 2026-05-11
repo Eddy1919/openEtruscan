@@ -32,7 +32,7 @@ resource "google_storage_bucket" "iiif_images" {
   name          = "openetruscan-iiif-images"
   location      = var.region
   force_destroy = false
-  
+
   # Allow public read for IIIF image tiles
   uniform_bucket_level_access = true
 }
@@ -51,25 +51,31 @@ resource "google_sql_database_instance" "main" {
 
   settings {
     tier = "db-custom-2-7680"
-    
-    disk_type = "PD_SSD"
-    disk_size = 10
+
+    disk_type       = "PD_SSD"
+    disk_size       = 10
     disk_autoresize = true
-    
+
     backup_configuration {
       enabled                        = true
       point_in_time_recovery_enabled = true
       transaction_log_retention_days = 7
-      retained_backups               = 30
+      # In provider v5.x `retained_backups` is nested under
+      # `backup_retention_settings`. Flat form was a schema mistake from an
+      # older provider version that `tofu validate` now rejects.
+      backup_retention_settings {
+        retained_backups = 30
+        retention_unit   = "COUNT"
+      }
     }
-    
+
     ip_configuration {
-      ipv4_enabled = false
+      ipv4_enabled    = false
       private_network = "projects/${var.project_id}/global/networks/default"
-      require_ssl = true
+      require_ssl     = true
     }
   }
-  
+
   deletion_protection = true
 }
 
@@ -136,15 +142,15 @@ resource "google_secret_manager_secret" "gemini_key" {
 resource "google_monitoring_alert_policy" "slow_sql" {
   display_name = "Slow SQL Queries Alert"
   combiner     = "OR"
-  
+
   conditions {
     display_name = "High Slow Query Count"
     condition_threshold {
-      filter     = "metric.type=\"cloudsql.googleapis.com/database/postgresql/transaction_count\" AND resource.type=\"cloudsql_database\" AND metric.labels.transaction_type=\"slow_query\""
-      duration   = "60s"
-      comparison = "COMPARISON_GT"
+      filter          = "metric.type=\"cloudsql.googleapis.com/database/postgresql/transaction_count\" AND resource.type=\"cloudsql_database\" AND metric.labels.transaction_type=\"slow_query\""
+      duration        = "60s"
+      comparison      = "COMPARISON_GT"
       threshold_value = 10
-      
+
       aggregations {
         alignment_period   = "60s"
         per_series_aligner = "ALIGN_RATE"
