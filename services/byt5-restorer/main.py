@@ -118,7 +118,14 @@ async def lifespan(app: FastAPI):
     global _cache_conn
     _cache_conn = _init_cache()
     logger.info("Cache initialised at %s", CACHE_DB)
-    # Model loaded lazily on first request to keep cold start minimal
+    # Model load is intentionally LAZY (first /restore call triggers
+    # _ensure_model). An earlier attempt at eager loading in lifespan
+    # was rejected by Cloud Run with "The user-provided container failed
+    # to start and listen on the port defined ... within the allocated
+    # timeout" — loading byt5-small to memory takes ~25-45s on 1 CPU
+    # and the lifespan startup blocks uvicorn from binding $PORT.
+    # Cold-start tolerance is now handled at the *API* layer via the
+    # 90s httpx timeout (see openetruscan/api/server.py).
     yield
     if _cache_conn:
         _cache_conn.close()
@@ -213,12 +220,23 @@ async def restore(req: RestoreRequest):
             detail=f"Model warming up, please retry in ~10s: {exc}",
         )
 
+    import re
+
     import torch
 
     t0 = time.time()
 
-    # Prepare the masked input for ByT5
-    masked_text = req.text.replace("[---]", "<extra_id_0>")
+    # Translate Leiden Convention lacunae markers to the ByT5
+    # span-corruption mask:
+    #   [.]      one missing char
+    #   [..]     two missing chars
+    #   [...]    three missing chars (etc., up to ~10)
+    #   [---]    legacy "wide range" notation
+    # ByT5 only understands `<extra_id_0>` so every dotted-bracket span
+    # collapses to one mask. We don't lose much information by erasing the
+    # span length because byt5-small is happy to generate variable-length
+    # restorations from the surrounding context.
+    masked_text = re.sub(r"\[(\.+|\-+)\]", "<extra_id_0>", req.text)
     inputs = _tokenizer(masked_text, return_tensors="pt", padding=True)
 
     with torch.no_grad():
