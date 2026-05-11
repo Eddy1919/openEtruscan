@@ -838,3 +838,64 @@ publishable outcome.
 Live status is in the chat session via TodoWrite. The
 **source-of-truth** for completed work is `git log --oneline` on the
 PRs that close each task ID.
+
+### Results (as of 2026-05-11)
+
+Phase 1 → 5 are all landed except T4.2-T4.4 (anchor review + the
+conditional fine-tune that hangs off the yield). The decision-tree
+arms in `## Phase summary > Decision tree after each phase` resolved
+as follows:
+
+- **After P3 (T3.1):** v4 column produced `field@10 = 0.0625`, *worse*
+  than LaBSE's `0.1875` — gap remains → proceed to P5.
+- **After P5 (T5.1 + T5.2 + T5.3 + T5.4):** rerank made `field@10`
+  *worse* (T5.1 negative result, documented in `FINDINGS.md`).
+  Margin-calibrated retention gave a real precision lift at
+  `margin ≥ 0.05` (T5.2), but unconditional `field@10` stayed at
+  0.1875. Below the ≥ 0.20 publish gate → proceed to P4.
+
+| Task | What it produced | Lands as | Status |
+| --- | --- | :---: | :---: |
+| **P1 — Defensible eval** | | | |
+| T1.1 Levenshtein retrieval baseline | `--baseline=levenshtein` mode + `/neural/rosetta/vocab` endpoint. Strict@10 = 0, field@10 = 0; coverage@0.5 = 0.955 (anchored to surface form) | [#14](https://github.com/Eddy1919/openEtruscan/pull/14) | ✅ |
+| T1.2 Random retrieval baseline | `--baseline=random` + analytical `k/V` and `1−C(V−F,k)/C(V,k)` arms | [#15](https://github.com/Eddy1919/openEtruscan/pull/15) | ✅ |
+| T1.3 Held-out 40/22 anchor split | `evals/rosetta_eval_pairs.py` with `split` of `train` or `test`; `min_confidence` filter | [#16](https://github.com/Eddy1919/openEtruscan/pull/16) | ✅ |
+| T1.4 Threshold-aware coverage | `coverage@{0.50, 0.70, 0.85}` cosine; correctly anchored to *target-side surface form* | [#17](https://github.com/Eddy1919/openEtruscan/pull/17) | ✅ |
+| T1.4b Integration glue | All 4 baseline columns side-by-side in one report shape | [#19](https://github.com/Eddy1919/openEtruscan/pull/19) | ✅ |
+| T1.5 Frozen `rosetta-eval-v1` | `--benchmark=rosetta-eval-v1` switch + `evals/rosetta_eval_v1.sh` orchestrator. **First frozen run:** model field@10 = 0.1875 | [#20](https://github.com/Eddy1919/openEtruscan/pull/20) | ✅ |
+| **P2 — etr-lora-v4 head-to-head** | | | |
+| T2.1 Parameterise embed script | `--embedder` + `--revision` flags; `--corpus` accepts local paths | inside [#30](https://github.com/Eddy1919/openEtruscan/pull/30) | ✅ |
+| T2.2 Embed prod vocab through v4 | 8,905 ett vectors at `(xlmr-lora, v4)`; Vertex job `xlmr-embed-ett-20260510-200031` | inside [#30](https://github.com/Eddy1919/openEtruscan/pull/30) | ✅ |
+| T2.3 Ingest v4 vectors behind a feature flag | Alembic `b7e6f7a8b9c1`: PK extended to `(language, word, embedder, embedder_revision)`; `?embedder=` query param; language-aware alias resolution in [#38](https://github.com/Eddy1919/openEtruscan/pull/38) | [#30](https://github.com/Eddy1919/openEtruscan/pull/30), [#38](https://github.com/Eddy1919/openEtruscan/pull/38) | ✅ |
+| T2.4 Run the head-to-head eval | 4-column eval `{random, levenshtein, labse, v4}`; first complete head-to-head 2026-05-11T08:00:32Z; v4 column = `field@10 = 0.0625` (loses to LaBSE) | [#35](https://github.com/Eddy1919/openEtruscan/pull/35) | ✅ |
+| Latin v4 re-embed | 100k Latin tokens through XLM-R-base, ingested under `(xlm-roberta-base, v4)` | [#36](https://github.com/Eddy1919/openEtruscan/pull/36) | ✅ |
+| **P3 — Findings refresh** | | | |
+| T3.1 FINDINGS.md head-to-head table | 4-column table + decision-tree verdict; gap remains → P5 | [#39](https://github.com/Eddy1919/openEtruscan/pull/39) | ✅ |
+| T3.2 Reproducibility manifest | Audit-grade `reproduce-rosetta-eval-v1.md` — alembic head pinned, GCS md5 hashes, run-log table | [#37](https://github.com/Eddy1919/openEtruscan/pull/37) | ✅ |
+| **P5 — Cheap interventions (sequenced before P4)** | | | |
+| T5.1 Cross-encoder rerank | BGE rerank-v2-m3 wired into the harness via `--rerank`. **Negative result:** field@10 0.1875 → 0.1250 (worse). Documented as publishable. | [#40](https://github.com/Eddy1919/openEtruscan/pull/40), [#41](https://github.com/Eddy1919/openEtruscan/pull/41) | ✅ |
+| T5.2 Calibration curve | Per-pair `top1_margin` + `calibration_curve` block; at `τ ≥ 0.05` precision@5 lifts 2.7× | [#42](https://github.com/Eddy1919/openEtruscan/pull/42) | ✅ |
+| T5.3 `min_margin` query param | `/neural/rosetta?min_margin=…` empties when margin < τ | [#42](https://github.com/Eddy1919/openEtruscan/pull/42) | ✅ |
+| T5.4 Dual-track API | `?track=` accepting `semantic`, `loanword`, or `all`; semantic drops the `apa→apa` loanword leak | [#42](https://github.com/Eddy1919/openEtruscan/pull/42) | ✅ |
+| **P4 — Primary-source mining (proceeding because gap remains)** | | | |
+| T4.1 LLM-as-parser | `scripts/research/llm_extract_anchors.py` using Gemini 2.5 Pro on Vertex (`double-runway`). **Result:** 27 raw glosses from 1,795 passages, 9 hallucination-drops, $4.46 (under $5 gate). Substituted Gemini for Claude because Anthropic-on-Vertex isn't enabled in the project. | [#45](https://github.com/Eddy1919/openEtruscan/pull/45) | ✅ |
+| **T4.2 Anchor review + dedup** | Hand-curated `attested.jsonl` from the 27 raw rows (rough triage suggests ~13 solid + ~5 plausible + ~9 reject) | TBD | 🟡 **NEXT** |
+| T4.3 Conditional contrastive LaBSE fine-tune | Only if T4.2 yields ≥ 30 train-eligible pairs (current rough triage: ~13–18 likely to survive). May skip. | TBD | ⏸ blocked-on T4.2 |
+| T4.4 Re-eval against rosetta-eval-v1 | 5th column (`labse-attested`) in the head-to-head; ≥ 1.5× field@5 lift = ship, otherwise negative result | TBD | ⏸ blocked-on T4.3 |
+
+### Infrastructure side-quests (completed during this WBS)
+
+These weren't in the WBS but were unblockers / quality-of-life lifts
+that landed alongside the research tasks:
+
+| Side-quest | Why it mattered | PR |
+| --- | --- | :---: |
+| Migrate CI/CD from GitHub Actions to Cloud Build | Removed WIF gymnastics, single billing surface, native Secret-Manager access | [#21](https://github.com/Eddy1919/openEtruscan/pull/21) onwards |
+| Phantom alembic-revision recovery (`j5e6f7a8b9c0`) | Unblocked prod deploys that were stuck mid-T2.3 | inside [#30](https://github.com/Eddy1919/openEtruscan/pull/30) |
+| Zenodo concept-DOI `10.5281/zenodo.20075836` backfill | Made the corpus citeable; surfaced in `/cite` page | (multiple) |
+| HF Hub push of `etr-lora-v4` | Adapter live at <https://huggingface.co/Eddy1919/etr-lora-v4> | [#43](https://github.com/Eddy1919/openEtruscan/pull/43) |
+| Weekly security-scan Cloud Scheduler | Reproducible setup script with the three non-obvious IAM bindings encoded | [#44](https://github.com/Eddy1919/openEtruscan/pull/44) |
+| `openetruscan-ci-pr` trigger fix | `commentControl: COMMENTS_ENABLED → COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY` so maintainer PRs auto-build | (gcloud, no PR) |
+| `openetruscan-ci-matrix` shared-DB-race fix | Per-Python-version isolated test databases | [#46](https://github.com/Eddy1919/openEtruscan/pull/46) |
+| Repo hygiene (`yolo*.pt`, `bandit.json` untracked) | ~11.5 MB off the working tree | [#47](https://github.com/Eddy1919/openEtruscan/pull/47) |
+| Pelagios Network metadata + manifesto surfacing | Machine-readable membership in CITATION.cff / .zenodo.json / codemeta.json + 6th principle on the frontend manifesto | [#48](https://github.com/Eddy1919/openEtruscan/pull/48) + frontend [#3](https://github.com/Eddy1919/openEtruscan-frontend/pull/3) |
