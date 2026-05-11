@@ -104,12 +104,12 @@ steps:
           --ssh-flag="-n" \
           --command='
             set -e
-            # NOTE on $$ escaping below: Cloud Build interprets $FOO as a
-            # substitution variable (even without curly braces). The bash
-            # variables in the remote command must be escaped as $$FOO so
-            # the Cloud Build parser passes them through verbatim to the
-            # shell on the VM. Without this, the build is rejected with
-            # "invalid value for build.substitutions" before any step runs.
+            # Cloud Build interprets bare-shell vars in this YAML as
+            # substitution keys; bash vars in the remote command are
+            # escaped with double-dollar so the parser passes them
+            # through verbatim. Do NOT write a literal escape example
+            # in this comment — the parser sees it through the bash
+            # # too and tries to resolve "FOO" or whatever you used.
             REPO_DIR=$$(sudo find /home -maxdepth 2 -name "openEtruscan" -type d -print -quit)
             if [ -z "$$REPO_DIR" ]; then echo "Repository not found"; exit 1; fi
 
