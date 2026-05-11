@@ -17,7 +17,7 @@ off GitHub Actions and onto Cloud Build for three reasons:
 | Project | Role |
 |---|---|
 | **`long-facet-427508-j2`** | **Where all Cloud Build runs execute, alongside the deploy target.** Project number `19927826393`. Hosts the prod GCE VM `openetruscan-eu`, the Artifact Registry repo `openetruscan/api`, the GitHub App connection, the build secrets, and the deploy SA `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com`. Builds run as that SA directly — no cross-project impersonation. |
-| **`long-facet-427508-j2`** | **Batch jobs only** (occasional Vertex training submissions, scheduled cron). Not in the CI/CD critical path; do NOT point `cloudbuild/*.yaml` at this project. |
+| **`double-runway-465420-h9`** | **Batch jobs only** (Vertex training submissions, eval jobs that touch the prod corpus). Not in the CI/CD critical path; do NOT point `cloudbuild/*.yaml` at this project. The "spending/training-on-double-runway, infra-on-long-facet" split is the project-billing rule. |
 | **`openetruscan-rosetta`** | AI workload storage (`gs://openetruscan-rosetta/` for adapters, embeddings, corpus). Read-only from Cloud Build steps that need the v4 JSONL etc. |
 
 ## Files
@@ -144,16 +144,18 @@ gcloud builds triggers create github \
   --service-account=$SA \
   --description="Gitleaks secret detection"
 
-# 4e. Weekly security scan via Cloud Scheduler hitting the trigger's webhook
-#     (Cloud Build has no native cron; use Scheduler → triggers.run)
-gcloud scheduler jobs create http openetruscan-security-weekly \
-  --project=$PROJECT \
-  --location=europe-west4 \
-  --schedule="0 3 * * 1" \
-  --uri="https://cloudbuild.googleapis.com/v1/projects/$PROJECT/triggers/openetruscan-security:run" \
-  --http-method=POST \
-  --message-body='{"branchName":"main"}' \
-  --oauth-service-account-email=gh-actions-deployer@${PROJECT}.iam.gserviceaccount.com
+# 4e. Weekly security scan via Cloud Scheduler hitting the trigger's webhook.
+#     Cloud Build has no native cron; we use Scheduler → triggers.run.
+#     This is non-trivial because the caller SA needs:
+#       (a) builds.builder + builds.editor on the project,
+#       (b) the Scheduler service-agent needs tokenCreator on the caller SA,
+#       (c) the caller SA needs serviceAccountUser on the *trigger's* SA.
+#     All three are wired by:
+bash scripts/ops/setup_weekly_security_cron.sh
+#     The job name is `openetruscan-weekly-security`, location `europe-west6`,
+#     schedule `0 7 * * 1` UTC. Test-fire it with:
+#       gcloud scheduler jobs run openetruscan-weekly-security \
+#         --location=europe-west6 --project=long-facet-427508-j2
 
 # 4f. PyPI publish on release tags
 gcloud builds triggers create github \
