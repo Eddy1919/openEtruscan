@@ -47,25 +47,54 @@ logger = logging.getLogger("ingest_embeddings")
 
 
 async def _stream_gcs_jsonl(uri: str) -> AsyncIterator[dict]:
-    """Stream a JSONL file from GCS via ``gcloud storage cat``. Avoids
-    landing the 3.3 GB lat-grc file on disk."""
-    proc = await asyncio.create_subprocess_exec(
-        "gcloud", "storage", "cat", uri,
-        stdout=subprocess.PIPE,
-    )
-    assert proc.stdout is not None
-    while True:
-        line = await proc.stdout.readline()
-        if not line:
-            break
-        line = line.decode("utf-8").strip()
-        if not line:
-            continue
+    """Stream a JSONL file from either GCS (``gs://``) or a local path.
+
+    GCS URIs invoke ``gcloud storage cat`` so the 3.3 GB lat-grc file
+    never lands on disk. Local file paths (anything that doesn't
+    match the ``gs://`` prefix) are read line-by-line via a worker
+    thread, so the same script works in environments without
+    ``gcloud`` installed — notably the Container-Optimized-OS VM
+    that pre-stages JSONLs via a sidecar ``google/cloud-sdk`` docker
+    container before the openetruscan-api image processes them.
+    """
+    if uri.startswith("gs://"):
+        proc = await asyncio.create_subprocess_exec(
+            "gcloud", "storage", "cat", uri,
+            stdout=subprocess.PIPE,
+        )
+        assert proc.stdout is not None
         try:
-            yield json.loads(line)
-        except json.JSONDecodeError:
-            continue
-    await proc.wait()
+            while True:
+                line = await proc.stdout.readline()
+                if not line:
+                    break
+                line = line.decode("utf-8").strip()
+                if not line:
+                    continue
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+        finally:
+            await proc.wait()
+        return
+
+    # Local file path. Reading via run_in_executor keeps the event
+    # loop responsive on large files; line-by-line, no in-memory
+    # buffering.
+    loop = asyncio.get_event_loop()
+    f = await loop.run_in_executor(None, lambda: open(uri, encoding="utf-8"))  # noqa: SIM115
+    try:
+        for raw in f:
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                yield json.loads(line)
+            except json.JSONDecodeError:
+                continue
+    finally:
+        f.close()
 
 
 def _vector_to_pgvector(vec: list[float]) -> str:
