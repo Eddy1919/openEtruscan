@@ -85,8 +85,15 @@ docs/internal/
 run_wif.sh
 slow_query_policy.json
 
-# Missing local artifacts
-/models/
+# Missing local artifacts. The /models/ tree holds local copies of
+# adapter weights pulled from gs://openetruscan-rosetta/adapters/ and
+# is heavy / regeneratable; default-ignore the whole tree, then
+# selectively re-include the HuggingFace Hub model cards we *do* want
+# tracked (so RG.7's push_etr_lora_v4.py has a source of truth).
+/models/*
+!/models/etr-lora-v4/
+/models/etr-lora-v4/*
+!/models/etr-lora-v4/README.md
 cloud-sql-proxy
 
 # Editor / agent local state
