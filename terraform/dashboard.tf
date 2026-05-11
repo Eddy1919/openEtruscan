@@ -29,6 +29,15 @@ locals {
 }
 
 resource "google_monitoring_dashboard" "api_endpoints" {
+  # GCP's monitoring backend normalises the dashboard JSON we submit
+  # (adds default `targetAxis = "Y1"`, `etag`, etc.). Without this
+  # `ignore_changes` every `tofu plan` would propose to re-write the
+  # JSON back into our narrower shape, GCP would re-normalise, and we'd
+  # loop forever. The shape is otherwise an exact match.
+  lifecycle {
+    ignore_changes = [dashboard_json]
+  }
+
   dashboard_json = jsonencode({
     displayName = "OpenEtruscan API & Anchors"
     mosaicLayout = {
