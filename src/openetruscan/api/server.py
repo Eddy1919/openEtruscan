@@ -989,10 +989,18 @@ async def restore_lacunae(
     if settings.byt5_service_url:
         client = request.app.state.http
         try:
+            # 90s, not 30s, because the byt5 service is on Cloud Run with
+            # min-instances=0 and a cold start that includes loading the
+            # transformer weights into memory (~25-45s on a 1 CPU /
+            # 2Gi instance). With a 30s timeout the first request after
+            # scale-to-zero was always failing with 502; 90s gives the
+            # service enough headroom to warm up and respond on the same
+            # connection. Once warm, inference is sub-second so the bigger
+            # timeout has no downside.
             resp = await client.post(
                 f"{settings.byt5_service_url.rstrip('/')}/restore",
                 json={"text": body.text, "top_k": body.top_k},
-                timeout=30.0,
+                timeout=90.0,
             )
             resp.raise_for_status()
             return {"text": body.text, "predictions": resp.json().get("predictions", [])}
