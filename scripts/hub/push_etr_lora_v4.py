@@ -71,7 +71,11 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_REPO_ID = "openetruscan/etr-lora-v4"
+# Pushed under the maintainer's user namespace because the `openetruscan`
+# HF organisation isn't created yet (would need a manual sign-up step on
+# huggingface.co). When the org exists, change this and re-push — HF will
+# create a redirect from the old path automatically.
+DEFAULT_REPO_ID = "Eddy1919/etr-lora-v4"
 DEFAULT_ADAPTER_DIR = REPO_ROOT / "adapters" / "etr-lora-v4"
 MODEL_CARD_PATH = REPO_ROOT / "models" / "etr-lora-v4" / "README.md"
 

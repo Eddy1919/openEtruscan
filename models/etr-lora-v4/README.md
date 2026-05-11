@@ -16,7 +16,7 @@ tags:
   - XLM-R
 base_model: sentence-transformers/LaBSE
 datasets:
-  - openetruscan/corpus
+  - Eddy1919/openetruscan-corpus
 metrics:
   - precision-at-k
   - cosine-similarity
@@ -28,7 +28,7 @@ model-index:
           name: Etruscan-Latin word-vector retrieval
         dataset:
           name: rosetta-eval-v1 (test split)
-          type: openetruscan/rosetta-eval-v1
+          type: Eddy1919/openetruscan-rosetta-eval-v1
         metrics:
           - type: precision_at_10_semantic_field
             value: 0.1875
@@ -104,7 +104,7 @@ translation. See *Limitations* before you cite the numbers.
 ```python
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("openetruscan/etr-lora-v4")
+model = SentenceTransformer("Eddy1919/etr-lora-v4")
 embeddings = model.encode(["fanu", "avil", "clan"])
 # embeddings.shape == (3, 768)
 ```
@@ -274,7 +274,7 @@ the model directly:
   title        = {{etr-lora-v4: Etruscan-side LoRA adapter for LaBSE / XLM-R}},
   year         = {2026},
   publisher    = {Hugging Face},
-  howpublished = {\url{https://huggingface.co/openetruscan/etr-lora-v4}},
+  howpublished = {\url{https://huggingface.co/Eddy1919/etr-lora-v4}},
   note         = {Evaluated against the rosetta-eval-v1 frozen benchmark.}
 }
 ```
