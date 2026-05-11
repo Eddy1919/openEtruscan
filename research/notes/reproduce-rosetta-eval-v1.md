@@ -69,19 +69,54 @@ historical run bit-for-bit.
 When you update the benchmark in a way that *changes the numbers*, bump
 the label (`rosetta-eval-v2`) — never re-purpose an existing label.
 
+## Pinned schema state
+
+Reproducing the numbers also requires the prod DB schema being on a
+specific alembic head. Querying a different schema can return the
+same vectors but with different filters applied — the eval will run
+but the results aren't comparable.
+
+| Component | Pinned value |
+|---|---|
+| `alembic_version` on prod DB | `b7e6f7a8b9c1` (T2.3 — `embedder_revision` in PK) |
+| PK shape on `language_word_embeddings` | `(language, word, embedder, embedder_revision)` |
+| Supporting index | `ix_lwe_lang_embedder_revision` on `(language, embedder, embedder_revision)` |
+
+Confirm with:
+
+```sql
+SELECT version_num FROM alembic_version;
+-- expect b7e6f7a8b9c1
+SELECT conname, pg_get_constraintdef(oid)
+  FROM pg_constraint
+ WHERE conrelid = 'language_word_embeddings'::regclass AND contype = 'p';
+-- expect (language, word, embedder, embedder_revision)
+```
+
 ## Pinned vocab / corpus (GCS)
 
 The API under test reads from `language_word_embeddings` in the prod
-Postgres. The current production population came from:
+Postgres. Each JSONL below is pinned with its GCS-side hashes so a
+re-download can be byte-verified against the snapshot that produced
+the committed run-log rows.
 
-- `gs://openetruscan-rosetta/embeddings/labse-v1.jsonl` (the LaBSE
-  baseline that the system currently serves by default).
-- `gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v3.jsonl` (the
-  Etruscan-side encoder; pre-v4).
+| GCS URI | Partition (embedder, revision) | Languages | Hash (md5, base64) | Notes |
+|---|---|---|---|---|
+| `gs://openetruscan-rosetta/embeddings/labse-v1.jsonl` | `("sentence-transformers/LaBSE", "v1")` | ett + grc + lat | `Smh4Hgl5+YLKeMR2mPeqhA==` | Default partition; the LaBSE column queries this. |
+| `gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v4.jsonl` | `("xlmr-lora", "v4")` | ett only | `8m44dg5cU7k6T8q4fUNlaA==` | T2.3 v4 ingest; Etruscan half of the v4 column. |
+| `gs://openetruscan-rosetta/embeddings/lat-xlmr-lora-v4.jsonl` | `("xlmr-lora", "v4")` | lat only | *pending — Vertex job `lat-xlmr-v4-20260511-072257`, custom-job id `2423313989711691776`* | Latin half of the v4 column. Re-embeds the `lat` subset of `labse-v1.jsonl` through XLM-R-base (no LoRA — Latin doesn't get one). |
+| `gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v3.jsonl` | `("xlm-roberta-base+etr-lora-v3", "v3")` | ett only | *historical; superseded by v4* | Pre-v4 Etruscan vectors; still resident in the DB for rollback. |
 
-Once T2.3 lands and v4 is queryable behind `embedder=xlmr-lora-v4`, the
-benchmark gains a fourth column and the v4 JSONL URI gets pinned here
-alongside the LaBSE one. See `research/EXECUTION_WBS.md` § T2.3.
+Verify the hash of a freshly-downloaded copy with:
+
+```bash
+gsutil hash -c gs://openetruscan-rosetta/embeddings/<file>
+# Compare the "Hash (md5)" line to the table above.
+```
+
+When the v4 partition is complete on both sides, the v4 column of
+`rosetta-eval-v1` becomes meaningful and FINDINGS.md gains a real
+head-to-head table (WBS T3.1).
 
 ## Run log
 
