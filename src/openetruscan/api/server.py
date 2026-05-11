@@ -1064,30 +1064,58 @@ async def rosetta_languages(request: Request) -> dict[str, Any]:
 
 # ── Embedder partition aliases ────────────────────────────────────────────
 # Public-facing `?embedder=` values map to the (embedder, embedder_revision)
-# tuple stored in language_word_embeddings. Adding a partition: append
-# one entry here, no other changes. Unknown values get a 400 with the
-# valid list so clients self-discover.
+# tuple stored in language_word_embeddings — and the mapping is *language-
+# aware* because a single column (e.g. "xlmr-lora-v4") may legitimately
+# correspond to different DB labels per language. Specifically: Etruscan
+# under v4 went through XLM-R-base + an Etruscan LoRA adapter (labelled
+# `xlmr-lora`); Latin under v4 went through XLM-R-base only, no LoRA
+# (labelled `xlm-roberta-base`). The DB labels reflect what was actually
+# done; the alias gives clients a single name for the head-to-head column.
+#
+# Adding a partition: append one entry. Unknown aliases → 400 with the
+# valid-list so clients self-discover.
 #
 # The default (None) MUST match the canonical labels already in prod
 # (`sentence-transformers/LaBSE` / `v1`) — see DEFAULT_EMBEDDER in
 # multilingual.py for the same constants. Drift between this map and
 # those constants would silently return empty result sets.
-_EMBEDDER_ALIASES: dict[str | None, tuple[str, str]] = {
-    None:           ("sentence-transformers/LaBSE",       "v1"),
-    "LaBSE":        ("sentence-transformers/LaBSE",       "v1"),
-    "xlmr-lora-v4": ("xlmr-lora",                          "v4"),
+#
+# Schema: alias → {language → (embedder, embedder_revision)}. A "*" key
+# in the inner dict serves as the fallback for any language without an
+# explicit entry.
+_EMBEDDER_ALIASES: dict[str | None, dict[str, tuple[str, str]]] = {
+    None:           {"*": ("sentence-transformers/LaBSE", "v1")},
+    "LaBSE":        {"*": ("sentence-transformers/LaBSE", "v1")},
+    "xlmr-lora-v4": {
+        "ett": ("xlmr-lora",         "v4"),  # etr-lora-v4 adapter applied
+        "*":   ("xlm-roberta-base",  "v4"),  # vanilla XLM-R-base for everyone else
+    },
 }
 
 
-def _resolve_embedder(alias: str | None) -> tuple[str, str]:
-    """Translate a public `?embedder=` value to the (embedder, embedder_revision)
-    partition stored on disk. Raises ValueError for unknown aliases."""
+def _resolve_embedder(alias: str | None, language: str) -> tuple[str, str]:
+    """Translate a public `?embedder=` value + language to the
+    (embedder, embedder_revision) partition stored on disk.
+
+    Raises ValueError for unknown aliases. Within a known alias, a
+    language without an explicit entry falls through to the alias's "*"
+    default; if neither matches, raises (defensive — every alias should
+    have a "*" fallback in the map above).
+    """
     if alias not in _EMBEDDER_ALIASES:
         valid = sorted(k for k in _EMBEDDER_ALIASES if k is not None)
         raise ValueError(
             f"Unknown embedder alias {alias!r}; valid: {valid}"
         )
-    return _EMBEDDER_ALIASES[alias]
+    per_lang = _EMBEDDER_ALIASES[alias]
+    if language in per_lang:
+        return per_lang[language]
+    if "*" in per_lang:
+        return per_lang["*"]
+    raise ValueError(
+        f"Embedder alias {alias!r} has no partition for language {language!r} "
+        f"and no '*' default"
+    )
 
 
 @app.get("/neural/rosetta", tags=["Neural"])
@@ -1132,8 +1160,13 @@ async def rosetta_lookup(
     """
     from openetruscan.ml.multilingual import find_cross_language_neighbours
 
+    # Resolve the alias separately for source and target languages.
+    # For aliases like "xlmr-lora-v4" the two halves may live in
+    # different DB partitions (ett under (xlmr-lora, v4); lat under
+    # (xlm-roberta-base, v4)) because Latin doesn't get a LoRA adapter.
     try:
-        emb_id, emb_rev = _resolve_embedder(embedder)
+        src_emb_id, src_emb_rev = _resolve_embedder(embedder, from_lang)
+        tgt_emb_id, tgt_emb_rev = _resolve_embedder(embedder, to_lang)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -1144,8 +1177,10 @@ async def rosetta_lookup(
             target_lang=to_lang,
             session=session,
             k=k,
-            embedder=emb_id,
-            embedder_revision=emb_rev,
+            source_embedder=src_emb_id,
+            source_embedder_revision=src_emb_rev,
+            target_embedder=tgt_emb_id,
+            target_embedder_revision=tgt_emb_rev,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -1197,7 +1232,7 @@ async def rosetta_vocab(
     from sqlalchemy import text
 
     try:
-        emb_id, emb_rev = _resolve_embedder(embedder)
+        emb_id, emb_rev = _resolve_embedder(embedder, lang)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
