@@ -196,12 +196,29 @@ async def test_rosetta_lookup_unknown_target_lang(client, sample_data):
 
 
 async def test_rosetta_lookup_returns_empty_when_no_vector(client, sample_data):
-    response = await client.get(
-        "/neural/rosetta",
-        params={"word": "definitely-not-real", "from": "ett", "to": "lat"},
-    )
+    # The Postgres image used in CI (postgis/postgis:15-3.4) lacks the
+    # pgvector extension, so the language_word_embeddings table can't be
+    # created. Conftest wraps that in try/except. The test then needs to
+    # handle two distinct manifestations of "no table":
+    #   - older starlette/fastapi: server returns 500 (caught by the
+    #     ServerErrorMiddleware), we skip.
+    #   - newer starlette (≥ Python 3.13 image's bundled version):
+    #     server-side DB exception bubbles out of the test client itself
+    #     instead of being wrapped in a 500 response. We catch the
+    #     ProgrammingError and skip with the same message.
+    # When CI eventually moves to an image that bundles both extensions,
+    # neither branch fires and the assertion runs as intended.
+    try:
+        response = await client.get(
+            "/neural/rosetta",
+            params={"word": "definitely-not-real", "from": "ett", "to": "lat"},
+        )
+    except Exception as exc:  # noqa: BLE001
+        if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
+            pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
+        raise
     if response.status_code == 500:
-        pytest.skip("language_word_embeddings table not available (SQLite fallback)")
+        pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
     assert response.status_code == 200
     assert response.json()["neighbours"] == []
 
