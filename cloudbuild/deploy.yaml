@@ -29,6 +29,13 @@ substitutions:
   _IMAGE_NAME: api
   _VM_NAME: openetruscan-eu
   _VM_ZONE: europe-west4-a
+  # OS-Login profile username for `gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com`.
+  # Derived from the SA's uniqueId as `sa_<uniqueId>`; this is constant
+  # unless the SA itself is recreated. Without specifying the user
+  # explicitly, gcloud compute ssh falls back to the Cloud Build
+  # container's local user (root) and OS-Login denies it with
+  # "Permission denied (publickey)".
+  _SSH_USER: sa_103597837589449401717
 
 options:
   machineType: E2_HIGHCPU_8
@@ -94,7 +101,7 @@ steps:
       - -c
       - |
         set -euo pipefail
-        gcloud compute ssh ${_VM_NAME} \
+        gcloud compute ssh ${_SSH_USER}@${_VM_NAME} \
           --zone=${_VM_ZONE} \
           --project=${_PROJECT} \
           --tunnel-through-iap \
