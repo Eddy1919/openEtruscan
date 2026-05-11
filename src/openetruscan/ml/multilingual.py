@@ -314,19 +314,20 @@ async def populate_language(
         )
 
     # Upsert: rerunning is idempotent + replaces vectors with the latest
-    # encoder output.
+    # encoder output. Conflict key matches the post-T2.3 4-column PK so
+    # different (embedder, embedder_revision) partitions for the same
+    # (language, word) coexist; re-running this populate replaces only
+    # the matching partition.
     stmt = text(
         """
         INSERT INTO language_word_embeddings
             (language, word, vector, frequency, source, embedder, embedder_revision)
         VALUES
             (:language, :word, :vector, :frequency, :source, :embedder, :embedder_revision)
-        ON CONFLICT (language, word) DO UPDATE SET
+        ON CONFLICT (language, word, embedder, embedder_revision) DO UPDATE SET
             vector = EXCLUDED.vector,
             frequency = EXCLUDED.frequency,
-            source = EXCLUDED.source,
-            embedder = EXCLUDED.embedder,
-            embedder_revision = EXCLUDED.embedder_revision
+            source = EXCLUDED.source
         """
     )
 
@@ -353,6 +354,14 @@ async def populate_language(
 # Cross-language lookup
 # ---------------------------------------------------------------------------
 
+# Default partition served when no `embedder` is requested. This MUST match
+# the canonical labels already in prod (verified 2026-05-11: rows are
+# labelled `sentence-transformers/LaBSE` / `v1`, NOT `LaBSE` / `v1`).
+# Changing either string here without also re-labelling the existing rows
+# would silently return an empty result set for the default call.
+DEFAULT_EMBEDDER = "sentence-transformers/LaBSE"
+DEFAULT_EMBEDDER_REVISION = "v1"
+
 
 @dataclass
 class CrossLanguageHit:
@@ -368,6 +377,8 @@ async def find_cross_language_neighbours(
     target_lang: str,
     session: AsyncSession,
     k: int = 10,
+    embedder: str | None = None,
+    embedder_revision: str | None = None,
 ) -> list[CrossLanguageHit]:
     """For ``word`` in ``source_lang``, return the top-k nearest words in
     ``target_lang`` (cosine similarity in the shared multilingual space).
@@ -375,6 +386,16 @@ async def find_cross_language_neighbours(
     Refuses tier-3 languages on either side. Refuses unknown codes.
     Returns an empty list if the source word has no stored vector — the
     caller can decide whether to embed-on-demand and retry.
+
+    Parameters
+    ----------
+    embedder, embedder_revision : str | None
+        Filter on the ``(embedder, embedder_revision)`` partition of
+        ``language_word_embeddings``. Both default to the canonical
+        LaBSE/v1 partition that the API has served since launch; pass
+        explicit values (e.g. ``embedder='xlmr-lora', embedder_revision='v4'``)
+        to query a different partition. Source word and target neighbours
+        are filtered consistently to the same partition.
     """
     from sqlalchemy import text
 
@@ -397,13 +418,23 @@ async def find_cross_language_neighbours(
         )
 
     word = unicodedata.normalize("NFC", word).lower()
+    embedder = embedder if embedder is not None else DEFAULT_EMBEDDER
+    embedder_revision = (
+        embedder_revision if embedder_revision is not None else DEFAULT_EMBEDDER_REVISION
+    )
 
     src_row = await session.execute(
         text(
             "SELECT vector FROM language_word_embeddings "
-            "WHERE language = :lang AND word = :word"
+            "WHERE language = :lang AND word = :word "
+            "  AND embedder = :embedder AND embedder_revision = :embedder_revision"
         ),
-        {"lang": source_lang, "word": word},
+        {
+            "lang": source_lang,
+            "word": word,
+            "embedder": embedder,
+            "embedder_revision": embedder_revision,
+        },
     )
     row = src_row.first()
     if row is None:
@@ -416,6 +447,7 @@ async def find_cross_language_neighbours(
             SELECT word, 1 - (vector <=> CAST(:src AS vector)) AS cosine
             FROM language_word_embeddings
             WHERE language = :target
+              AND embedder = :embedder AND embedder_revision = :embedder_revision
             ORDER BY vector <=> CAST(:src AS vector)
             LIMIT :k
             """
@@ -423,6 +455,8 @@ async def find_cross_language_neighbours(
         {
             "src": src_vector,
             "target": target_lang,
+            "embedder": embedder,
+            "embedder_revision": embedder_revision,
             "k": k,
         },
     )

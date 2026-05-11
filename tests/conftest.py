@@ -177,9 +177,14 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
                             frequency         INTEGER,
                             source            TEXT,
                             embedder          TEXT       NOT NULL DEFAULT 'mock',
-                            embedder_revision TEXT,
+                            embedder_revision TEXT       NOT NULL DEFAULT 'test',
                             created_at        TIMESTAMPTZ DEFAULT now(),
-                            PRIMARY KEY (language, word)
+                            -- Post-T2.3: PK includes (embedder, embedder_revision) so
+                            -- two partitions can coexist for the same (language, word).
+                            -- The NOT NULL DEFAULT on embedder_revision lets older
+                            -- tests that didn't specify it keep passing — they all
+                            -- land in the implicit 'mock'/'test' partition.
+                            PRIMARY KEY (language, word, embedder, embedder_revision)
                         )
                         """
                     )
