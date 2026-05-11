@@ -1,0 +1,39 @@
+2026-05-11 11:16:19,975 INFO input has 1795 passages; 0 already done; 1795 to process this run
+2026-05-11 11:16:19,975 INFO estimated tokens: in=1077000 out=143600 ; estimated cost: $2.782 (USD, gemini-2.5-pro pricing)
+2026-05-11 11:18:03,490 INFO 50/1795 processed ; glosses=1 ; drops parse=0 validate=0
+2026-05-11 11:19:49,420 INFO 100/1795 processed ; glosses=1 ; drops parse=0 validate=0
+2026-05-11 11:21:22,654 INFO 150/1795 processed ; glosses=1 ; drops parse=0 validate=0
+2026-05-11 11:23:05,002 INFO 200/1795 processed ; glosses=2 ; drops parse=0 validate=1
+2026-05-11 11:24:38,434 INFO 250/1795 processed ; glosses=2 ; drops parse=0 validate=1
+2026-05-11 11:26:09,655 INFO 300/1795 processed ; glosses=2 ; drops parse=0 validate=1
+2026-05-11 11:27:46,356 INFO 350/1795 processed ; glosses=2 ; drops parse=0 validate=1
+2026-05-11 11:29:18,291 INFO 400/1795 processed ; glosses=2 ; drops parse=0 validate=1
+2026-05-11 11:31:03,386 INFO 450/1795 processed ; glosses=4 ; drops parse=0 validate=1
+2026-05-11 11:32:39,947 INFO 500/1795 processed ; glosses=4 ; drops parse=0 validate=1
+2026-05-11 11:34:21,581 INFO 550/1795 processed ; glosses=4 ; drops parse=0 validate=1
+2026-05-11 11:35:54,174 INFO 600/1795 processed ; glosses=4 ; drops parse=0 validate=1
+2026-05-11 11:37:36,297 INFO 650/1795 processed ; glosses=7 ; drops parse=0 validate=1
+2026-05-11 11:39:11,881 INFO 700/1795 processed ; glosses=7 ; drops parse=0 validate=1
+2026-05-11 11:40:54,946 INFO 750/1795 processed ; glosses=9 ; drops parse=0 validate=1
+2026-05-11 11:42:27,957 INFO 800/1795 processed ; glosses=9 ; drops parse=0 validate=1
+2026-05-11 11:44:06,804 INFO 850/1795 processed ; glosses=9 ; drops parse=0 validate=1
+2026-05-11 11:45:46,001 INFO 900/1795 processed ; glosses=9 ; drops parse=0 validate=1
+2026-05-11 11:47:33,793 INFO 950/1795 processed ; glosses=9 ; drops parse=0 validate=1
+2026-05-11 11:49:22,006 INFO 1000/1795 processed ; glosses=11 ; drops parse=0 validate=1
+2026-05-11 11:51:08,519 INFO 1050/1795 processed ; glosses=15 ; drops parse=0 validate=1
+2026-05-11 11:56:47,179 INFO 1100/1795 processed ; glosses=16 ; drops parse=0 validate=3
+2026-05-11 11:58:33,312 INFO 1150/1795 processed ; glosses=17 ; drops parse=0 validate=4
+2026-05-11 12:00:13,020 INFO 1200/1795 processed ; glosses=19 ; drops parse=0 validate=5
+2026-05-11 12:01:44,409 INFO 1250/1795 processed ; glosses=19 ; drops parse=0 validate=5
+2026-05-11 12:03:13,634 INFO 1300/1795 processed ; glosses=19 ; drops parse=0 validate=5
+2026-05-11 12:04:55,952 INFO 1350/1795 processed ; glosses=19 ; drops parse=0 validate=5
+2026-05-11 12:06:27,520 INFO 1400/1795 processed ; glosses=20 ; drops parse=0 validate=5
+2026-05-11 12:07:59,335 INFO 1450/1795 processed ; glosses=20 ; drops parse=0 validate=5
+2026-05-11 12:09:29,924 INFO 1500/1795 processed ; glosses=20 ; drops parse=0 validate=7
+2026-05-11 12:11:04,989 INFO 1550/1795 processed ; glosses=23 ; drops parse=0 validate=8
+2026-05-11 12:12:37,792 INFO 1600/1795 processed ; glosses=24 ; drops parse=0 validate=8
+2026-05-11 12:14:11,435 INFO 1650/1795 processed ; glosses=24 ; drops parse=0 validate=9
+2026-05-11 12:15:43,853 INFO 1700/1795 processed ; glosses=24 ; drops parse=0 validate=9
+2026-05-11 12:17:20,960 INFO 1750/1795 processed ; glosses=25 ; drops parse=0 validate=9
+2026-05-11 12:18:40,881 INFO done: 1795 passages in 3740.3 s ; 27 glosses kept ; drops parse=0 validate=9
+2026-05-11 12:18:40,881 INFO actual tokens: in=3528618 out=4745 ; actual cost: $4.458 (USD, billed to double-runway-465420-h9)
