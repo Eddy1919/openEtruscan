@@ -18,7 +18,13 @@ options:
 timeout: 1800s  # 30 min hard cap.
 
 steps:
-  # One shared Postgres sidecar; all four python lanes hit it.
+  # Shared Postgres sidecar, **with one isolated database per python lane**.
+  # The four lanes run in parallel and each runs `Base.metadata.create_all`
+  # at pytest session start and `drop_all` at session end. With a single
+  # shared DB this race produces a "relation 'inscriptions' does not exist"
+  # error on whichever lane is mid-test when another finishes — the fix is
+  # to give each lane its own database name (test_py310 / py311 / py312 /
+  # py313) so `create_all` / `drop_all` are independent.
   - id: postgres
     name: gcr.io/cloud-builders/docker
     waitFor: ['-']
@@ -30,11 +36,20 @@ steps:
         docker run -d --rm --name testdb --network=cloudbuild \
           -e POSTGRES_USER=postgres \
           -e POSTGRES_PASSWORD=postgres \
-          -e POSTGRES_DB=test_db \
+          -e POSTGRES_DB=postgres \
           postgis/postgis:15-3.4
-        for i in $(seq 1 15); do
+        # Bump the readiness-poll window from 15 → 30 cycles (30 → 60 s)
+        # because the per-lane CREATE DATABASE step adds a few seconds of
+        # post-pg_isready setup and we'd rather pay it once than flake.
+        for i in $(seq 1 30); do
           if docker exec testdb pg_isready -U postgres >/dev/null 2>&1; then
-            echo "postgres ready"; exit 0
+            echo "postgres ready"
+            for v in py310 py311 py312 py313; do
+              docker exec testdb psql -U postgres -d postgres -v ON_ERROR_STOP=1 \
+                -c "CREATE DATABASE test_$v"
+              echo "  created db: test_$v"
+            done
+            exit 0
           fi
           sleep 2
         done
@@ -47,7 +62,7 @@ steps:
     waitFor: [postgres]
     entrypoint: bash
     env:
-      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_py310
     args:
       - -c
       - |
@@ -60,7 +75,7 @@ steps:
     waitFor: [postgres]
     entrypoint: bash
     env:
-      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_py311
     args:
       - -c
       - |
@@ -73,7 +88,7 @@ steps:
     waitFor: [postgres]
     entrypoint: bash
     env:
-      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_py312
     args:
       - -c
       - |
@@ -88,7 +103,7 @@ steps:
     waitFor: [postgres]
     entrypoint: bash
     env:
-      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_db
+      - DATABASE_URL=postgresql://postgres:postgres@testdb:5432/test_py313
     args:
       - -c
       - |
