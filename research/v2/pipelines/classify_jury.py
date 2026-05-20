@@ -157,11 +157,14 @@ def _make_gemini(model: str) -> Provider:
 def _make_vertex_maas(model: str) -> Provider:
     """Open-weights models served via Vertex Model Garden's OpenAI-compatible
     Model-as-a-Service endpoint. Uses Application Default Credentials —
-    no separate API key. The same adapter shape works for DeepSeek, Llama,
-    Mistral, etc. — only the `model` id changes.
+    no separate API key. The same adapter shape works for Llama, Mistral,
+    Qwen, etc. — only the `model` id changes.
 
-    Region override: env var `MAAS_VERTEX_REGION` (default us-central1, which
-    is where Model Garden MaaS models are usually published).
+    Region override: env var `MAAS_VERTEX_REGION` (default us-east5, which
+    is where Meta publishes the Llama 4 MaaS endpoint as of 2026-05).
+
+    Path uses /v1/ — the /v1beta1/ form is NOT current and returns 404 even
+    for enabled models. Verified by the Console "Use this model" snippet.
     """
     def invoke(system: str, user: str) -> str:
         from google.auth import default  # type: ignore
@@ -170,9 +173,9 @@ def _make_vertex_maas(model: str) -> Provider:
 
         credentials, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
         credentials.refresh(Request())
-        region = os.environ.get("MAAS_VERTEX_REGION", "us-central1")
+        region = os.environ.get("MAAS_VERTEX_REGION", "us-east5")
         base = (
-            f"https://{region}-aiplatform.googleapis.com/v1beta1/projects/"
+            f"https://{region}-aiplatform.googleapis.com/v1/projects/"
             f"{VERTEX_PROJECT_ID}/locations/{region}/endpoints/openapi"
         )
         client = OpenAI(base_url=base, api_key=credentials.token)
@@ -183,6 +186,11 @@ def _make_vertex_maas(model: str) -> Provider:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
+            # Force JSON-object output. Llama 4 reverts to prose without
+            # this flag and burns the max_tokens budget on essays. Mistral
+            # / Qwen also benefit. Has no effect on models that already
+            # respect the schema (e.g. Claude on Vertex).
+            response_format={"type": "json_object"},
         )
         return (resp.choices[0].message.content or "").strip()
 
@@ -200,9 +208,9 @@ PROVIDER_REGISTRY: dict[str, Callable[[], Provider]] = {
     "claude-opus-4-7": lambda: _make_anthropic_vertex("claude-opus-4-7"),
     "claude-sonnet-4-6": lambda: _make_anthropic_vertex("claude-sonnet-4-6"),
     "gemini-2.5-pro": lambda: _make_gemini("gemini-2.5-pro"),
-    "deepseek-v4-pro": lambda: _make_vertex_maas("deepseek-ai/DeepSeek-V4-Pro"),
-    "llama-3.3-70b": lambda: _make_vertex_maas("meta/llama-3.3-70b-instruct"),
-    "mistral-large-2": lambda: _make_vertex_maas("mistralai/mistral-large-2"),
+    "llama-4-scout": lambda: _make_vertex_maas("meta/llama-4-scout-17b-16e-instruct-maas"),
+    "llama-4-maverick": lambda: _make_vertex_maas("meta/llama-4-maverick-17b-128e-instruct-maas"),
+    "mistral-large-2411": lambda: _make_vertex_maas("mistralai/mistral-large-2411"),
     "gpt-5": lambda: _make_openai("gpt-5"),
     "gpt-4o": lambda: _make_openai("gpt-4o"),
 }
@@ -288,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True,
                     help="Append-mode JSONL of (model, id, label, …) rows.")
     ap.add_argument("--providers", nargs="+",
-                    default=["claude-opus-4-7", "gemini-2.5-pro", "deepseek-v4-pro"],
+                    default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"],
                     help="Provider names from PROVIDER_REGISTRY. "
                          "Default 3-model jury: Claude (Vertex), Gemini, DeepSeek (Vertex MaaS). "
                          "All bill to the same GCP project; no separate API keys needed.")

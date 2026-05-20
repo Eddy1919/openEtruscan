@@ -44,13 +44,16 @@ substitutions:
   # jury). Override to 1 only for smoke configurations where you're testing
   # the pipeline plumbing, not the data.
   _REQUIRE_N_RATERS: "3"
-  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro deepseek-v4-pro"
+  # Default 3-rater jury. Claude is currently quota-zero (use --substitutions
+  # =_PROVIDERS="gemini-2.5-pro llama-4-scout" for a 2-rater smoke while
+  # waiting for the Anthropic quota increase).
+  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro llama-4-maverick"
 
   # Vertex billing project — the SCRIPTS read these, the Cloud Build runs
   # in long-facet but every API call is billed to double-runway.
   _VERTEX_PROJECT_ID: double-runway-465420-h9
   _VERTEX_REGION: europe-west1
-  _MAAS_VERTEX_REGION: us-central1
+  _MAAS_VERTEX_REGION: us-east5
 
   # Secret Manager: the Gemini key lives in long-facet (oe-gemini-api-key),
   # not double-runway. Pipeline scripts read these env vars via _secrets.py.
@@ -67,7 +70,9 @@ options:
     - SECRET_MANAGER_PROJECT_ID=${_SECRET_PROJECT_ID}
     - GEMINI_SECRET_NAME=${_GEMINI_SECRET_NAME}
 
-timeout: 3600s   # 1 hour cap; 400 rows × 3 models × ~1.5s ≈ 30 min healthy.
+timeout: 7200s   # 2-hour cap. Empirical rate: ~6 calls/min on 2-rater jury
+                 # (Gemini-Pro + Llama-4-Maverick), so 800 calls ≈ 130 min.
+                 # 1-hour was too tight (hit timeout at 425/800 on 2026-05-20).
 
 steps:
   # ───────────────────────────────────────────────────────────────
@@ -149,11 +154,26 @@ steps:
       - |
         set -euo pipefail
         export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
+        # --sleep 0.2 cuts ~5 min of dead wall-time vs 0.5 with no rate-limit
+        # impact at Gemini-Pro + Llama-4 default RPM.
+        # Also: upload partial progress to GCS on EXIT (even on timeout) so
+        # a re-run can skip already-completed (model, id) pairs from the
+        # previous run via append-mode.
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        PARTIAL_DEST="gs://${_OUTPUT_BUCKET}/${_OUTPUT_PREFIX}/$$TS-partial/classify_jury_raw.jsonl"
+        upload_partial() {
+          if [ -f /workspace/classify_jury_raw.jsonl ]; then
+            gcloud storage cp /workspace/classify_jury_raw.jsonl "$$PARTIAL_DEST" \
+              2>/dev/null || true
+            echo "(partial uploaded to $$PARTIAL_DEST)"
+          fi
+        }
+        trap upload_partial EXIT
         python -m research.v2.pipelines.classify_jury \
           --test-pool /workspace/classify_test_v2.jsonl \
           --out /workspace/classify_jury_raw.jsonl \
           --providers ${_PROVIDERS} \
-          --sleep 0.5
+          --sleep 0.2
 
   # ───────────────────────────────────────────────────────────────
   # 5. Adjudication queue build — local, free, fast.

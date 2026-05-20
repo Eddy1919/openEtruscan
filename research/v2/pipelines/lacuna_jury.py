@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True,
                     help="Append-mode JSONL of jury outputs.")
     ap.add_argument("--providers", nargs="+",
-                    default=["claude-opus-4-7", "gemini-2.5-pro", "deepseek-v4-pro"])
+                    default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"])
     ap.add_argument("--max-rows", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true")

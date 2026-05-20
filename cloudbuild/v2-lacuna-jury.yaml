@@ -23,12 +23,12 @@ substitutions:
   _CORPUS_INT_GS: gs://openetruscan-rosetta/corpus/etruscan-prod-rawtext-v3.jsonl
   _OUTPUT_BUCKET: long-facet-427508-j2_cloudbuild
   _OUTPUT_PREFIX: openetruscan-v2/lacuna
-  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro deepseek-v4-pro"
+  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro llama-4-maverick"
   _MAX_ROWS: "0"   # 0 = no cap. Set to 5 for a smoke test.
 
   _VERTEX_PROJECT_ID: double-runway-465420-h9
   _VERTEX_REGION: europe-west1
-  _MAAS_VERTEX_REGION: us-central1
+  _MAAS_VERTEX_REGION: us-east5
 
 options:
   machineType: E2_HIGHCPU_8

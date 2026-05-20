@@ -89,7 +89,11 @@ Hard requirements (any violation: drop the pair, return empty array):
    λέγουσι, καλοῦσι; Latin: appellare, vocare, dicere, nominare).
 4. Do not infer. If you are not sure both words appear verbatim, drop the pair.
 
-Return JSON array only, no prose.
+Return a JSON object with a single field `pairs` containing the array, e.g.
+
+  {{"pairs": [{{...}}, {{...}}]}}
+
+If no valid pair found, return {{"pairs": []}}. Do not include prose.
 """
 
 
@@ -119,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True,
                     help="Output JSONL of candidate pairs (append-mode).")
     ap.add_argument("--providers", nargs="+",
-                    default=["claude-opus-4-7", "gemini-2.5-pro", "deepseek-v4-pro"])
+                    default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"])
     ap.add_argument("--max-passages", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true")
@@ -181,8 +185,19 @@ def main(argv: list[str] | None = None) -> int:
                     if text_resp.startswith("json"):
                         text_resp = text_resp[4:].strip()
                 try:
-                    candidates = json.loads(text_resp)
+                    payload = json.loads(text_resp)
                 except json.JSONDecodeError:
+                    parse_errors += 1
+                    continue
+                # Accept either {"pairs": [...]} envelope or bare array.
+                # JSON-mode-enforcing providers (Llama, etc.) require object
+                # so the prompt now asks for the envelope; bare-array
+                # responses from older outputs still parse.
+                if isinstance(payload, dict) and "pairs" in payload:
+                    candidates = payload["pairs"]
+                elif isinstance(payload, list):
+                    candidates = payload
+                else:
                     parse_errors += 1
                     continue
                 if not isinstance(candidates, list):

@@ -34,8 +34,8 @@ LAC_JURY  := $(DATA)/lacuna_jury_raw.jsonl
 # Providers. Default 3-model jury, all billed to double-runway-465420-h9:
 #   claude-opus-4-7 — AnthropicVertex + ADC                   (europe-west1)
 #   gemini-2.5-pro  — Generative Language API, key in Secret Manager
-#   deepseek-v3     — Vertex Model Garden MaaS + ADC          (us-central1)
-PROVIDERS := claude-opus-4-7 gemini-2.5-pro deepseek-v3
+#   llama-4-maverick — Vertex Model Garden MaaS + ADC         (us-east5)
+PROVIDERS := claude-opus-4-7 gemini-2.5-pro llama-4-maverick
 
 .PHONY: help all check-compile classify-split classify-jury classify-adjudicate \
         rosetta-exclude lacuna-mine lacuna-jury clean
