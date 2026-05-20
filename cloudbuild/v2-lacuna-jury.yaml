@@ -1,0 +1,122 @@
+# Cloud Build — Stream C (Lacunae) gold-annotation pipeline.
+#
+# Runs the v2 lacuna flow:
+#   1. lacuna_mine.py — extract editor-restored inscriptions from the corpus
+#   2. lacuna_jury.py — multi-model fill-in with hallucination scoring
+#
+# Adjudication for Stream C is currently human-only (no equivalent of
+# classify_adjudicate.py yet — the queue is the entire jury output, the
+# philologist works through it row-by-row).
+#
+# Project: long-facet-427508-j2.
+#
+# Submit:
+#   gcloud builds submit . \
+#     --project=long-facet-427508-j2 \
+#     --config=cloudbuild/v2-lacuna-jury.yaml
+
+substitutions:
+  # Both corpus exports are mined: prod-v2 (publication ids) is more likely to
+  # carry editor brackets in scholarly transliteration; prod-rawtext-v3
+  # (integer ids) gives broader coverage. See v2-classify-jury.yaml.
+  _CORPUS_PUB_GS: gs://openetruscan-rosetta/corpus/etruscan-prod-v2.jsonl
+  _CORPUS_INT_GS: gs://openetruscan-rosetta/corpus/etruscan-prod-rawtext-v3.jsonl
+  _OUTPUT_BUCKET: long-facet-427508-j2_cloudbuild
+  _OUTPUT_PREFIX: openetruscan-v2/lacuna
+  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro deepseek-v4-pro"
+  _MAX_ROWS: "0"   # 0 = no cap. Set to 5 for a smoke test.
+
+  _VERTEX_PROJECT_ID: double-runway-465420-h9
+  _VERTEX_REGION: europe-west1
+  _MAAS_VERTEX_REGION: us-central1
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+  env:
+    - VERTEX_PROJECT_ID=${_VERTEX_PROJECT_ID}
+    - VERTEX_REGION=${_VERTEX_REGION}
+    - MAAS_VERTEX_REGION=${_MAAS_VERTEX_REGION}
+
+timeout: 3600s
+
+steps:
+  - id: fetch-corpus
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        mkdir -p research/data
+        gcloud storage cp "${_CORPUS_PUB_GS}" research/data/corpus_pub.jsonl
+        gcloud storage cp "${_CORPUS_INT_GS}" research/data/corpus_int.jsonl
+        echo "  pub: $(wc -l < research/data/corpus_pub.jsonl) rows"
+        echo "  int: $(wc -l < research/data/corpus_int.jsonl) rows"
+
+  - id: install
+    name: python:3.12
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # Install into /workspace/deps so downstream steps' containers see
+        # them via PYTHONPATH. See v2-classify-jury.yaml for the rationale.
+        pip install --quiet --no-cache-dir --target=/workspace/deps \
+          'anthropic[vertex]>=0.40' \
+          'google-generativeai>=0.8' \
+          'openai>=1.50' \
+          'google-cloud-secret-manager>=2.20' \
+          'google-auth>=2.30'
+
+  - id: mine
+    name: python:3.12
+    waitFor: [fetch-corpus, install]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
+        python -m research.v2.pipelines.lacuna_mine \
+          --corpus research/data/corpus_pub.jsonl \
+          --corpus research/data/corpus_int.jsonl \
+          --silver-labels research/data/openetruscan_labels.csv \
+          --out /workspace/lacuna_raw_pairs.jsonl
+        wc -l /workspace/lacuna_raw_pairs.jsonl
+
+  - id: jury
+    name: python:3.12
+    waitFor: [mine]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
+        EXTRA=""
+        if [ "${_MAX_ROWS}" != "0" ]; then EXTRA="--max-rows ${_MAX_ROWS}"; fi
+        python -m research.v2.pipelines.lacuna_jury \
+          --pool /workspace/lacuna_raw_pairs.jsonl \
+          --out /workspace/lacuna_jury_raw.jsonl \
+          --providers ${_PROVIDERS} \
+          --sleep 0.5 \
+          $$EXTRA
+
+  - id: upload
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [jury]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        DEST="gs://${_OUTPUT_BUCKET}/${_OUTPUT_PREFIX}/$$TS"
+        for f in lacuna_raw_pairs.jsonl lacuna_jury_raw.jsonl ; do
+          gcloud storage cp /workspace/$$f "$$DEST/$$f"
+        done
+        echo "Outputs written to $$DEST"

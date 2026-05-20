@@ -1,0 +1,156 @@
+# Cloud Build — one-shot setup for the v2 jury pipelines.
+#
+# Idempotent. Re-running is safe; the IAM binding and the EULA acceptance
+# both no-op if already in place.
+#
+# What it does:
+#   1. Ensures aiplatform.googleapis.com is enabled in BOTH projects.
+#   2. Grants the Cloud Build SA (in long-facet) the roles/aiplatform.user
+#      role in double-runway, so cross-project Vertex calls work.
+#   3. Accepts the Model Garden EULA for DeepSeek V3 in double-runway.
+#      (Anthropic Claude on Vertex is already in use by the project per
+#      the existing rosetta-eval, so no EULA step is needed for it.)
+#
+# Submit once before the first v2-classify-jury / v2-lacuna-jury run:
+#   gcloud builds submit --no-source \
+#     --project=long-facet-427508-j2 \
+#     --config=cloudbuild/v2-setup.yaml
+
+substitutions:
+  _COMPUTE_PROJECT: long-facet-427508-j2
+  _VERTEX_PROJECT: double-runway-465420-h9
+  _CLOUDBUILD_SA_NUMBER: "19927826393"   # long-facet project number (from cloudbuild/README.md)
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 600s
+
+steps:
+  # ───────────────────────────────────────────────────────────────
+  # 1. Make sure the Vertex AI API is enabled in BOTH projects.
+  #    Idempotent: gcloud services enable is a no-op if already on.
+  # ───────────────────────────────────────────────────────────────
+  - id: enable-apis
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        for P in "${_COMPUTE_PROJECT}" "${_VERTEX_PROJECT}" ; do
+          echo "Enabling aiplatform.googleapis.com on $$P ..."
+          gcloud services enable aiplatform.googleapis.com --project=$$P
+          gcloud services enable secretmanager.googleapis.com --project=$$P
+        done
+
+  # ───────────────────────────────────────────────────────────────
+  # 2. Cross-project IAM binding: long-facet's Cloud Build SA needs
+  #    aiplatform.user on double-runway so Vertex calls succeed.
+  #    add-iam-policy-binding is idempotent — re-running adds nothing.
+  # ───────────────────────────────────────────────────────────────
+  - id: iam-binding
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [enable-apis]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        SA="${_CLOUDBUILD_SA_NUMBER}@cloudbuild.gserviceaccount.com"
+        for ROLE in roles/aiplatform.user roles/secretmanager.secretAccessor ; do
+          echo "Granting $$ROLE to $$SA on ${_VERTEX_PROJECT} ..."
+          gcloud projects add-iam-policy-binding "${_VERTEX_PROJECT}" \
+            --member="serviceAccount:$$SA" \
+            --role="$$ROLE" \
+            --condition=None \
+            --quiet
+        done
+
+  # ───────────────────────────────────────────────────────────────
+  # 3. Accept the Model Garden EULA for DeepSeek V3 in double-runway.
+  #    Available via the Model Garden CLI since 2025-Q3. Idempotent.
+  #    If this step fails with NOT_FOUND, the model id may have shifted
+  #    — re-run after confirming the publisher id in the Console.
+  # ───────────────────────────────────────────────────────────────
+  - id: accept-deepseek-eula
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [enable-apis]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # The gcloud surface for Model Garden EULA acceptance lives under
+        # `gcloud ai model-garden models`. If your gcloud is too old to
+        # have this command, update with `gcloud components update`.
+        if gcloud ai model-garden models --help 2>/dev/null | grep -q 'accept-eula' ; then
+          echo "Accepting EULA for publishers/deepseek-ai/models/deepseek-v3 on ${_VERTEX_PROJECT} ..."
+          gcloud ai model-garden models accept-eula \
+            'publishers/deepseek-ai/models/deepseek-v3' \
+            --project=${_VERTEX_PROJECT} \
+            --quiet || echo "  (EULA may already be accepted — continuing)"
+        else
+          echo "WARN: this gcloud SDK does not have 'ai model-garden models accept-eula'."
+          echo "      Either:"
+          echo "        a) update Cloud Build to a newer cloud-sdk image, or"
+          echo "        b) accept manually in the Console:"
+          echo "           https://console.cloud.google.com/vertex-ai/publishers/deepseek-ai/model-garden/deepseek-v3?project=${_VERTEX_PROJECT}"
+          echo "           → click Enable."
+          # Don't fail the build — the user may have already accepted in the Console.
+        fi
+
+  # ───────────────────────────────────────────────────────────────
+  # 4. Sanity probe: do a no-op Vertex API call from the Cloud Build
+  #    SA to confirm the cross-project setup actually works before the
+  #    user spends $15-30 on the real jury run.
+  # ───────────────────────────────────────────────────────────────
+  - id: probe-vertex
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [iam-binding]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TOKEN=$$(gcloud auth print-access-token)
+        URL="https://europe-west1-aiplatform.googleapis.com/v1/projects/${_VERTEX_PROJECT}/locations/europe-west1/publishers/anthropic/models"
+        echo "Probing $$URL ..."
+        HTTP_CODE=$$(curl -s -o /tmp/probe.json -w '%{http_code}' \
+          -H "Authorization: Bearer $$TOKEN" "$$URL")
+        echo "  HTTP $$HTTP_CODE"
+        if [ "$$HTTP_CODE" = "200" ]; then
+          echo "  ✓ Cross-project Vertex auth works."
+        else
+          echo "  ✗ Cross-project Vertex auth failed:"
+          cat /tmp/probe.json
+          exit 1
+        fi
+
+  - id: summary
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [probe-vertex, accept-deepseek-eula]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        cat <<EOF
+        ─────────────────────────────────────────────────────────────
+        Setup complete.
+
+        You can now submit either jury build:
+
+          gcloud builds submit . \\
+            --project=${_COMPUTE_PROJECT} \\
+            --config=cloudbuild/v2-classify-jury.yaml
+
+          gcloud builds submit . \\
+            --project=${_COMPUTE_PROJECT} \\
+            --config=cloudbuild/v2-lacuna-jury.yaml
+
+        Outputs land at:
+          gs://long-facet-427508-j2_cloudbuild/openetruscan-v2/<stream>/<TS>/
+        ─────────────────────────────────────────────────────────────
+        EOF
