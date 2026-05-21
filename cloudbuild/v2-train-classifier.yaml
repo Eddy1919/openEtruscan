@@ -1,0 +1,89 @@
+# Cloud Build — v2 classifier training (TF-IDF + NB baseline).
+#
+# Trains the same architecture v1 reported `0.28 macro F1` on 29 rows
+# against the v2 frozen splits: 312 silver-labeled train rows, 159
+# candidate-gold eval rows (2-rater jury, unanimous, conf ≥ medium).
+# Reports macro-F1 + accuracy + head-2 / tail-5 F1 with bootstrap 95% CIs.
+#
+# Submit:
+#   gcloud builds submit . \
+#     --project=long-facet-427508-j2 \
+#     --config=cloudbuild/v2-train-classifier.yaml \
+#     --service-account=projects/long-facet-427508-j2/serviceAccounts/gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com \
+#     --substitutions=_RUN_PREFIX=20260520T205613Z
+#
+# `_RUN_PREFIX` is the timestamp of the classify-jury run whose outputs are
+# the inputs here. Defaults to the most recent successful run as of writing.
+
+substitutions:
+  _RUN_PREFIX: "20260520T205613Z"
+  _OUTPUT_BUCKET: long-facet-427508-j2_cloudbuild
+  _SOURCE_PREFIX: openetruscan-v2/classify
+  _MODEL_TAG: tfidf-nb-v2.0
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 900s   # CPU-only training on 312 rows takes ~10s; bootstrap CIs the bulk.
+
+steps:
+  - id: fetch-splits
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        SRC="gs://${_OUTPUT_BUCKET}/${_SOURCE_PREFIX}/${_RUN_PREFIX}"
+        mkdir -p /workspace/v2
+        gcloud storage cp "$$SRC/classify_train_pool.jsonl"    /workspace/v2/train_pool.jsonl
+        gcloud storage cp "$$SRC/classify_candidate_gold.jsonl" /workspace/v2/candidate_gold.jsonl
+        echo "  train: $(wc -l < /workspace/v2/train_pool.jsonl) rows"
+        echo "  eval:  $(wc -l < /workspace/v2/candidate_gold.jsonl) rows"
+
+  - id: install
+    name: python:3.12
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir --target=/workspace/deps \
+          'scikit-learn>=1.4' 'numpy>=1.26'
+        PYTHONPATH=/workspace/deps python -c "import sklearn, numpy; print('deps ok')"
+
+  - id: train
+    name: python:3.12
+    waitFor: [fetch-splits, install]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
+        python -m research.v2.pipelines.train_classifier \
+          --train-pool /workspace/v2/train_pool.jsonl \
+          --eval-gold /workspace/v2/candidate_gold.jsonl \
+          --out-metrics /workspace/v2/train_metrics.json \
+          --out-predictions /workspace/v2/train_predictions.jsonl \
+          --seed 42 \
+          --n-resamples 10000
+        echo "── metrics ──"
+        cat /workspace/v2/train_metrics.json
+
+  - id: upload
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [train]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        DEST="gs://${_OUTPUT_BUCKET}/openetruscan-v2/training/${_MODEL_TAG}-$$TS"
+        gcloud storage cp /workspace/v2/train_metrics.json     "$$DEST/train_metrics.json"
+        gcloud storage cp /workspace/v2/train_predictions.jsonl "$$DEST/train_predictions.jsonl"
+        echo "Results: $$DEST"

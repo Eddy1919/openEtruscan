@@ -47,7 +47,13 @@ from typing import Any, Callable, Iterator
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _secrets import get_secret  # noqa: E402
 
-CODEBOOK_PATH = Path(__file__).resolve().parent.parent / "codebooks" / "classification.md"
+def _resolve_codebook(language: str) -> Path:
+    """Resolve `codebooks/{language}/classification.md` from the repo layout."""
+    return Path(__file__).resolve().parent.parent / "codebooks" / language / "classification.md"
+
+
+# Default to Etruscan for backward compatibility. Override via --language.
+CODEBOOK_PATH = _resolve_codebook("etr")
 
 # AnthropicVertex defaults — override via env if your Vertex deployment uses
 # a different region or project.
@@ -306,12 +312,17 @@ def main(argv: list[str] | None = None) -> int:
                     help="Seconds to sleep between API calls (politeness).")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print the prompts that WOULD be sent, do not call any API.")
+    ap.add_argument("--language", default="etr",
+                    help="ISO-639-3 code selecting which codebook to use. "
+                         "Currently supported: etr. Others (osc, fal, rae) are "
+                         "scaffolded but the codebooks are still TODOs.")
     args = ap.parse_args(argv)
 
-    if not CODEBOOK_PATH.exists():
-        print(f"ERROR: codebook not found at {CODEBOOK_PATH}", file=sys.stderr)
+    codebook_path = _resolve_codebook(args.language)
+    if not codebook_path.exists():
+        print(f"ERROR: codebook not found at {codebook_path}", file=sys.stderr)
         return 1
-    codebook_text = CODEBOOK_PATH.read_text()
+    codebook_text = codebook_path.read_text()
 
     test_rows = list(iter_test_pool(args.test_pool))
     if args.max_rows:

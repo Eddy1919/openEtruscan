@@ -24,7 +24,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from classify_jury import PROVIDER_REGISTRY  # noqa: E402
 
-CODEBOOK_PATH = Path(__file__).resolve().parent.parent / "codebooks" / "lacunae.md"
+def _resolve_codebook(language: str) -> Path:
+    return Path(__file__).resolve().parent.parent / "codebooks" / language / "lacunae.md"
+
+
+# Default to Etruscan for backward compatibility.
+CODEBOOK_PATH = _resolve_codebook("etr")
 
 SYSTEM_PROMPT = """You are restoring damaged Etruscan inscriptions. You will see
 an inscription with a single marked lacuna of known character width. Your job
@@ -132,10 +137,18 @@ def main(argv: list[str] | None = None) -> int:
                     help="Append-mode JSONL of jury outputs.")
     ap.add_argument("--providers", nargs="+",
                     default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"])
+    ap.add_argument("--language", default="etr",
+                    help="ISO-639-3 code selecting which lacunae codebook to use.")
     ap.add_argument("--max-rows", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
+
+    # Resolve codebook based on --language (defaults to etr for back-compat).
+    codebook_path = _resolve_codebook(args.language)
+    if not codebook_path.exists():
+        print(f"ERROR: codebook not found at {codebook_path}", file=sys.stderr)
+        return 1
 
     candidates = [json.loads(l) for l in args.pool.read_text().splitlines() if l.strip()]
     if args.max_rows:

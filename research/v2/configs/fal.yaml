@@ -1,0 +1,38 @@
+# Language config for Faliscan (fal). STUB — not yet active.
+
+language: fal
+language_name: Faliscan
+codebook_dir: research/v2/codebooks/fal
+
+corpus:
+  - gs://openetruscan-rosetta/corpus/bakkum_2009_faliscan.jsonl   # TODO: stage
+
+silver_labels: null
+
+allowed_classes:
+  - funerary
+  - ownership
+  - dedicatory
+  - votive
+  - legal
+  - boundary
+
+source_tag_heuristic: bakkum_2009
+
+jury_defaults:
+  providers:
+    - claude-opus-4-7
+    - gemini-2.5-pro
+    - llama-4-maverick
+  vertex_project: double-runway-465420-h9
+  vertex_region: europe-west1
+  maas_vertex_region: us-east5
+  secret_manager_project: long-facet-427508-j2
+  gemini_secret_name: oe-gemini-api-key
+
+eval:
+  n_test: 150
+  seed: 42
+  bootstrap_n_resamples: 10000
+  significance_alpha: 0.05
+  krippendorff_target: 0.80

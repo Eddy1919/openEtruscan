@@ -16,9 +16,43 @@ function returns a float so the bootstrap harness can wrap it directly.
 """
 from __future__ import annotations
 
+import re
 from typing import Sequence
 
 BUCKETS = ("w1", "w2_3", "w4_6", "w7_plus")
+
+# Trailing-dash markers: editor convention for "more destroyed text continues
+# here". Anything containing `---` (or 2+ consecutive dashes) is unscoreable
+# because the gold itself encodes uncertainty about what's missing.
+_HAS_DASH_MARKER = re.compile(r"-{2,}")
+
+# Arabic digits in gold are editorial line-number annotations, not actual
+# Etruscan characters. Etruscan numerals are Roman-style letters.
+_HAS_DIGITS = re.compile(r"\d")
+
+
+def is_clean_gold(row: dict) -> bool:
+    """Return True iff the row's gold_lacuna is suitable for scoring.
+
+    Excluded:
+      - gold containing `---` (unknown continuation marker)
+      - gold containing Arabic digits (editorial line/section markers)
+      - gold that is empty
+    Catches the v2.0 mining false-positives surfaced on 2026-05-20.
+    """
+    gold = (row.get("gold_lacuna") or "").strip()
+    if not gold:
+        return False
+    if _HAS_DASH_MARKER.search(gold):
+        return False
+    if _HAS_DIGITS.search(gold):
+        return False
+    return True
+
+
+def filter_clean(rows: Sequence[dict]) -> list[dict]:
+    """Drop rows whose gold isn't suitable for scoring (see is_clean_gold)."""
+    return [r for r in rows if is_clean_gold(r)]
 
 
 def char_acc_top1(rows: Sequence[dict]) -> float:

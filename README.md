@@ -78,10 +78,9 @@ Response:
 ```
 
 Other core endpoints:
-- `GET /stats/timeline` — Retrieve aggregated spatio-temporal distributions for 11,361 inscriptions
-- `GET /clan/{gens}` — Perform prosopographical network search for a localized clan
-- `GET /concordance` — Perform Keyword-in-Context (KWIC) search across transcriptions
-- `GET /inscriptions/{id}/genetics` — Match inscriptions with archaeogenetic sequences within local spatial radius
+- `GET /stats/timeline` — Aggregated temporal distributions across the corpus.
+- `GET /clan/{gens}` — Prosopographical network of co-occurring personal names for a single Etruscan family name.
+- `GET /concordance` — Keyword-in-Context (KWIC) search across transcriptions.
 
 ## Python Package
 
@@ -117,35 +116,43 @@ openEtruscan/
 
 ## Linked Open Data & Pelagios Network
 
-OpenEtruscan is an official member of the **[Pelagios Network](https://pelagios.org/)** (Contributing to the People, Place, and Registry Working Groups). Our robust Linked Open Data integrations guarantee interoperability with primary external ancient-world DH graphs:
+OpenEtruscan exports Linked Open Data in formats interoperable with the wider ancient-world DH graph:
 
-- **11,361 total inscriptions** exported natively via our [Pelagios JSON-LD Endpoint](/pelagios.jsonld)
-- 184 dynamic findspots aligned dynamically with [Pleiades](https://pleiades.stoa.org)
-- Robust Web Annotations supporting spatial geometries even beneath uncertainty arrays
-- 17 findspots aligned to GeoNames
-- SPARQL endpoint: Apache Jena Fuseki 5.1 (34,477 triples, SPARQL 1.1)
+- **6,633 inscriptions** exported via the [Pelagios-compatible JSON-LD endpoint](/pelagios.jsonld) (Pelagios Network format spec; not a formal membership claim).
+- Findspots aligned to [Pleiades](https://pleiades.stoa.org) for the subset with documented provenance (see §Provenance disclosure above).
+- SPARQL endpoint: Apache Jena Fuseki (CC0 RDF dump, SPARQL 1.1).
 
-## Neural Classification
+## Classification & restoration models
 
-Two character-level models classify inscriptions into 7 epigraphic types:
+This project ships two small models alongside an LLM-jury annotation pipeline. The numbers below are from `research/v2/` — frozen test splits, multi-rater consensus eval, bootstrap-CI'd metrics, full pre-registration in [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md).
 
-### 🧠 Intelligence Suite (V2)
+### Classifier (7-class inscription type)
 
-The OpenEtruscan Intelligence Suite provides state-of-the-art neural restoration and classification.
+| Metric | Value (95% bootstrap CI) | n |
+|---|---|---|
+| Macro F1 | **0.312** (0.273 – 0.344) | 159 |
+| Accuracy | 0.767 (0.698 – 0.830) | 159 |
+| Head-2 F1 (`funerary` + `ownership`) | 0.829 (0.770 – 0.880) | 123 |
+| Tail-5 F1 (rare classes) | 0.105 (0.061 – 0.140) | 36 |
 
-- **Lacunae Restoration**: ByT5-based **Scholarly Span Corruption** (LoRA).
-- **Inscription Classifier**: Neural MLP achieving **99% Macro F1**.
-- **Prosopography**: Neural Entity Disambiguation (NED) using `pgvector`.
+Architecture: TF-IDF char 2-4-gram + Multinomial Naive Bayes. Train n = 282 silver-labeled rows; eval n = 159 candidate-gold rows (2-model LLM-jury, unanimous, confidence ≥ medium).
 
-Available on [Hugging Face](https://huggingface.co/Eddy1919/openetruscan-classifier).
+The dominant `funerary` and `ownership` classes are well-modelled (per-class F1 0.87 and 0.79); the rare `boundary` / `legal` / `votive` / `commercial` classes are data-starved and not yet modelable. **The 0.31 macro number reflects this imbalance honestly** — earlier copy in this repository claimed "99% macro F1", which referred to in-training-set performance on a self-labeled subset and is retracted.
 
-#### Performance Benchmarks
-| Task | Model | Metric | Baseline (V1) | **Intelligence V2** |
-| :--- | :--- | :--- | :--- | :--- |
-| **Classification** | Embedding MLP | F1-Macro | 0.52 | **0.99** |
-| **Restoration** | ByT5-Small | Phil. Safety | Low (Halluc.) | **High (Sentinels)** |
+### Lacuna restoration
 
-See [Intelligence V2 Methodology](docs/INTELLIGENCE_V2.md) for architectural details.
+Per-restoration evaluation on 118 editor-restored inscriptions (Leiden `[abc]`-style restorations, gold filtered to exclude unknown-continuation markers):
+
+| Model | Span exact-match (95% CI) | Char acc top-1 (95% CI) | Hallucination rate (95% CI) |
+|---|---|---|---|
+| Gemini 2.5 Pro | 0.254 (0.178 – 0.339) | 0.278 (0.202 – 0.358) | 0.356 (0.271 – 0.441) |
+| Llama 4 Maverick | 0.195 (0.127 – 0.263) | 0.215 (0.146 – 0.288) | 0.610 (0.525 – 0.695) |
+
+Hallucination = the model emits at least one character outside the marked lacuna span. Earlier copy in this repository claimed "Phil. Safety: High (Sentinels)" — this was a vibes-based label without a quantitative metric and is retracted in favour of the explicit rate above. Paired-bootstrap test on shared rows: Gemini−Llama Δ span-exact = +0.062, **p = 0.20 (not significant at p<0.05)**; we cannot claim Gemini outperforms Llama at the current n.
+
+### Methodology
+
+Full annotation codebook, frozen stratified splits, LLM-jury runners, and bootstrap-CI eval harness live in [`research/v2/`](research/v2/). The dataset cards and pre-registration are the citation-grade artifacts; this README is a summary.
 
 ## Development
 
@@ -222,7 +229,18 @@ The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructi
 
 </div>
 
-## What's New in v0.5.0
-- **Cloud Run Neural Restoration**: The ByT5 lacunae restoration model has been moved to a dedicated, autoscaling Cloud Run inference service (`/services/byt5-restorer`).
-- **Production CI/CD Eval Gates**: Implemented hybrid search NDCG@10 CI eval gates seeded with real DB queries (`evals/search_eval_queries.jsonl`).
-- **Admin Curatorial UI**: Deployed frontend provenance promotion workflow inside the Inscription viewer (`ProvenancePromoteModal.tsx`).
+## What's new
+
+### v2 annotation & evaluation pipeline (in progress)
+
+`research/v2/` introduces the gold-annotation and frozen-benchmark infrastructure that this project's earlier metric claims lacked:
+
+- **Frozen, stratified test split** (seed=42, 400 rows, 7 classes with a class-2 floor) — see [`research/v2/pipelines/classify_split.py`](research/v2/pipelines/classify_split.py).
+- **Multi-model LLM jury** (Gemini 2.5 Pro + Llama 4 Maverick on Vertex Model Garden; Claude Opus 4.7 pending quota grant) produces independent labels; Krippendorff α and a unanimous-agreement filter promote rows to candidate-gold.
+- **Pre-registered eval** with bootstrap 95% CIs on every metric and paired-bootstrap p-values on every model-comparison claim — see [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md) and [`research/v2/eval/bootstrap.py`](research/v2/eval/bootstrap.py).
+- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.31 ± 0.04. See the §Classification & restoration models section above.
+
+### v0.5.0 infrastructure
+- **Cloud Run neural restoration**: ByT5 lacunae restoration is served from a dedicated Cloud Run inference service (`services/byt5-restorer/`).
+- **CI/CD eval gates**: hybrid-search NDCG@10 gates seeded with real DB queries (`evals/search_eval_queries.jsonl`).
+- **Admin curatorial UI**: provenance promotion workflow in the Inscription viewer (`ProvenancePromoteModal.tsx`).

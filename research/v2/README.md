@@ -22,19 +22,30 @@ Three parallel streams that close the audit gaps identified against v1:
 research/v2/
 ├── README.md                    this file
 ├── PRE_REGISTRATION.md          frozen eval spec (metrics, baselines, sig tests)
-├── codebooks/                   annotation protocols
-│   ├── classification.md        7-class decision tree + edge cases
-│   ├── rosetta.md               bilingual pair definition
-│   └── lacunae.md               restoration evaluation protocol
-├── pipelines/                   runnable scripts
+├── codebooks/                   annotation protocols, ONE DIR PER LANGUAGE
+│   ├── README.md                multi-language overview
+│   ├── etr/                     Etruscan (v2.0 frozen)
+│   │   ├── classification.md    7-class decision tree + edge cases
+│   │   ├── rosetta.md           bilingual pair definition
+│   │   └── lacunae.md           restoration evaluation protocol
+│   ├── osc/  README.md          Oscan (scaffold; codebooks TODO)
+│   ├── fal/  README.md          Faliscan (scaffold; codebooks TODO)
+│   └── rae/  README.md          Raetian (scaffold; codebooks TODO)
+├── configs/                     per-language pipeline configuration
+│   ├── etr.yaml                 active; corpus paths + class set + jury defaults
+│   ├── osc.yaml                 stub
+│   ├── fal.yaml                 stub
+│   └── rae.yaml                 stub
+├── pipelines/                   language-agnostic; pass --language=<iso>
 │   ├── classify_split.py        frozen stratified split
-│   ├── classify_jury.py         multi-model labeling
+│   ├── classify_jury.py         multi-model labeling (--language)
 │   ├── classify_adjudicate.py   Krippendorff α + queue builder
 │   ├── rosetta_mine_pairs.py    bilingual pair extraction
 │   ├── verify_lemma_exclusion.py  train/test contamination check
 │   ├── lacuna_mine.py           extract editor-restored examples
-│   └── lacuna_jury.py           multi-model restoration + hallucination scoring
-├── eval/                        bootstrap-CI eval harness
+│   ├── lacuna_jury.py           multi-model restoration (--language)
+│   └── train_classifier.py      v2 classifier training + bootstrap-CI eval
+├── eval/                        bootstrap-CI eval harness (language-agnostic)
 │   ├── bootstrap.py             reusable resampling + paired tests
 │   ├── classify_metrics.py      macro-F1, per-class P/R, confusion
 │   ├── rosetta_metrics.py       P@k, semantic-field@k, paired delta
@@ -45,6 +56,19 @@ research/v2/
     ├── ADJUDICATION_GUIDE.md    how a philologist works the queue
     └── RUNBOOK.md               step-by-step operator instructions
 ```
+
+## Multi-language scope
+
+The architecture supports four ancient Italic languages out of the same harness:
+
+| Language | ISO | Status | Approx corpus |
+|---|---|---|---|
+| Etruscan | `etr` | **v2.0 frozen**; 400-row test set; classifier macro F1 = 0.31 ± 0.04 | ~6,500 inscriptions |
+| Oscan | `osc` | scaffold (config + README); codebooks TODO | ~600 inscriptions (Crawford 2011) |
+| Faliscan | `fal` | scaffold; codebooks TODO | ~400 inscriptions (Bakkum 2009) |
+| Raetian | `rae` | scaffold; codebooks TODO | ~400 inscriptions (Schumacher 2004) |
+
+The eval harness (bootstrap, classify_metrics, lacuna_metrics) is language-agnostic. Adding Oscan etc. is: draft codebook → fill out config YAML → stage corpus in `gs://openetruscan-rosetta/corpus/` → re-run the same Cloud Build with `--substitutions=_LANGUAGE=osc`. Zero pipeline changes.
 
 ## End-to-end runbook (operator view)
 
