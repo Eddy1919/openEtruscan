@@ -6,7 +6,7 @@ return floats so the bootstrap harness can wrap them directly.
 from __future__ import annotations
 
 from collections import Counter
-from typing import Iterable, Sequence
+from collections.abc import Sequence
 
 CLASSES: tuple[str, ...] = (
     "funerary",

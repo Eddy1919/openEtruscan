@@ -51,7 +51,7 @@ SEED = 42
 
 
 def _load_jsonl(path: Path) -> list[dict]:
-    return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
 def _text_field(row: dict) -> str:
@@ -98,7 +98,6 @@ def train_torch_arch(
 ) -> tuple[list[str], dict[str, Any]]:
     """Train CharCNN or MicroTransformer; return (predictions, train_metrics)."""
     import torch
-    import torch.nn.functional as F  # noqa: N812
     from openetruscan.ml.neural import (
         AlphaFocalLoss,
         CharCNN,
@@ -329,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     # Build (gold, pred) pairs for bootstrap
-    rows_for_metrics = list(zip(eval_labels, preds))
+    rows_for_metrics = list(zip(eval_labels, preds, strict=False))
 
     cb_macro = bootstrap_ci(rows_for_metrics, macro_f1, n_resamples=args.n_resamples, seed=SEED)
     cb_acc = bootstrap_ci(rows_for_metrics, accuracy, n_resamples=args.n_resamples, seed=SEED)
@@ -357,7 +356,7 @@ def main(argv: list[str] | None = None) -> int:
     write_result(args.out_metrics, payload)
 
     with args.out_predictions.open("w") as f:
-        for (gold, _, insc_id), pred in zip(eval_pairs, preds):
+        for (gold, _, insc_id), pred in zip(eval_pairs, preds, strict=False):
             f.write(json.dumps({
                 "id": insc_id,
                 "arch": args.arch,

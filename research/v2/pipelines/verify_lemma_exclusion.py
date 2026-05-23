@@ -33,7 +33,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Iterator
+from collections.abc import Iterator
 
 LEIDEN_PUNCT = re.compile(r"[\[\]\{\}\(\)\<\>•·\.,;:?!]")
 

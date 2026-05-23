@@ -1,0 +1,54 @@
+# Gitleaks config — allowlist for known false positives.
+#
+# Gitleaks' built-in `generic-api-key` rule has a high false-positive rate
+# on identifier-shaped strings. Below we whitelist the strings that are
+# part of the project's public configuration surface and are NOT secrets:
+#
+#   - GCP project IDs (`long-facet-427508-j2`, `double-runway-465420-h9`,
+#     `openetruscan-rosetta`) appear in console URLs, gcloud commands,
+#     and the cloudbuild yamls. They are public identifiers.
+#   - GCS bucket names that embed those project IDs are equally public.
+#   - The published Zenodo DOI prefix `10.5281/zenodo.20075836`.
+#
+# When adding a new allowlist entry, prefer narrow regexes anchored to a
+# specific identifier shape, not broad globs.
+
+title = "openEtruscan gitleaks config"
+
+# Inherit the default rule set; we only narrow it via allowlist below.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public identifiers that are not secrets"
+
+# Allowlist by literal string (case-sensitive substring match).
+stopwords = [
+  "long-facet-427508-j2",
+  "double-runway-465420-h9",
+  "openetruscan-rosetta",
+  "10.5281/zenodo.20075836",
+]
+
+# Allowlist by regex — catches the same project IDs embedded in resource
+# names (e.g. `long-facet-427508-j2_cloudbuild`, the auto-generated
+# Cloud Build artefacts bucket).
+regexes = [
+  '''(long-facet-427508-j2|double-runway-465420-h9)(_cloudbuild)?''',
+  # `gh-actions-deployer@long-facet-…` service-account email
+  '''gh-actions-deployer@long-facet-427508-j2\.iam\.gserviceaccount\.com''',
+  # `service-19927826393@gcp-sa-…` Google-managed service-agent emails
+  '''service-\d+@gcp-sa-[a-z]+\.iam\.gserviceaccount\.com''',
+  # Zenodo concept-DOI and version-DOI prefix
+  '''10\.5281/zenodo\.[0-9]+''',
+]
+
+# File-level allowlist — paths whose contents have been reviewed and are
+# known to be public configuration only.
+paths = [
+  '''cloudbuild/v2-.*\.yaml''',
+  '''research/v2/configs/.*\.yaml''',
+  '''research/v2/pipelines/_secrets\.py''',
+  '''scripts/ops/migrate_to_tembo\.py''',
+  '''docs/HUGGINGFACE\.md''',
+]

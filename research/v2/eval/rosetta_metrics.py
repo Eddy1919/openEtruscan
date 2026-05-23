@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def precision_at_k(rows: Sequence[dict], k: int) -> float:

@@ -17,7 +17,7 @@ function returns a float so the bootstrap harness can wrap it directly.
 from __future__ import annotations
 
 import re
-from typing import Sequence
+from collections.abc import Sequence
 
 BUCKETS = ("w1", "w2_3", "w4_6", "w7_plus")
 

@@ -39,7 +39,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Iterator
+from collections.abc import Iterator
 
 # Matches [content] where content is one or more chars that are not just dots
 # or dashes. Lazy match prevents grabbing across multiple brackets.
@@ -116,8 +116,7 @@ def _walk_corpus(path: Path) -> Iterator[dict]:
     else:
         with path.open() as f:
             reader = csv.DictReader(f)
-            for row in reader:
-                yield row
+            yield from reader
 
 
 def main(argv: list[str] | None = None) -> int:

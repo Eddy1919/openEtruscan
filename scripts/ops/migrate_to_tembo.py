@@ -46,7 +46,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import signal
@@ -56,7 +55,7 @@ import time
 import urllib.parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
+from collections.abc import Iterator
 
 DEFAULT_SOURCE_PROJECT = "long-facet-427508-j2"
 DEFAULT_SOURCE_INSTANCE = "openetruscan"

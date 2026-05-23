@@ -113,7 +113,7 @@ def _check_assertion(quote: str, lang: str) -> bool:
 
 
 def iter_passages(path: Path) -> list[dict]:
-    return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -171,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"--- DRY :: passage {passage['passage_index']} ---")
                 print(user[:400] + "...")
                 continue
-            for provider_name, provider in zip(args.providers, providers):
+            for provider_name, provider in zip(args.providers, providers, strict=False):
                 try:
                     raw = provider.invoke(system, user)
                 except Exception as e:  # noqa: BLE001

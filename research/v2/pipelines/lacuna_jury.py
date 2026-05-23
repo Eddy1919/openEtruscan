@@ -150,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: codebook not found at {codebook_path}", file=sys.stderr)
         return 1
 
-    candidates = [json.loads(l) for l in args.pool.read_text().splitlines() if l.strip()]
+    candidates = [json.loads(line) for line in args.pool.read_text().splitlines() if line.strip()]
     if args.max_rows:
         candidates = candidates[: args.max_rows]
     if not candidates:
@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"--- DRY :: {row['id']} ---")
                 print(user_prompt[:400] + "...")
                 continue
-            for provider_name, provider in zip(args.providers, providers):
+            for provider_name, provider in zip(args.providers, providers, strict=False):
                 try:
                     raw = provider.invoke(SYSTEM_PROMPT, user_prompt)
                 except Exception as e:  # noqa: BLE001

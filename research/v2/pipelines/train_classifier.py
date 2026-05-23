@@ -41,7 +41,6 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 from research.v2.eval.bootstrap import bootstrap_ci, write_result  # noqa: E402
 from research.v2.eval.classify_metrics import (  # noqa: E402
-    CLASSES,
     accuracy,
     confusion_matrix,
     head2_f1,
@@ -52,7 +51,7 @@ from research.v2.eval.classify_metrics import (  # noqa: E402
 
 
 def _load_jsonl(path: Path) -> list[dict]:
-    return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
 def _text_field(row: dict) -> str:
@@ -116,8 +115,8 @@ def main(argv: list[str] | None = None) -> int:
     ]
 
     # Drop rows with empty text or missing labels (defensive)
-    train_pairs = [(t, lbl) for t, lbl in zip(train_texts, train_labels) if t and lbl]
-    eval_pairs = [(t, lbl, r["id"]) for t, lbl, r in zip(eval_texts, eval_labels, eval_rows)
+    train_pairs = [(t, lbl) for t, lbl in zip(train_texts, train_labels, strict=False) if t and lbl]
+    eval_pairs = [(t, lbl, r["id"]) for t, lbl, r in zip(eval_texts, eval_labels, eval_rows, strict=False)
                   if t and lbl]
     if not train_pairs or not eval_pairs:
         print(f"ABORT: after empty-text drop, train={len(train_pairs)} eval={len(eval_pairs)}",
@@ -147,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     y_true = [lbl for _, lbl, _ in eval_pairs]
 
     # ── Eval rows = list of (gold, predicted) tuples for bootstrap_ci wrappers ──
-    pairs_for_metrics = list(zip(y_true, y_pred))
+    pairs_for_metrics = list(zip(y_true, y_pred, strict=False))
 
     cb_macro = bootstrap_ci(pairs_for_metrics, macro_f1,
                             n_resamples=args.n_resamples, seed=args.seed)
@@ -179,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     write_result(args.out_metrics, payload)
 
     with args.out_predictions.open("w") as f:
-        for (text, gold, insc_id), pred in zip(eval_pairs, y_pred):
+        for (text, gold, insc_id), pred in zip(eval_pairs, y_pred, strict=False):
             f.write(json.dumps({
                 "id": insc_id,
                 "text": text,
