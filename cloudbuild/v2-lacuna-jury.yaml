@@ -38,7 +38,10 @@ options:
     - VERTEX_REGION=${_VERTEX_REGION}
     - MAAS_VERTEX_REGION=${_MAAS_VERTEX_REGION}
 
-timeout: 3600s
+timeout: 14400s  # 4-hour cap. 1-hour timed out at 275/375 jury calls on
+                 # 2026-05-23 (build 766ddabf). 3-rater w/ Sonnet+Gemini+Llama
+                 # averages ~10s per candidate (3 raters × ~3s each); 125
+                 # candidates × ~30s ≈ 60-90 min wall time + headroom.
 
 steps:
   - id: fetch-corpus
@@ -70,7 +73,8 @@ steps:
           'google-generativeai>=0.8' \
           'openai>=1.50' \
           'google-cloud-secret-manager>=2.20' \
-          'google-auth>=2.30'
+          'google-auth>=2.30' \
+          'google-cloud-storage>=2.16'
 
   - id: mine
     name: python:3.12
@@ -99,6 +103,49 @@ steps:
         export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
         EXTRA=""
         if [ "${_MAX_ROWS}" != "0" ]; then EXTRA="--max-rows ${_MAX_ROWS}"; fi
+
+        # Partial-sync to GCS every 60s so a timeout/OOM doesn't lose progress.
+        # Mirrors the pattern in v2-classify-jury.yaml — see that file for the
+        # rationale (python:3.12 image has no gcloud, so we use the python SDK).
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        export DEST_BUCKET="${_OUTPUT_BUCKET}"
+        export DEST_PREFIX="${_OUTPUT_PREFIX}/$$TS-partial"
+
+        cat > /workspace/sync_partial.py <<PYEOF
+        import os, sys, time
+        from pathlib import Path
+        from google.cloud import storage
+        SRC = Path("/workspace/lacuna_jury_raw.jsonl")
+        bucket_name = os.environ["DEST_BUCKET"]
+        blob_path = os.environ["DEST_PREFIX"] + "/lacuna_jury_raw.jsonl"
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        def upload_once():
+            if not SRC.exists() or SRC.stat().st_size == 0: return False
+            try:
+                bucket.blob(blob_path).upload_from_filename(str(SRC))
+                print(f"  [partial-sync] uploaded {SRC.stat().st_size}B → gs://{bucket_name}/{blob_path}", flush=True)
+                return True
+            except Exception as e:
+                print(f"  [partial-sync] failed: {e}", flush=True)
+                return False
+        mode = sys.argv[1] if len(sys.argv) > 1 else "loop"
+        if mode == "loop":
+            while True:
+                time.sleep(60); upload_once()
+        else:
+            upload_once()
+        PYEOF
+
+        python /workspace/sync_partial.py loop &
+        SYNC_PID=$!
+        flush_partial() {
+          python /workspace/sync_partial.py once 2>/dev/null || true
+          kill $$SYNC_PID 2>/dev/null || true
+        }
+        trap flush_partial EXIT
+        trap 'flush_partial; exit 143' TERM
+
         python -m research.v2.pipelines.lacuna_jury \
           --pool /workspace/lacuna_raw_pairs.jsonl \
           --out /workspace/lacuna_jury_raw.jsonl \
