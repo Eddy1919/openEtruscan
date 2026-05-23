@@ -136,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True,
                     help="Append-mode JSONL of jury outputs.")
     ap.add_argument("--providers", nargs="+",
-                    default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"])
+                    default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"])
     ap.add_argument("--language", default="etr",
                     help="ISO-639-3 code selecting which lacunae codebook to use.")
     ap.add_argument("--max-rows", type=int, default=0)

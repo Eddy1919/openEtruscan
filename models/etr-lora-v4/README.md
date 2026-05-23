@@ -260,7 +260,7 @@ the model directly:
 
 ```bibtex
 @software{openetruscan_2026,
-  author    = {OpenEtruscan Contributors},
+  author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
   version   = {0.5.0},
@@ -270,7 +270,7 @@ the model directly:
 }
 
 @misc{openetruscan_etr_lora_v4_2026,
-  author       = {OpenEtruscan Contributors},
+  author       = {Panichi, Edoardo},
   title        = {{etr-lora-v4: Etruscan-side LoRA adapter for LaBSE / XLM-R}},
   year         = {2026},
   publisher    = {Hugging Face},

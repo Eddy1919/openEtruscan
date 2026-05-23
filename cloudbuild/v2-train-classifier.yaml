@@ -16,7 +16,7 @@
 # the inputs here. Defaults to the most recent successful run as of writing.
 
 substitutions:
-  _RUN_PREFIX: "20260520T205613Z"
+  _RUN_PREFIX: "20260523T214907Z"
   _OUTPUT_BUCKET: long-facet-427508-j2_cloudbuild
   _SOURCE_PREFIX: openetruscan-v2/classify
   _MODEL_TAG: tfidf-nb-v2.0

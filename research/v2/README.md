@@ -75,10 +75,10 @@ The eval harness (bootstrap, classify_metrics, lacuna_metrics) is language-agnos
 ```bash
 # Stream A — Classification
 make -C research/v2 classify-split         # → data/classify_train.jsonl, classify_test.jsonl
-make -C research/v2 classify-jury          # → data/classify_jury_raw.jsonl  (costs ~$15 in API)
+make -C research/v2 classify-jury          # → data/classify_jury_raw.jsonl  (~$15 in API at 2-rater jury)
 make -C research/v2 classify-adjudicate    # → data/classify_candidate_gold.jsonl
                                             # + data/classify_adjudication_queue.jsonl
-# Philologist works the queue (~600 rows × 30s = 5 hours)
+# Philologists work the queue (~79 disagreement rows + 30-row dual-blind spot-check; ≈5-7 hours per philologist)
 make -C research/v2 classify-merge         # → data/classify_gold_v2.jsonl
 make -C research/v2 classify-eval BASELINE=charcnn EXPERIMENTAL=embedding_mlp
 
@@ -97,9 +97,9 @@ make -C research/v2 lacuna-eval MODEL=byt5
 ## What "candidate gold" means
 
 A row is **candidate gold** iff:
-- ≥3 frontier LLMs (Claude Opus 4.7, Gemini 2.5 Pro, GPT-5) independently produce the same label
-- Each model returns a confidence ≥ 0.85
-- The row's text passes the "non-trivial signal" check (length > 5 chars, not pure name-only fragment unless context disambiguates)
+- All raters in the active jury independently produce the same label (target jury: 3 frontier LLMs from distinct training lineages; **v2.0.1 deviation**: shipped with 2 raters, Gemini 2.5 Pro + Llama 4 Maverick, because Claude Vertex quota was unavailable at run time — see `PRE_REGISTRATION.md` §Deviations §A).
+- Every rater returns confidence ≥ medium (the schema-enforced confidence levels are `high`/`medium`/`low`).
+- The row's text passes the "non-trivial signal" check (length > 5 chars, not pure name-only fragment unless context disambiguates).
 
 Everything else lands in the adjudication queue, stratified by class so philologists see a balanced sample. Once a human signs off on a queue row (`accept`, `reject`, `relabel`), it joins the gold set with `signal_source = gold:human_adjudicated`.
 

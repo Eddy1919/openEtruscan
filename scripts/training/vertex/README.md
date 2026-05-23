@@ -21,7 +21,7 @@ job.
 
 ## Files
 
-### Embedding (the current-state-of-the-art path)
+### Embedding (the current production path)
 
 | File | Purpose |
 |---|---|

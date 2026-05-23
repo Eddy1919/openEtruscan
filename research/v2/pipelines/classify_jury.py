@@ -213,6 +213,7 @@ def _make_vertex_maas(model: str) -> Provider:
 PROVIDER_REGISTRY: dict[str, Callable[[], Provider]] = {
     "claude-opus-4-7": lambda: _make_anthropic_vertex("claude-opus-4-7"),
     "claude-sonnet-4-6": lambda: _make_anthropic_vertex("claude-sonnet-4-6"),
+    "claude-haiku-4-5": lambda: _make_anthropic_vertex("claude-haiku-4-5@20251001"),
     "gemini-2.5-pro": lambda: _make_gemini("gemini-2.5-pro"),
     "llama-4-scout": lambda: _make_vertex_maas("meta/llama-4-scout-17b-16e-instruct-maas"),
     "llama-4-maverick": lambda: _make_vertex_maas("meta/llama-4-maverick-17b-128e-instruct-maas"),
@@ -302,7 +303,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True,
                     help="Append-mode JSONL of (model, id, label, …) rows.")
     ap.add_argument("--providers", nargs="+",
-                    default=["claude-opus-4-7", "gemini-2.5-pro", "llama-4-maverick"],
+                    default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"],
                     help="Provider names from PROVIDER_REGISTRY. "
                          "Default 3-model jury: Claude (Vertex), Gemini, DeepSeek (Vertex MaaS). "
                          "All bill to the same GCP project; no separate API keys needed.")

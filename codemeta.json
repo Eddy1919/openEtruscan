@@ -41,15 +41,19 @@
   "developmentStatus": "active",
   "author": [
     {
-      "@type": "Organization",
-      "name": "OpenEtruscan Contributors",
-      "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
+      "@type": "Person",
+      "givenName": "Edoardo",
+      "familyName": "Panichi",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Independent researcher"
+      }
     }
   ],
   "maintainer": {
-    "@type": "Organization",
-    "name": "OpenEtruscan Contributors",
-    "url": "https://github.com/Eddy1919/openEtruscan/graphs/contributors"
+    "@type": "Person",
+    "givenName": "Edoardo",
+    "familyName": "Panichi"
   },
   "sameAs": "https://doi.org/10.5281/zenodo.20075836",
   "isPartOf": [

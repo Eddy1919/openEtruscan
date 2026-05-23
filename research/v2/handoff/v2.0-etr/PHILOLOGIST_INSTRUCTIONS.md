@@ -2,7 +2,7 @@
 
 You are one of the human adjudicators for the OpenEtruscan v2.0 classification gold set. This document is everything you need.
 
-**Time commitment:** ~3–4 hours, paid for thinking, not speed.
+**Time commitment:** ~5–7 hours total (codebook read-in 30–45 min; 30-row blind spot-check at ~2 min/row = ~1 h; α check + review 15 min; full 79-row queue at ~2–3 min/row = ~3–4 h). Paid for thinking, not speed — easy rows take seconds, hard rows can take minutes. Budget 6–8 hours if you tend to consult the bibliography on edge cases.
 
 ## What you are doing
 

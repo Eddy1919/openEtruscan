@@ -47,7 +47,7 @@ substitutions:
   # Default 3-rater jury. Claude is currently quota-zero (use --substitutions
   # =_PROVIDERS="gemini-2.5-pro llama-4-scout" for a 2-rater smoke while
   # waiting for the Anthropic quota increase).
-  _PROVIDERS: "claude-opus-4-7 gemini-2.5-pro llama-4-maverick"
+  _PROVIDERS: "claude-haiku-4-5 gemini-2.5-pro llama-4-maverick"
 
   # Vertex billing project — the SCRIPTS read these, the Cloud Build runs
   # in long-facet but every API call is billed to double-runway.
@@ -70,9 +70,11 @@ options:
     - SECRET_MANAGER_PROJECT_ID=${_SECRET_PROJECT_ID}
     - GEMINI_SECRET_NAME=${_GEMINI_SECRET_NAME}
 
-timeout: 7200s   # 2-hour cap. Empirical rate: ~6 calls/min on 2-rater jury
-                 # (Gemini-Pro + Llama-4-Maverick), so 800 calls ≈ 130 min.
-                 # 1-hour was too tight (hit timeout at 425/800 on 2026-05-20).
+timeout: 14400s  # 4-hour cap. 3-rater w/ Sonnet-4.6 averages ~7s/call (Sonnet
+                 # is the slow rater; Gemini & Llama are ~2s). 1200 calls × ~7s
+                 # ≈ 140 min model time + 20 min for split/install/adjudicate/
+                 # upload + headroom. 2-hour cap timed out at 1025/1200 on
+                 # 2026-05-23 (build 48023b39); 4-hour gives margin.
 
 steps:
   # ───────────────────────────────────────────────────────────────
@@ -115,7 +117,8 @@ steps:
           'google-generativeai>=0.8' \
           'openai>=1.50' \
           'google-cloud-secret-manager>=2.20' \
-          'google-auth>=2.30'
+          'google-auth>=2.30' \
+          'google-cloud-storage>=2.16'
         PYTHONPATH=/workspace/deps python -c \
           "import anthropic, google.generativeai, openai, google.cloud.secretmanager, google.auth; print('deps ok')"
 
@@ -154,26 +157,63 @@ steps:
       - |
         set -euo pipefail
         export PYTHONPATH=/workspace/deps:${PYTHONPATH:-}
-        # --sleep 0.2 cuts ~5 min of dead wall-time vs 0.5 with no rate-limit
-        # impact at Gemini-Pro + Llama-4 default RPM.
-        # Also: upload partial progress to GCS on EXIT (even on timeout) so
-        # a re-run can skip already-completed (model, id) pairs from the
-        # previous run via append-mode.
+        # --sleep 0.1 cuts dead wall-time without hitting Gemini/Llama RPM
+        # limits in practice (Sonnet is the slow rater, not the throttled one).
+        #
+        # Partial-progress upload strategy: a Python background process syncs
+        # /workspace/classify_jury_raw.jsonl to GCS every 60s. Earlier version
+        # used `gcloud storage cp` but this container is python:3.12 with no
+        # gcloud installed, so we use google-cloud-storage instead. The
+        # background process is also trapped on EXIT/TERM to do a final flush.
         TS=$(date -u +%Y%m%dT%H%M%SZ)
-        PARTIAL_DEST="gs://${_OUTPUT_BUCKET}/${_OUTPUT_PREFIX}/$$TS-partial/classify_jury_raw.jsonl"
-        upload_partial() {
-          if [ -f /workspace/classify_jury_raw.jsonl ]; then
-            gcloud storage cp /workspace/classify_jury_raw.jsonl "$$PARTIAL_DEST" \
-              2>/dev/null || true
-            echo "(partial uploaded to $$PARTIAL_DEST)"
-          fi
+        DEST_BUCKET="${_OUTPUT_BUCKET}"
+        DEST_PREFIX="${_OUTPUT_PREFIX}/$$TS-partial"
+
+        cat > /workspace/sync_partial.py <<PYEOF
+        import os, sys, time, traceback
+        from pathlib import Path
+        from google.cloud import storage
+        SRC = Path("/workspace/classify_jury_raw.jsonl")
+        bucket_name = os.environ["DEST_BUCKET"]
+        blob_path = os.environ["DEST_PREFIX"] + "/classify_jury_raw.jsonl"
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        def upload_once():
+            if not SRC.exists() or SRC.stat().st_size == 0: return False
+            try:
+                bucket.blob(blob_path).upload_from_filename(str(SRC))
+                print(f"  [partial-sync] uploaded {SRC.stat().st_size}B → gs://{bucket_name}/{blob_path}", flush=True)
+                return True
+            except Exception as e:
+                print(f"  [partial-sync] failed: {e}", flush=True)
+                return False
+        mode = sys.argv[1] if len(sys.argv) > 1 else "loop"
+        if mode == "loop":
+            while True:
+                time.sleep(60); upload_once()
+        else:
+            upload_once()
+        PYEOF
+
+        # Background sync (Python; works in python:3.12 image)
+        DEST_BUCKET="$$DEST_BUCKET" DEST_PREFIX="$$DEST_PREFIX" \
+          python /workspace/sync_partial.py loop &
+        SYNC_PID=$!
+
+        flush_partial() {
+          # Best-effort final flush on exit.
+          DEST_BUCKET="$$DEST_BUCKET" DEST_PREFIX="$$DEST_PREFIX" \
+            python /workspace/sync_partial.py once 2>/dev/null || true
+          kill $$SYNC_PID 2>/dev/null || true
         }
-        trap upload_partial EXIT
+        trap flush_partial EXIT
+        trap 'flush_partial; exit 143' TERM
+
         python -m research.v2.pipelines.classify_jury \
           --test-pool /workspace/classify_test_v2.jsonl \
           --out /workspace/classify_jury_raw.jsonl \
           --providers ${_PROVIDERS} \
-          --sleep 0.2
+          --sleep 0.1
 
   # ───────────────────────────────────────────────────────────────
   # 5. Adjudication queue build — local, free, fast.

@@ -61,8 +61,8 @@ VOID_TEMPLATE = """@prefix : <{base}/#> .
     void:linkPredicate <http://www.w3.org/ns/oa#hasTarget> ;
     void:objectsTarget <https://www.wikidata.org> .
 
-:OpenEtruscanTeam a foaf:Organization ;
-    foaf:name "OpenEtruscan Contributors" ;
+:OpenEtruscanTeam a foaf:Person ;
+    foaf:name "Edoardo Panichi" ;
     foaf:homepage <{base}> .
 """
 

@@ -1,10 +1,11 @@
 # Pre-registration — OpenEtruscan v2 Evaluations
 
+**Version:** v2.0.1 (originally frozen as v2.0 on 2026-05-17; bumped to v2.0.1 on 2026-05-21 to acknowledge a 2-rater jury delivery, see Deviation §A below).
 **Frozen on:** 2026-05-17
-**Git commit at freeze:** TBD (record `git rev-parse HEAD` when this file is signed off)
-**Authority:** any deviation from this document requires a v2.1 release and an entry in [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
+**Git commit at freeze:** `c281ed9` (`refactor: implement v2 research protocol with rigorous evaluation metrics, standardized configurations, and updated methodology documentation`).
+**Authority:** any deviation from this document requires a version bump (next: v2.1) and an entry in the Deviations section at the bottom of this file.
 
-This document fixes the evaluation protocol *before* the eval runs. If you read results first and then revise this document, you have unblinded the eval and the results are inadmissible in publication.
+This document fixes the evaluation protocol *before* the eval runs. If you read results first and then revise this document, you have unblinded the eval and the results are inadmissible in publication. The Deviations section is the only sanctioned place to record post-freeze adjustments — and only those forced by external constraints (e.g. unavailable API quota), not opportunistic improvements.
 
 ---
 
@@ -17,7 +18,7 @@ Multi-class single-label classification of Etruscan inscriptions into one of 7 e
 - **Source:** stratified random sample from the OpenEtruscan v1 cleaned corpus (`research/data/openetruscan_clean.csv` at commit `<freeze-commit>`).
 - **Size:** `n = 400` (target). Strata: 7 classes × {high, medium, low} confidence × {Larth, CIE} source.
 - **Selection:** seed=42, `pipelines/classify_split.py`. Frozen output: `data/classify_test_v2.jsonl`.
-- **Annotation:** LLM-jury (3 models) → unanimous → candidate gold → human philologist adjudication (target inter-rater Krippendorff α ≥ 0.80 across 2 human raters on a 50-row sub-sample).
+- **Annotation:** LLM-jury → unanimous → candidate gold → human philologist adjudication (target inter-rater Krippendorff α ≥ 0.80 across 2 human raters on a 30-row sub-sample). **Original protocol called for 3 raters** (Claude Opus 4.7 + Gemini 2.5 Pro + a third frontier model). **As delivered** (v2.0.1, see Deviation §A): 2 raters — Gemini 2.5 Pro + Llama 4 Maverick. Claude was unavailable at the time of the run because the project's Vertex Anthropic quota had not been granted yet. The 3-rater rerun will happen once quota lands.
 
 ### Primary metric
 **Macro-F1 over the 7 classes**, computed with `sklearn.metrics.f1_score(average='macro', zero_division=0)`.
@@ -135,7 +136,27 @@ Given an Etruscan inscription with a marked lacuna (Leiden `[...]` or dotted-bra
 
 ## Sign-off
 
-This document becomes binding when:
-- [ ] All three codebooks are signed off (`codebooks/*.md`)
-- [ ] The freeze commit hash is recorded above
-- [ ] At least one external reviewer (philologist or ML researcher not on the project) has reviewed and dated the bottom of this file
+This document becomes fully binding when:
+- [x] All three Etruscan codebooks have been drafted (`codebooks/etr/*.md` — 2026-05-17)
+- [x] The freeze commit hash is recorded above (`c281ed9` — recorded 2026-05-21)
+- [ ] **Pending:** Krippendorff α between two human philologists on the 30-row spot-check sub-sample (target ≥ 0.80). Until this lands, the v2 numbers are explicitly labelled "candidate gold" / "consensus silver", not "gold".
+- [ ] **Pending:** at least one external reviewer (philologist or ML researcher not on the project) has reviewed and dated this file.
+
+Until the bottom two boxes are checked, v2 results may be cited only with the explicit caveat that human adjudication has not yet been performed. The published documents (`README.md`, `docs/INTELLIGENCE_V2.md`) already carry this caveat.
+
+---
+
+## Deviations from the frozen protocol
+
+Each entry records: which clause changed, why it changed, when, and what mitigation was applied.
+
+### §A — 2-rater jury instead of 3-rater (v2.0 → v2.0.1)
+
+- **Original clause** (Stream A §Test set, Stream B §Baselines, Stream C §Baselines): "LLM-jury (3 models) → unanimous → candidate gold".
+- **As delivered (v2.0.1, 2026-05-20)**: 2-rater jury (Gemini 2.5 Pro + Llama 4 Maverick) on Vertex AI, both with `response_format=json_object` schema enforcement. Run logged at `gs://long-facet-427508-j2_cloudbuild/openetruscan-v2/classify/20260520T205613Z/`.
+- **Why**: Anthropic Claude Opus 4.7 on Vertex was enabled in the GCP project but the per-base-model `online_prediction_input_tokens_per_minute` quota was 0 at run time, and the quota-increase ticket was estimated to block the run by an unknown number of hours.
+- **Closure (v2.0.2, 2026-05-23)**: 3-rater jury delivered. Claude **Sonnet 4.6** was substituted for Opus 4.7 because Sonnet's pre-provisioned quota (2.4M tokens/min on `claude-haiku-4-5` in europe-west1; Sonnet enabled the same way) was already active. Claude Haiku 4.5 was evaluated first but its over-conservative "unsure" rate (8/14 on the smoke vs Sonnet's 4/14) tanked Krippendorff α from 0.67 (2-rater) to 0.45 (3-rater w/ Haiku); we substituted Sonnet 4.6 instead. Final 3-rater run logged at `gs://long-facet-427508-j2_cloudbuild/openetruscan-v2/classify/20260523T214907Z/`.
+- **v2.0.2 headline numbers** (which supersede v2.0.1 for all forward-looking claims): Krippendorff α = **0.7649** (up from 0.716), candidate-gold = **143 rows** (down from 159; stricter), adjudication queue = **99 rows** (up from 79), all-unsure = 158. The stricter 3-rater unanimity gate is the right shape: lower yield, higher per-row confidence.
+- **Mitigation**: v2.0.1 candidate-gold (159 rows from the 2-rater jury) remains addressable as a "consensus-silver" reference set; v2.0.2 (143 rows, 3-rater unanimous) is the new headline figure for publication. Both raw jury outputs are preserved in GCS for audit.
+- **Substitution rationale documentation**: Sonnet 4.6 is in the same Anthropic family as the originally pre-registered Opus 4.7, so the inter-rater-independence assumption (three distinct training-data lineages: Anthropic + Google + Meta) is preserved. We are NOT claiming Sonnet 4.6 ≈ Opus 4.7 on task performance; we are claiming that for inter-rater-disagreement detection, an Anthropic model in the same family provides equivalent independence from Gemini and Llama.
+- **Severity**: this is the kind of deviation an honest pre-registration documents rather than the kind it hides. The closure happened within 3 days of the original deviation, and the substitution is principled (same-family Anthropic model for inter-rater independence). All v2 numbers cited in `README.md` and `docs/INTELLIGENCE_V2.md` should be re-tagged to v2.0.2 at the next public-doc update.

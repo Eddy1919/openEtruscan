@@ -1582,18 +1582,28 @@ async def semantic_search(
     return {"total": results.total, "count": len(data), "results": data}
 
 
-@app.get("/genetics/samples", tags=["Genetics"])
+@app.get("/genetics/samples", tags=["Experimental"], deprecated=True)
 @limiter.limit("60/minute")
 async def get_all_genetic_samples(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> list[dict[str, Any]]:
-    """Retrieve all geotagged genetic samples for spatial mapping."""
+    """EXPERIMENTAL placeholder. Returns the contents of the `genetic_samples`
+    table, which is currently empty in production. The table exists as
+    schema scaffolding for a planned (not yet implemented) integration with
+    published archaeogenetic datasets (e.g. AADR, the Allen Ancient DNA
+    Resource). Until that integration is built, callers will receive an
+    empty list — do NOT treat this endpoint as a substantive data source.
+
+    The endpoint is marked `deprecated=True` so it shows that status in the
+    OpenAPI / Swagger surface; it is kept live only for backward
+    compatibility with code that already pings it.
+    """
     repo = InscriptionRepository(session)
     return await repo.get_genetic_samples()
 
 
-@app.get("/inscriptions/{id}/genetics", tags=["Genetics"])
+@app.get("/inscriptions/{id}/genetics", tags=["Experimental"], deprecated=True)
 @limiter.limit("30/minute")
 async def get_genetic_matches(
     request: Request,
@@ -1607,7 +1617,14 @@ async def get_genetic_matches(
     ] = 5,
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Spatio-temporal matchmaking between inscriptions and archaeogenetic samples."""
+    """EXPERIMENTAL placeholder for spatio-temporal matching between
+    inscriptions and archaeogenetic samples. See `/genetics/samples` for the
+    full caveat: the `genetic_samples` table is empty, so this endpoint
+    currently returns `{"total": 0, "matches": []}` for every input. The
+    endpoint is preserved as a hook for a future integration; treat any
+    "match" returned here as an artefact of incomplete data rather than
+    evidence of an archaeogenetic association.
+    """
     repo = InscriptionRepository(session)
     matches = await repo.get_genetic_matches(inscription_id=id, limit=limit)
     return {"total": len(matches), "inscription_id": id, "matches": matches}

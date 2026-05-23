@@ -15,24 +15,28 @@ The v2 protocol fixes both by pre-registering metrics, freezing splits, running 
 
 ## 2. v2 classifier
 
-**Architecture.** TF-IDF (character 2–4-grams, max 3000 features, min_df=2) + Multinomial Naive Bayes (α=0.1). Identical to the v1 production architecture under `src/openetruscan/ml/classifier.py`. Reusing the v1 architecture deliberately so that the rigor delta between v1 and v2 is in the *evaluation*, not the *model*.
+**Reference architecture.** TF-IDF (character 2–4-grams, max 3000 features, min_df=2) + Multinomial Naive Bayes (α=0.1). Identical to the v1 production architecture under `src/openetruscan/ml/classifier.py`. Reusing the v1 architecture deliberately so that the rigor delta between v1 and v2 is in the *evaluation*, not the *model*.
 
 **Training data.** 282 silver-labeled inscriptions from the v1 reasoning-cascade output (`research/data/openetruscan_labels.csv`), filtered to those NOT in the v2 frozen test split.
 
-**Evaluation data.** 159 candidate-gold inscriptions, drawn from a 400-row stratified test split of the corpus and labeled by an LLM jury (Gemini 2.5 Pro + Llama 4 Maverick) under the codebook at [`research/v2/codebooks/classification.md`](../research/v2/codebooks/classification.md). A row enters candidate-gold only if both raters agreed at confidence ≥ medium.
+**Evaluation data (v2.0.2).** 143 candidate-gold inscriptions, drawn from a 400-row stratified test split and labeled by a 3-model LLM jury (**Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick** on Vertex AI) under the codebook at [`research/v2/codebooks/etr/classification.md`](../research/v2/codebooks/etr/classification.md). A row enters candidate-gold only if all three raters independently agreed at confidence ≥ medium. **Krippendorff α = 0.7649 across raters** on the full pool. v2.0.1 (n=159, 2-rater jury) is superseded; see [Deviation §A in PRE_REGISTRATION.md](../research/v2/PRE_REGISTRATION.md) for the substitution rationale.
 
-**Headline results (10 000-resample bootstrap, seed=42):**
+**Head-to-head: four architectures on the same v2.0.2 split** (10 000-resample bootstrap, seed=42):
 
-| Metric | Point | 95% CI |
-|---|---|---|
-| Macro F1 | 0.312 | [0.273, 0.344] |
-| Accuracy | 0.767 | [0.698, 0.830] |
-| Head-2 F1 (`funerary` + `ownership`) | 0.829 | [0.770, 0.880] |
-| Tail-5 F1 (rare classes) | 0.105 | [0.061, 0.140] |
+| Architecture | Params | Macro F1 (95% CI) | Accuracy | Head-2 F1 | Tail-5 F1 |
+|---|---|---|---|---|---|
+| TF-IDF + NB | ~3K | **0.313** (0.273 – 0.348) | 0.776 | 0.838 | 0.103 |
+| CharCNN | 28K | **0.369** (0.257 – 0.432) | 0.657 | 0.762 | 0.211 |
+| MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 | 0.530 | 0.232 |
+| EmbeddingMLP (MiniLM-multilingual) | 58K + frozen 384-d encoder | **0.124** (0.099 – 0.149) | 0.469 | 0.434 | 0.000 |
 
-**Per-class:** `funerary` F1 0.87, `ownership` F1 0.79, `dedicatory` F1 0.53, `boundary`/`legal` F1 0.00 (both predict-zero failures), `votive`/`commercial` n=0 in the eval set.
+**Two findings, both replicated between v2.0.1 (n=159) and v2.0.2 (n=143):**
 
-**Honest interpretation.** The architecture works for the two dominant classes and fails on the rare classes. This matches the long-standing finding in `research/CURATION_FINDINGS.md` that the bottleneck is *data*, not *architecture* — three different architectures (CharCNN, MicroTransformer, linear head over embeddings) all produced macro F1 in the 0.25–0.32 band on truly held-out data. The path to better numbers runs through more annotated data, not better models.
+*Finding A — architecture-invariance among local-feature models.* TF-IDF+NB / CharCNN / MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. **Adding parameters does not move macro F1; the bottleneck is data, not architecture.**
+
+*Finding B — out-of-distribution dense embeddings fail.* EmbeddingMLP with multilingual MiniLM as a frozen encoder lands at 0.124 — CI [0.099, 0.149] does **not** overlap with TF-IDF+NB's CI [0.273, 0.348]. **Significant at p<0.05** by the non-overlapping-CI heuristic. A pretrained encoder with no Etruscan in its training distribution discards exactly the surface-morphological features (`-uce`, `mi…al`, `tular spural`) that carry the typological signal; character n-grams capture them. This contradicts the conventional NLP intuition that dense pretrained embeddings always beat surface-feature baselines.
+
+**Honest interpretation.** The reference TF-IDF+NB architecture works for the two dominant classes (`funerary` F1 0.84, `ownership` F1 0.79) and fails on the rare classes. The path to better numbers runs through *more annotated data*, not better models — confirmed across four architectures spanning 3 K → 274 K parameters.
 
 ## 3. v2 lacuna restoration
 

@@ -35,7 +35,7 @@ LAC_JURY  := $(DATA)/lacuna_jury_raw.jsonl
 #   claude-opus-4-7 — AnthropicVertex + ADC                   (europe-west1)
 #   gemini-2.5-pro  — Generative Language API, key in Secret Manager
 #   llama-4-maverick — Vertex Model Garden MaaS + ADC         (us-east5)
-PROVIDERS := claude-opus-4-7 gemini-2.5-pro llama-4-maverick
+PROVIDERS := claude-haiku-4-5 gemini-2.5-pro llama-4-maverick
 
 .PHONY: help all check-compile classify-split classify-jury classify-adjudicate \
         rosetta-exclude lacuna-mine lacuna-jury clean

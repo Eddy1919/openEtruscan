@@ -54,10 +54,10 @@ sequenceDiagram
 ```
 
 ### 2. Database Layer (`db/repository.py`)
-A strictly decoupled repository pattern using `SQLAlchemy 2.0` and `pgvector`.
-- **Spatial**: Native PostGIS integration for proximity searches (`genetic_samples` x `inscriptions`).
-- **Semantic**: Uses `halfvec(3072)` embeddings generated via `text-embedding-004` for high-precision similarity search across **8,091 verified records**.
-- **Tiles**: Direct `ST_AsMVT` generation for high-performance mapping of tens of thousands of points.
+A repository pattern using `SQLAlchemy 2.0` and `pgvector`.
+- **Spatial**: PostGIS-backed proximity queries against findspot geometries. The `genetic_samples` join table exists in the schema as a placeholder for future archaeogenetic data integration; it is not currently populated (see ROADMAP).
+- **Semantic**: `halfvec(3072)` embeddings from `text-embedding-004` over the 6,633-inscription corpus. Earlier copy in this document referred to "8,091 verified records"; that number was stale (it predated the v2 corpus cleaning) and is replaced here with the actual current count — see the §Provenance disclosure section in [`README.md`](../README.md) for the breakdown into documented- and undocumented-provenance tiers.
+- **Tiles**: Direct `ST_AsMVT` generation for vector-tile mapping.
 
 ### 3. API Middleware (`api/server.py`)
 - **Rate Limiting**: Per-endpoint windowed limiting using `slowapi`.

@@ -126,18 +126,25 @@ OpenEtruscan exports Linked Open Data in formats interoperable with the wider an
 
 This project ships two small models alongside an LLM-jury annotation pipeline. The numbers below are from `research/v2/` — frozen test splits, multi-rater consensus eval, bootstrap-CI'd metrics, full pre-registration in [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md).
 
-### Classifier (7-class inscription type)
+### Classifier (7-class inscription type) — v2.0.2 head-to-head
 
-| Metric | Value (95% bootstrap CI) | n |
-|---|---|---|
-| Macro F1 | **0.312** (0.273 – 0.344) | 159 |
-| Accuracy | 0.767 (0.698 – 0.830) | 159 |
-| Head-2 F1 (`funerary` + `ownership`) | 0.829 (0.770 – 0.880) | 123 |
-| Tail-5 F1 (rare classes) | 0.105 (0.061 – 0.140) | 36 |
+Four architectures spanning two orders of magnitude in parameter count were evaluated on the v2.0.2 candidate-gold (n=143, 3-rater LLM-jury unanimous: Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, Krippendorff α=0.7649). Train pool: 282 silver-labelled rows.
 
-Architecture: TF-IDF char 2-4-gram + Multinomial Naive Bayes. Train n = 282 silver-labeled rows; eval n = 159 candidate-gold rows (2-model LLM-jury, unanimous, confidence ≥ medium).
+| Architecture | Params | **Macro F1** (95% bootstrap CI) | Accuracy |
+|---|---|---|---|
+| TF-IDF + Multinomial NB | ~3K | **0.313** (0.273 – 0.348) | 0.776 |
+| CharCNN | 28K | **0.369** (0.257 – 0.432) | 0.657 |
+| MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 |
+| EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.124** (0.099 – 0.149) | 0.469 |
 
-The dominant `funerary` and `ownership` classes are well-modelled (per-class F1 0.87 and 0.79); the rare `boundary` / `legal` / `votive` / `commercial` classes are data-starved and not yet modelable. **The 0.31 macro number reflects this imbalance honestly** — earlier copy in this repository claimed "99% macro F1", which referred to in-training-set performance on a self-labeled subset and is retracted.
+Two findings:
+
+1. **Architecture-invariance among local-feature models.** TF-IDF+NB, CharCNN, and MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. Adding parameters does not move macro F1 — the bottleneck is data, not architecture.
+2. **Out-of-distribution dense embeddings fail.** EmbeddingMLP using a multilingual MiniLM encoder lands at **0.124, with a CI that does not overlap with TF-IDF+NB's** — significant degradation. A frozen modern-multilingual encoder discards the surface-morphological features (`mi…al/-as` possessives, `tular spural` boundary formula, suffixal markers) that carry the typological signal. This contradicts the conventional NLP intuition that dense embeddings beat char-ngrams; for under-resourced ancient corpora with strong domain-specific morphology, the reverse holds.
+
+The dominant `funerary` and `ownership` classes are well-modelled (per-class F1 0.84 and 0.79 on TF-IDF+NB); rare classes (`boundary`, `legal`, `votive`, `commercial`) remain data-starved. **The 0.31–0.37 macro band reflects this imbalance honestly** — earlier copy in this repository claimed "99% macro F1", which referred to in-training-set performance on a self-labeled subset and is retracted.
+
+v2.0.1 (n=159, 2-rater jury without Sonnet) is preserved in GCS as a looser consensus-silver reference; v2.0.2 supersedes it per the closure of Deviation §A in [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md).
 
 ### Lacuna restoration
 
@@ -193,7 +200,7 @@ A minimal BibTeX entry:
 
 ```bibtex
 @software{openetruscan_2026,
-  author    = {OpenEtruscan Contributors},
+  author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
   version   = {0.5.0},

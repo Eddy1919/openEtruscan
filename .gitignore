@@ -133,3 +133,8 @@ terraform/.terraform/
 terraform/tofu_*.zip
 *.tfstate
 *.tfstate.backup
+
+# Private research staging — manuscript drafts, internal evaluation
+# logs, pre-publication artifacts. Anything under here stays local
+# until explicitly promoted to research/v2/ (which IS tracked).
+research/private/

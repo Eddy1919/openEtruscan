@@ -1,0 +1,126 @@
+# Cloud Build — v2 neural classifier retrain.
+#
+# Trains one of CharCNN / MicroTransformer / EmbeddingMLP against the same
+# v2 frozen splits used by v2-train-classifier.yaml (the TF-IDF + NB baseline).
+# Honest head-to-head against the audit's "data not architecture" hypothesis.
+#
+# Submit (one per architecture):
+#   gcloud builds submit . \
+#     --project=long-facet-427508-j2 \
+#     --config=cloudbuild/v2-train-neural.yaml \
+#     --service-account=projects/long-facet-427508-j2/serviceAccounts/gh-actions-deployer@long-facet-427508-j2.iam.gserviceaccount.com \
+#     --substitutions=_ARCH=charcnn
+#
+# Repeat with _ARCH=microtransformer and _ARCH=embedding-mlp.
+
+substitutions:
+  _ARCH: charcnn
+  _RUN_PREFIX: "20260523T214907Z"  # v2.0.2 3-rater (Sonnet+Gemini+Llama) candidate-gold (n=143)
+  _OUTPUT_BUCKET: long-facet-427508-j2_cloudbuild
+  _SOURCE_PREFIX: openetruscan-v2/classify
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+# CharCNN / MicroTransformer: ~5-10 min on CPU.
+# EmbeddingMLP: ~3 min (embedder download + encode + sklearn fit).
+timeout: 1800s
+
+steps:
+  - id: fetch-splits
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        SRC="gs://${_OUTPUT_BUCKET}/${_SOURCE_PREFIX}/${_RUN_PREFIX}"
+        mkdir -p /workspace/v2
+        gcloud storage cp "$$SRC/classify_train_pool.jsonl"    /workspace/v2/train_pool.jsonl
+        gcloud storage cp "$$SRC/classify_candidate_gold.jsonl" /workspace/v2/candidate_gold.jsonl
+        echo "  train: $(wc -l < /workspace/v2/train_pool.jsonl) rows"
+        echo "  eval:  $(wc -l < /workspace/v2/candidate_gold.jsonl) rows"
+
+  - id: install
+    name: python:3.12
+    waitFor: ['-']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # Base deps for all archs (incl. transitive deps openetruscan imports
+        # eagerly via __init__ — `yaml` is read by core/adapter.py at import time).
+        DEPS=(
+          'scikit-learn>=1.4'
+          'numpy>=1.26'
+          'pyyaml>=6.0'
+        )
+        case "${_ARCH}" in
+          charcnn|microtransformer)
+            # Torch on CPU is sufficient for these small models.
+            DEPS+=('torch>=2.2' 'torchvision>=0.17' 'psycopg2-binary>=2.9')
+            ;;
+          embedding-mlp)
+            # Sentence-transformers pulls torch + transformers automatically.
+            DEPS+=('sentence-transformers>=2.7' 'torch>=2.2')
+            ;;
+          *)
+            echo "ERROR: unknown _ARCH=${_ARCH}" >&2
+            exit 1
+            ;;
+        esac
+        pip install --quiet --no-cache-dir --target=/workspace/deps "$${DEPS[@]}"
+        # The openetruscan package itself doesn't need pip-install: we just
+        # add `src/` to PYTHONPATH at runtime (see the train step).
+        # `pip install -e .` with --target doesn't work cleanly on Cloud Build
+        # because the source tree is read-only inside the container's mount.
+        PYTHONPATH=/workspace/deps python -c "
+        import sklearn, numpy
+        try: import torch; print(f'torch={torch.__version__}')
+        except ImportError: pass
+        print('deps ok')
+        "
+
+  - id: train
+    name: python:3.12
+    waitFor: [fetch-splits, install]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        # PYTHONPATH includes:
+        #   /workspace/deps  → pip-installed deps (torch/sklearn/etc.)
+        #   /workspace/src   → the openetruscan package source (so neural.py imports)
+        #   /workspace       → repo root (so `research.v2.pipelines.train_neural` resolves)
+        export PYTHONPATH=/workspace/deps:/workspace/src:/workspace:${PYTHONPATH:-}
+        # Sentence-transformers caches models under HF_HOME; keep them in /workspace
+        # so subsequent same-arch runs reuse the download.
+        export HF_HOME=/workspace/hf
+        mkdir -p $$HF_HOME
+        python -m research.v2.pipelines.train_neural \
+          --arch ${_ARCH} \
+          --train-pool /workspace/v2/train_pool.jsonl \
+          --eval-gold /workspace/v2/candidate_gold.jsonl \
+          --out-metrics /workspace/v2/train_metrics_${_ARCH}.json \
+          --out-predictions /workspace/v2/train_predictions_${_ARCH}.jsonl \
+          --n-resamples 10000
+        echo "── ${_ARCH} metrics ──"
+        cat /workspace/v2/train_metrics_${_ARCH}.json | python -c "import json,sys; d=json.load(sys.stdin); m=d['metrics']; print(f'macro_f1   = {m[\"macro_f1\"][\"point\"]:.4f}  (95% CI [{m[\"macro_f1\"][\"ci_low\"]:.4f}, {m[\"macro_f1\"][\"ci_high\"]:.4f}])'); print(f'accuracy   = {m[\"accuracy\"][\"point\"]:.4f}'); print(f'head-2 F1  = {m[\"head2_f1_funerary_ownership\"][\"point\"]:.4f}'); print(f'tail-5 F1  = {m[\"tail5_f1\"][\"point\"]:.4f}')"
+
+  - id: upload
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [train]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        TS=$(date -u +%Y%m%dT%H%M%SZ)
+        DEST="gs://${_OUTPUT_BUCKET}/openetruscan-v2/training/${_ARCH}-v2.0-$$TS"
+        gcloud storage cp /workspace/v2/train_metrics_${_ARCH}.json      "$$DEST/train_metrics.json"
+        gcloud storage cp /workspace/v2/train_predictions_${_ARCH}.jsonl "$$DEST/train_predictions.jsonl"
+        echo "Results: $$DEST"

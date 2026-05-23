@@ -34,7 +34,7 @@ def generate_openapi(format: str = "json") -> str:
 
     # Add additional metadata
     openapi_schema["info"]["contact"] = {
-        "name": "OpenEtruscan Contributors",
+        "name": "Edoardo Panichi",
         "url": "https://github.com/Eddy1919/openEtruscan",
     }
     openapi_schema["info"]["license"] = {
