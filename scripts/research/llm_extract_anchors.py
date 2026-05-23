@@ -505,7 +505,7 @@ def main() -> int:
                 "source": f"{row.get('author', '?')} {row.get('work', '?')}".strip(),
                 "passage_index": idx,
                 "model": args.model,
-                "extracted_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
+                "extracted_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             }
             _append_jsonl(args.output, out_row)
             n_glosses += 1

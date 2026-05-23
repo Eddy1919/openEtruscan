@@ -283,7 +283,9 @@ def _materialise(
             if d.action == ACTION_EDIT and d.equivalent_override:
                 out_row["equivalent"] = d.equivalent_override
                 out_row["equivalent_edited_from"] = row["equivalent"]
-            out_row["reviewed_at"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+            # dt.timezone.utc (not dt.UTC — that alias was added in 3.11 and the
+            # CI matrix runs 3.10 too; using timezone.utc keeps it portable).
+            out_row["reviewed_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
             if d.note:
                 out_row["reviewer_note"] = d.note
             if _is_overlap_with_eval(out_row["etruscan_word"], out_row["equivalent"], eval_keys):
