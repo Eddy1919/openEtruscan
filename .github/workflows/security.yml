@@ -1,0 +1,31 @@
+name: Security
+
+# Replaces the `openetruscan-security` Cloud Build trigger.
+# Same scope as before: Gitleaks only (Bandit + Semgrep + pip-audit dropped
+# earlier for chronic false-positive rate; that decision is in the
+# .gitleaks.toml header and stays).
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly Monday 03:00 UTC catch-all, same as the old Cloud Build cron.
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so Gitleaks can scan all commits, not just the tip.
+          fetch-depth: 0
+
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_VERSION: latest
