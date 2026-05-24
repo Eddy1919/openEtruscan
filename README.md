@@ -148,14 +148,20 @@ v2.0.1 (n=159, 2-rater jury without Sonnet) is preserved in GCS as a looser cons
 
 ### Lacuna restoration
 
-Per-restoration evaluation on 118 editor-restored inscriptions (Leiden `[abc]`-style restorations, gold filtered to exclude unknown-continuation markers):
+Per-restoration evaluation on 118 editor-restored inscriptions (Leiden `[abc]`-style restorations, gold filtered to exclude unknown-continuation markers). **v2.0.2 — 3-rater jury (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick), 10 000-resample bootstrap, seed=42:**
 
 | Model | Span exact-match (95% CI) | Char acc top-1 (95% CI) | Hallucination rate (95% CI) |
 |---|---|---|---|
-| Gemini 2.5 Pro | 0.254 (0.178 – 0.339) | 0.278 (0.202 – 0.358) | 0.356 (0.271 – 0.441) |
-| Llama 4 Maverick | 0.195 (0.127 – 0.263) | 0.215 (0.146 – 0.288) | 0.610 (0.525 – 0.695) |
+| Gemini 2.5 Pro | **0.220** (0.144 – 0.297) | **0.245** (0.172 – 0.321) | **0.271** (0.195 – 0.356) |
+| Llama 4 Maverick | 0.170 (0.102 – 0.237) | 0.189 (0.123 – 0.259) | 0.627 (0.542 – 0.712) |
+| Claude Sonnet 4.6 | 0.051 (0.017 – 0.093) | 0.055 (0.017 – 0.098) | 0.949 (0.907 – 0.983) |
 
-Hallucination = the model emits at least one character outside the marked lacuna span. Earlier copy in this repository claimed "Phil. Safety: High (Sentinels)" — this was a vibes-based label without a quantitative metric and is retracted in favour of the explicit rate above. Paired-bootstrap test on shared rows: Gemini−Llama Δ span-exact = +0.062, **p = 0.20 (not significant at p<0.05)**; we cannot claim Gemini outperforms Llama at the current n.
+Hallucination = the model emits at least one character outside the marked lacuna span. Earlier copy in this repository claimed "Phil. Safety: High (Sentinels)" — this was a vibes-based label without a quantitative metric and is retracted in favour of the explicit rate above.
+
+**New finding at v2.0.2 — Sonnet is significantly worse than both Gemini and Llama on this task.** Paired-bootstrap deltas on the n=65 shared subset:
+- Gemini − Sonnet Δ span-exact = +0.169 (95% CI [+0.092, +0.262]), **two-sided p < 0.001** — Sonnet's higher reasoning capacity does not transfer; it cannot help itself from "fixing" characters outside the marked lacuna span (95% hallucination rate).
+- Llama − Sonnet Δ span-exact = +0.123 (95% CI [+0.031, +0.215]), **two-sided p ≈ 0.002**.
+- Gemini − Llama Δ span-exact = +0.046 (95% CI [−0.077, +0.185]), **two-sided p ≈ 0.57 (not significant)** — replicates the v2.0.1 result that Gemini vs Llama cannot be separated at this sample size.
 
 ### Methodology
 

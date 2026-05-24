@@ -44,29 +44,42 @@ The v2 protocol fixes both by pre-registering metrics, freezing splits, running 
 
 **Eval set.** 118 inscriptions mined from the corpus where the editor proposed a specific restoration (`[abc]`-style brackets). Gold filtered to drop trailing dash markers (`reri---` = "more destroyed text continues here", unscoreable) and editorial digit annotations.
 
-**Models compared:** Gemini 2.5 Pro and Llama 4 Maverick, both via Vertex AI. ByT5+LoRA (the model the v1 doc highlighted) is not included in this comparison — it will be re-evaluated under the same protocol when its checkpoint is re-exported.
+**Models compared (v2.0.2 — 3-rater).** Claude Sonnet 4.6 (`claude-sonnet-4-6@vertex-anthropic`), Gemini 2.5 Pro (`gemini-2.5-pro`), Llama 4 Maverick (`llama-4-maverick-17b-128e-instruct-maas`), all on Vertex AI in `europe-west1` / MaaS region `us-east5`. ByT5+LoRA (the model the v1 doc highlighted) is not included in this comparison — it will be re-evaluated under the same protocol when its checkpoint is re-exported. v2.0.1 (Gemini + Llama only, 2-rater) is superseded; the v2.0.1 outputs remain in GCS for audit.
 
-**Headline results (bootstrap, 10 000 resamples, seed=42):**
+**Headline results (bootstrap, 10 000 resamples, seed=42, n=118 per model):**
 
-| Model | Span exact-match (95% CI) | Char acc top-1 (95% CI) | Hallucination rate (95% CI) |
-|---|---|---|---|
-| Gemini 2.5 Pro | 0.254 (0.178 – 0.339) | 0.278 (0.202 – 0.358) | 0.356 (0.271 – 0.441) |
-| Llama 4 Maverick | 0.195 (0.127 – 0.263) | 0.215 (0.146 – 0.288) | 0.610 (0.525 – 0.695) |
+| Model | Span exact-match (95% CI) | Char acc top-1 (95% CI) | Char acc top-3 (95% CI) | Hallucination rate (95% CI) |
+|---|---|---|---|---|
+| Gemini 2.5 Pro | **0.220** (0.144 – 0.297) | **0.245** (0.172 – 0.321) | **0.415** (0.330 – 0.501) | **0.271** (0.195 – 0.356) |
+| Llama 4 Maverick | 0.170 (0.102 – 0.237) | 0.189 (0.123 – 0.259) | 0.304 (0.227 – 0.381) | 0.627 (0.542 – 0.712) |
+| Claude Sonnet 4.6 | 0.051 (0.017 – 0.093) | 0.055 (0.017 – 0.098) | 0.066 (0.025 – 0.112) | **0.949** (0.907 – 0.983) |
 
 **Width-stratified char accuracy (Gemini):**
 
-| Width bucket | n | char_acc_top1 | span_exact |
-|---|---|---|---|
-| w1 (1 character) | 75 | 0.293 | 0.293 |
-| w2_3 | 35 | 0.274 | 0.200 |
-| w4_6 | 8 | 0.150 | 0.125 |
-| w7+ | 0 | n/a | n/a |
+| Width bucket | n | char_acc_top1 | span_exact | hallucination |
+|---|---|---|---|---|
+| w1 (1 character) | 75 | 0.293 | 0.293 | 0.293 |
+| w2_3 | 35 | 0.190 | 0.114 | 0.286 |
+| w4_6 | 8 | 0.031 | 0.000 | 0.000 |
+| w7+ | 0 | n/a | n/a | n/a |
 
-The task is mostly tractable for single-character gaps and falls off sharply with width. This is a real finding.
+The task is mostly tractable for single-character gaps and falls off sharply with width. This replicates the v2.0.1 width-stratification finding.
 
 **Hallucination definition (replaces the v1 "Phil. Safety" placeholder):** a row counts as hallucinated if the model's `restored_full` deviates from the masked input outside the marked lacuna span — i.e., the model "fixed" or changed a character it was supposed to leave alone. Implementation in [`research/v2/pipelines/lacuna_jury.py`](../research/v2/pipelines/lacuna_jury.py).
 
-**Significance.** Paired-bootstrap test on the 65 inscriptions where both raters' gold survived the filter: Δ(Gemini − Llama) span-exact = +0.062, 95% CI [−0.062, +0.185], **p = 0.20**. We cannot claim Gemini outperforms Llama on this task at the current sample size. A genuinely significant claim would require either a larger eval set (target n ≥ 200) or a tighter difference.
+**Significance (paired-bootstrap, n=65 shared subset where all three raters' gold survived the filter):**
+
+| Comparison | Δ span-exact | 95% CI | Two-sided p | Significant at α=0.05? |
+|---|---|---|---|---|
+| Gemini − Sonnet | **+0.169** | [+0.092, +0.262] | **< 0.001** | yes |
+| Llama − Sonnet | **+0.123** | [+0.031, +0.215] | **≈ 0.002** | yes |
+| Gemini − Llama | +0.046 | [−0.077, +0.185] | ≈ 0.57 | no |
+
+**Two findings, both new at v2.0.2 or strengthened from v2.0.1:**
+
+*Finding C — Sonnet's reasoning capacity does not transfer to lacuna restoration.* Sonnet's 0.949 hallucination rate (95% CI [0.907, 0.983]) means it changes at least one character outside the marked lacuna on 95 of every 100 inscriptions. It interprets the task as "fix this damaged Etruscan text" rather than "fill the masked span and leave the rest byte-identical", despite an explicit hard-rule in the prompt. The same prompt to Gemini and Llama yields 0.271 and 0.627 hallucination rates respectively. **This is the strongest model-capability finding in v2** — a frontier reasoning model is *significantly worse* than two general-purpose models on a structured-edit task, because the structured-edit constraint is exactly the kind of instruction-following that fine-grained "creative" reasoning erodes.
+
+*Finding D — Gemini vs Llama is still not separable at n=118.* Δ span-exact = +0.046, two-sided p ≈ 0.57. A genuinely significant Gemini-vs-Llama claim would require either a larger eval set (target n ≥ 200) or a tighter difference. v2.0.1 reported the same non-finding.
 
 ## 4. Reproducibility
 
@@ -99,6 +112,7 @@ By design:
 - No claim that the v2 numbers are "good" or "state-of-the-art". They are honest numbers; whether they meet a particular bar is for downstream readers to decide.
 
 Future v2.1 work (tracked in [`research/v2/README.md`](../research/v2/README.md)):
-- 3-rater jury once Anthropic Vertex quota is granted.
-- Philologist adjudication of the 79-row queue rows, target Krippendorff α ≥ 0.80 between humans.
+- ~~3-rater jury once Anthropic Vertex quota is granted.~~ **Done at v2.0.2** — Sonnet 4.6 was substituted for Opus per [`PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md) Deviation §A; classifier Krippendorff α = 0.7649, full results in §2 and §3.
+- Philologist adjudication of the queue rows, target Krippendorff α ≥ 0.80 between humans.
 - Multi-language extension (Oscan, Faliscan, Raetian) using the same architecture.
+- Lacuna eval set expansion to n ≥ 200 so Gemini vs Llama can be tested for significance.
