@@ -37,10 +37,13 @@ The `/search` endpoint accepts `?has_provenance=true` to restrict to the first t
 
 The "184 archaeological sites" referenced in earlier copy is the count of distinct findspot strings across the **34.9% with documented provenance** — not across the whole corpus.
 
-The platform follows a decoupled, cloud-native architecture:
-- **Data Layer:** PostgreSQL (PostGIS + pgvector) hosted on Google Cloud SQL, featuring 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision epigraphic similarity search.
-- **Backend Layer:** FastAPI service on GCE (App VM) serving structured data and neural inference proxies.
-- **Frontend Layer:** Next.js 15 (App Router) deployed on Vercel, fetching dynamically from the live production API.
+The platform follows a decoupled, cloud-native architecture (as of 2026-05-24):
+
+- **Data Layer** — PostgreSQL (PostGIS + pgvector) on **Neon** serverless (was Cloud SQL, migrated). 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision similarity search.
+- **Public HTTP API** — **Vercel Functions** (TypeScript + Drizzle ORM + Neon serverless driver) co-located in the [`openetruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) repo under `app/api/*`. Single-origin, no cross-cloud hop. See `https://www.openetruscan.com/api/{search,inscription/[id],stats/summary,concordance,clan/[gens],radius,search/geo,names/network,anchors/…}`.
+- **Web app** — Next.js 15 on Vercel, with the mobile path shipping as RSC + `useSyncExternalStore`-gated dynamic-import islands (Lighthouse a11y 100, perf 92 mobile / 99 desktop).
+- **Python `openetruscan` package** (this repo) — **CLI + research-pipeline source of truth**. `pip install openetruscan` ships the 14-command CLI (`normalize`, `classify`, `train-neural`, `export-corpus`, `epidoc`, etc.) plus the `src/openetruscan/api/` FastAPI surface used for parity testing and local development. The live public HTTP API no longer runs from this codebase.
+- **Research pipelines** — Cloud Build orchestrators (`cloudbuild/v2-classify-jury.yaml`, `v2-lacuna-jury.yaml`) drive the v2.0.2 LLM-jury annotation work; Vertex AI billing flows to `double-runway-465420-h9`.
 
 | Page | Description |
 |---|---|
@@ -275,6 +278,16 @@ The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructi
 </div>
 
 ## What's new
+
+### Architecture shift (2026-05-24) — research-first repo
+
+The public HTTP API moved out of this repo. The live `www.openetruscan.com/api/*` surface is now **TypeScript route handlers in the [`openetruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) Vercel project**, talking to **Neon serverless Postgres** via Drizzle ORM + `@neondatabase/serverless`. Cloud SQL stopped, GCE VM terminated.
+
+What stays here (and gets first billing in this README):
+- **`research/v2/`** — the 3-rater LLM-jury annotation pipeline, pre-registration, codebooks, and frozen benchmarks. **Source of truth** for the v2.0.2 evaluation work below.
+- **The `openetruscan` CLI** on PyPI — `pip install openetruscan` ships 14 commands for normalisation, classification, EpiDoc export, batch processing, neural training/inference.
+- **`src/openetruscan/api/`** — the legacy FastAPI server stays in-tree as a parity reference + local-dev convenience (`uvicorn openetruscan.api.server:app`). It is **no longer the production HTTP surface**.
+- **Cloud Build research pipelines** — `cloudbuild/v2-classify-jury.yaml`, `v2-lacuna-jury.yaml`, `v2-train-neural.yaml` continue to drive the v2 evaluation work; Vertex AI billing is unchanged.
 
 ### v2.0.2 annotation & evaluation pipeline (shipped 2026-05-24)
 
