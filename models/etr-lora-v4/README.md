@@ -29,14 +29,20 @@ model-index:
         dataset:
           name: rosetta-eval-v1 (test split)
           type: Eddy1919/openetruscan-rosetta-eval-v1
+        # NOTE: These numbers are the LaBSE-only column of rosetta-eval-v1.
+        # The v4 (LoRA-adapted) column will be added after WBS tasks T2.3
+        # (ingest v4 vectors behind a feature flag) and T2.4 (run the head-
+        # to-head eval) land in prod and the benchmark gains its v4 row.
+        # `verified: false` reflects that neither row has been ratified by
+        # the philologist α≥0.80 spot-check yet.
         metrics:
           - type: precision_at_10_semantic_field
             value: 0.1875
-            name: Semantic-field precision@10 (LaBSE baseline)
+            name: Semantic-field precision@10 (LaBSE baseline, pre-v4)
             verified: false
           - type: precision_at_10
             value: 0.0625
-            name: Strict-lexical precision@10 (LaBSE baseline)
+            name: Strict-lexical precision@10 (LaBSE baseline, pre-v4)
             verified: false
 ---
 

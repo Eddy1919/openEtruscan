@@ -2,11 +2,11 @@
 
 Three parallel streams that close the audit gaps identified against v1:
 
-| Stream | Goal | Status |
+| Stream | Goal | Status (v2.0.2, 2026-05-24) |
 |---|---|---|
-| **A — Classification gold** | 2,000 gold rows over 7 inscription-type classes with Krippendorff α ≥ 0.80 | scaffolding ready |
-| **B — Rosetta-eval-v2** | 100+ bilingual pairs, train-lemma excluded, paired-bootstrap significance | scaffolding ready |
-| **C — Lacunae gold** | 100–200 editor-restored inscriptions with hallucination metric | scaffolding ready |
+| **A — Classification gold** | 2,000 gold rows over 7 inscription-type classes with Krippendorff α ≥ 0.80 | **143 candidate-gold rows shipped** (3-rater jury, Krippendorff α = 0.7649); 99-row adjudication queue awaiting philologist α ≥ 0.80 spot-check |
+| **B — Rosetta-eval-v2** | 100+ bilingual pairs, train-lemma excluded, paired-bootstrap significance | scaffolding ready; mining pipeline in `pipelines/rosetta_mine_pairs.py` |
+| **C — Lacunae gold** | 100–200 editor-restored inscriptions with hallucination metric | **118-row 3-rater jury shipped** (Gemini 0.220 span-exact / Llama 0.170 / Sonnet 0.051); **Finding C** — Sonnet hallucinates at 0.949 (95 % CI 0.907–0.983), significantly worse than Gemini & Llama at *p* < 0.001 |
 
 ## Design principles (frozen)
 

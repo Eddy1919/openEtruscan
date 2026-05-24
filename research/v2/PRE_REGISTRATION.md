@@ -1,6 +1,8 @@
 # Pre-registration — OpenEtruscan v2 Evaluations
 
-**Version:** v2.0.1 (originally frozen as v2.0 on 2026-05-17; bumped to v2.0.1 on 2026-05-21 to acknowledge a 2-rater jury delivery, see Deviation §A below).
+**Currently shipped:** **v2.0.2** (3-rater jury complete for Streams A & C, 2026-05-23/24). See [Deviation §A](#deviation-a-3-rater-jury-not-delivered-on-v20) for the substitution rationale (Sonnet 4.6 for Opus 4.7).
+
+**Version history:** v2.0 frozen 2026-05-17 → v2.0.1 on 2026-05-21 (2-rater jury acknowledgement) → v2.0.2 on 2026-05-23 (3-rater jury delivered, Deviation §A closed).
 **Frozen on:** 2026-05-17
 **Git commit at freeze:** `c281ed9` (`refactor: implement v2 research protocol with rigorous evaluation metrics, standardized configurations, and updated methodology documentation`).
 **Authority:** any deviation from this document requires a version bump (next: v2.1) and an entry in the Deviations section at the bottom of this file.

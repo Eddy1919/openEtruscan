@@ -244,14 +244,15 @@ The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructi
 
 ## What's new
 
-### v2 annotation & evaluation pipeline (in progress)
+### v2.0.2 annotation & evaluation pipeline (shipped 2026-05-24)
 
-`research/v2/` introduces the gold-annotation and frozen-benchmark infrastructure that this project's earlier metric claims lacked:
+`research/v2/` is the gold-annotation and frozen-benchmark infrastructure that this project's earlier metric claims lacked. As of v2.0.2 both the classifier and lacuna streams are evaluated under a full 3-rater LLM jury (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick on Vertex AI); the philologist α≥0.80 spot-check on the adjudication queue remains the final ratification step before Hugging Face publication.
 
 - **Frozen, stratified test split** (seed=42, 400 rows, 7 classes with a class-2 floor) — see [`research/v2/pipelines/classify_split.py`](research/v2/pipelines/classify_split.py).
-- **Multi-model LLM jury** (Gemini 2.5 Pro + Llama 4 Maverick on Vertex Model Garden; Claude Opus 4.7 pending quota grant) produces independent labels; Krippendorff α and a unanimous-agreement filter promote rows to candidate-gold.
+- **3-rater LLM jury** (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick on Vertex AI; Sonnet substituted for Opus per [Deviation §A](research/v2/PRE_REGISTRATION.md)) produces independent labels; Krippendorff α and a unanimous-agreement filter promote rows to candidate-gold. Classifier α = 0.7649 on the full pool; n=143 candidate-gold rows.
 - **Pre-registered eval** with bootstrap 95% CIs on every metric and paired-bootstrap p-values on every model-comparison claim — see [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md) and [`research/v2/eval/bootstrap.py`](research/v2/eval/bootstrap.py).
-- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.31 ± 0.04. See the §Classification & restoration models section above.
+- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.313 ± 0.038 (TF-IDF + NB on n=143).
+- **Finding C (new at v2.0.2)** — Sonnet 4.6 hallucinates outside the marked lacuna span on **94.9%** of inscriptions, significantly worse than Gemini (Δ +0.169 span-exact, two-sided **p < 0.001**) and Llama (Δ +0.123, **p ≈ 0.002**). A frontier reasoning model loses to two general-purpose models on a structured-edit task. See §Lacuna restoration above and [`docs/INTELLIGENCE_V2.md`](docs/INTELLIGENCE_V2.md).
 
 ### v0.5.0 infrastructure
 - **Cloud Run neural restoration**: ByT5 lacunae restoration is served from a dedicated Cloud Run inference service (`services/byt5-restorer/`).

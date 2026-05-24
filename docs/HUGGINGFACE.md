@@ -8,10 +8,10 @@
 
 Once the philologist adjudication on the v2.0 candidate-gold set lands (Krippendorff α between two human raters ≥ 0.80 on the 30-row spot-check sub-sample), the following artifacts will be published:
 
-| Artifact | Source | Reported metric |
+| Artifact | Source | Reported metric (current v2.0.2 numbers) |
 |---|---|---|
-| `classifier_v2/` | `src/openetruscan/ml/classifier.py` (TF-IDF + MultinomialNB) trained on the v2 train pool | Macro F1 with bootstrap 95% CI on the human-ratified gold subset of the 400-row frozen test split |
-| `lacuna_restorer_v2/` | TBD — the v1 ByT5+LoRA path has not yet been re-evaluated under the v2 protocol | Span-exact-match, char-acc top-1, and hallucination rate, each with bootstrap 95% CI |
+| `classifier_v2/` | `src/openetruscan/ml/classifier.py` (TF-IDF + MultinomialNB) trained on the v2 train pool | TF-IDF + NB: **macro F1 0.313, 95 % CI 0.273 – 0.348** on n=143 candidate-gold rows. Three neural baselines on the same split: CharCNN 0.369 [0.257, 0.432]; MicroTransformer 0.317 [0.202, 0.404]; EmbeddingMLP (frozen MiniLM-multilingual) 0.124 [0.099, 0.149]. |
+| `lacuna_restorer_v2/` | Pre-trained frontier models scored under the v2 protocol; the v1 ByT5+LoRA path is not yet re-evaluated under v2 | Gemini 2.5 Pro: span-exact **0.220** [0.144, 0.297], hallucination **0.271**. Llama 4 Maverick: 0.170 / 0.627. Sonnet 4.6: 0.051 / **0.949** — see Finding C in [`INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md). |
 
 Both artifacts will carry a full model card following the [Mitchell et al. 2019](https://arxiv.org/abs/1810.03993) template: intended use, training data, limitations, bias analysis, and the bootstrap-CI'd headline numbers — NOT point estimates without uncertainty.
 
