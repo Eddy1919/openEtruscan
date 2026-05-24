@@ -37,8 +37,8 @@ abstract: >-
   vector space. The repository includes a frozen reference benchmark
   (`rosetta-eval-v1`) with random / Levenshtein / model baselines, a
   reproducibility manifest, and a published v1 dataset.
-version: "0.5.0"
-date-released: "2026-05-10"
+version: "1.0.0"
+date-released: "2026-05-24"
 # Zenodo concept-DOI (resolves to the latest version). Each tagged release
 # also mints its own version-specific DOI; this all-versions identifier is
 # the right one to cite when meaning "the project" rather than "this exact

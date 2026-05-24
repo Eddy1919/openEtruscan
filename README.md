@@ -82,11 +82,16 @@ Other core endpoints:
 - `GET /clan/{gens}` — Prosopographical network of co-occurring personal names for a single Etruscan family name.
 - `GET /concordance` — Keyword-in-Context (KWIC) search across transcriptions.
 
-## Python Package
+## Python Package & CLI
 
 ```bash
-pip install openetruscan
+pip install openetruscan          # core (CLI + library)
+pip install 'openetruscan[server]' # FastAPI server runtime
+pip install 'openetruscan[neural]' # neural classifiers (torch + onnxscript)
+pip install 'openetruscan[all]'    # full stack incl. transformers + sotac
 ```
+
+### Library
 
 ```python
 from openetruscan import normalize
@@ -96,6 +101,33 @@ print(result.canonical)   # larθal
 print(result.phonetic)    # /lar.tʰal/
 print(result.old_italic)  # 𐌓𐌀𐌓𐌈𐌀𐌋
 ```
+
+### CLI
+
+The `openetruscan` console script wraps the library and the corpus
+operations. Run `openetruscan --help` for the full menu; subcommands:
+
+| Command                          | What it does                                                                       |
+|----------------------------------|------------------------------------------------------------------------------------|
+| `openetruscan normalize TEXT`    | Canonicalise an inscription string; `--json-output` for machine consumption.       |
+| `openetruscan convert TEXT`      | Switch between Latin transliteration and Old Italic script (`--to old_italic`/etc).|
+| `openetruscan validate FILE`     | Lint a transcription file or CSV column for orthography issues.                    |
+| `openetruscan batch INPUT`       | Bulk-normalise CSV/JSONL; writes CSV/JSON/JSONL out.                               |
+| `openetruscan list-adapters`     | Print the per-language adapters registered with the engine.                        |
+| `openetruscan search QUERY`      | Query the local corpus DB (`OPENETRUSCAN_DB` or `--db`).                           |
+| `openetruscan import-csv FILE`   | Ingest a CSV of inscriptions into the corpus DB.                                   |
+| `openetruscan export-corpus`     | Dump the corpus to CSV / JSONL / TEI / RDF.                                        |
+| `openetruscan epidoc TEXT`       | Render an inscription to EpiDoc/TEI XML.                                           |
+| `openetruscan register …`        | Register a new inscription record.                                                 |
+| `openetruscan upload-image …`    | Attach an image (file or URL) to an inscription.                                   |
+| `openetruscan classify TEXT`     | Classify an inscription (TF-IDF + NB by default; `--arch charcnn` etc.).           |
+| `openetruscan train-neural`      | Train CharCNN / MicroTransformer / EmbeddingMLP heads under the v2 protocol.       |
+| `openetruscan predict-neural`    | Predict with a trained neural head; outputs JSON with probabilities.               |
+
+All commands accept `--language` (default `etruscan`) and respect the
+language adapter registry (`list-adapters`). The classification commands
+report bootstrap-CI'd metrics; see [`research/v2/`](research/v2/) for the
+evaluation protocol.
 
 ## Repository Structure
 
