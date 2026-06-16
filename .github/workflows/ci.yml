@@ -18,6 +18,23 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    # Fast, dependency-light gate. ruff is pinned to the same version as
+    # .pre-commit-config.yaml and pyproject's [dev] extra so a green local
+    # pre-commit guarantees a green CI lint (no silent format drift).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff (pinned)
+        run: pip install --quiet ruff==0.4.10
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
   test:
     runs-on: ubuntu-latest
     strategy:
