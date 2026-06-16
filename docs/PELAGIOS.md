@@ -53,12 +53,30 @@ Design notes:
   `?has_provenance` / the search facets see it), run the existing reconcile/
   enrichment path.
 
+## Time axis — PeriodO (done)
+
+Every dated inscription now links to a [PeriodO](https://perio.do) period
+definition, completing place + time + people. The mapping lives in
+[`openetruscan.core.periodo`](../src/openetruscan/core/periodo.py) (pure,
+unit-tested in [`tests/test_periodo.py`](../tests/test_periodo.py)) and is wired
+into `inscription_to_jsonld`.
+
+- **Authority.** We link against the MAPPA Lab Tuscany data model (PeriodO
+  authority `p03dzfb`), whose Etruscan-era periods (Orientalizing → Archaic →
+  Classical → Hellenistic) *tile* the timeline with no gaps or overlaps and are
+  spatially scoped to Etruria. Pinning one coherent authority keeps the links
+  joinable.
+- **Linking by date.** `period_for_year(date_approx)` picks the period whose
+  interval contains the inscription's signed-year estimate — the most defensible
+  path. `period_for_label("archaic"|"classical"|"late")` is a fallback for rows
+  with only a feature-based label (from `core.statistics`).
+- **Emission.** The period URI appears both as an `identifying` body (so
+  Peripleo ingests it next to the gazetteer refs) and as a `dcterms:temporal`
+  property (`{"id": "<ark>", "label": ...}`) for plain RDF consumers. URIs are
+  canonical PeriodO ARKs (`http://n2t.net/ark:/99152/<id>`).
+
 ## Next steps (planned)
 
-- **Time axis — PeriodO.** Map the period labels from
-  `openetruscan.core.statistics` (`archaic` / `classical` / `late`) to
-  [PeriodO](https://perio.do) period URIs and emit them alongside the place
-  links, completing place + time + people.
 - **Recogito round-trip.** Export the v2 LLM-jury adjudication queue to
   [Recogito](https://recogito.pelagios.org)-importable annotations so human
   philologists adjudicate in the community's own tool, then re-import decisions.
