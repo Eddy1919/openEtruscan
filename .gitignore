@@ -20,6 +20,9 @@ ENV/
 # IDE
 .vscode/
 .idea/
+# Multi-root workspace files reference machine-specific sibling paths
+# (e.g. ../openEtruscan-frontend); keep them local.
+*.code-workspace
 *.swp
 *.swo
 *~
