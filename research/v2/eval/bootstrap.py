@@ -13,6 +13,7 @@ Design notes
 - We return both the point estimate and the (lower, upper) bound of the 95% CI
   (percentile method, not BCa — simpler and adequate for our n).
 """
+
 from __future__ import annotations
 
 import json
@@ -226,10 +227,13 @@ if __name__ == "__main__":
     # Quick self-test: synthetic accuracy comparison
     rng = random.Random(0)
     rows = [(rng.random() < 0.7, rng.random() < 0.6) for _ in range(200)]
+
     def acc_a(rs):
         return sum(1 for a, _ in rs if a) / len(rs)
+
     def acc_b(rs):
         return sum(1 for _, b in rs if b) / len(rs)
+
     a_res = bootstrap_ci(rows, acc_a)
     b_res = bootstrap_ci(rows, acc_b)
     paired = paired_bootstrap(rows, acc_a, acc_b)

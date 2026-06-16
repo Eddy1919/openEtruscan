@@ -78,11 +78,13 @@ def test_is_overlap_detects_exact_match(m):
         (m._normalise_token("apa"), m._normalise_token("pater")),
     }
     assert m._is_overlap_with_eval("ati", "mater", eval_keys) is True
-    assert m._is_overlap_with_eval("ATI", "mater", eval_keys) is True   # case-insensitive
+    assert m._is_overlap_with_eval("ATI", "mater", eval_keys) is True  # case-insensitive
     assert m._is_overlap_with_eval("apa", "pater", eval_keys) is True
     # Diacritic-folding pass on the Greek side: "Πάτερ" matches the
     # un-accented "pater" key (NFD + combining-mark strip).
-    assert m._is_overlap_with_eval("apa", "Πάτερ", eval_keys) is False  # different script, doesn't fold to Latin
+    assert (
+        m._is_overlap_with_eval("apa", "Πάτερ", eval_keys) is False
+    )  # different script, doesn't fold to Latin
     # -m strip converges accusative -um and nominative -us, but neither
     # matches the -er form, so this stays distinct (no false positive):
     assert m._is_overlap_with_eval("ati", "matrum", eval_keys) is False

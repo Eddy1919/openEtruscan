@@ -23,6 +23,7 @@ Usage:
         --freeze_encoder \
         --epochs 20 --batch_size 32 --learning_rate 1e-3
 """
+
 from __future__ import annotations
 
 import argparse
@@ -51,23 +52,22 @@ def _ensure_deps():
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 # ── Etruscan character set (same as char_mlm.py) ─────────────────────
 
 ETRUSCAN_CHARS_RAW = (
     "abcdefghiklmnopqrstuvxyz"  # 24 Latin letters (no j/w)
-    "θχσφξς"                    # 6 Greek phonemes lower
-    "ΘΧΣΦΞ"                     # 5 Greek phonemes upper
-    "śŚšń"                      # 4 diacritical sibilants
-    "ṛṭḥṿṣṇẹ"                   # 7 IPA dot-below
-    " ·•|:;"                    # 6 Word separators
-    "[]<>{}()?!"                # 10 Editorial markers
-    "-"                         # 1 Lacuna
+    "θχσφξς"  # 6 Greek phonemes lower
+    "ΘΧΣΦΞ"  # 5 Greek phonemes upper
+    "śŚšń"  # 4 diacritical sibilants
+    "ṛṭḥṿṣṇẹ"  # 7 IPA dot-below
+    " ·•|:;"  # 6 Word separators
+    "[]<>{}()?!"  # 10 Editorial markers
+    "-"  # 1 Lacuna
 )
+
 
 def _build_char_set():
     seen = set()
@@ -77,6 +77,7 @@ def _build_char_set():
             chars.append(c)
             seen.add(c)
     return chars
+
 
 ETRUSCAN_CHARS = _build_char_set()
 CHAR_TO_ID = {c: i for i, c in enumerate(ETRUSCAN_CHARS)}
@@ -103,10 +104,7 @@ class CharPredictionDataset(Dataset):
 
         for text in texts:
             # Find positions of valid Etruscan characters
-            valid_positions = [
-                i for i, c in enumerate(text)
-                if c in CHAR_TO_ID
-            ]
+            valid_positions = [i for i, c in enumerate(text) if c in CHAR_TO_ID]
             if len(valid_positions) < 3:
                 continue
 
@@ -118,14 +116,16 @@ class CharPredictionDataset(Dataset):
                 target_char = text[pos]
                 target_id = CHAR_TO_ID[target_char]
                 # Replace single char with <mask>
-                masked = text[:pos] + "<mask>" + text[pos + 1:]
-                self.samples.append({
-                    "masked_text": masked,
-                    "target_id": target_id,
-                    "target_char": target_char,
-                    "original": text,
-                    "mask_pos_in_text": pos,
-                })
+                masked = text[:pos] + "<mask>" + text[pos + 1 :]
+                self.samples.append(
+                    {
+                        "masked_text": masked,
+                        "target_id": target_id,
+                        "target_char": target_char,
+                        "original": text,
+                        "mask_pos_in_text": pos,
+                    }
+                )
 
     def __len__(self):
         return len(self.samples)
@@ -200,6 +200,7 @@ class CharPredictionHead(nn.Module):
 
 # ── Training ──────────────────────────────────────────────────────────
 
+
 def _read_corpus(path, log):
     texts = []
     with path.open() as f:
@@ -221,8 +222,11 @@ def main() -> int:
     parser.add_argument("--adapter_path", required=True)
     parser.add_argument("--output_dir", required=True)
     parser.add_argument("--base_model", default="xlm-roberta-base")
-    parser.add_argument("--freeze_encoder", action="store_true",
-                        help="Freeze the XLM-R+LoRA encoder; train only the head.")
+    parser.add_argument(
+        "--freeze_encoder",
+        action="store_true",
+        help="Freeze the XLM-R+LoRA encoder; train only the head.",
+    )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--learning_rate", type=float, default=1e-3)
@@ -279,10 +283,12 @@ def main() -> int:
     log.info("Character classes: %d (%s)", NUM_CHARS, ETRUSCAN_CHARS)
 
     _collate = partial(collate_fn, tokenizer=tokenizer, max_length=args.max_length)
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,
-                              collate_fn=_collate, num_workers=2)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
-                            collate_fn=_collate, num_workers=2)
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=_collate, num_workers=2
+    )
+    val_loader = DataLoader(
+        val_ds, batch_size=args.batch_size, shuffle=False, collate_fn=_collate, num_workers=2
+    )
 
     # Optimizer: head params + (optionally) encoder params
     trainable = list(head.parameters())
@@ -363,8 +369,13 @@ def main() -> int:
 
         log.info(
             "Epoch %d/%d — train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% lr=%.2e",
-            epoch, args.epochs, train_loss, train_acc * 100,
-            val_loss, val_acc * 100, scheduler.get_last_lr()[0],
+            epoch,
+            args.epochs,
+            train_loss,
+            train_acc * 100,
+            val_loss,
+            val_acc * 100,
+            scheduler.get_last_lr()[0],
         )
 
         if val_acc > best_val_acc:

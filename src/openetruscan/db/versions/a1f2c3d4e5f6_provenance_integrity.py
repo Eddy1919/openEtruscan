@@ -133,7 +133,6 @@ def upgrade() -> None:
             )
         )
 
-
     # 4. Add a CHECK constraint with the new vocabulary. Use a dedicated name
     #    so future migrations can find and modify it.
     op.create_check_constraint(

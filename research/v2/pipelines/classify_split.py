@@ -32,6 +32,7 @@ This script is a SPLIT generator. It does NOT label data. The test rows are
 still silver-labeled — the LLM-jury + adjudication pipeline replaces those
 labels with gold afterwards.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -147,19 +148,34 @@ def _stratum(silver_row: dict[str, str], src: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--corpus", type=Path, action="append", required=True,
-                    help="Path to corpus file. Pass multiple times to merge "
-                         "across id namespaces (e.g. once for publication-id "
-                         "JSONL, once for integer-DB-id JSONL). Later sources "
-                         "do not override earlier ones for the same id.")
-    ap.add_argument("--silver", type=Path, default=Path("research/data/openetruscan_labels.csv"),
-                    help="Path to v1 silver-label CSV.")
-    ap.add_argument("--out-train", type=Path, required=True,
-                    help="Output JSONL for the training pool.")
-    ap.add_argument("--out-test", type=Path, required=True,
-                    help="Output JSONL for the frozen test pool.")
-    ap.add_argument("--n-test", type=int, default=400,
-                    help="Target test-pool size (rounded up to satisfy class-2 floor).")
+    ap.add_argument(
+        "--corpus",
+        type=Path,
+        action="append",
+        required=True,
+        help="Path to corpus file. Pass multiple times to merge "
+        "across id namespaces (e.g. once for publication-id "
+        "JSONL, once for integer-DB-id JSONL). Later sources "
+        "do not override earlier ones for the same id.",
+    )
+    ap.add_argument(
+        "--silver",
+        type=Path,
+        default=Path("research/data/openetruscan_labels.csv"),
+        help="Path to v1 silver-label CSV.",
+    )
+    ap.add_argument(
+        "--out-train", type=Path, required=True, help="Output JSONL for the training pool."
+    )
+    ap.add_argument(
+        "--out-test", type=Path, required=True, help="Output JSONL for the frozen test pool."
+    )
+    ap.add_argument(
+        "--n-test",
+        type=int,
+        default=400,
+        help="Target test-pool size (rounded up to satisfy class-2 floor).",
+    )
     ap.add_argument("--seed", type=int, default=SEED)
     args = ap.parse_args(argv)
 
@@ -175,8 +191,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: no silver labels loaded from {args.silver}", file=sys.stderr)
         return 1
     matched = sum(1 for sid in silver if sid in corpus)
-    print(f"Silver-corpus join: {matched}/{len(silver)} silver ids "
-          f"resolved to corpus text", file=sys.stderr)
+    print(
+        f"Silver-corpus join: {matched}/{len(silver)} silver ids " f"resolved to corpus text",
+        file=sys.stderr,
+    )
 
     # Group ids by stratum
     strata: dict[str, list[str]] = defaultdict(list)
@@ -213,9 +231,7 @@ def main(argv: list[str] | None = None) -> int:
         # Proportional sampling from the rest
         per_stratum_quota: dict[str, int] = {}
         for stratum, ids in strata.items():
-            per_stratum_quota[stratum] = max(
-                0, round(remaining * len(ids) / n_total)
-            )
+            per_stratum_quota[stratum] = max(0, round(remaining * len(ids) / n_total))
         # Sample without replacement, skipping floor-taken ids
         for stratum, ids in strata.items():
             quota = per_stratum_quota[stratum]
@@ -270,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Per-class test breakdown
     from collections import Counter
+
     label_counts = Counter(silver[i]["label"] for i in test_ids)
     print("\nTest-pool class breakdown:", file=sys.stderr)
     for cls, count in sorted(label_counts.items(), key=lambda kv: -kv[1]):

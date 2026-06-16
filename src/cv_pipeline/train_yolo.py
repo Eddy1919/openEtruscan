@@ -43,7 +43,7 @@ def train_and_export():
     """
     logger.info("Initializing YOLO model...")
     model = YOLO(MODEL_NAME)
-    
+
     logger.info("Starting training loop...")
     model.train(
         data=str(DATASET_DIR / "dataset.yaml"),
@@ -53,14 +53,14 @@ def train_and_export():
         device="cuda",  # Assumes GPU availability
         project="runs/glyph_detector",
         name="v1",
-        cache=True
+        cache=True,
     )
-    
+
     logger.info("Exporting best weights to ONNX format for onnxruntime-web...")
     # Exporting dynamically allocates input shape for browser usage
     export_path = model.export(format="onnx", dynamic=True, simplify=True)
     logger.info("Model exported successfully to %s", export_path)
-    
+
     return export_path
 
 
@@ -69,9 +69,9 @@ def push_to_huggingface(onnx_path: str):
     Pushes the trained ONNX model to the Hugging Face Hub for public CDN delivery.
     """
     logger.info("Pushing model to Hugging Face Hub: %s", HF_REPO_ID)
-    
+
     api = HfApi()
-    
+
     # Ensure the repo exists (requires HF_TOKEN env var)
     try:
         api.create_repo(repo_id=HF_REPO_ID, private=False, exist_ok=True)
@@ -80,7 +80,9 @@ def push_to_huggingface(onnx_path: str):
         # never the credential itself; semgrep flags any logger call that mentions
         # "TOKEN" in the message. Suppress because the message text is a hint,
         # not an emitted secret.
-        logger.warning("Could not verify/create HF repo. Make sure HF_TOKEN is set. Error: %s", e)  # nosemgrep
+        logger.warning(
+            "Could not verify/create HF repo. Make sure HF_TOKEN is set. Error: %s", e
+        )  # nosemgrep
         return
 
     # Upload the ONNX file
@@ -89,7 +91,7 @@ def push_to_huggingface(onnx_path: str):
             path_or_fileobj=onnx_path,
             path_in_repo="glyph_detector.onnx",
             repo_id=HF_REPO_ID,
-            commit_message="Update ONNX model for OpenEtruscan frontend inference"
+            commit_message="Update ONNX model for OpenEtruscan frontend inference",
         )
         logger.info("🚀 Successfully pushed to Hugging Face!")
     except Exception as e:
@@ -98,14 +100,14 @@ def push_to_huggingface(onnx_path: str):
 
 if __name__ == "__main__":
     logger.info("--- Starting OpenEtruscan CV Pipeline ---")
-    
+
     # 1. Verify data
     verify_dataset()
-    
-    # 2. Train and export 
+
+    # 2. Train and export
     onnx_file = train_and_export()
-    
-    # 3. Push to registry 
+
+    # 3. Push to registry
     push_to_huggingface(onnx_file)
-    
+
     logger.info("Pipeline execution built successfully.")

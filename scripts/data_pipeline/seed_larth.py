@@ -214,8 +214,10 @@ def seed_corpus(csv_data: str, db_path: str = "data/corpus.db") -> int:
 
     parse_time = _time.perf_counter() - t0
     inscriptions = list(buffer_dict.values())
-    print(f"\n✅ Parsed {len(inscriptions):,} unique inscriptions in {parse_time:.1f}s (skipped {skipped})")
-    print(f"🚀 Bulk-inserting into PostgreSQL...")
+    print(
+        f"\n✅ Parsed {len(inscriptions):,} unique inscriptions in {parse_time:.1f}s (skipped {skipped})"
+    )
+    print("🚀 Bulk-inserting into PostgreSQL...")
 
     t1 = _time.perf_counter()
     count = corpus.add_batch(inscriptions, batch_size=500)

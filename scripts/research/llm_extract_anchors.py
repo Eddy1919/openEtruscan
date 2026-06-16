@@ -308,9 +308,7 @@ def _parse_model_output(raw: str) -> list[dict[str, Any]] | None:
     return parsed
 
 
-def _validate_gloss(
-    gloss: dict[str, Any], passage_text: str
-) -> tuple[bool, str | None]:
+def _validate_gloss(gloss: dict[str, Any], passage_text: str) -> tuple[bool, str | None]:
     """Reject glosses missing required fields or whose evidence_quote isn't a verbatim substring."""
     required = ("etruscan_word", "equivalent", "equivalent_language", "evidence_quote")
     for key in required:
@@ -413,8 +411,7 @@ def main() -> int:
     est_in = len(pending) * 600
     est_out = len(pending) * 80
     est_usd = (
-        est_in * PRICE_PER_MTOK_INPUT / 1_000_000
-        + est_out * PRICE_PER_MTOK_OUTPUT / 1_000_000
+        est_in * PRICE_PER_MTOK_INPUT / 1_000_000 + est_out * PRICE_PER_MTOK_OUTPUT / 1_000_000
     )
     logger.info(
         "estimated tokens: in=%d out=%d ; estimated cost: $%.3f (USD, %s pricing)",

@@ -107,9 +107,7 @@ class InscriptionRepository:
             conditions.append(Inscription.provenance_status == provenance)
 
         if has_provenance is True:
-            conditions.append(
-                Inscription.provenance_status.in_(PROVENANCE_KINDS_WITH_PROVENANCE)
-            )
+            conditions.append(Inscription.provenance_status.in_(PROVENANCE_KINDS_WITH_PROVENANCE))
         elif has_provenance is False:
             conditions.append(
                 Inscription.provenance_status.in_(PROVENANCE_KINDS_WITHOUT_PROVENANCE)
@@ -589,9 +587,7 @@ class InscriptionRepository:
         # Single batch fetch instead of N round-trips. The previous loop was
         # doing one SELECT per clan, which made this endpoint linear in the
         # number of frequent clans and a P99 outlier under load.
-        clan_rows = await self.session.execute(
-            select(Clan).where(Clan.id.in_(clan_ids))
-        )
+        clan_rows = await self.session.execute(select(Clan).where(Clan.id.in_(clan_ids)))
         nodes = {
             clan.id: {
                 "id": clan.id,

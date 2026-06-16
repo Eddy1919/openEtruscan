@@ -29,6 +29,7 @@ Honest framing
 This script is meant to be invoked from cloudbuild/v2-train-classifier.yaml.
 Local invocation is also supported for debugging.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -57,26 +58,31 @@ def _load_jsonl(path: Path) -> list[dict]:
 def _text_field(row: dict) -> str:
     """Pick the best available text field; fall back gracefully."""
     return (
-        row.get("canonical_transliterated")
-        or row.get("raw_text")
-        or row.get("text")
-        or ""
+        row.get("canonical_transliterated") or row.get("raw_text") or row.get("text") or ""
     ).strip()
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--train-pool", type=Path, required=True,
-                    help="JSONL of silver-labeled training rows (NOT in test split).")
-    ap.add_argument("--eval-gold", type=Path, required=True,
-                    help="JSONL of candidate-gold rows for eval.")
-    ap.add_argument("--out-metrics", type=Path, required=True,
-                    help="Output JSON with bootstrap-CI'd metrics.")
-    ap.add_argument("--out-predictions", type=Path, required=True,
-                    help="Output JSONL with per-row predictions.")
+    ap.add_argument(
+        "--train-pool",
+        type=Path,
+        required=True,
+        help="JSONL of silver-labeled training rows (NOT in test split).",
+    )
+    ap.add_argument(
+        "--eval-gold", type=Path, required=True, help="JSONL of candidate-gold rows for eval."
+    )
+    ap.add_argument(
+        "--out-metrics", type=Path, required=True, help="Output JSON with bootstrap-CI'd metrics."
+    )
+    ap.add_argument(
+        "--out-predictions", type=Path, required=True, help="Output JSONL with per-row predictions."
+    )
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--n-resamples", type=int, default=10_000,
-                    help="Bootstrap resample count for CIs.")
+    ap.add_argument(
+        "--n-resamples", type=int, default=10_000, help="Bootstrap resample count for CIs."
+    )
     args = ap.parse_args(argv)
 
     # ── Lazy imports so the module is importable without sklearn ──
@@ -91,8 +97,9 @@ def main(argv: list[str] | None = None) -> int:
     train_rows = _load_jsonl(args.train_pool)
     eval_rows = _load_jsonl(args.eval_gold)
     if not train_rows or not eval_rows:
-        print(f"ERROR: empty splits (train={len(train_rows)}, eval={len(eval_rows)})",
-              file=sys.stderr)
+        print(
+            f"ERROR: empty splits (train={len(train_rows)}, eval={len(eval_rows)})", file=sys.stderr
+        )
         return 1
 
     # ── Contamination check: no train id may also be in eval ──
@@ -100,8 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     eval_ids = {r["id"] for r in eval_rows}
     overlap = train_ids & eval_ids
     if overlap:
-        print(f"ABORT: train/eval contamination on ids: {sorted(overlap)[:5]}...",
-              file=sys.stderr)
+        print(f"ABORT: train/eval contamination on ids: {sorted(overlap)[:5]}...", file=sys.stderr)
         return 2
 
     # Train labels are the silver labels. Eval labels are the consensus
@@ -116,17 +122,26 @@ def main(argv: list[str] | None = None) -> int:
 
     # Drop rows with empty text or missing labels (defensive)
     train_pairs = [(t, lbl) for t, lbl in zip(train_texts, train_labels, strict=False) if t and lbl]
-    eval_pairs = [(t, lbl, r["id"]) for t, lbl, r in zip(eval_texts, eval_labels, eval_rows, strict=False)
-                  if t and lbl]
+    eval_pairs = [
+        (t, lbl, r["id"])
+        for t, lbl, r in zip(eval_texts, eval_labels, eval_rows, strict=False)
+        if t and lbl
+    ]
     if not train_pairs or not eval_pairs:
-        print(f"ABORT: after empty-text drop, train={len(train_pairs)} eval={len(eval_pairs)}",
-              file=sys.stderr)
+        print(
+            f"ABORT: after empty-text drop, train={len(train_pairs)} eval={len(eval_pairs)}",
+            file=sys.stderr,
+        )
         return 3
 
-    print(f"Train: {len(train_pairs)} rows, labels = {Counter(p[1] for p in train_pairs)}",
-          file=sys.stderr)
-    print(f"Eval:  {len(eval_pairs)} rows, labels = {Counter(p[1] for p in eval_pairs)}",
-          file=sys.stderr)
+    print(
+        f"Train: {len(train_pairs)} rows, labels = {Counter(p[1] for p in train_pairs)}",
+        file=sys.stderr,
+    )
+    print(
+        f"Eval:  {len(eval_pairs)} rows, labels = {Counter(p[1] for p in eval_pairs)}",
+        file=sys.stderr,
+    )
 
     # ── Train ──
     vectorizer = TfidfVectorizer(
@@ -148,14 +163,16 @@ def main(argv: list[str] | None = None) -> int:
     # ── Eval rows = list of (gold, predicted) tuples for bootstrap_ci wrappers ──
     pairs_for_metrics = list(zip(y_true, y_pred, strict=False))
 
-    cb_macro = bootstrap_ci(pairs_for_metrics, macro_f1,
-                            n_resamples=args.n_resamples, seed=args.seed)
-    cb_acc = bootstrap_ci(pairs_for_metrics, accuracy,
-                          n_resamples=args.n_resamples, seed=args.seed)
-    cb_head = bootstrap_ci(pairs_for_metrics, head2_f1,
-                           n_resamples=args.n_resamples, seed=args.seed)
-    cb_tail = bootstrap_ci(pairs_for_metrics, tail5_f1,
-                           n_resamples=args.n_resamples, seed=args.seed)
+    cb_macro = bootstrap_ci(
+        pairs_for_metrics, macro_f1, n_resamples=args.n_resamples, seed=args.seed
+    )
+    cb_acc = bootstrap_ci(pairs_for_metrics, accuracy, n_resamples=args.n_resamples, seed=args.seed)
+    cb_head = bootstrap_ci(
+        pairs_for_metrics, head2_f1, n_resamples=args.n_resamples, seed=args.seed
+    )
+    cb_tail = bootstrap_ci(
+        pairs_for_metrics, tail5_f1, n_resamples=args.n_resamples, seed=args.seed
+    )
 
     payload: dict[str, Any] = {
         "n_train": len(train_pairs),
@@ -179,13 +196,19 @@ def main(argv: list[str] | None = None) -> int:
 
     with args.out_predictions.open("w") as f:
         for (text, gold, insc_id), pred in zip(eval_pairs, y_pred, strict=False):
-            f.write(json.dumps({
-                "id": insc_id,
-                "text": text,
-                "gold_label": gold,
-                "predicted_label": pred,
-                "correct": gold == pred,
-            }, ensure_ascii=False) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "id": insc_id,
+                        "text": text,
+                        "gold_label": gold,
+                        "predicted_label": pred,
+                        "correct": gold == pred,
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
 
     print("\n── v2 training result ──", file=sys.stderr)
     print(f"  macro_f1   : {cb_macro.fmt()}", file=sys.stderr)

@@ -122,8 +122,7 @@ def upgrade() -> None:
     )
     op.execute(
         sa.text(
-            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_id "
-            "ON inscriptions(source_id)"
+            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_id " "ON inscriptions(source_id)"
         )
     )
 

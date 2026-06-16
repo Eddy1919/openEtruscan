@@ -14,9 +14,12 @@ SNAPSHOT_SET = {
     "spura tular": "boundary",
 }
 
+
 def test_classifier_snapshot():
     """Ensure classification results do not regress on a held-out snapshot set."""
     clf = InscriptionClassifier()
     for text, expected_label in SNAPSHOT_SET.items():
         result = clf.predict(text)
-        assert result.label == expected_label, f"Regression on '{text}': expected {expected_label}, got {result.label}"
+        assert (
+            result.label == expected_label
+        ), f"Regression on '{text}': expected {expected_label}, got {result.label}"

@@ -139,7 +139,9 @@ def _normalise_token(s: str) -> str:
     return s
 
 
-def _is_overlap_with_eval(etruscan_word: str, equivalent: str, eval_keys: set[tuple[str, str]]) -> bool:
+def _is_overlap_with_eval(
+    etruscan_word: str, equivalent: str, eval_keys: set[tuple[str, str]]
+) -> bool:
     key = (_normalise_token(etruscan_word), _normalise_token(equivalent))
     return key in eval_keys
 
@@ -147,6 +149,7 @@ def _is_overlap_with_eval(etruscan_word: str, equivalent: str, eval_keys: set[tu
 def _load_eval_test_keys() -> set[tuple[str, str]]:
     """Return the set of `(etr_norm, lat_norm)` tuples in the held-out test split."""
     from rosetta_eval_pairs import eval_pairs  # type: ignore[import-not-found]
+
     pairs = eval_pairs(split="test")
     return {(_normalise_token(p.etr), _normalise_token(p.lat)) for p in pairs}
 
@@ -217,7 +220,9 @@ def _print_card(i: int, n: int, row: dict[str, Any]) -> None:
     print()
     print("─" * 78)
     print(f"[{i}/{n}]  idx={row.get('passage_index'):>4d}  source={row.get('source', '')!r}")
-    print(f"          {row['etruscan_word']!r}  →  {row['equivalent']!r}  ({row['equivalent_language']})")
+    print(
+        f"          {row['etruscan_word']!r}  →  {row['equivalent']!r}  ({row['equivalent_language']})"
+    )
     print(f"  quote: {row['evidence_quote']}")
     print("─" * 78)
 
@@ -233,10 +238,14 @@ def _prompt(prompt_text: str, allowed: set[str]) -> str:
         print(f"  → please answer one of {sorted(allowed)} or q to save+quit")
 
 
-def _interactive(rows: list[dict[str, Any]], decisions: dict[int, Decision], decisions_path: Path) -> dict[int, Decision]:
+def _interactive(
+    rows: list[dict[str, Any]], decisions: dict[int, Decision], decisions_path: Path
+) -> dict[int, Decision]:
     pending = [r for r in rows if r.get("passage_index") not in decisions]
     if not pending:
-        print(f"All {len(rows)} rows already decided ({len(decisions)} in sidecar). Nothing to review.")
+        print(
+            f"All {len(rows)} rows already decided ({len(decisions)} in sidecar). Nothing to review."
+        )
         return decisions
     print(f"{len(pending)} rows pending, {len(decisions)} already decided ({len(rows)} total).")
     print("Actions: [k]eep / [s]kip / [e]dit-equivalent / [q]uit-and-save\n")
@@ -244,7 +253,9 @@ def _interactive(rows: list[dict[str, Any]], decisions: dict[int, Decision], dec
         _print_card(i, len(pending), row)
         choice = _prompt("  action [k/s/e/q]: ", {ACTION_KEEP, ACTION_SKIP, ACTION_EDIT})
         if choice == "q":
-            print(f"\nSaved {len(decisions)} decisions. Re-run to resume from row {i}/{len(pending)}.")
+            print(
+                f"\nSaved {len(decisions)} decisions. Re-run to resume from row {i}/{len(pending)}."
+            )
             break
         override = ""
         if choice == ACTION_EDIT:
@@ -274,7 +285,10 @@ def _materialise(
     n_keep, n_overlap = 0, 0
     # Truncate-and-rewrite the output files atomically — this is the
     # authoritative materialisation pass, not append-only.
-    with keep_path.open("w", encoding="utf-8") as fk, overlap_path.open("w", encoding="utf-8") as fo:
+    with (
+        keep_path.open("w", encoding="utf-8") as fk,
+        overlap_path.open("w", encoding="utf-8") as fo,
+    ):
         for row in rows:
             d = decisions.get(row.get("passage_index"))
             if d is None or d.action == ACTION_SKIP:
@@ -327,7 +341,9 @@ def main() -> int:
     parser.add_argument("--out-overlap", type=Path, default=DEFAULT_OVERLAP)
     parser.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS)
     parser.add_argument("--interactive", action="store_true", help="Prompt per-row [k/s/e/q].")
-    parser.add_argument("--apply", action="store_true", help="Apply decisions TSV → JSONL outputs (no prompts).")
+    parser.add_argument(
+        "--apply", action="store_true", help="Apply decisions TSV → JSONL outputs (no prompts)."
+    )
     parser.add_argument("--report", action="store_true", help="Print yield report and exit.")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -371,7 +387,10 @@ def main() -> int:
         )
         logger.info(
             "wrote %d → %s, %d → %s",
-            n_keep, args.out_keep, n_overlap, args.out_overlap,
+            n_keep,
+            args.out_keep,
+            n_overlap,
+            args.out_overlap,
         )
 
     sys.stdout.write(_yield_report(args.out_keep, args.out_overlap))

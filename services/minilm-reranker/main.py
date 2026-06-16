@@ -4,17 +4,21 @@ from sentence_transformers import CrossEncoder
 
 app = FastAPI(title="OpenEtruscan Reranker")
 
+
 class RerankRequest(BaseModel):
     query: str
     documents: list[str]
 
+
 model = None
+
 
 @app.on_event("startup")
 def load_model():
     global model
     # CrossEncoder implicitly loads from HF Hub or local cache
     model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
 
 @app.post("/rerank")
 def rerank(req: RerankRequest):

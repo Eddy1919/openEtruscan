@@ -12,6 +12,7 @@ Inputs: a list of "scored retrieval" records. Each record is
 The metrics consume such records and return floats so the bootstrap harness
 can wrap them.
 """
+
 from __future__ import annotations
 
 import json
@@ -56,6 +57,7 @@ def make_semantic_field_pk(semantic_fields: dict[str, set[str]], k: int):
     semantic-field vocabulary. The semantic_fields dict is frozen at the
     freeze commit — it does NOT get edited based on observed misses.
     """
+
     def metric(rows: Sequence[dict]) -> float:
         if not rows:
             return 0.0
@@ -72,4 +74,5 @@ def make_semantic_field_pk(semantic_fields: dict[str, set[str]], k: int):
             if topk & vocab:
                 hits += 1
         return hits / len(rows)
+
     return metric

@@ -139,49 +139,89 @@ def _ensure_deps() -> None:
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 def _argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Contrastive LaBSE fine-tune with hard negatives "
-                    "(WBS T4.3 Option B — overfitting-guarded)."
+        "(WBS T4.3 Option B — overfitting-guarded)."
     )
-    parser.add_argument("--anchors_path", required=True,
-                       help="GCS or local path to attested.jsonl (17 anchors).")
-    parser.add_argument("--negatives_path", required=True,
-                       help="GCS or local path to hard_negatives.jsonl.")
-    parser.add_argument("--output_dir", required=True,
-                       help="GCS or local destination for the LoRA adapter weights + metrics JSON.")
-    parser.add_argument("--base_model", default="sentence-transformers/LaBSE",
-                       help="HF Hub id of the base sentence-transformer to fine-tune.")
-    parser.add_argument("--epochs", type=int, default=3,
-                       help="Max epochs; per-epoch regression detector can short-circuit.")
-    parser.add_argument("--lr", type=float, default=2e-6,
-                       help="Learning rate. KEEP LOW — see overfitting guard #2.")
-    parser.add_argument("--batch_size", type=int, default=4,
-                       help="Batch size. KEEP SMALL — see overfitting guard #5 (in-batch leak).")
-    parser.add_argument("--lora_r", type=int, default=2,
-                       help="LoRA rank. KEEP SMALL — see overfitting guard #1.")
-    parser.add_argument("--lora_alpha", type=int, default=4,
-                       help="LoRA alpha (scaling). Default 2× r per the original LoRA paper.")
+    parser.add_argument(
+        "--anchors_path", required=True, help="GCS or local path to attested.jsonl (17 anchors)."
+    )
+    parser.add_argument(
+        "--negatives_path", required=True, help="GCS or local path to hard_negatives.jsonl."
+    )
+    parser.add_argument(
+        "--output_dir",
+        required=True,
+        help="GCS or local destination for the LoRA adapter weights + metrics JSON.",
+    )
+    parser.add_argument(
+        "--base_model",
+        default="sentence-transformers/LaBSE",
+        help="HF Hub id of the base sentence-transformer to fine-tune.",
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=3,
+        help="Max epochs; per-epoch regression detector can short-circuit.",
+    )
+    parser.add_argument(
+        "--lr", type=float, default=2e-6, help="Learning rate. KEEP LOW — see overfitting guard #2."
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=4,
+        help="Batch size. KEEP SMALL — see overfitting guard #5 (in-batch leak).",
+    )
+    parser.add_argument(
+        "--lora_r", type=int, default=2, help="LoRA rank. KEEP SMALL — see overfitting guard #1."
+    )
+    parser.add_argument(
+        "--lora_alpha",
+        type=int,
+        default=4,
+        help="LoRA alpha (scaling). Default 2× r per the original LoRA paper.",
+    )
     parser.add_argument("--lora_dropout", type=float, default=0.1)
-    parser.add_argument("--lora_layers", type=int, nargs="*", default=[8, 9, 10, 11],
-                       help="LaBSE BERT layer indices to apply LoRA to. Default: last 4 of 12.")
-    parser.add_argument("--max_seq_length", type=int, default=64,
-                       help="Token length cap (per LaBSE convention for word-level inputs).")
-    parser.add_argument("--temperature", type=float, default=0.05,
-                       help="Temperature for the InfoNCE-style softmax (smaller = sharper).")
-    parser.add_argument("--regression_threshold", type=float, default=0.02,
-                       help="Per-epoch early stop trigger: abort if the (anchor, random-positive) "
-                            "average cosine increases by more than this from epoch 0 (signal that "
-                            "the encoder is collapsing).")
+    parser.add_argument(
+        "--lora_layers",
+        type=int,
+        nargs="*",
+        default=[8, 9, 10, 11],
+        help="LaBSE BERT layer indices to apply LoRA to. Default: last 4 of 12.",
+    )
+    parser.add_argument(
+        "--max_seq_length",
+        type=int,
+        default=64,
+        help="Token length cap (per LaBSE convention for word-level inputs).",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.05,
+        help="Temperature for the InfoNCE-style softmax (smaller = sharper).",
+    )
+    parser.add_argument(
+        "--regression_threshold",
+        type=float,
+        default=0.02,
+        help="Per-epoch early stop trigger: abort if the (anchor, random-positive) "
+        "average cosine increases by more than this from epoch 0 (signal that "
+        "the encoder is collapsing).",
+    )
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--no_loo", action="store_true",
-                       help="Skip leave-one-out cross-validation and just train one model on all "
-                            "17 anchors. Used for the final deployable artefact, NOT for honest metrics.")
+    parser.add_argument(
+        "--no_loo",
+        action="store_true",
+        help="Skip leave-one-out cross-validation and just train one model on all "
+        "17 anchors. Used for the final deployable artefact, NOT for honest metrics.",
+    )
     return parser
 
 
@@ -362,27 +402,37 @@ def _train_one_fold(
             on_diag = float(cross_sim.diag().mean().item())
             off_diag = float(cross_sim[mask].mean().item()) if mask.any() else 0.0
         regression_delta = off_diag - baseline_offdiag
-        history.append({
-            "epoch": epoch + 1,
-            "loss_per_batch": epoch_loss / max(n_batches, 1),
-            "on_diag_mean_cosine": on_diag,
-            "off_diag_mean_cosine": off_diag,
-            "regression_delta": regression_delta,
-        })
+        history.append(
+            {
+                "epoch": epoch + 1,
+                "loss_per_batch": epoch_loss / max(n_batches, 1),
+                "on_diag_mean_cosine": on_diag,
+                "off_diag_mean_cosine": off_diag,
+                "regression_delta": regression_delta,
+            }
+        )
         logger.info(
             "  epoch=%d loss=%.4f on_diag=%.4f off_diag=%.4f Δ=%+.4f",
-            epoch + 1, epoch_loss / max(n_batches, 1), on_diag, off_diag, regression_delta,
+            epoch + 1,
+            epoch_loss / max(n_batches, 1),
+            on_diag,
+            off_diag,
+            regression_delta,
         )
         if regression_delta > args.regression_threshold:
             logger.warning(
                 "  REGRESSION DETECTOR FIRED at epoch %d (Δ=%+.4f > %g). "
                 "Aborting fold; using pre-epoch weights.",
-                epoch + 1, regression_delta, args.regression_threshold,
+                epoch + 1,
+                regression_delta,
+                args.regression_threshold,
             )
             aborted = True
             break
         # Snapshot good state.
-        final_state = {k: v.detach().clone() for k, v in model.state_dict().items() if "lora" in k.lower()}
+        final_state = {
+            k: v.detach().clone() for k, v in model.state_dict().items() if "lora" in k.lower()
+        }
 
     # Eval on the held-out anchor (if any): rank the positive among {positive, all negatives}.
     fold_metrics: dict[str, Any] = {"history": history, "aborted": aborted}
@@ -398,17 +448,19 @@ def _train_one_fold(
             order = sims.argsort(descending=True).tolist()
             # Positive is at candidate index 0; find its rank.
             pos_rank = order.index(0) + 1  # 1-indexed
-            fold_metrics.update({
-                "held_out_etruscan_word": held_anc,
-                "held_out_positive": held_pos,
-                "held_out_positive_rank": pos_rank,
-                "held_out_n_candidates": len(cand_texts),
-                "p_at_1": 1.0 if pos_rank == 1 else 0.0,
-                "p_at_5": 1.0 if pos_rank <= 5 else 0.0,
-                "p_at_10": 1.0 if pos_rank <= 10 else 0.0,
-                "held_out_top3_words": [cand_texts[i] for i in order[:3]],
-                "held_out_top3_cosines": [float(sims[i].item()) for i in order[:3]],
-            })
+            fold_metrics.update(
+                {
+                    "held_out_etruscan_word": held_anc,
+                    "held_out_positive": held_pos,
+                    "held_out_positive_rank": pos_rank,
+                    "held_out_n_candidates": len(cand_texts),
+                    "p_at_1": 1.0 if pos_rank == 1 else 0.0,
+                    "p_at_5": 1.0 if pos_rank <= 5 else 0.0,
+                    "p_at_10": 1.0 if pos_rank <= 10 else 0.0,
+                    "held_out_top3_words": [cand_texts[i] for i in order[:3]],
+                    "held_out_top3_cosines": [float(sims[i].item()) for i in order[:3]],
+                }
+            )
 
     # Return LoRA-only state-dict for caller-side optional persistence.
     fold_metrics["final_lora_state"] = final_state
@@ -463,16 +515,20 @@ def main() -> int:
     if args.no_loo:
         logger.info("=== single fold over all %d anchors (no LOO) ===", len(rows))
         metrics = _train_one_fold(rows, None, args)
-        fold_results.append({"fold": -1, **{k: v for k, v in metrics.items() if k != "final_lora_state"}})
+        fold_results.append(
+            {"fold": -1, **{k: v for k, v in metrics.items() if k != "final_lora_state"}}
+        )
     else:
         for fold_idx, held in enumerate(rows):
             logger.info("=== fold %d/%d held=%r ===", fold_idx + 1, len(rows), held[0])
             train_rows = rows[:fold_idx] + rows[fold_idx + 1 :]
             metrics = _train_one_fold(train_rows, held, args)
-            fold_results.append({
-                "fold": fold_idx,
-                **{k: v for k, v in metrics.items() if k != "final_lora_state"},
-            })
+            fold_results.append(
+                {
+                    "fold": fold_idx,
+                    **{k: v for k, v in metrics.items() if k != "final_lora_state"},
+                }
+            )
 
     # Aggregate.
     p1 = [r.get("p_at_1") for r in fold_results if r.get("p_at_1") is not None]
@@ -493,9 +549,14 @@ def main() -> int:
         "args": vars(args),
         "fold_results": fold_results,
     }
-    logger.info("summary: n_folds=%d aborted=%d p@1=%.3f p@5=%.3f p@10=%.3f",
-                summary["n_folds"], summary["n_aborted"],
-                summary["p_at_1_mean"], summary["p_at_5_mean"], summary["p_at_10_mean"])
+    logger.info(
+        "summary: n_folds=%d aborted=%d p@1=%.3f p@5=%.3f p@10=%.3f",
+        summary["n_folds"],
+        summary["n_aborted"],
+        summary["p_at_1_mean"],
+        summary["p_at_5_mean"],
+        summary["p_at_10_mean"],
+    )
 
     # Write outputs.
     output_dir = Path("/tmp/labse_hardneg_output")
@@ -506,7 +567,9 @@ def main() -> int:
     logger.info("wrote summary → %s", summary_path)
 
     if args.output_dir.startswith("gs://"):
-        subprocess.check_call(["gsutil", "cp", str(summary_path), args.output_dir.rstrip("/") + "/"])
+        subprocess.check_call(
+            ["gsutil", "cp", str(summary_path), args.output_dir.rstrip("/") + "/"]
+        )
         logger.info("uploaded summary → %s", args.output_dir)
     else:
         target = Path(args.output_dir)

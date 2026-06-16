@@ -78,9 +78,7 @@ async def _vocab_from_corpus(language_db_code: str) -> list[str]:
 
     _, session_maker = get_engine()
     async with session_maker() as session:
-        stmt = select(Inscription.canonical).where(
-            Inscription.language == language_db_code
-        )
+        stmt = select(Inscription.canonical).where(Inscription.language == language_db_code)
         result = await session.execute(stmt)
         canonicals = [c for (c,) in result.all() if c]
 

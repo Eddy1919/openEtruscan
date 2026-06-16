@@ -36,9 +36,9 @@ class TestLanguageRegistry:
         XLM-R-base. The registry's expected_dim has to track that."""
         assert EMBEDDING_DIM == 768
         for code, rec in LANGUAGE_TIERS.items():
-            assert rec.expected_dim == 768, (
-                f"language {code} has unexpected expected_dim={rec.expected_dim}"
-            )
+            assert (
+                rec.expected_dim == 768
+            ), f"language {code} has unexpected expected_dim={rec.expected_dim}"
 
     def test_tier_1_languages_are_alignable(self):
         for code, rec in LANGUAGE_TIERS.items():
@@ -173,8 +173,15 @@ async def test_languages_endpoint_returns_full_registry(client, sample_data):
     assert "lat" in codes
     assert "lin_a" in codes
     for rec in body["languages"]:
-        assert {"code", "name", "tier", "deciphered", "alignable",
-                "corpus_status", "notes"} <= rec.keys()
+        assert {
+            "code",
+            "name",
+            "tier",
+            "deciphered",
+            "alignable",
+            "corpus_status",
+            "notes",
+        } <= rec.keys()
 
 
 async def test_rosetta_lookup_refuses_tier3_via_api(client, sample_data):
@@ -317,22 +324,30 @@ async def test_pk_allows_dual_embedder_partitions(db_session):
     # 1. Insert LaBSE/v1 partition row
     await db_session.execute(
         insert_one,
-        {"lang": "ett", "w": "fanu-partitiontest", "v": vec,
-         "emb": "sentence-transformers/LaBSE", "rev": "v1"},
+        {
+            "lang": "ett",
+            "w": "fanu-partitiontest",
+            "v": vec,
+            "emb": "sentence-transformers/LaBSE",
+            "rev": "v1",
+        },
     )
     # 2. Insert xlmr-lora/v4 partition row for the SAME (lang, word). Must succeed.
     await db_session.execute(
         insert_one,
-        {"lang": "ett", "w": "fanu-partitiontest", "v": vec,
-         "emb": "xlmr-lora", "rev": "v4"},
+        {"lang": "ett", "w": "fanu-partitiontest", "v": vec, "emb": "xlmr-lora", "rev": "v4"},
     )
     await db_session.commit()
 
-    rows = (await db_session.execute(
-        text("SELECT embedder, embedder_revision FROM language_word_embeddings "
-             "WHERE language = 'ett' AND word = 'fanu-partitiontest' "
-             "ORDER BY embedder")
-    )).fetchall()
+    rows = (
+        await db_session.execute(
+            text(
+                "SELECT embedder, embedder_revision FROM language_word_embeddings "
+                "WHERE language = 'ett' AND word = 'fanu-partitiontest' "
+                "ORDER BY embedder"
+            )
+        )
+    ).fetchall()
     assert len(rows) == 2, f"Expected 2 partitions, got {len(rows)}"
     assert rows[0][0] == "sentence-transformers/LaBSE"
     assert rows[1][0] == "xlmr-lora"
@@ -365,38 +380,69 @@ async def test_find_cross_language_filters_by_embedder(db_session):
     )
 
     # Default partition: ett 'clan' shares its vector with lat 'clan' (cos=1)
-    await db_session.execute(insert_one, {
-        "lang": "ett", "w": "clan", "v": one,
-        "emb": "sentence-transformers/LaBSE", "rev": "v1",
-    })
-    await db_session.execute(insert_one, {
-        "lang": "lat", "w": "clan", "v": one,
-        "emb": "sentence-transformers/LaBSE", "rev": "v1",
-    })
+    await db_session.execute(
+        insert_one,
+        {
+            "lang": "ett",
+            "w": "clan",
+            "v": one,
+            "emb": "sentence-transformers/LaBSE",
+            "rev": "v1",
+        },
+    )
+    await db_session.execute(
+        insert_one,
+        {
+            "lang": "lat",
+            "w": "clan",
+            "v": one,
+            "emb": "sentence-transformers/LaBSE",
+            "rev": "v1",
+        },
+    )
     # xlmr-lora/v4 partition: orthogonal vectors (cos=0)
-    await db_session.execute(insert_one, {
-        "lang": "ett", "w": "clan", "v": one,
-        "emb": "xlmr-lora", "rev": "v4",
-    })
-    await db_session.execute(insert_one, {
-        "lang": "lat", "w": "clan", "v": two,
-        "emb": "xlmr-lora", "rev": "v4",
-    })
+    await db_session.execute(
+        insert_one,
+        {
+            "lang": "ett",
+            "w": "clan",
+            "v": one,
+            "emb": "xlmr-lora",
+            "rev": "v4",
+        },
+    )
+    await db_session.execute(
+        insert_one,
+        {
+            "lang": "lat",
+            "w": "clan",
+            "v": two,
+            "emb": "xlmr-lora",
+            "rev": "v4",
+        },
+    )
     await db_session.commit()
 
     # Default partition: cosine ~ 1.0
     default_hits = await find_cross_language_neighbours(
-        word="clan", source_lang="ett", target_lang="lat",
-        session=db_session, k=1,
+        word="clan",
+        source_lang="ett",
+        target_lang="lat",
+        session=db_session,
+        k=1,
     )
     assert len(default_hits) == 1
     assert default_hits[0].cosine == pytest.approx(1.0, abs=1e-4)
 
     # Explicit xlmr-lora/v4: cosine ~ 0.0 (orthogonal)
     v4_hits = await find_cross_language_neighbours(
-        word="clan", source_lang="ett", target_lang="lat",
-        session=db_session, k=1,
-        embedder="xlmr-lora", embedder_revision="v4",
+        word="clan",
+        source_lang="ett",
+        target_lang="lat",
+        session=db_session,
+        k=1,
+        embedder="xlmr-lora",
+        embedder_revision="v4",
     )
     assert len(v4_hits) == 1
     assert v4_hits[0].cosine == pytest.approx(0.0, abs=1e-4)
@@ -416,18 +462,29 @@ async def test_find_cross_language_empty_partition(db_session):
     vec = "[" + ",".join("0.1" for _ in range(768)) + "]"
     # Insert into default partition only.
     await db_session.execute(
-        text("INSERT INTO language_word_embeddings "
-             "(language, word, vector, embedder, embedder_revision) "
-             "VALUES (:lang, :w, :v, :emb, :rev)"),
-        {"lang": "ett", "w": "only-in-default", "v": vec,
-         "emb": "sentence-transformers/LaBSE", "rev": "v1"},
+        text(
+            "INSERT INTO language_word_embeddings "
+            "(language, word, vector, embedder, embedder_revision) "
+            "VALUES (:lang, :w, :v, :emb, :rev)"
+        ),
+        {
+            "lang": "ett",
+            "w": "only-in-default",
+            "v": vec,
+            "emb": "sentence-transformers/LaBSE",
+            "rev": "v1",
+        },
     )
     await db_session.commit()
 
     # Query the v4 partition — source word doesn't exist there, expect [].
     hits = await find_cross_language_neighbours(
-        word="only-in-default", source_lang="ett", target_lang="lat",
-        session=db_session, k=5,
-        embedder="xlmr-lora", embedder_revision="v4",
+        word="only-in-default",
+        source_lang="ett",
+        target_lang="lat",
+        session=db_session,
+        k=5,
+        embedder="xlmr-lora",
+        embedder_revision="v4",
     )
     assert hits == []

@@ -62,6 +62,7 @@ would have duplicates. The downgrade DELETEs anything that isn't
 Run downgrade only on a fresh DB or one you're willing to lose v4-ingest
 work from.
 """
+
 from collections.abc import Sequence
 
 from alembic import op
@@ -84,14 +85,12 @@ def upgrade() -> None:
     #    zero existing nulls, so this is a definitional change with no
     #    data motion.
     op.execute(
-        "ALTER TABLE language_word_embeddings "
-        "ALTER COLUMN embedder_revision SET NOT NULL"
+        "ALTER TABLE language_word_embeddings " "ALTER COLUMN embedder_revision SET NOT NULL"
     )
 
     # 2. Drop the existing 2-column PK.
     op.execute(
-        "ALTER TABLE language_word_embeddings "
-        "DROP CONSTRAINT language_word_embeddings_pkey"
+        "ALTER TABLE language_word_embeddings " "DROP CONSTRAINT language_word_embeddings_pkey"
     )
 
     # 3. Add the 4-column PK. PostgreSQL builds the supporting UNIQUE
@@ -121,8 +120,7 @@ def downgrade() -> None:
 
     # Drop new PK first so the next ADD PRIMARY KEY can claim the name.
     op.execute(
-        "ALTER TABLE language_word_embeddings "
-        "DROP CONSTRAINT language_word_embeddings_pkey"
+        "ALTER TABLE language_word_embeddings " "DROP CONSTRAINT language_word_embeddings_pkey"
     )
 
     # Without this DELETE, ADD PRIMARY KEY (language, word) fails on
@@ -142,6 +140,5 @@ def downgrade() -> None:
     )
 
     op.execute(
-        "ALTER TABLE language_word_embeddings "
-        "ALTER COLUMN embedder_revision DROP NOT NULL"
+        "ALTER TABLE language_word_embeddings " "ALTER COLUMN embedder_revision DROP NOT NULL"
     )

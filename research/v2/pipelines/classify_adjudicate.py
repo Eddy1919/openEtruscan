@@ -18,6 +18,7 @@ The Krippendorff α is computed per the eval/bootstrap module — same
 implementation used in the final eval, so the agreement number reported
 here is directly comparable to the post-adjudication number.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,8 +76,10 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
 
     if all(label == "unsure" for label in labels):
         disposition = "all_unsure"
-    elif n_top == n_raters and consensus != "unsure" and all(
-        c in UNANIMITY_CONF_FLOOR for c in confidences
+    elif (
+        n_top == n_raters
+        and consensus != "unsure"
+        and all(c in UNANIMITY_CONF_FLOOR for c in confidences)
     ):
         disposition = "candidate_gold"
     else:
@@ -101,18 +104,28 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--jury", type=Path, required=True,
-                    help="JSONL produced by classify_jury.py")
-    ap.add_argument("--test-pool", type=Path, required=True,
-                    help="The frozen test JSONL from classify_split.py")
-    ap.add_argument("--out-gold", type=Path, required=True,
-                    help="Output JSONL of unanimous candidate-gold rows.")
-    ap.add_argument("--out-queue", type=Path, required=True,
-                    help="Output JSONL of rows for human adjudication.")
-    ap.add_argument("--out-summary", type=Path, required=True,
-                    help="Output JSON with aggregate jury stats.")
-    ap.add_argument("--require-n-raters", type=int, default=3,
-                    help="Drop rows with fewer than this many raters.")
+    ap.add_argument("--jury", type=Path, required=True, help="JSONL produced by classify_jury.py")
+    ap.add_argument(
+        "--test-pool", type=Path, required=True, help="The frozen test JSONL from classify_split.py"
+    )
+    ap.add_argument(
+        "--out-gold",
+        type=Path,
+        required=True,
+        help="Output JSONL of unanimous candidate-gold rows.",
+    )
+    ap.add_argument(
+        "--out-queue", type=Path, required=True, help="Output JSONL of rows for human adjudication."
+    )
+    ap.add_argument(
+        "--out-summary", type=Path, required=True, help="Output JSON with aggregate jury stats."
+    )
+    ap.add_argument(
+        "--require-n-raters",
+        type=int,
+        default=3,
+        help="Drop rows with fewer than this many raters.",
+    )
     args = ap.parse_args(argv)
 
     jury = load_jury(args.jury)
@@ -120,9 +133,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Build a ratings matrix for Krippendorff: one column per rater (sorted),
     # one row per inscription. Use None when a rater is missing.
-    all_models: list[str] = sorted(
-        {r["model"] for rows in jury.values() for r in rows}
-    )
+    all_models: list[str] = sorted({r["model"] for rows in jury.values() for r in rows})
     ratings: list[list[str | None]] = []
     candidate_gold_rows: list[dict[str, Any]] = []
     queue_rows: list[dict[str, Any]] = []
@@ -146,11 +157,13 @@ def main(argv: list[str] | None = None) -> int:
             "disposition": disp,
         }
         if disp == "candidate_gold":
-            candidate_gold_rows.append({
-                **record,
-                "gold_label": summary["consensus_label"],
-                "gold_label_source": "candidate_jury_unanimous",
-            })
+            candidate_gold_rows.append(
+                {
+                    **record,
+                    "gold_label": summary["consensus_label"],
+                    "gold_label_source": "candidate_jury_unanimous",
+                }
+            )
         elif disp == "all_unsure":
             all_unsure.append(insc_id)
         else:
@@ -165,9 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     alpha_per_class: dict[str, float] = {}
     for cls in CLASSES:
         sub = [row for row in ratings if cls in row]
-        alpha_per_class[cls] = (
-            krippendorff_alpha_nominal(sub) if len(sub) >= 5 else float("nan")
-        )
+        alpha_per_class[cls] = krippendorff_alpha_nominal(sub) if len(sub) >= 5 else float("nan")
 
     # Write outputs
     args.out_gold.parent.mkdir(parents=True, exist_ok=True)
@@ -199,8 +210,7 @@ def main(argv: list[str] | None = None) -> int:
         "krippendorff_alpha_overall": alpha_overall,
         "krippendorff_alpha_per_class": alpha_per_class,
         "top_disagreement_pairs": [
-            {"pair": list(k), "count": v}
-            for k, v in label_pair_counts.most_common(15)
+            {"pair": list(k), "count": v} for k, v in label_pair_counts.most_common(15)
         ],
     }
     args.out_summary.write_text(json.dumps(summary_payload, indent=2, sort_keys=True) + "\n")
@@ -212,10 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"All-unsure:         {len(all_unsure)}", file=sys.stderr)
     print(f"Krippendorff α:    {alpha_overall:.3f}  (target ≥ 0.80)", file=sys.stderr)
     if alpha_overall < 0.60 and ratings:
-        print("  WARNING: α below 0.60 indicates the codebook is ambiguous.",
-              file=sys.stderr)
-        print("  Consider revising codebook before adjudicating the queue.",
-              file=sys.stderr)
+        print("  WARNING: α below 0.60 indicates the codebook is ambiguous.", file=sys.stderr)
+        print("  Consider revising codebook before adjudicating the queue.", file=sys.stderr)
     return 0
 
 

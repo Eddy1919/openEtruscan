@@ -58,9 +58,7 @@ def _ensure_stack() -> None:
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 WORD_RE = re.compile(r"\b[^\W\d_][^\W\d_'\-]{1,30}(?:['\-][^\W\d_]+){0,3}\b", re.UNICODE)
@@ -72,13 +70,14 @@ SCRIPT_REQUIRED = {
 }
 
 
-def _build_wikipedia_vocab(language_code: str, top_n: int,
-                            log: logging.Logger) -> list[str]:
+def _build_wikipedia_vocab(language_code: str, top_n: int, log: logging.Logger) -> list[str]:
     from datasets import load_dataset
+
     script_gate = SCRIPT_REQUIRED.get(language_code)
     log.info("Loading Wikipedia[%s]...", language_code)
-    ds = load_dataset("wikimedia/wikipedia", f"20231101.{language_code}",
-                       split="train", streaming=True)
+    ds = load_dataset(
+        "wikimedia/wikipedia", f"20231101.{language_code}", split="train", streaming=True
+    )
     counts: collections.Counter[str] = collections.Counter()
     n_articles = 0
     n_dropped = 0
@@ -94,11 +93,21 @@ def _build_wikipedia_vocab(language_code: str, top_n: int,
             counts[tok] += 1
         n_articles += 1
         if n_articles % 5000 == 0:
-            log.info("  [%s] %d articles, %d unique tokens, dropped=%d, %.0fs",
-                     language_code, n_articles, len(counts), n_dropped,
-                     time.time() - t0)
-    log.info("[%s] DONE: %d articles → top %d of %d uniques",
-             language_code, n_articles, top_n, len(counts))
+            log.info(
+                "  [%s] %d articles, %d unique tokens, dropped=%d, %.0fs",
+                language_code,
+                n_articles,
+                len(counts),
+                n_dropped,
+                time.time() - t0,
+            )
+    log.info(
+        "[%s] DONE: %d articles → top %d of %d uniques",
+        language_code,
+        n_articles,
+        top_n,
+        len(counts),
+    )
     return [w for w, _ in counts.most_common(top_n)]
 
 
@@ -129,8 +138,7 @@ def _build_etruscan_vocab(corpus_path: Path, log: logging.Logger) -> list[str]:
                     continue
                 counts[tok] += 1
             n_inscs += 1
-    log.info("Etruscan vocab built from %d inscriptions: %d unique tokens",
-             n_inscs, len(counts))
+    log.info("Etruscan vocab built from %d inscriptions: %d unique tokens", n_inscs, len(counts))
     return [w for w, _ in counts.most_common()]
 
 
@@ -143,8 +151,7 @@ def main() -> int:
     parser.add_argument("--batch_size", type=int, default=64)
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     log = logging.getLogger("embed_labse")
 
     _ensure_stack()
@@ -186,13 +193,20 @@ def main() -> int:
                 normalize_embeddings=True,
             )
             elapsed = time.time() - t0
-            log.info("  %s embed done in %.1fs (%.0f w/s)",
-                     lang, elapsed, len(words) / elapsed if elapsed else 0)
+            log.info(
+                "  %s embed done in %.1fs (%.0f w/s)",
+                lang,
+                elapsed,
+                len(words) / elapsed if elapsed else 0,
+            )
             for w, v in zip(words, vectors, strict=True):
-                f.write(json.dumps(
-                    {"language": lang, "word": w, "vector": v.tolist()},
-                    ensure_ascii=False,
-                ) + "\n")
+                f.write(
+                    json.dumps(
+                        {"language": lang, "word": w, "vector": v.tolist()},
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
                 n_total += 1
     log.info("Wrote %d total embeddings to %s", n_total, output_path)
     return 0

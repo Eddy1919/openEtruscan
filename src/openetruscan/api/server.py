@@ -101,13 +101,16 @@ def _maybe_install_otel(app: FastAPI) -> None:
         # Optional. Production prefers explicit dep install; dev runs without.
         return
 
-    resource = Resource.create({
-        "service.name": "openetruscan-api",
-        "service.version": __version__,
-    })
+    resource = Resource.create(
+        {
+            "service.name": "openetruscan-api",
+            "service.version": __version__,
+        }
+    )
     provider = TracerProvider(resource=resource)
 
     import os as _os
+
     endpoint = _os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
     if endpoint:
         try:
@@ -143,13 +146,13 @@ async def lifespan(app: FastAPI):
     app.state.lacunae = None  # constructed on first /neural/restore call
 
     import collections
+
     app.state.query_embedding_cache = collections.OrderedDict()
 
     from openetruscan.api.zotero import ZoteroClient
+
     app.state.zotero = ZoteroClient(
-        group_id=settings.zotero_group_id,
-        api_key=settings.zotero_api_key,
-        client=app.state.http
+        group_id=settings.zotero_group_id, api_key=settings.zotero_api_key, client=app.state.http
     )
 
     try:
@@ -228,9 +231,9 @@ async def _global_exception_handler(request: Request, exc: Exception):
             "title": "Internal Server Error",
             "status": 500,
             "detail": "Internal server error",
-            "instance": request.url.path
+            "instance": request.url.path,
         },
-        media_type="application/problem+json"
+        media_type="application/problem+json",
     )
 
 
@@ -245,9 +248,9 @@ async def _value_error_handler(request: Request, exc: ValueError):
             "title": "Bad Request",
             "status": 400,
             "detail": str(exc),
-            "instance": request.url.path
+            "instance": request.url.path,
         },
-        media_type="application/problem+json"
+        media_type="application/problem+json",
     )
 
 
@@ -261,9 +264,9 @@ async def _http_exception_handler(request: Request, exc: StarletteHTTPException)
             "title": "HTTP Error",
             "status": exc.status_code,
             "detail": str(exc.detail),
-            "instance": request.url.path
+            "instance": request.url.path,
         },
-        media_type="application/problem+json"
+        media_type="application/problem+json",
     )
 
 
@@ -278,9 +281,9 @@ async def _validation_exception_handler(request: Request, exc: RequestValidation
             "status": 422,
             "detail": "Request validation failed",
             "errors": exc.errors(),
-            "instance": request.url.path
+            "instance": request.url.path,
         },
-        media_type="application/problem+json"
+        media_type="application/problem+json",
     )
 
 
@@ -650,11 +653,14 @@ def _inscription_jsonld(inscription) -> dict:
             "@type": "Place",
             "name": inscription.findspot,
             **(
-                {"geo": {"@type": "GeoCoordinates",
-                         "latitude": inscription.findspot_lat,
-                         "longitude": inscription.findspot_lon}}
-                if inscription.findspot_lat is not None
-                and inscription.findspot_lon is not None
+                {
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": inscription.findspot_lat,
+                        "longitude": inscription.findspot_lon,
+                    }
+                }
+                if inscription.findspot_lat is not None and inscription.findspot_lon is not None
                 else {}
             ),
         }
@@ -667,7 +673,9 @@ def _inscription_jsonld(inscription) -> dict:
     if inscription.pleiades_id:
         same_as.append(f"https://pleiades.stoa.org/places/{inscription.pleiades_id}")
     if inscription.eagle_id:
-        same_as.append(f"https://www.edr-edr.it/edr_programmi/res_complex_comune.php?do=show&id_nr={inscription.eagle_id}")
+        same_as.append(
+            f"https://www.edr-edr.it/edr_programmi/res_complex_comune.php?do=show&id_nr={inscription.eagle_id}"
+        )
 
     payload = {
         "@context": [
@@ -819,7 +827,7 @@ async def get_inscription(
 
     # JSON default — emit Pydantic via JSONResponse so the Link header lands.
     data = _build_model(inscription).model_dump()
-    
+
     if inscription.zotero_id:
         zotero_data = await request.app.state.zotero.get_item_csl(inscription.zotero_id)
         if zotero_data:
@@ -1100,11 +1108,11 @@ async def rosetta_languages(request: Request) -> dict[str, Any]:
 # in the inner dict serves as the fallback for any language without an
 # explicit entry.
 _EMBEDDER_ALIASES: dict[str | None, dict[str, tuple[str, str]]] = {
-    None:           {"*": ("sentence-transformers/LaBSE", "v1")},
-    "LaBSE":        {"*": ("sentence-transformers/LaBSE", "v1")},
+    None: {"*": ("sentence-transformers/LaBSE", "v1")},
+    "LaBSE": {"*": ("sentence-transformers/LaBSE", "v1")},
     "xlmr-lora-v4": {
-        "ett": ("xlmr-lora",         "v4"),  # etr-lora-v4 adapter applied
-        "*":   ("xlm-roberta-base",  "v4"),  # vanilla XLM-R-base for everyone else
+        "ett": ("xlmr-lora", "v4"),  # etr-lora-v4 adapter applied
+        "*": ("xlm-roberta-base", "v4"),  # vanilla XLM-R-base for everyone else
     },
 }
 
@@ -1120,9 +1128,7 @@ def _resolve_embedder(alias: str | None, language: str) -> tuple[str, str]:
     """
     if alias not in _EMBEDDER_ALIASES:
         valid = sorted(k for k in _EMBEDDER_ALIASES if k is not None)
-        raise ValueError(
-            f"Unknown embedder alias {alias!r}; valid: {valid}"
-        )
+        raise ValueError(f"Unknown embedder alias {alias!r}; valid: {valid}")
     per_lang = _EMBEDDER_ALIASES[alias]
     if language in per_lang:
         return per_lang[language]
@@ -1182,7 +1188,8 @@ async def rosetta_lookup(
     min_margin: Annotated[
         float,
         Query(
-            ge=0.0, le=1.0,
+            ge=0.0,
+            le=1.0,
             description=(
                 "T5.3 calibration knob. Returns an empty neighbour list "
                 "if (top1.cosine - top2.cosine) < this threshold — i.e. "
@@ -1286,7 +1293,7 @@ async def rosetta_lookup(
         "margin": margin,
         "neighbours": [
             {"word": h.word, "language": h.language, "cosine": h.cosine}
-            for h in hits[:k]   # slice back to the requested k after filtering
+            for h in hits[:k]  # slice back to the requested k after filtering
         ],
     }
 
@@ -1296,6 +1303,7 @@ async def rosetta_lookup(
 # partition warms its cache independently on first hit.
 _VOCAB_CACHE: dict[tuple[str, str | None], tuple[float, list[str]]] = {}
 _VOCAB_TTL_SECONDS = 3600
+
 
 @app.get("/neural/rosetta/vocab", tags=["Neural"])
 @limiter.limit("60/minute")
@@ -1349,7 +1357,6 @@ async def rosetta_vocab(
 
     _VOCAB_CACHE[cache_key] = (now + _VOCAB_TTL_SECONDS, words)
     return {"words": words}
-
 
 
 @app.get("/stats/summary", tags=["Statistics"])
@@ -1822,7 +1829,10 @@ def _load_attested_jsonl() -> list[dict[str, Any]]:
     from pathlib import Path
 
     candidates = [
-        Path(__file__).resolve().parent.parent.parent.parent / "research" / "anchors" / "attested.jsonl",
+        Path(__file__).resolve().parent.parent.parent.parent
+        / "research"
+        / "anchors"
+        / "attested.jsonl",
         Path("/app/research/anchors/attested.jsonl"),
     ]
     for p in candidates:
@@ -1900,9 +1910,13 @@ async def propose_anchor(
     from datetime import datetime, timedelta, timezone
 
     since = datetime.now(tz=timezone.utc) - timedelta(days=1)
-    daily_count_stmt = select(func.count()).select_from(ProposedAnchor).where(
-        ProposedAnchor.submitter_email == payload.submitter_email,
-        ProposedAnchor.created_at >= since,
+    daily_count_stmt = (
+        select(func.count())
+        .select_from(ProposedAnchor)
+        .where(
+            ProposedAnchor.submitter_email == payload.submitter_email,
+            ProposedAnchor.created_at >= since,
+        )
     )
     daily_count = (await session.execute(daily_count_stmt)).scalar_one()
     if daily_count >= 100:
@@ -1930,9 +1944,13 @@ async def propose_anchor(
     await session.refresh(new_row)
 
     # Approximate the queue position: count pending rows older than this one.
-    queue_pos_stmt = select(func.count()).select_from(ProposedAnchor).where(
-        ProposedAnchor.status == "pending",
-        ProposedAnchor.created_at <= new_row.created_at,
+    queue_pos_stmt = (
+        select(func.count())
+        .select_from(ProposedAnchor)
+        .where(
+            ProposedAnchor.status == "pending",
+            ProposedAnchor.created_at <= new_row.created_at,
+        )
     )
     queue_pos = (await session.execute(queue_pos_stmt)).scalar_one()
 
@@ -1970,8 +1988,8 @@ async def anchors_queue(
     )
     rows = (await session.execute(stmt)).scalars().all()
 
-    total_stmt = select(func.count()).select_from(ProposedAnchor).where(
-        ProposedAnchor.status == "pending"
+    total_stmt = (
+        select(func.count()).select_from(ProposedAnchor).where(ProposedAnchor.status == "pending")
     )
     total_pending = (await session.execute(total_stmt)).scalar_one()
 
@@ -2050,9 +2068,7 @@ async def promote_anchor(
 
 @app.get("/anchors/attested", tags=["Anchors"])
 @limiter.limit("60/minute")
-async def anchors_attested(
-    request: Request, word: str | None = None
-) -> dict[str, Any]:
+async def anchors_attested(request: Request, word: str | None = None) -> dict[str, Any]:
     """Public-read attested equivalences for an Etruscan word.
 
     Sources the canonical `research/anchors/attested.jsonl` shipped in
@@ -2185,13 +2201,13 @@ _FAMILY_GRAPH_LOCK = None
 async def _get_family_graph(repo: InscriptionRepository, language: str = "etruscan") -> Any:
     """Returns a cached FamilyGraph, building it once upon first request."""
     global _FAMILY_GRAPH_CACHE, _FAMILY_GRAPH_LOCK
-    
+
     if _FAMILY_GRAPH_CACHE is not None:
         return _FAMILY_GRAPH_CACHE
-        
+
     if _FAMILY_GRAPH_LOCK is None:
         _FAMILY_GRAPH_LOCK = asyncio.Lock()
-        
+
     async with _FAMILY_GRAPH_LOCK:
         if _FAMILY_GRAPH_CACHE is None:
             _FAMILY_GRAPH_CACHE = await _build_family_graph(repo, language)
@@ -2447,6 +2463,7 @@ async def provenance_history(
         ],
     )
 
+
 @app.get("/sources", tags=["Sources"])
 @limiter.limit("60/minute")
 async def list_data_sources(request: Request, session: AsyncSession = Depends(get_session)):
@@ -2540,9 +2557,9 @@ async def _get_reranker():
 # ground truth for "what does 'archaic' mean here". If the boundaries
 # change, update both files together.
 _PERIOD_RANGES: dict[str, tuple[int, int]] = {
-    "archaic":       (-700, -500),  # noqa: E241 - lined up with siblings
-    "classical":     (-499, -300),  # noqa: E241
-    "late":          (-299,  -50),  # noqa: E241
+    "archaic": (-700, -500),  # noqa: E241 - lined up with siblings
+    "classical": (-499, -300),  # noqa: E241
+    "late": (-299, -50),  # noqa: E241
     # Orientalising overlaps the early end of archaic; keep it as a separate
     # token because Etruscan typology distinguishes them (Pallottino 1968 §3,
     # de Grummond 2014). Querying "orientalising" should return rows in
@@ -2550,7 +2567,7 @@ _PERIOD_RANGES: dict[str, tuple[int, int]] = {
     "orientalising": (-720, -580),
     # Hellenistic is the standard alias for "late" in Etruscan studies.
     # Same bounds — querying either returns the same gold set.
-    "hellenistic":   (-299,  -50),  # noqa: E241
+    "hellenistic": (-299, -50),  # noqa: E241
 }
 
 # Cross-corpus markers: when one of these tokens appears in the query, we
@@ -2559,9 +2576,9 @@ _PERIOD_RANGES: dict[str, tuple[int, int]] = {
 # the literal string in canonical text (where it never appears).
 _CORPUS_MARKERS: dict[str, str] = {
     "trismegistos": "has_trismegistos",
-    "tm":           "has_trismegistos",  # noqa: E241
-    "pleiades":     "has_pleiades",      # noqa: E241
-    "eagle":        "has_eagle",         # noqa: E241
+    "tm": "has_trismegistos",  # noqa: E241
+    "pleiades": "has_pleiades",  # noqa: E241
+    "eagle": "has_eagle",  # noqa: E241
 }
 
 
@@ -2631,7 +2648,9 @@ async def search_hybrid(
     ] = True,
     has_provenance: Annotated[
         bool | None,
-        Query(description="Restrict to inscriptions with (true) or without (false) a known findspot"),
+        Query(
+            description="Restrict to inscriptions with (true) or without (false) a known findspot"
+        ),
     ] = None,
     limit: Annotated[
         int,

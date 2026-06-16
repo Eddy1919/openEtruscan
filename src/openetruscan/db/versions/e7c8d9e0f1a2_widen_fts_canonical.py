@@ -88,9 +88,7 @@ def upgrade() -> None:
         GENERATED ALWAYS AS ({WIDENED_FTS_EXPR}) STORED
         """
     )
-    op.execute(
-        "CREATE INDEX idx_fts_canonical ON inscriptions USING GIN (fts_canonical)"
-    )
+    op.execute("CREATE INDEX idx_fts_canonical ON inscriptions USING GIN (fts_canonical)")
 
 
 def downgrade() -> None:
@@ -104,6 +102,4 @@ def downgrade() -> None:
         GENERATED ALWAYS AS (to_tsvector('simple', coalesce(canonical, ''))) STORED
         """
     )
-    op.execute(
-        "CREATE INDEX idx_fts_canonical ON inscriptions USING GIN (fts_canonical)"
-    )
+    op.execute("CREATE INDEX idx_fts_canonical ON inscriptions USING GIN (fts_canonical)")

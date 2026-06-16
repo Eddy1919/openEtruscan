@@ -140,12 +140,8 @@ def evaluate(api_url: str) -> dict[str, Any]:
         }
         for cat, scores in per_category.items()
     }
-    macro = (
-        statistics.fmean(c["mean"] for c in cat_summary.values()) if cat_summary else 0.0
-    )
-    micro = (
-        statistics.fmean(p["ndcg"] for p in per_query) if per_query else 0.0
-    )
+    macro = statistics.fmean(c["mean"] for c in cat_summary.values()) if cat_summary else 0.0
+    micro = statistics.fmean(p["ndcg"] for p in per_query) if per_query else 0.0
 
     return {
         "per_query": per_query,
@@ -200,9 +196,7 @@ def _evaluate_gates(report: dict[str, Any], gate_spec: str) -> tuple[bool, list[
             failures.append(f"unknown gate metric {name!r}")
             continue
         if actual < threshold:
-            failures.append(
-                f"{name}={actual:.4f} below threshold {threshold:.2f}"
-            )
+            failures.append(f"{name}={actual:.4f} below threshold {threshold:.2f}")
     return (not failures), failures
 
 

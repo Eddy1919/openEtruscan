@@ -3,6 +3,7 @@
 All metrics consume a sequence of (gold_label, predicted_label) tuples. They
 return floats so the bootstrap harness can wrap them directly.
 """
+
 from __future__ import annotations
 
 from collections import Counter

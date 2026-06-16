@@ -66,6 +66,7 @@ VOID_TEMPLATE = """@prefix : <{base}/#> .
     foaf:homepage <{base}> .
 """
 
+
 def generate_void_ttl(
     output_path: str | Path,
     entities_count: int = 11361,
@@ -73,7 +74,7 @@ def generate_void_ttl(
 ) -> None:
     """
     Generate the void.ttl file for the corpus.
-    
+
     Args:
         output_path: Path to save the .ttl file.
         entities_count: Number of inscriptions in the corpus.
@@ -84,11 +85,12 @@ def generate_void_ttl(
         license=CC_BY_4_0,
         date=datetime.now().strftime("%Y-%m-%d"),
         entities_count=entities_count,
-        triples_estimate=triples_estimate
+        triples_estimate=triples_estimate,
     )
-    
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
+
 
 if __name__ == "__main__":
     # Standard build location: root of the project for web exposure

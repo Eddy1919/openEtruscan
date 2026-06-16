@@ -9,6 +9,7 @@ from openetruscan.core.corpus import Corpus
 
 logger = logging.getLogger("lineage_bridge")
 
+
 class LineageBridge:
     """
     Engine to identify genetic signatures for Etruscan clans and analyze regional distributions.
@@ -19,7 +20,7 @@ class LineageBridge:
 
     def get_clan_lineage_signature(self, clan_name: str, radius_km: float = 10.0) -> dict[str, Any]:
         """
-        Identify "Lineage Signatures": Search for consistent Y-haplogroups associated 
+        Identify "Lineage Signatures": Search for consistent Y-haplogroups associated
         with epigraphic clan names by looking at genetic samples near relevant inscriptions.
         """
         query = """
@@ -40,12 +41,12 @@ class LineageBridge:
             GROUP BY g.y_haplogroup
             ORDER BY c DESC
         """
-        
+
         signature = {"clan": clan_name, "y_haplogroups": {}}
         with self.corpus._conn.cursor() as cur:
             cur.execute(query, (f"%{clan_name}%", radius_km))
             signature["y_haplogroups"] = {row[0]: row[1] for row in cur.fetchall()}
-            
+
         return signature
 
     def get_regional_distribution(self, lat_threshold: float = 42.8) -> dict[str, Any]:
@@ -62,13 +63,13 @@ class LineageBridge:
             GROUP BY region, y_haplogroup
             ORDER BY region, c DESC
         """
-        
+
         stats = {"Northern": {}, "Southern": {}}
         with self.corpus._conn.cursor() as cur:
             cur.execute(query, (lat_threshold,))
             for row in cur.fetchall():
                 stats[row[0]][row[1]] = row[2]
-                
+
         return stats
 
     def contrast_coastal_vs_inland(self, coastal_buffer_km: float = 20.0) -> dict[str, Any]:
@@ -78,8 +79,16 @@ class LineageBridge:
         or check specific coastal findspots.
         """
         # Heuristic list of major coastal cities
-        coastal_sites = ("Tarquinia", "Cerveteri", "Vulci", "Populonia", "Vetulonia", "Gravisca", "Pyrgi")
-        
+        coastal_sites = (
+            "Tarquinia",
+            "Cerveteri",
+            "Vulci",
+            "Populonia",
+            "Vetulonia",
+            "Gravisca",
+            "Pyrgi",
+        )
+
         query = """
             SELECT 
                 CASE 
@@ -92,14 +101,14 @@ class LineageBridge:
             GROUP BY location_type, mt_haplogroup
             ORDER BY location_type, c DESC
         """
-        
+
         stats = {"Coastal": {}, "Inland": {}}
         # Convert tuple to PostgreSQL array-like list for ILIKE ANY
         patterns = [f"%{s}%" for s in coastal_sites]
-        
+
         with self.corpus._conn.cursor() as cur:
             cur.execute(query, (patterns,))
             for row in cur.fetchall():
                 stats[row[0]][row[1]] = row[2]
-                
+
         return stats

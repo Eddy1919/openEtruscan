@@ -24,6 +24,7 @@ brackets `[]<>{}()` and trailing punctuation. Etruscan canonical
 transliteration is whitespace-tokenized in the corpus, so this matches
 exactly.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,14 +70,22 @@ def iter_corpus(path: Path) -> Iterator[tuple[str, str]]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--eval", type=Path, required=True,
-                    help="Rosetta-eval-v2 frozen test JSONL.")
-    ap.add_argument("--corpus", type=Path, required=True,
-                    help="Cleaned-corpus CSV (training data source).")
-    ap.add_argument("--out-exclusions", type=Path, required=True,
-                    help="JSONL of inscriptions to exclude from training.")
-    ap.add_argument("--out-report", type=Path, required=True,
-                    help="JSON report: contamination counts per lemma.")
+    ap.add_argument("--eval", type=Path, required=True, help="Rosetta-eval-v2 frozen test JSONL.")
+    ap.add_argument(
+        "--corpus", type=Path, required=True, help="Cleaned-corpus CSV (training data source)."
+    )
+    ap.add_argument(
+        "--out-exclusions",
+        type=Path,
+        required=True,
+        help="JSONL of inscriptions to exclude from training.",
+    )
+    ap.add_argument(
+        "--out-report",
+        type=Path,
+        required=True,
+        help="JSON report: contamination counts per lemma.",
+    )
     args = ap.parse_args(argv)
 
     pairs = list(iter_pairs(args.eval))
@@ -104,10 +113,16 @@ def main(argv: list[str] | None = None) -> int:
     args.out_exclusions.parent.mkdir(parents=True, exist_ok=True)
     with args.out_exclusions.open("w") as f:
         for insc_id in sorted(inscription_to_lemmas):
-            f.write(json.dumps({
-                "id": insc_id,
-                "contaminating_lemmas": sorted(inscription_to_lemmas[insc_id]),
-            }, ensure_ascii=False) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "id": insc_id,
+                        "contaminating_lemmas": sorted(inscription_to_lemmas[insc_id]),
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
 
     report = {
         "n_eval_pairs": len(pairs),
@@ -119,7 +134,9 @@ def main(argv: list[str] | None = None) -> int:
         },
         "lemmas_with_zero_corpus_hits": sorted(eval_lemmas - set(contamination)),
     }
-    args.out_report.write_text(json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+    args.out_report.write_text(
+        json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    )
 
     print(f"Eval lemmas:          {len(eval_lemmas)}", file=sys.stderr)
     print(f"Corpus rows:          {n_corpus}", file=sys.stderr)
@@ -129,8 +146,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  ({pct:.1f}% of corpus)", file=sys.stderr)
 
     if not contamination:
-        print("WARN: zero contamination found. Verify the eval file is non-empty",
-              "and the corpus path is correct.", file=sys.stderr)
+        print(
+            "WARN: zero contamination found. Verify the eval file is non-empty",
+            "and the corpus path is correct.",
+            file=sys.stderr,
+        )
     return 0
 
 

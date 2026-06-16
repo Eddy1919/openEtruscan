@@ -63,16 +63,14 @@ def _ensure_hf_stack() -> None:
     """
     log = logging.getLogger("embed_lat_xlmr_v4.bootstrap")
     cmds = [
-        ["pip", "install", "--quiet",
-         "transformers>=4.40,<4.47", "tokenizers>=0.19,<0.21"],
+        ["pip", "install", "--quiet", "transformers>=4.40,<4.47", "tokenizers>=0.19,<0.21"],
         ["pip", "uninstall", "-y", "torch_xla"],
     ]
     for cmd in cmds:
         try:
             subprocess.run(cmd, check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
-            log.warning("bootstrap %s exit=%d (often benign for pip uninstall)",
-                        cmd, e.returncode)
+            log.warning("bootstrap %s exit=%d (often benign for pip uninstall)", cmd, e.returncode)
 
 
 def _stream_lat_words(gcs_uri: str, max_tokens: int | None, log: logging.Logger) -> list[str]:
@@ -96,8 +94,12 @@ def _stream_lat_words(gcs_uri: str, max_tokens: int | None, log: logging.Logger)
     for raw in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         n_rows += 1
         if n_rows % 100_000 == 0:
-            log.info("  scanned %d rows in %.0fs, lat words so far: %d",
-                     n_rows, time.time() - t0, len(words))
+            log.info(
+                "  scanned %d rows in %.0fs, lat words so far: %d",
+                n_rows,
+                time.time() - t0,
+                len(words),
+            )
         try:
             row = json.loads(raw)
         except json.JSONDecodeError:
@@ -112,8 +114,12 @@ def _stream_lat_words(gcs_uri: str, max_tokens: int | None, log: logging.Logger)
         if max_tokens and len(words) >= max_tokens:
             break
     proc.wait()
-    log.info("Final lat vocab size: %d (after scanning %d rows in %.0fs)",
-             len(words), n_rows, time.time() - t0)
+    log.info(
+        "Final lat vocab size: %d (after scanning %d rows in %.0fs)",
+        len(words),
+        n_rows,
+        time.time() - t0,
+    )
     return words
 
 
@@ -142,8 +148,11 @@ def _embed_and_write(words: list[str], output_path: Path, log: logging.Logger) -
         for i in range(0, len(words), BATCH):
             batch = words[i : i + BATCH]
             enc = tok(
-                batch, return_tensors="pt", padding=True,
-                truncation=True, max_length=16,
+                batch,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=16,
             ).to(device)
             with torch.no_grad():
                 out = model(**enc).last_hidden_state
@@ -152,10 +161,13 @@ def _embed_and_write(words: list[str], output_path: Path, log: logging.Logger) -
             pooled = F.normalize(pooled, p=2, dim=1)
             vecs = pooled.cpu().tolist()
             for w, v in zip(batch, vecs, strict=True):
-                f.write(json.dumps(
-                    {"language": "lat", "word": w, "vector": v},
-                    ensure_ascii=False,
-                ) + "\n")
+                f.write(
+                    json.dumps(
+                        {"language": "lat", "word": w, "vector": v},
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
                 n_total += 1
             if (i // BATCH) % 50 == 0:
                 elapsed = time.time() - t0
@@ -172,24 +184,25 @@ def main() -> int:
         help="GCS URI of the JSONL containing the Latin vocab to re-embed.",
     )
     parser.add_argument(
-        "--output_path", required=True,
+        "--output_path",
+        required=True,
         help="Where to write the new JSONL. Vertex mounts gs:// as /gcs/<bucket>/...",
     )
     parser.add_argument(
-        "--max_tokens", type=int, default=None,
+        "--max_tokens",
+        type=int,
+        default=None,
         help="Optional cap (for debugging).",
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     log = logging.getLogger("embed_lat_xlmr_v4")
 
     _ensure_hf_stack()
     words = _stream_lat_words(args.source_uri, args.max_tokens, log)
     if not words:
-        log.error("No Latin words found in %s — refusing to write empty JSONL.",
-                  args.source_uri)
+        log.error("No Latin words found in %s — refusing to write empty JSONL.", args.source_uri)
         return 1
     output_path = Path(args.output_path)
     n = _embed_and_write(words, output_path, log)

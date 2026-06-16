@@ -54,9 +54,7 @@ def _ensure_hf_stack() -> None:
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 def _normalise_etruscan_dividers(text: str) -> str:
@@ -85,7 +83,9 @@ def _read_corpus(path: Path) -> list[str]:
             if not line:
                 continue
             row = json.loads(line)
-            text = (row.get("canonical_clean") or row.get("raw_text") or row.get("text") or "").strip()
+            text = (
+                row.get("canonical_clean") or row.get("raw_text") or row.get("text") or ""
+            ).strip()
             if not text:
                 continue
             text = _normalise_etruscan_dividers(text)
@@ -166,9 +166,7 @@ def main() -> int:
     dataset = Dataset.from_dict({"text": inscriptions})
     dataset = dataset.map(_tokenise, batched=True, remove_columns=["text"])
 
-    collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=True, mlm_probability=0.15
-    )
+    collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 
     # /tmp keeps the trainer's intermediate files off the GCS fuse mount —
     # GCS doesn't support fast random writes and the trainer would thrash.

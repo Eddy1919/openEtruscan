@@ -13,6 +13,7 @@ Like classify_jury, this is the orchestrator. The eval metrics
 (top-1 char accuracy, hallucination rate, etc.) live in
 `eval/lacuna_metrics.py`.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from classify_jury import PROVIDER_REGISTRY  # noqa: E402
+
 
 def _resolve_codebook(language: str) -> Path:
     return Path(__file__).resolve().parent.parent / "codebooks" / language / "lacunae.md"
@@ -131,14 +133,16 @@ def parse_response(insc_id: str, raw: str, width: int, masked: str) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--pool", type=Path, required=True,
-                    help="Mined candidate pool from lacuna_mine.py")
-    ap.add_argument("--out", type=Path, required=True,
-                    help="Append-mode JSONL of jury outputs.")
-    ap.add_argument("--providers", nargs="+",
-                    default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"])
-    ap.add_argument("--language", default="etr",
-                    help="ISO-639-3 code selecting which lacunae codebook to use.")
+    ap.add_argument(
+        "--pool", type=Path, required=True, help="Mined candidate pool from lacuna_mine.py"
+    )
+    ap.add_argument("--out", type=Path, required=True, help="Append-mode JSONL of jury outputs.")
+    ap.add_argument(
+        "--providers", nargs="+", default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"]
+    )
+    ap.add_argument(
+        "--language", default="etr", help="ISO-639-3 code selecting which lacunae codebook to use."
+    )
     ap.add_argument("--max-rows", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true")
@@ -192,8 +196,7 @@ def main(argv: list[str] | None = None) -> int:
                 try:
                     raw = provider.invoke(SYSTEM_PROMPT, user_prompt)
                 except Exception as e:  # noqa: BLE001
-                    print(f"  api_error [{provider_name} {row['id']}]: {e}",
-                          file=sys.stderr)
+                    print(f"  api_error [{provider_name} {row['id']}]: {e}", file=sys.stderr)
                     time.sleep(args.sleep)
                     continue
                 parsed = parse_response(row["id"], raw, row["width"], masked)
@@ -208,14 +211,15 @@ def main(argv: list[str] | None = None) -> int:
                 sink.flush()
                 completed += 1
                 if completed % 25 == 0:
-                    print(f"  progress: {completed} (hallucinated so far: {halluc_count})",
-                          file=sys.stderr)
+                    print(
+                        f"  progress: {completed} (hallucinated so far: {halluc_count})",
+                        file=sys.stderr,
+                    )
                 time.sleep(args.sleep)
     finally:
         sink.close()
 
-    print(f"Done. completed={completed} hallucinated={halluc_count}",
-          file=sys.stderr)
+    print(f"Done. completed={completed} hallucinated={halluc_count}", file=sys.stderr)
     return 0
 
 

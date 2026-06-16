@@ -25,14 +25,16 @@ import time
 from pathlib import Path
 
 import requests
+
 try:
     from dotenv import load_dotenv
+
     load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 except ImportError:
     # Manual fallback for environments without python-dotenv
     env_path = Path(__file__).resolve().parent.parent.parent / ".env"
     if env_path.exists():
-        with open(env_path, "r") as f:
+        with open(env_path) as f:
             for line in f:
                 if "=" in line and not line.startswith("#"):
                     k, v = line.strip().split("=", 1)
@@ -253,7 +255,7 @@ def main():
         rows = cur.fetchall()
 
     if args.limit > 0:
-        rows = rows[:args.limit]
+        rows = rows[: args.limit]
 
     total = len(rows)
     log.info("Found %d inscriptions to embed", total)
@@ -294,14 +296,20 @@ def main():
         with conn.cursor() as cur:
             update_data = []
             for i, row in enumerate(batch):
-                if text_vecs[i] is not None or context_vecs[i] is not None or combined_vecs[i] is not None:
-                    update_data.append((
-                        row["id"],
-                        vector_to_pg(text_vecs[i]),
-                        vector_to_pg(context_vecs[i]),
-                        vector_to_pg(combined_vecs[i])
-                    ))
-            
+                if (
+                    text_vecs[i] is not None
+                    or context_vecs[i] is not None
+                    or combined_vecs[i] is not None
+                ):
+                    update_data.append(
+                        (
+                            row["id"],
+                            vector_to_pg(text_vecs[i]),
+                            vector_to_pg(context_vecs[i]),
+                            vector_to_pg(combined_vecs[i]),
+                        )
+                    )
+
             if update_data:
                 sql = """
                     UPDATE inscriptions 

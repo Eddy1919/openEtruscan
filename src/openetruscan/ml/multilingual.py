@@ -88,10 +88,10 @@ class LanguageRecord:
 
     code: str
     name: str
-    tier: int               # 1 = best, 3 = undeciphered or sub-viable
+    tier: int  # 1 = best, 3 = undeciphered or sub-viable
     deciphered: bool
     alignable: bool
-    corpus_status: str      # one of: pretrained_in_encoder, ingest_pending, undeciphered, missing
+    corpus_status: str  # one of: pretrained_in_encoder, ingest_pending, undeciphered, missing
     notes: str = ""
     expected_dim: int = EMBEDDING_DIM
     typical_source: str = ""
@@ -101,105 +101,148 @@ class LanguageRecord:
 LANGUAGE_TIERS: dict[str, LanguageRecord] = {
     # ── Tier 1: deciphered, well-covered by the encoder's pretraining ──
     "lat": LanguageRecord(
-        code="lat", name="Latin", tier=1, deciphered=True, alignable=True,
+        code="lat",
+        name="Latin",
+        tier=1,
+        deciphered=True,
+        alignable=True,
         corpus_status="pretrained_in_encoder",
         typical_source="XLM-RoBERTa multilingual pretraining (CC + Wikipedia Latin)",
         notes="Latin is one of XLM-R's 100 pretraining languages, with "
-              "substantial Common Crawl + Wikipedia coverage. Vectors come "
-              "directly from the encoder, no separate model needed.",
+        "substantial Common Crawl + Wikipedia coverage. Vectors come "
+        "directly from the encoder, no separate model needed.",
     ),
     "grc": LanguageRecord(
-        code="grc", name="Ancient Greek", tier=1, deciphered=True, alignable=True,
+        code="grc",
+        name="Ancient Greek",
+        tier=1,
+        deciphered=True,
+        alignable=True,
         corpus_status="pretrained_in_encoder",
         typical_source="XLM-R multilingual pretraining (with Greek-BERT fallback for hard inputs)",
         notes="Ancient Greek shares vocabulary + syntax with modern Greek "
-              "well enough that XLM-R's `el` weights transfer. For domain-"
-              "specific work consider Greek-BERT (Koutsikakis et al 2020) "
-              "as an alternative encoder.",
+        "well enough that XLM-R's `el` weights transfer. For domain-"
+        "specific work consider Greek-BERT (Koutsikakis et al 2020) "
+        "as an alternative encoder.",
     ),
     # ── Tier 2: deciphered, supported via LoRA fine-tuning or proxy ────
     "ett": LanguageRecord(
-        code="ett", name="Etruscan", tier=2, deciphered=True, alignable=True,
+        code="ett",
+        name="Etruscan",
+        tier=2,
+        deciphered=True,
+        alignable=True,
         corpus_status="ingest_pending",
         typical_source="XLM-R + LoRA adapter fine-tuned on this corpus",
         notes="The anchor language for the Rosetta initiative. The LoRA "
-              "adapter is fine-tuned on the 6,633-inscription corpus so "
-              "Etruscan vectors live in the same multilingual space as "
-              "the languages already covered by XLM-R pretraining.",
+        "adapter is fine-tuned on the 6,633-inscription corpus so "
+        "Etruscan vectors live in the same multilingual space as "
+        "the languages already covered by XLM-R pretraining.",
     ),
     "phn": LanguageRecord(
-        code="phn", name="Phoenician", tier=2, deciphered=True, alignable=True,
+        code="phn",
+        name="Phoenician",
+        tier=2,
+        deciphered=True,
+        alignable=True,
         corpus_status="ingest_pending",
         typical_source="XLM-R + LoRA fine-tune on KAI corpus",
         notes="~50k tokens (KAI digitisation). LoRA fine-tune the same way "
-              "we do Etruscan; Latin-via-Greek-via-Phoenician transfer "
-              "should be measurable.",
+        "we do Etruscan; Latin-via-Greek-via-Phoenician transfer "
+        "should be measurable.",
     ),
     "osc": LanguageRecord(
-        code="osc", name="Oscan", tier=2, deciphered=True, alignable=True,
+        code="osc",
+        name="Oscan",
+        tier=2,
+        deciphered=True,
+        alignable=True,
         corpus_status="ingest_pending",
         typical_source="XLM-R + LoRA fine-tune on ImagInes Italicae",
         notes="~5k tokens. Tight Italic ties to Latin make this an easy "
-              "transfer once the corpus is ingested.",
+        "transfer once the corpus is ingested.",
     ),
     "cop": LanguageRecord(
-        code="cop", name="Coptic", tier=2, deciphered=True, alignable=True,
+        code="cop",
+        name="Coptic",
+        tier=2,
+        deciphered=True,
+        alignable=True,
         corpus_status="ingest_pending",
         typical_source="XLM-R + LoRA fine-tune (or use Coptic-SCRIPTORIUM's encoder directly)",
         notes="Latest stage of Egyptian. Older stages flagged separately as `egy`.",
     ),
     "egy": LanguageRecord(
-        code="egy", name="Egyptian (Old/Middle/Late)", tier=2, deciphered=True,
-        alignable=True, corpus_status="missing",
+        code="egy",
+        name="Egyptian (Old/Middle/Late)",
+        tier=2,
+        deciphered=True,
+        alignable=True,
+        corpus_status="missing",
         notes="Hieroglyphic. Substantial specialist work (Manuel de Codage "
-              "transliteration, register split). Not on the immediate path.",
+        "transliteration, register split). Not on the immediate path.",
     ),
     "eus": LanguageRecord(
-        code="eus", name="Basque (modern, proxy for Aquitanian)", tier=2,
-        deciphered=True, alignable=True,
+        code="eus",
+        name="Basque (modern, proxy for Aquitanian)",
+        tier=2,
+        deciphered=True,
+        alignable=True,
         corpus_status="pretrained_in_encoder",
         typical_source="XLM-R multilingual pretraining (modern Basque)",
         notes="Modern Basque is the closest living relative of pre-Roman "
-              "Aquitanian. Cross-language results MUST be labelled "
-              "MODERN-BASQUE-VIA-PROXY, never claim direct Aquitanian "
-              "equivalence.",
+        "Aquitanian. Cross-language results MUST be labelled "
+        "MODERN-BASQUE-VIA-PROXY, never claim direct Aquitanian "
+        "equivalence.",
     ),
     # ── Tier 3: structural-only or non-viable ──────────────────────────
     "lin_a": LanguageRecord(
-        code="lin_a", name="Linear A / Minoan", tier=3,
-        deciphered=False, alignable=False,
+        code="lin_a",
+        name="Linear A / Minoan",
+        tier=3,
+        deciphered=False,
+        alignable=False,
         structural_embedding_viable=True,
         corpus_status="ingest_pending",
         typical_source="custom encoder fine-tuned from random init on Younger's database",
         notes="~1500 fragments. Enough sign-sequence data to learn "
-              "structural neighbourhoods (which sign clusters appear in "
-              "similar contexts). Cross-language alignment to deciphered "
-              "languages is NOT supported — no semantic ground truth.",
+        "structural neighbourhoods (which sign clusters appear in "
+        "similar contexts). Cross-language alignment to deciphered "
+        "languages is NOT supported — no semantic ground truth.",
     ),
     "xnu": LanguageRecord(
-        code="xnu", name="Nuragic / pre-Roman Sardic", tier=3,
-        deciphered=False, alignable=False,
+        code="xnu",
+        name="Nuragic / pre-Roman Sardic",
+        tier=3,
+        deciphered=False,
+        alignable=False,
         structural_embedding_viable=False,
         corpus_status="undeciphered",
         notes="~30-50 short inscriptions. Below viability threshold even "
-              "for structural embeddings.",
+        "for structural embeddings.",
     ),
     "xil": LanguageRecord(
-        code="xil", name="Illyrian", tier=3,
-        deciphered=False, alignable=False,
+        code="xil",
+        name="Illyrian",
+        tier=3,
+        deciphered=False,
+        alignable=False,
         structural_embedding_viable=False,
         corpus_status="missing",
         notes="Onomastic-only — personal names attested in Greek/Latin "
-              "sources, no running text for the encoder to learn from.",
+        "sources, no running text for the encoder to learn from.",
     ),
     "xfa": LanguageRecord(
-        code="xfa", name="Faliscan", tier=3,
-        deciphered=True, alignable=False,
+        code="xfa",
+        name="Faliscan",
+        tier=3,
+        deciphered=True,
+        alignable=False,
         structural_embedding_viable=False,
         corpus_status="missing",
         notes="Deciphered (Italic, sister of Latin) but corpus is ~300 "
-              "inscriptions / sub-1k tokens. Move to tier 2 + alignable "
-              "if a larger digitisation lands.",
+        "inscriptions / sub-1k tokens. Move to tier 2 + alignable "
+        "if a larger digitisation lands.",
     ),
 }
 
@@ -245,9 +288,7 @@ async def populate_language(
 
     record = LANGUAGE_TIERS.get(language)
     if record is None:
-        raise ValueError(
-            f"Unknown language code {language!r}. Add it to LANGUAGE_TIERS first."
-        )
+        raise ValueError(f"Unknown language code {language!r}. Add it to LANGUAGE_TIERS first.")
     if not record.structural_embedding_viable:
         raise ValueError(
             f"Language {language!r} is registered as structurally non-viable. "
@@ -276,7 +317,9 @@ async def populate_language(
     # Compute embeddings in one batch (Embedder handles internal batching).
     logger.info(
         "populate_language(%r): embedding %d words via %s",
-        language, len(words), info.model_id,
+        language,
+        len(words),
+        info.model_id,
     )
     vectors = embedder.embed_words(words)
 
@@ -338,7 +381,9 @@ async def populate_language(
 
     logger.info(
         "populate_language(%r): inserted %d rows (skipped %d zero-norm)",
-        language, len(rows), n_skipped_empty,
+        language,
+        len(rows),
+        n_skipped_empty,
     )
     return PopulateResult(
         language=language,
@@ -414,19 +459,11 @@ async def find_cross_language_neighbours(
     tgt = LANGUAGE_TIERS.get(target_lang)
     if src is None or tgt is None:
         raise ValueError(
-            f"Unknown language code(s): "
-            f"source={source_lang!r}, target={target_lang!r}"
+            f"Unknown language code(s): " f"source={source_lang!r}, target={target_lang!r}"
         )
     if not src.alignable or not tgt.alignable:
-        unaligned = [
-            f"{lr.code} ({lr.notes})"
-            for lr in (src, tgt)
-            if not lr.alignable
-        ]
-        raise ValueError(
-            "Cross-language semantic neighbours refused: "
-            + "; ".join(unaligned)
-        )
+        unaligned = [f"{lr.code} ({lr.notes})" for lr in (src, tgt) if not lr.alignable]
+        raise ValueError("Cross-language semantic neighbours refused: " + "; ".join(unaligned))
 
     word = unicodedata.normalize("NFC", word).lower()
     base_embedder = embedder if embedder is not None else DEFAULT_EMBEDDER
@@ -476,6 +513,5 @@ async def find_cross_language_neighbours(
         },
     )
     return [
-        CrossLanguageHit(word=w, cosine=float(c), language=target_lang)
-        for w, c in target.all()
+        CrossLanguageHit(word=w, cosine=float(c), language=target_lang) for w, c in target.all()
     ]

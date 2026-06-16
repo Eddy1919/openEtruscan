@@ -135,9 +135,7 @@ class TestXLMREmbedderRealModel:
     def embedder(self):
         """Skip the entire class if [transformers] extras aren't here."""
         pytest.importorskip("torch", reason="needs [transformers] extra")
-        pytest.importorskip(
-            "transformers", reason="needs [transformers] extra"
-        )
+        pytest.importorskip("transformers", reason="needs [transformers] extra")
         from openetruscan.ml.embeddings import XLMREmbedder
 
         return XLMREmbedder(model_id="xlm-roberta-base", batch_size=8)
@@ -168,9 +166,7 @@ class TestXLMREmbedderRealModel:
         gives the comparison enough structure that the inequality
         usually holds. Treated as a sanity check, not a quality bar.
         """
-        v_clan, v_filius, v_unrelated = embedder.embed_words(
-            ["clan", "filius", "platform"]
-        )
+        v_clan, v_filius, v_unrelated = embedder.embed_words(["clan", "filius", "platform"])
         sim_pair = float(v_clan @ v_filius)
         sim_unrelated = float(v_clan @ v_unrelated)
         # If the inequality flips, log both sims so the failure message
