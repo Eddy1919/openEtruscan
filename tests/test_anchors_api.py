@@ -16,7 +16,13 @@ async def test_anchors_attested_returns_canonical_set(client):
     assert isinstance(body["items"], list)
     if body["items"]:
         first = body["items"][0]
-        for key in ("etruscan_word", "equivalent", "equivalent_language", "evidence_quote", "source"):
+        for key in (
+            "etruscan_word",
+            "equivalent",
+            "equivalent_language",
+            "evidence_quote",
+            "source",
+        ):
             assert key in first
 
 
@@ -33,7 +39,9 @@ async def test_anchors_attested_filters_by_word(client):
 
 @pytest.mark.asyncio
 async def test_anchors_attested_word_not_found_returns_empty(client):
-    response = await client.get("/anchors/attested", params={"word": "totally-not-an-etruscan-word"})
+    response = await client.get(
+        "/anchors/attested", params={"word": "totally-not-an-etruscan-word"}
+    )
     assert response.status_code == 200
     assert response.json() == {"items": [], "count": 0}
 

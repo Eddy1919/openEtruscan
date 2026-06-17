@@ -141,6 +141,7 @@ def _query_neighbours(
 
 _VOCAB_CACHE: dict[tuple[str, str | None], list[str]] = {}
 
+
 def _get_vocab(api_url: str, lang: str, embedder: str | None = None) -> list[str]:
     """Fetch the vocabulary for one (language, embedder partition).
 
@@ -156,11 +157,13 @@ def _get_vocab(api_url: str, lang: str, embedder: str | None = None) -> list[str
             params["embedder"] = embedder
         resp = httpx.get(
             f"{api_url.rstrip('/')}/neural/rosetta/vocab",
-            params=params, timeout=30.0,
+            params=params,
+            timeout=30.0,
         )
         resp.raise_for_status()
         _VOCAB_CACHE[cache_key] = resp.json().get("words", [])
     return _VOCAB_CACHE[cache_key]
+
 
 def _query_neighbours_levenshtein(
     api_url: str,
@@ -177,10 +180,10 @@ def _query_neighbours_levenshtein(
     except Exception as exc:
         print(f"  SKIP  {word!r}: {exc}", file=sys.stderr)
         return None
-        
+
     if not vocab:
         return []
-        
+
     def dist(v: str) -> int:
         m, n = len(word), len(v)
         dp = list(range(n + 1))
@@ -195,10 +198,10 @@ def _query_neighbours_levenshtein(
                     dp[j] = 1 + min(dp[j], dp[j - 1], prev)
                 prev = temp
         return dp[n]
-        
+
     scored = [(dist(v), v) for v in vocab]
     scored.sort()
-    
+
     out = []
     for distance, v in scored[:k]:
         max_len = max(len(word), len(v))
@@ -209,11 +212,11 @@ def _query_neighbours_levenshtein(
 
 def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[str, Any]:
     """Compute the analytical expected precision@k under uniform random retrieval.
-    
-    For strict-lexical precision@k, the expected chance of finding the single expected 
+
+    For strict-lexical precision@k, the expected chance of finding the single expected
     target lemma in a random sample of k items from V items is simply k / V.
-    
-    For semantic-field precision@k, the expected chance of finding AT LEAST ONE 
+
+    For semantic-field precision@k, the expected chance of finding AT LEAST ONE
     member of the semantic field in a random sample of k items is:
     1 - (chance of finding ZERO members)
     = 1 - C(V-F, k) / C(V, k)
@@ -221,7 +224,7 @@ def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[s
     """
     p_at_k: dict[int, float] = {}
     p_at_k_field: dict[int, float] = {}
-    
+
     try:
         vocab_size = len(_get_vocab(api_url, "lat"))
     except Exception as exc:
@@ -233,15 +236,15 @@ def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[s
             p_at_k[k] = 0.0
             p_at_k_field[k] = 0.0
         return {"precision_at_k": p_at_k, "precision_at_k_semantic_field": p_at_k_field}
-        
+
     for k in DEFAULT_K_VALUES:
         strict_sum = 0.0
         field_sum = 0.0
-        
+
         for pair in eval_pairs:
             # Strict-lexical: exactly 1 target lemma
             strict_sum += min(1.0, k / vocab_size)
-            
+
             # Semantic-field: F target lemmas
             F = len(LATIN_SEMANTIC_FIELDS.get(pair.category, set()))
             if vocab_size <= F or vocab_size < k:
@@ -251,10 +254,10 @@ def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[s
             else:
                 chance_zero = math.comb(vocab_size - F, k) / math.comb(vocab_size, k)
                 field_sum += 1.0 - chance_zero
-                
+
         p_at_k[k] = strict_sum / len(eval_pairs)
         p_at_k_field[k] = field_sum / len(eval_pairs)
-        
+
     return {
         "precision_at_k": p_at_k,
         "precision_at_k_semantic_field": p_at_k_field,
@@ -315,11 +318,21 @@ def evaluate(
     for pair in pairs:
         if baseline == "levenshtein":
             neighbours = _query_neighbours_levenshtein(
-                api_url, pair.etr, "ett", "lat", fetch_k, embedder=embedder,
+                api_url,
+                pair.etr,
+                "ett",
+                "lat",
+                fetch_k,
+                embedder=embedder,
             )
         else:
             neighbours = _query_neighbours(
-                api_url, pair.etr, "ett", "lat", fetch_k, embedder=embedder,
+                api_url,
+                pair.etr,
+                "ett",
+                "lat",
+                fetch_k,
+                embedder=embedder,
             )
         if neighbours is None:
             n_failed += 1
@@ -339,15 +352,16 @@ def evaluate(
         # means the bi-encoder is confident in its top choice; a tight
         # cluster (small margin) is anisotropy / no clear winner.
         # Computed BEFORE rerank for the same reason as top1_cosine.
-        pre_rerank_margin = (
-            neighbours[0][1] - neighbours[1][1]
-            if len(neighbours) >= 2 else None
-        )
+        pre_rerank_margin = neighbours[0][1] - neighbours[1][1] if len(neighbours) >= 2 else None
         if rerank:
             try:
                 from rerank import rerank_candidates  # lazy import
+
                 neighbours = rerank_candidates(
-                    pair.etr, neighbours, model_name=rerank, top_k=k_max,
+                    pair.etr,
+                    neighbours,
+                    model_name=rerank,
+                    top_k=k_max,
                 )
             except Exception as exc:  # noqa: BLE001 — surface the import/load failure
                 print(f"  RERANK FAIL  {pair.etr!r}: {exc}", file=sys.stderr)
@@ -367,8 +381,11 @@ def evaluate(
         # the query into the right semantic neighbourhood, even if it picked
         # the wrong specific lemma".
         field_hit_k = next(
-            (rank + 1 for rank, n in enumerate(top_words)
-             if n.lower() in LATIN_SEMANTIC_FIELDS.get(pair.category, set())),
+            (
+                rank + 1
+                for rank, n in enumerate(top_words)
+                if n.lower() in LATIN_SEMANTIC_FIELDS.get(pair.category, set())
+            ),
             None,
         )
         per_pair.append(
@@ -377,11 +394,11 @@ def evaluate(
                 "expected_lat": pair.lat,
                 "category": pair.category,
                 "confidence": pair.confidence,
-                "rank_of_expected": hit_k,                  # strict-lexical
-                "rank_of_first_field_match": field_hit_k,   # semantic-field
+                "rank_of_expected": hit_k,  # strict-lexical
+                "rank_of_first_field_match": field_hit_k,  # semantic-field
                 "top_predictions": top_words,
                 "top1_cosine": top1_cosine,
-                "top1_margin": top1_margin,                 # T5.2 calibration signal
+                "top1_margin": top1_margin,  # T5.2 calibration signal
             }
         )
         if pace:
@@ -395,8 +412,7 @@ def evaluate(
             p_at_k[k] = 0.0
             continue
         hits = sum(
-            1 for p in per_pair
-            if p["rank_of_expected"] is not None and p["rank_of_expected"] <= k
+            1 for p in per_pair if p["rank_of_expected"] is not None and p["rank_of_expected"] <= k
         )
         p_at_k[k] = hits / n_evaluated
 
@@ -412,9 +428,9 @@ def evaluate(
             p_at_k_field[k] = 0.0
             continue
         hits = sum(
-            1 for p in per_pair
-            if p["rank_of_first_field_match"] is not None
-            and p["rank_of_first_field_match"] <= k
+            1
+            for p in per_pair
+            if p["rank_of_first_field_match"] is not None and p["rank_of_first_field_match"] <= k
         )
         p_at_k_field[k] = hits / n_evaluated
 
@@ -426,7 +442,9 @@ def evaluate(
         if n_evaluated == 0:
             coverage_at_threshold[thr] = 0.0
             continue
-        with_thr = sum(1 for p in per_pair if p.get("top1_cosine") is not None and p["top1_cosine"] >= thr)
+        with_thr = sum(
+            1 for p in per_pair if p.get("top1_cosine") is not None and p["top1_cosine"] >= thr
+        )
         coverage_at_threshold[thr] = with_thr / n_evaluated
 
     # ── T5.2 calibration curve ───────────────────────────────────────────
@@ -472,8 +490,7 @@ def evaluate(
     if n_evaluated > 0:
         for tau in (0.0, 0.02, 0.05, 0.10, 0.20):
             qualifying = [
-                p for p in per_pair
-                if p.get("top1_margin") is not None and p["top1_margin"] >= tau
+                p for p in per_pair if p.get("top1_margin") is not None and p["top1_margin"] >= tau
             ]
             n_above = len(qualifying)
 
@@ -482,7 +499,8 @@ def evaluate(
                     return 0.0
                 if not filtered:
                     return sum(
-                        1 for p in items
+                        1
+                        for p in items
                         if p["rank_of_first_field_match"] is not None
                         and p["rank_of_first_field_match"] <= k
                     ) / len(items)
@@ -496,11 +514,11 @@ def evaluate(
             calibration_curve[tau] = {
                 "n_at_or_above": n_above,
                 "retention": n_above / n_evaluated,
-                "precision_at_1_field":      _at_k(qualifying, 1),
-                "precision_at_5_field":      _at_k(qualifying, 5),
+                "precision_at_1_field": _at_k(qualifying, 1),
+                "precision_at_5_field": _at_k(qualifying, 5),
                 "loanword_filtered": {
-                    "precision_at_1_field":  _at_k(qualifying, 1, filtered=True),
-                    "precision_at_5_field":  _at_k(qualifying, 5, filtered=True),
+                    "precision_at_1_field": _at_k(qualifying, 1, filtered=True),
+                    "precision_at_5_field": _at_k(qualifying, 5, filtered=True),
                 },
             }
 
@@ -541,11 +559,11 @@ def _group_metrics(per_pair: list[dict[str, Any]], key: str) -> dict[str, Any]:
         cat_p_at_k_field: dict[int, float] = {}
         for k in DEFAULT_K_VALUES:
             hits = sum(
-                1 for p in items
-                if p["rank_of_expected"] is not None and p["rank_of_expected"] <= k
+                1 for p in items if p["rank_of_expected"] is not None and p["rank_of_expected"] <= k
             )
             field_hits = sum(
-                1 for p in items
+                1
+                for p in items
                 if p.get("rank_of_first_field_match") is not None
                 and p["rank_of_first_field_match"] <= k
             )
@@ -555,7 +573,9 @@ def _group_metrics(per_pair: list[dict[str, Any]], key: str) -> dict[str, Any]:
         # because it tells you whether the encoder is *close* or completely
         # wrong. Rank `None` (missed) becomes k_max+1 for this calculation.
         ranks = [
-            p["rank_of_expected"] if p["rank_of_expected"] is not None else max(DEFAULT_K_VALUES) + 1
+            p["rank_of_expected"]
+            if p["rank_of_expected"] is not None
+            else max(DEFAULT_K_VALUES) + 1
             for p in items
         ]
         out[cat] = {
@@ -576,12 +596,16 @@ def _print_human(report: dict[str, Any]) -> None:
     for k, v in report["precision_at_k"].items():
         print(f"  precision@{k:<2d} = {v:.3f}")
 
-    print("\nSemantic-field precision@k (was ANY Latin word from the right semantic field in top-k?):")
+    print(
+        "\nSemantic-field precision@k (was ANY Latin word from the right semantic field in top-k?):"
+    )
     for k, v in report["precision_at_k_semantic_field"].items():
         print(f"  precision@{k:<2d} (field) = {v:.3f}")
 
     print("\nBy category — strict / field:")
-    print(f"  {'category':<12} {'n':>3}  {'@1 strict':>10} {'@5 strict':>10} {'@1 field':>10} {'@5 field':>10}  median_rank")
+    print(
+        f"  {'category':<12} {'n':>3}  {'@1 strict':>10} {'@5 strict':>10} {'@1 field':>10} {'@5 field':>10}  median_rank"
+    )
     for cat, m in sorted(report["by_category"].items()):
         s1 = m["precision_at_k"][1]
         s5 = m["precision_at_k"][5]
@@ -659,8 +683,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--category",
         choices=[
-            "kinship", "civic", "religious", "time", "numeral",
-            "verb", "theonym", "onomastic",
+            "kinship",
+            "civic",
+            "religious",
+            "time",
+            "numeral",
+            "verb",
+            "theonym",
+            "onomastic",
         ],
         help="Restrict eval to one category only",
     )
@@ -745,15 +775,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.split != "test":
             overrides.append(f"--split={args.split} → {preset['split']}")
         if args.min_confidence != "medium":
-            overrides.append(
-                f"--min-confidence={args.min_confidence} → {preset['min_confidence']}"
-            )
+            overrides.append(f"--min-confidence={args.min_confidence} → {preset['min_confidence']}")
         if args.category is not None and preset["category"] is None:
             overrides.append(f"--category={args.category} → (none)")
         if overrides:
             print(
-                f"WARN  --benchmark={args.benchmark} locks: "
-                + ", ".join(overrides),
+                f"WARN  --benchmark={args.benchmark} locks: " + ", ".join(overrides),
                 file=sys.stderr,
             )
         args.split = preset["split"]
@@ -777,9 +804,9 @@ def main(argv: list[str] | None = None) -> int:
         )
     print(f"Split: {args.split} ({len(pairs)} pairs)", file=sys.stderr)
 
-
     report = evaluate(
-        args.api_url, pairs,
+        args.api_url,
+        pairs,
         pace=not args.no_pace,
         baseline=args.baseline,
         embedder=args.embedder,

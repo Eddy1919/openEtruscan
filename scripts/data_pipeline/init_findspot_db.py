@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 
+
 def main():
     etruscan_db_path = Path("data/cie/cie_etruscan.db")
     geocoding_db_path = Path("data/cie/findspots_geocoding.db")
@@ -44,19 +45,23 @@ def main():
         count = row[1]
         insert_data.append((findspot, count))
 
-    cur_geo.executemany("""
+    cur_geo.executemany(
+        """
         INSERT INTO unique_findspots (original_string, frequency_count)
         VALUES (?, ?)
-    """, insert_data)
+    """,
+        insert_data,
+    )
 
     conn_geo.commit()
-    
+
     cur_geo.execute("SELECT COUNT(*) FROM unique_findspots")
     count = cur_geo.fetchone()[0]
     print(f"Successfully initialized findspots_geocoding.db with {count} distinct findspots.")
 
     conn_et.close()
     conn_geo.close()
+
 
 if __name__ == "__main__":
     main()

@@ -705,12 +705,22 @@ class Corpus:
                 )
 
                 # Genetic samples hardening
-                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS biological_sex TEXT;")
-                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS c14_date_range TEXT;")
+                cur.execute(
+                    "ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS biological_sex TEXT;"
+                )
+                cur.execute(
+                    "ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS c14_date_range TEXT;"
+                )
                 cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS tomb_id TEXT;")
-                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS context_detail TEXT;")
-                cur.execute("ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS ancestry_components TEXT;")
-                cur.execute("CREATE INDEX IF NOT EXISTS idx_genetic_tomb ON genetic_samples(tomb_id);")
+                cur.execute(
+                    "ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS context_detail TEXT;"
+                )
+                cur.execute(
+                    "ALTER TABLE genetic_samples ADD COLUMN IF NOT EXISTS ancestry_components TEXT;"
+                )
+                cur.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_genetic_tomb ON genetic_samples(tomb_id);"
+                )
 
             self._conn.commit()
 
@@ -980,10 +990,14 @@ class Corpus:
         with self._conn.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor,
         ) as cur:
-            cur.execute(query, (lon, lat, lon, lat, radius_m, limit))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
+            cur.execute(
+                query, (lon, lat, lon, lat, radius_m, limit)
+            )  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             rows = cur.fetchall()
             inscriptions = [_dict_to_inscription(row) for row in rows]
-            cur.execute(count_query, (lon, lat, radius_m))  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
+            cur.execute(
+                count_query, (lon, lat, radius_m)
+            )  # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             total = cur.fetchone()["count"]
 
         return SearchResults(inscriptions=inscriptions, total=total)

@@ -1,5 +1,10 @@
 # Search-quality eval
 
+> **Not to be confused with [`eval/`](../eval/README.md).** This directory
+> (`evals/`, plural) is the eval **harness** — the scripts and gold-set
+> generators. The **committed JSON results** of frozen benchmark runs live in
+> `eval/` (singular).
+
 This directory holds a reproducible evaluation harness for `/search/hybrid`
 based on authority-controlled ground truth: Pleiades place IDs, Trismegistos
 cross-corpus IDs, `date_approx` chronology buckets, and findspot vocabularies,

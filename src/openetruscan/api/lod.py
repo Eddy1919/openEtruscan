@@ -140,7 +140,9 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
         "id": f"{OPENETRUSCAN_BASE}/inscriptions/{inscription.id}",
         "type": "Annotation",
         "dcterms:license": CC_BY_4_0,
-        "dcterms:issued": inscription.created_at.isoformat() if hasattr(inscription, 'created_at') and inscription.created_at else None,
+        "dcterms:issued": inscription.created_at.isoformat()
+        if hasattr(inscription, "created_at") and inscription.created_at
+        else None,
         "body": [
             {
                 "type": "TextualBody",

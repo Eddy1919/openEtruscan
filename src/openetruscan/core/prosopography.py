@@ -468,11 +468,12 @@ class FamilyGraph:
         """
         if not self.db_url:
             raise ValueError("Database URL required for Neural Resolution.")
-        
+
         from openetruscan.ml.entity_linker_v2 import NeuralEntityLinker
+
         linker = NeuralEntityLinker(self.db_url)
         linker.threshold = threshold
-        
+
         links = linker.resolve_entities(self)
         return links
 

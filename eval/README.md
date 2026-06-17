@@ -1,5 +1,12 @@
 # `eval/` — committed benchmark outputs
 
+> **Not to be confused with [`evals/`](../evals/README.md).** This directory
+> (`eval/`, singular) stores the **committed JSON results** of frozen benchmark
+> runs. The eval **harness** that produces and scores those runs lives in
+> `evals/` (plural). The split is deliberate: results here are cited by
+> permalink from `research/FINDINGS.md` and published model cards, so the paths
+> are kept stable.
+
 Each file in this directory is the JSON produced by a single run of a
 **frozen** benchmark. The point of committing them is reproducibility:
 the FINDINGS.md narrative cites specific numbers, and these are the

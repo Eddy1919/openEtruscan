@@ -54,6 +54,7 @@ This script does NOT connect to any database. It reads JSONL and
 writes JSONL or SQL. The user reviews the diff and applies the SQL
 manually via psql/SSH tunnel.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -64,7 +65,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Iterator
+from collections.abc import Iterable, Iterator
 
 
 # ---------------------------------------------------------------------------
@@ -76,17 +77,17 @@ from typing import Iterable, Iterator
 # code points from the Cyrillic block. Mapping is to the *intended*
 # Latin letter, not the rotated form.
 CYRILLIC_MAP: dict[str, str] = {
-    "Э": "e",   # mirror E
-    "И": "n",   # mirror N (И is N's mirror in Cyrillic)
-    "Я": "r",   # mirror R
-    "О": "o",   # lookalike O
-    "А": "a",   # lookalike A
+    "Э": "e",  # mirror E
+    "И": "n",  # mirror N (И is N's mirror in Cyrillic)
+    "Я": "r",  # mirror R
+    "О": "o",  # lookalike O
+    "А": "a",  # lookalike A
     "Т": "t",
     "Е": "e",
     "Ч": "kh",  # phonetic — corresponds to χ in Etruscan transliteration
     "З": "z",
     "Ј": "i",
-    "Ѵ": "v",   # archaic Cyrillic izhitsa = Latin V
+    "Ѵ": "v",  # archaic Cyrillic izhitsa = Latin V
 }
 
 # Latin-Extended-B / IPA Extensions mirror-glyphs. Same root cause as
@@ -99,9 +100,9 @@ LATIN_EXT_MIRROR_MAP: dict[str, str] = {
     "Ɔ": "c",
     "Ƨ": "s",
     "Ʀ": "r",
-    "Ɐ": "a",   # turned A
+    "Ɐ": "a",  # turned A
     "Ɯ": "m",
-    "Ɛ": "e",   # open-E, occasionally used as θ stand-in but treated as e here
+    "Ɛ": "e",  # open-E, occasionally used as θ stand-in but treated as e here
 }
 
 # Roman Numerals / Number Forms block — Ↄ ↄ are "reversed C", another
@@ -116,7 +117,7 @@ NUMBER_FORMS_MAP: dict[str, str] = {
 # OCR output for the same retrograde reason.
 MATH_MAP: dict[str, str] = {
     "∃": "e",
-    "∂": "",   # partial-derivative is noise; drop it
+    "∂": "",  # partial-derivative is noise; drop it
 }
 
 # Latin-1 / Latin-Extended-A stragglers. The two big ones:
@@ -128,7 +129,7 @@ LATIN1_STRAGGLERS_MAP: dict[str, str] = {
     "ê": "e",
     "þ": "θ",
     "Þ": "Θ",
-    "ð": "",   # rare and inconsistent, drop
+    "ð": "",  # rare and inconsistent, drop
     "Ð": "",
     "°": "",
     "Æ": "ae",
@@ -154,41 +155,68 @@ CORRUPTION_MAP: dict[str, str] = {
 # direct Old Italic counterparts; ś / σ both render as 𐌑 (san),
 # the sibilant variant distinct from 𐌔 (sigma).
 LATIN_TO_OLD_ITALIC: dict[str, str] = {
-    "a": "𐌀", "b": "𐌁", "c": "𐌂", "d": "𐌃", "e": "𐌄",
-    "v": "𐌅", "z": "𐌆", "h": "𐌇", "θ": "𐌈", "i": "𐌉",
-    "k": "𐌊", "l": "𐌋", "m": "𐌌", "n": "𐌍", "o": "𐌏",
-    "p": "𐌐", "ś": "𐌑", "q": "𐌒", "r": "𐌓", "s": "𐌔",
-    "t": "𐌕", "u": "𐌖", "x": "𐌗", "φ": "𐌘", "χ": "𐌙",
+    "a": "𐌀",
+    "b": "𐌁",
+    "c": "𐌂",
+    "d": "𐌃",
+    "e": "𐌄",
+    "v": "𐌅",
+    "z": "𐌆",
+    "h": "𐌇",
+    "θ": "𐌈",
+    "i": "𐌉",
+    "k": "𐌊",
+    "l": "𐌋",
+    "m": "𐌌",
+    "n": "𐌍",
+    "o": "𐌏",
+    "p": "𐌐",
+    "ś": "𐌑",
+    "q": "𐌒",
+    "r": "𐌓",
+    "s": "𐌔",
+    "t": "𐌕",
+    "u": "𐌖",
+    "x": "𐌗",
+    "φ": "𐌘",
+    "χ": "𐌙",
     "f": "𐌚",
     # Greek sigma (any case) and final sigma render as san — both are
     # used in the Pallottino-style transliteration for the SAN sibilant.
-    "σ": "𐌑", "ς": "𐌑",
+    "σ": "𐌑",
+    "ς": "𐌑",
     # Diacritical sibilants and IPA dot-below transcriptions: render
     # as the corresponding bare-letter glyph (the diacritic is a
     # phonetic marker that has no Old Italic correspondent).
-    "š": "𐌔", "ń": "𐌍",
-    "ṛ": "𐌓", "ṭ": "𐌕", "ḥ": "𐌇", "ṿ": "𐌅",
-    "ṣ": "𐌔", "ṇ": "𐌍", "ẹ": "𐌄",
+    "š": "𐌔",
+    "ń": "𐌍",
+    "ṛ": "𐌓",
+    "ṭ": "𐌕",
+    "ḥ": "𐌇",
+    "ṿ": "𐌅",
+    "ṣ": "𐌔",
+    "ṇ": "𐌍",
+    "ẹ": "𐌄",
     # Capitals fold to their lowercase glyph (Old Italic has no case).
-    "Θ": "𐌈", "Φ": "𐌘", "Χ": "𐌙", "Ś": "𐌑",
+    "Θ": "𐌈",
+    "Φ": "𐌘",
+    "Χ": "𐌙",
+    "Ś": "𐌑",
 }
 
 # Whitelist: characters allowed in `canonical_clean`. Anything outside
 # this set after normalization means the row needs human review.
 ALLOWED_LETTERS = (
-    "abcdefghiklmnopqrstuvxyz"   # Latin (Etruscan never uses j/w)
-    "θχσφξς"                     # Greek phonemes (lower)
-    "ΘΧΣΦΞ"                      # Greek phonemes (upper, used for proper names)
-    "śŚšńṛṭḥṿṣṇẹ"                # diacritical sibilants + IPA
+    "abcdefghiklmnopqrstuvxyz"  # Latin (Etruscan never uses j/w)
+    "θχσφξς"  # Greek phonemes (lower)
+    "ΘΧΣΦΞ"  # Greek phonemes (upper, used for proper names)
+    "śŚšńṛṭḥṿṣṇẹ"  # diacritical sibilants + IPA
 )
 ALLOWED_PUNCT = " .,:;|·•[]()<>{}-_'\"?!/…—"
 ALLOWED_DIGITS = ""  # digits in the body are OCR junk; only allowed in IDs
 
 ALLOWED_CHARSET = (
-    set(ALLOWED_LETTERS)
-    | set(ALLOWED_LETTERS.upper())
-    | set(ALLOWED_PUNCT)
-    | set(ALLOWED_DIGITS)
+    set(ALLOWED_LETTERS) | set(ALLOWED_LETTERS.upper()) | set(ALLOWED_PUNCT) | set(ALLOWED_DIGITS)
 )
 # Old Italic glyphs are also allowed if a row mixes scripts.
 ALLOWED_CHARSET |= {chr(cp) for cp in range(0x10300, 0x10330)}
@@ -215,30 +243,34 @@ WORD_SPLIT_RE = re.compile(r"[\s·•|:;]+")
 # Core normalization
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class NormalizedRow:
     id: str
     raw_text: str
-    canonical: str                # original, unchanged
-    canonical_clean: str          # post-mapping
-    old_italic_v2: str | None     # regenerated from canonical_clean, or None
-    canonical_words_only: str     # intact tokens only, space-joined
-    intact_token_ratio: float     # intact_tokens / total_tokens, 0..1
-    data_quality: str             # clean | needs_review | ocr_failed
-    residual_invalid: list[str]   # chars that failed the contract
+    canonical: str  # original, unchanged
+    canonical_clean: str  # post-mapping
+    old_italic_v2: str | None  # regenerated from canonical_clean, or None
+    canonical_words_only: str  # intact tokens only, space-joined
+    intact_token_ratio: float  # intact_tokens / total_tokens, 0..1
+    data_quality: str  # clean | needs_review | ocr_failed
+    residual_invalid: list[str]  # chars that failed the contract
 
     def to_json(self) -> str:
-        return json.dumps({
-            "id": self.id,
-            "raw_text": self.raw_text,
-            "canonical": self.canonical,
-            "canonical_clean": self.canonical_clean,
-            "old_italic_v2": self.old_italic_v2,
-            "canonical_words_only": self.canonical_words_only,
-            "intact_token_ratio": round(self.intact_token_ratio, 3),
-            "data_quality": self.data_quality,
-            "residual_invalid": self.residual_invalid,
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "id": self.id,
+                "raw_text": self.raw_text,
+                "canonical": self.canonical,
+                "canonical_clean": self.canonical_clean,
+                "old_italic_v2": self.old_italic_v2,
+                "canonical_words_only": self.canonical_words_only,
+                "intact_token_ratio": round(self.intact_token_ratio, 3),
+                "data_quality": self.data_quality,
+                "residual_invalid": self.residual_invalid,
+            },
+            ensure_ascii=False,
+        )
 
 
 def apply_corruption_map(s: str) -> str:
@@ -407,6 +439,7 @@ def normalize_row(row: dict) -> NormalizedRow:
 # IO + reporting
 # ---------------------------------------------------------------------------
 
+
 def iter_rows(path: Path) -> Iterator[dict]:
     with path.open() as f:
         for line in f:
@@ -470,21 +503,29 @@ def emit_csv(rows: Iterable[NormalizedRow], path: Path) -> None:
     """
     with path.open("w", newline="") as f:
         w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
-        w.writerow([
-            "id", "raw_text", "canonical_transliterated",
-            "canonical_italic", "canonical_words_only",
-            "intact_token_ratio", "data_quality",
-        ])
+        w.writerow(
+            [
+                "id",
+                "raw_text",
+                "canonical_transliterated",
+                "canonical_italic",
+                "canonical_words_only",
+                "intact_token_ratio",
+                "data_quality",
+            ]
+        )
         for r in rows:
-            w.writerow([
-                r.id,
-                r.raw_text,
-                r.canonical_clean,
-                r.old_italic_v2 if r.old_italic_v2 is not None else "",
-                r.canonical_words_only,
-                f"{r.intact_token_ratio:.3f}",
-                r.data_quality,
-            ])
+            w.writerow(
+                [
+                    r.id,
+                    r.raw_text,
+                    r.canonical_clean,
+                    r.old_italic_v2 if r.old_italic_v2 is not None else "",
+                    r.canonical_words_only,
+                    f"{r.intact_token_ratio:.3f}",
+                    r.data_quality,
+                ]
+            )
 
 
 def emit_sql(rows: Iterable[NormalizedRow], out=sys.stdout) -> None:
@@ -494,13 +535,19 @@ def emit_sql(rows: Iterable[NormalizedRow], out=sys.stdout) -> None:
     """
     out.write("-- Generated by normalize_inscriptions.py — review before applying.\n")
     out.write("BEGIN;\n")
-    out.write("ALTER TABLE inscriptions "
-              "ADD COLUMN IF NOT EXISTS canonical_clean TEXT, "
-              "ADD COLUMN IF NOT EXISTS old_italic_v2 TEXT, "
-              "ADD COLUMN IF NOT EXISTS data_quality TEXT;\n")
+    out.write(
+        "ALTER TABLE inscriptions "
+        "ADD COLUMN IF NOT EXISTS canonical_clean TEXT, "
+        "ADD COLUMN IF NOT EXISTS old_italic_v2 TEXT, "
+        "ADD COLUMN IF NOT EXISTS data_quality TEXT;\n"
+    )
     for r in rows:
         clean_sql = r.canonical_clean.replace("'", "''")
-        oi_sql = ("'" + r.old_italic_v2.replace("'", "''") + "'") if r.old_italic_v2 is not None else "NULL"
+        oi_sql = (
+            ("'" + r.old_italic_v2.replace("'", "''") + "'")
+            if r.old_italic_v2 is not None
+            else "NULL"
+        )
         id_sql = r.id.replace("'", "''")
         out.write(
             f"UPDATE inscriptions SET "
@@ -516,19 +563,23 @@ def emit_sql(rows: Iterable[NormalizedRow], out=sys.stdout) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("--input", type=Path,
-                   default=Path("/tmp/etruscan-prod-rawtext-v1.jsonl"))
-    p.add_argument("--output", type=Path,
-                   help="Write normalized JSONL to this path.")
-    p.add_argument("--csv", type=Path,
-                   help="Write CSV (id, raw_text, canonical_transliterated, "
-                        "canonical_italic, data_quality) to this path.")
-    p.add_argument("--emit-sql", action="store_true",
-                   help="Print an UPDATE script to stdout instead of a report.")
-    p.add_argument("--limit", type=int,
-                   help="Process only the first N rows (debug).")
+    p.add_argument("--input", type=Path, default=Path("/tmp/etruscan-prod-rawtext-v1.jsonl"))
+    p.add_argument("--output", type=Path, help="Write normalized JSONL to this path.")
+    p.add_argument(
+        "--csv",
+        type=Path,
+        help="Write CSV (id, raw_text, canonical_transliterated, "
+        "canonical_italic, data_quality) to this path.",
+    )
+    p.add_argument(
+        "--emit-sql",
+        action="store_true",
+        help="Print an UPDATE script to stdout instead of a report.",
+    )
+    p.add_argument("--limit", type=int, help="Process only the first N rows (debug).")
     args = p.parse_args()
 
     if not args.input.exists():

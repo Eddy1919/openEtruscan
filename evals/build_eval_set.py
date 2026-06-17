@@ -55,19 +55,19 @@ MAX_GOLD_PER_QUERY = 250
 # Latin variants stored alongside it). One Pleiades ID can match several
 # findspot strings — that's the *point* of the category.
 PLEIADES_QUERY_NAMES: dict[str, str] = {
-    "413332": "Tarquinia",          # Tarchna / Tarquinii
-    "422859": "Caere",              # = Cerveteri
-    "413096": "Clusium",            # = Chiusi
+    "413332": "Tarquinia",  # Tarchna / Tarquinii
+    "422859": "Caere",  # = Cerveteri
+    "413096": "Clusium",  # = Chiusi
     "432742": "Campania",
-    "433061": "Pyrgi",              # Cerveteri's port
-    "413389": "Volsinii",           # = Orvieto / Bolsena
+    "433061": "Pyrgi",  # Cerveteri's port
+    "413389": "Volsinii",  # = Orvieto / Bolsena
     "413106": "Cortona",
     "423116": "Veii",
-    "413393": "Vulci",              # Ager Volcentanus
+    "413393": "Vulci",  # Ager Volcentanus
     "393498": "Spina",
-    "403292": "Volaterrae",         # = Volterra
-    "413044": "Saena",              # = Siena
-    "413105": "Perusia",            # = Perugia
+    "403292": "Volaterrae",  # = Volterra
+    "413044": "Saena",  # = Siena
+    "413105": "Perusia",  # = Perugia
     "413095": "Falerii",
     "423025": "Roma",
 }
@@ -247,14 +247,14 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
 # A row is "relevant" to a period query iff its date_approx falls in
 # [lo, hi] inclusive.
 _PERIOD_BOUNDS: dict[str, tuple[int, int]] = {
-    "archaic":       (-700, -500),
-    "classical":     (-499, -300),
-    "late":          (-299,  -50),
+    "archaic": (-700, -500),
+    "classical": (-499, -300),
+    "late": (-299, -50),
     # Pre-archaic Etruscan: 720–580 BCE. Overlaps archaic on purpose
     # (rows in -700..-580 are relevant to both queries).
     "orientalising": (-720, -580),
     # Standard Etruscan-studies alias for `late`. Same bounds → same gold.
-    "hellenistic":   (-299,  -50),
+    "hellenistic": (-299, -50),
 }
 
 
@@ -270,7 +270,8 @@ def queries_chronology(rows: list[dict]) -> list[dict]:
     out: list[dict] = []
     for period, (lo, hi) in _PERIOD_BOUNDS.items():
         ids = sorted(
-            r["id"] for r in rows
+            r["id"]
+            for r in rows
             if r.get("date_approx") is not None and lo <= r["date_approx"] <= hi
         )
         if len(ids) < 5:

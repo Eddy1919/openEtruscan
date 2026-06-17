@@ -10,6 +10,7 @@ Reports:
 
 No external dependencies — pure Python 3.10+.
 """
+
 from __future__ import annotations
 
 import csv

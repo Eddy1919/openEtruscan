@@ -44,6 +44,7 @@ checks pass.
 This script is the orchestrator; it delegates the per-passage LLM call to a
 provider adapter shared with classify_jury.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -118,12 +119,13 @@ def iter_passages(path: Path) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--passages", type=Path, required=True,
-                    help="JSONL of source passages.")
-    ap.add_argument("--out", type=Path, required=True,
-                    help="Output JSONL of candidate pairs (append-mode).")
-    ap.add_argument("--providers", nargs="+",
-                    default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"])
+    ap.add_argument("--passages", type=Path, required=True, help="JSONL of source passages.")
+    ap.add_argument(
+        "--out", type=Path, required=True, help="Output JSONL of candidate pairs (append-mode)."
+    )
+    ap.add_argument(
+        "--providers", nargs="+", default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"]
+    )
     ap.add_argument("--max-passages", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.5)
     ap.add_argument("--dry-run", action="store_true")
@@ -175,8 +177,10 @@ def main(argv: list[str] | None = None) -> int:
                 try:
                     raw = provider.invoke(system, user)
                 except Exception as e:  # noqa: BLE001
-                    print(f"  [{provider_name} #{passage['passage_index']}] api_error: {e}",
-                          file=sys.stderr)
+                    print(
+                        f"  [{provider_name} #{passage['passage_index']}] api_error: {e}",
+                        file=sys.stderr,
+                    )
                     time.sleep(args.sleep)
                     continue
                 text_resp = raw.strip()
@@ -210,7 +214,11 @@ def main(argv: list[str] | None = None) -> int:
                     eq = str(cand.get("equivalent", ""))
                     ev = str(cand.get("evidence_quote", ""))
                     cat = str(cand.get("category", "gloss_only"))
-                    substr_ok = _check_substring(et, text) and _check_substring(eq, text) and _check_substring(ev, text)
+                    substr_ok = (
+                        _check_substring(et, text)
+                        and _check_substring(eq, text)
+                        and _check_substring(ev, text)
+                    )
                     assert_ok = _check_assertion(ev, source_lang)
                     record = {
                         "passage_index": passage.get("passage_index"),
@@ -237,9 +245,11 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         sink.close()
 
-    print(f"kept={kept} dropped_substring={dropped_substring} "
-          f"dropped_assertion={dropped_assertion} parse_errors={parse_errors}",
-          file=sys.stderr)
+    print(
+        f"kept={kept} dropped_substring={dropped_substring} "
+        f"dropped_assertion={dropped_assertion} parse_errors={parse_errors}",
+        file=sys.stderr,
+    )
     return 0
 
 

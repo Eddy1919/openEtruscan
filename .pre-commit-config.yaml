@@ -24,13 +24,11 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.10
     hooks:
-      # Run the linter
+      # Run the linter (all tracked Python; per-file-ignores live in pyproject.toml)
       - id: ruff
         args: [--fix]
-        files: ^(src/|tests/)
       # Run the formatter
       - id: ruff-format
-        files: ^(src/|tests/)
 
   # Mypy - Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy

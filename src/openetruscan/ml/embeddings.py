@@ -203,17 +203,14 @@ class XLMREmbedder(Embedder):
         # Capture a usable revision string for storage. HF's
         # `model.config._name_or_path` is stable across runs; the
         # adapter path discriminates fine-tuned variants.
-        self._revision = (
-            f"adapter:{self._adapter_path}" if self._adapter_path else "base"
-        )
+        self._revision = f"adapter:{self._adapter_path}" if self._adapter_path else "base"
 
     def _attach_lora_adapter(self, adapter_path: str) -> None:
         try:
             from peft import PeftModel
         except ImportError as e:
             raise ImportError(
-                "LoRA adapters require `peft`. Install with: "
-                "pip install -e '.[transformers]'"
+                "LoRA adapters require `peft`. Install with: " "pip install -e '.[transformers]'"
             ) from e
         logger.info("Attaching LoRA adapter from %s", adapter_path)
         self._model = PeftModel.from_pretrained(self._model, adapter_path)

@@ -16,7 +16,6 @@ import argparse
 import collections
 import json
 import logging
-import re
 import subprocess
 import sys
 import time
@@ -41,9 +40,7 @@ def _ensure_hf_stack() -> None:
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 def _normalise_dividers(text: str) -> str:
@@ -80,13 +77,15 @@ def _read_etruscan_vocab(corpus_path: Path, log: logging.Logger) -> list[str]:
             n_inscs += 1
     log.info(
         "Etruscan vocab built from %d inscriptions: %d unique tokens",
-        n_inscs, len(counts),
+        n_inscs,
+        len(counts),
     )
     return [w for w, _ in counts.most_common()]
 
 
-def _embed_with_adapter(words: list[str], base_model: str, adapter_path: Path,
-                        log: logging.Logger) -> list[list[float]]:
+def _embed_with_adapter(
+    words: list[str], base_model: str, adapter_path: Path, log: logging.Logger
+) -> list[list[float]]:
     """Load XLM-R-base + LoRA adapter, mean-pool + L2-normalise each word.
 
     The adapter weights compose with the base — same encoder forward as
@@ -113,8 +112,11 @@ def _embed_with_adapter(words: list[str], base_model: str, adapter_path: Path,
     for i in range(0, len(words), BATCH):
         batch = words[i : i + BATCH]
         enc = tok(
-            batch, return_tensors="pt", padding=True,
-            truncation=True, max_length=16,
+            batch,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=16,
         ).to(device)
         with torch.no_grad():
             output = model(**enc).last_hidden_state
@@ -134,8 +136,7 @@ def _download_gcs_uri(uri: str, dest_dir: Path, is_dir: bool = False) -> Path:
     if not uri.startswith("gs://"):
         return Path(uri)
     import subprocess
-    import tempfile
-    
+
     local_path = dest_dir / uri.split("/")[-1]
     if is_dir:
         local_path.mkdir(parents=True, exist_ok=True)
@@ -151,7 +152,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     # Backwards compatibility and new arguments
     parser.add_argument("--corpus_path", help="Local path to corpus JSONL")
-    parser.add_argument("--corpus-uri", default="gs://openetruscan-rosetta/corpus/etruscan-prod-v2.jsonl", help="GCS URI to corpus JSONL")
+    parser.add_argument(
+        "--corpus-uri",
+        default="gs://openetruscan-rosetta/corpus/etruscan-prod-v2.jsonl",
+        help="GCS URI to corpus JSONL",
+    )
     parser.add_argument("--adapter_path", help="Local path to adapter dir")
     parser.add_argument("--adapter-uri", help="GCS URI to adapter dir")
     parser.add_argument("--output_path", help="Legacy output path")
@@ -160,16 +165,16 @@ def main() -> int:
     parser.add_argument("--limit", type=int, help="Limit number of words to embed (for dry runs)")
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     log = logging.getLogger("embed_etruscan")
 
     _ensure_hf_stack()
 
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
-        
+
         # Resolve corpus path
         corpus = args.corpus_path
         if not corpus:
@@ -194,19 +199,25 @@ def main() -> int:
 
         if args.limit:
             log.info("Limiting to first %d words", args.limit)
-            words = words[:args.limit]
+            words = words[: args.limit]
 
         vectors = _embed_with_adapter(
-            words, args.base_model, adapter, log,
+            words,
+            args.base_model,
+            adapter,
+            log,
         )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as f:
             for w, v in zip(words, vectors, strict=True):
-                f.write(json.dumps(
-                    {"language": "ett", "word": w, "vector": v},
-                    ensure_ascii=False,
-                ) + "\n")
+                f.write(
+                    json.dumps(
+                        {"language": "ett", "word": w, "vector": v},
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
         log.info("Wrote %d Etruscan embeddings to %s", len(words), output_path)
     return 0
 

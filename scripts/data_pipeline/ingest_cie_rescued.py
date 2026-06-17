@@ -1,12 +1,11 @@
-import os
 import sqlite3
 import psycopg2
-from psycopg2.extras import execute_values
 from pathlib import Path
 
 # Setup Path to include src for core imports
 repo_root = Path(__file__).resolve().parent.parent.parent
 import sys
+
 sys.path.append(str(repo_root / "src"))
 
 from openetruscan.core.normalizer import normalize
@@ -19,12 +18,13 @@ os_env_path = repo_root / ".env"
 gemini_key = None
 
 if os_env_path.exists():
-    with open(os_env_path, 'r') as f:
+    with open(os_env_path) as f:
         for line in f:
             if line.startswith("DATABASE_URL="):
-                pg_url = line.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                pg_url = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
             if line.startswith("GEMINI_API_KEY="):
-                gemini_key = line.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                gemini_key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
+
 
 def ingest_batch():
     if not sqlite_db_path.exists():
@@ -63,17 +63,17 @@ def ingest_batch():
     with p_conn.cursor() as p_cur:
         for row in rows:
             (cie_id, translit, modern_loc, lat, lon, unc_m, bib, latin_comm, ai_notes, source) = row
-            
+
             # 1. Normalize phonological representation
             norm = normalize(translit or "", language="etruscan")
-            
+
             # 2. Build Notes
             full_notes = []
             if latin_comm:
                 full_notes.append(f"[Commentary] {latin_comm}")
             if ai_notes:
                 full_notes.append(ai_notes)
-            
+
             # 3. UPSERT into inscriptions
             sql = """
                 INSERT INTO inscriptions (
@@ -98,20 +98,35 @@ def ingest_batch():
                     notes = EXCLUDED.notes,
                     updated_at = NOW()
             """
-            
-            p_cur.execute(sql, (
-                f"CIE {cie_id}", norm.canonical, norm.phonetic, norm.old_italic, translit or "",
-                modern_loc or "", lat, lon, unc_m,
-                bib or "", "\n\n".join(full_notes), "etruscan", "etruscan",
-                f"CIE Rescued ({source})" if source else "CIE Rescued", "verified", "rescued,ai-verified"
-            ))
-            
+
+            p_cur.execute(
+                sql,
+                (
+                    f"CIE {cie_id}",
+                    norm.canonical,
+                    norm.phonetic,
+                    norm.old_italic,
+                    translit or "",
+                    modern_loc or "",
+                    lat,
+                    lon,
+                    unc_m,
+                    bib or "",
+                    "\n\n".join(full_notes),
+                    "etruscan",
+                    "etruscan",
+                    f"CIE Rescued ({source})" if source else "CIE Rescued",
+                    "verified",
+                    "rescued,ai-verified",
+                ),
+            )
+
             count += 1
             if count % 100 == 0:
                 print(f"  Ingested {count}/{len(rows)}...")
 
     print(f"Ingestion complete. Total records merged: {count}")
-    
+
     # Post-process: Update geometry column from lat/lon for PostGIS
     try:
         with p_conn.cursor() as p_cur:
@@ -127,6 +142,7 @@ def ingest_batch():
 
     p_conn.close()
     s_conn.close()
+
 
 if __name__ == "__main__":
     ingest_batch()

@@ -180,8 +180,13 @@ def call_gemini(pil_image, log, retries=5):
                 try:
                     return json.loads(text_out)
                 except json.JSONDecodeError as je:
-                    log.error("  [%d/%d] JSON Parse Error: %s. Text starts with: %s...", 
-                             attempt + 1, retries, je, text_out[:200])
+                    log.error(
+                        "  [%d/%d] JSON Parse Error: %s. Text starts with: %s...",
+                        attempt + 1,
+                        retries,
+                        je,
+                        text_out[:200],
+                    )
                     raise je
             elif resp.status_code == 429:
                 wait = min(backoff * (2**attempt), 120)
@@ -195,7 +200,9 @@ def call_gemini(pil_image, log, retries=5):
                 time.sleep(backoff * (attempt + 1))
         except Exception as e:
             wait = backoff * (attempt + 1)
-            log.error("  [%d/%d] Network Exception: %s. Retrying in %ds...", attempt + 1, retries, e, wait)
+            log.error(
+                "  [%d/%d] Network Exception: %s. Retrying in %ds...", attempt + 1, retries, e, wait
+            )
             time.sleep(wait)
     return None
 
@@ -220,16 +227,8 @@ def process_pdf(pdf_name: str, skip_pages: int = 4):
     done = set(progress["completed_pages"])
     log.info("Resume: %d pages done, %d entries so far", len(done), progress["total_entries"])
 
-    # Determine source label from filename
-    source_label = "CIE Volume I (VLM Extracted)"
-    if "Clusium" in pdf_name and "475" in pdf_name:
-        source_label = "CIE Vol I Clusium 475-1742 (VLM)"
-    elif "Clusium" in pdf_name and "1743" in pdf_name:
-        source_label = "CIE Vol I Clusium 1743-3306 (VLM)"
-    elif "Perusia" in pdf_name:
-        source_label = "CIE Vol I Perusia 3307-4612 (VLM)"
-    elif "Additamentum" in pdf_name:
-        source_label = "CIE Vol I Additamentum (VLM)"
+    # NOTE: source labelling lived here but is now dead — DB insertion is bypassed
+    # in favour of HITL review staging (see below), and ingest_into_db() is deprecated.
 
     pages_dir = CIE_DIR / f"pages_{pdf_name.replace('.pdf', '')}"
     pages_dir.mkdir(parents=True, exist_ok=True)

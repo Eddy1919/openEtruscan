@@ -21,7 +21,32 @@ LABELS_DIR = Path("data/real_yolo/labels/train")
 OUTPUT_JSON = Path("label_studio_import.json")
 
 # The 23 Etruscan Characters (from etruscan.yaml)
-ETRUSCAN_CHARS = ["𐌀", "𐌂", "𐌄", "𐌅", "𐌆", "𐌇", "𐌈", "𐌉", "𐌊", "𐌋", "𐌌", "𐌍", "𐌎", "𐌐", "𐌑", "𐌒", "𐌓", "𐌔", "𐌕", "𐌖", "𐌗", "𐌘", "𐌚"]
+ETRUSCAN_CHARS = [
+    "𐌀",
+    "𐌂",
+    "𐌄",
+    "𐌅",
+    "𐌆",
+    "𐌇",
+    "𐌈",
+    "𐌉",
+    "𐌊",
+    "𐌋",
+    "𐌌",
+    "𐌍",
+    "𐌎",
+    "𐌐",
+    "𐌑",
+    "𐌒",
+    "𐌓",
+    "𐌔",
+    "𐌕",
+    "𐌖",
+    "𐌗",
+    "𐌘",
+    "𐌚",
+]
+
 
 def get_base64_image(image_path: Path):
     with open(image_path, "rb") as f:
@@ -31,15 +56,16 @@ def get_base64_image(image_path: Path):
         ext = "jpeg"
     return f"data:image/{ext};base64,{encoded}"
 
+
 def convert():
     tasks = []
-    
+
     for img_path in IMAGES_DIR.glob("*.jpg"):
         txt_path = LABELS_DIR / f"{img_path.stem}.txt"
-        
+
         # We assume all downloaded images are roughly standard sizes, LS handles scaling
         results = []
-        
+
         if txt_path.exists():
             with open(txt_path) as f:
                 lines = f.readlines()
@@ -51,57 +77,55 @@ def convert():
                         y_center = float(parts[2])
                         w = float(parts[3])
                         h = float(parts[4])
-                        
+
                         # YOLO to Label Studio percentage conversion
                         ls_w = w * 100
                         ls_h = h * 100
-                        ls_x = (x_center - w/2) * 100
-                        ls_y = (y_center - h/2) * 100
-                        
+                        ls_x = (x_center - w / 2) * 100
+                        ls_y = (y_center - h / 2) * 100
+
                         label_val = f"{cls_id}_{ETRUSCAN_CHARS[cls_id]}"
-                        
-                        results.append({
-                            "original_width": 1000, # LS scales dynamically
-                            "original_height": 1000,
-                            "image_rotation": 0,
-                            "value": {
-                                "x": ls_x,
-                                "y": ls_y,
-                                "width": ls_w,
-                                "height": ls_h,
-                                "rotation": 0,
-                                "rectanglelabels": [label_val]
-                            },
-                            "from_name": "label",
-                            "to_name": "image",
-                            "type": "rectanglelabels"
-                        })
-                        
-        data_dict = {
-            "image": get_base64_image(img_path)
-        }
-        
+
+                        results.append(
+                            {
+                                "original_width": 1000,  # LS scales dynamically
+                                "original_height": 1000,
+                                "image_rotation": 0,
+                                "value": {
+                                    "x": ls_x,
+                                    "y": ls_y,
+                                    "width": ls_w,
+                                    "height": ls_h,
+                                    "rotation": 0,
+                                    "rectanglelabels": [label_val],
+                                },
+                                "from_name": "label",
+                                "to_name": "image",
+                                "type": "rectanglelabels",
+                            }
+                        )
+
+        data_dict = {"image": get_base64_image(img_path)}
+
         stem_lower = img_path.stem.lower()
         if "cippus_perusinus" in stem_lower:
-            data_dict["transliteration"] = "eurat tanna larezul ame vaχr lautn velθinaš eštla afunas sleleθ caru tezan fušleri tesnšteiš rašneš ipa ama hen naper χii velθinaθuraš araš peraš cincem amercnl velθina zia šatenete sne eca velθinaθuraš θaura helu"
-            data_dict["translation"] = "THIS IS THE SETTLEMENT BETWEEN THE VELTHINA AND AFUNA FAMILIES CONCERNING THE PROPERTY BOUNDARIES AND THE TOMB OF THE VELTHINA AS ARBITRATED BY LART REZUL ACCORDING TO ETRUSCAN LAW"
+            data_dict["transliteration"] = (
+                "eurat tanna larezul ame vaχr lautn velθinaš eštla afunas sleleθ caru tezan fušleri tesnšteiš rašneš ipa ama hen naper χii velθinaθuraš araš peraš cincem amercnl velθina zia šatenete sne eca velθinaθuraš θaura helu"
+            )
+            data_dict["translation"] = (
+                "THIS IS THE SETTLEMENT BETWEEN THE VELTHINA AND AFUNA FAMILIES CONCERNING THE PROPERTY BOUNDARIES AND THE TOMB OF THE VELTHINA AS ARBITRATED BY LART REZUL ACCORDING TO ETRUSCAN LAW"
+            )
         elif "tabula_cortonensis" in stem_lower:
             data_dict["transliteration"] = "et peṭruiš scēvies eliuntś"
             data_dict["translation"] = "This is the estate of Petru Scevie"
 
-        tasks.append({
-            "data": data_dict,
-            "annotations": [
-                {
-                    "result": results
-                }
-            ]
-        })
-        
+        tasks.append({"data": data_dict, "annotations": [{"result": results}]})
+
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(tasks, f, ensure_ascii=False)
-        
+
     logger.info(f"Successfully converted {len(tasks)} images into {OUTPUT_JSON}!")
+
 
 if __name__ == "__main__":
     convert()

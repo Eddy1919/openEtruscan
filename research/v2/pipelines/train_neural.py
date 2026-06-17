@@ -25,6 +25,7 @@ Honest framing
   because the candidate-gold eval has no examples of those classes. Same
   caveat as in `train_classifier.py`.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,10 +57,7 @@ def _load_jsonl(path: Path) -> list[dict]:
 
 def _text_field(row: dict) -> str:
     return (
-        row.get("canonical_transliterated")
-        or row.get("raw_text")
-        or row.get("text")
-        or ""
+        row.get("canonical_transliterated") or row.get("raw_text") or row.get("text") or ""
     ).strip()
 
 
@@ -67,11 +65,13 @@ def _seed_everything(seed: int) -> None:
     random.seed(seed)
     try:
         import numpy as np
+
         np.random.seed(seed)
     except ImportError:
         pass
     try:
         import torch
+
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
@@ -136,9 +136,7 @@ def train_torch_arch(
     if arch == "charcnn":
         model = CharCNN(vocab_size=len(vocab), num_classes=num_classes)
     elif arch == "microtransformer":
-        model = MicroTransformer(
-            vocab_size=len(vocab), num_classes=num_classes, max_len=max_len
-        )
+        model = MicroTransformer(vocab_size=len(vocab), num_classes=num_classes, max_len=max_len)
     else:
         raise ValueError(f"Unknown torch arch: {arch}")
 
@@ -170,6 +168,7 @@ def train_torch_arch(
         with torch.no_grad():
             val_preds = model(x_vl).argmax(dim=1).cpu().numpy()
         from sklearn.metrics import f1_score
+
         val_f1 = f1_score(y_vl.numpy(), val_preds, average="macro", zero_division=0)
         if val_f1 > best_val_f1:
             best_val_f1 = float(val_f1)
@@ -178,8 +177,10 @@ def train_torch_arch(
         else:
             no_improve += 1
             if no_improve >= patience:
-                print(f"  early stop at epoch {epoch} (best val F1 {best_val_f1:.3f})",
-                      file=sys.stderr)
+                print(
+                    f"  early stop at epoch {epoch} (best val F1 {best_val_f1:.3f})",
+                    file=sys.stderr,
+                )
                 break
 
     if best_state is not None:
@@ -224,8 +225,9 @@ def train_embedding_mlp(
     _seed_everything(SEED)
     print(f"  loading embedder {embedder_id!r} ...", file=sys.stderr)
     encoder = SentenceTransformer(embedder_id)
-    print(f"  embedding {len(train_texts)} train + {len(eval_texts)} eval texts ...",
-          file=sys.stderr)
+    print(
+        f"  embedding {len(train_texts)} train + {len(eval_texts)} eval texts ...", file=sys.stderr
+    )
     t0 = time.time()
     x_train = np.asarray(
         encoder.encode(train_texts, normalize_embeddings=True, show_progress_bar=False),
@@ -273,15 +275,18 @@ def train_embedding_mlp(
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--arch", required=True,
-                    choices=["charcnn", "microtransformer", "embedding-mlp"])
+    ap.add_argument(
+        "--arch", required=True, choices=["charcnn", "microtransformer", "embedding-mlp"]
+    )
     ap.add_argument("--train-pool", type=Path, required=True)
     ap.add_argument("--eval-gold", type=Path, required=True)
     ap.add_argument("--out-metrics", type=Path, required=True)
     ap.add_argument("--out-predictions", type=Path, required=True)
-    ap.add_argument("--embedder",
-                    default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-                    help="Sentence-transformer model id for --arch embedding-mlp.")
+    ap.add_argument(
+        "--embedder",
+        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        help="Sentence-transformer model id for --arch embedding-mlp.",
+    )
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--n-resamples", type=int, default=10_000)
     args = ap.parse_args(argv)
@@ -291,8 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     train_ids = {r["id"] for r in train_rows}
     eval_ids = {r["id"] for r in eval_rows}
     if train_ids & eval_ids:
-        print(f"ABORT: train/eval contamination ({len(train_ids & eval_ids)} ids)",
-              file=sys.stderr)
+        print(f"ABORT: train/eval contamination ({len(train_ids & eval_ids)} ids)", file=sys.stderr)
         return 2
 
     train_pairs = [(_text_field(r), r["silver_label"]) for r in train_rows]
@@ -312,19 +316,24 @@ def main(argv: list[str] | None = None) -> int:
     # no separate list needed.
 
     print(f"arch={args.arch}", file=sys.stderr)
-    print(f"  n_train={len(train_pairs)}  classes={dict(Counter(train_labels))}",
-          file=sys.stderr)
-    print(f"  n_eval ={len(eval_pairs)}  classes={dict(Counter(eval_labels))}",
-          file=sys.stderr)
+    print(f"  n_train={len(train_pairs)}  classes={dict(Counter(train_labels))}", file=sys.stderr)
+    print(f"  n_eval ={len(eval_pairs)}  classes={dict(Counter(eval_labels))}", file=sys.stderr)
 
     if args.arch in ("charcnn", "microtransformer"):
         preds, train_meta = train_torch_arch(
-            args.arch, train_texts, train_labels, eval_texts, eval_labels,
+            args.arch,
+            train_texts,
+            train_labels,
+            eval_texts,
+            eval_labels,
             epochs=args.epochs,
         )
     else:  # embedding-mlp
         preds, train_meta = train_embedding_mlp(
-            train_texts, train_labels, eval_texts, args.embedder,
+            train_texts,
+            train_labels,
+            eval_texts,
+            args.embedder,
         )
 
     # Build (gold, pred) pairs for bootstrap
@@ -357,13 +366,19 @@ def main(argv: list[str] | None = None) -> int:
 
     with args.out_predictions.open("w") as f:
         for (gold, _, insc_id), pred in zip(eval_pairs, preds, strict=False):
-            f.write(json.dumps({
-                "id": insc_id,
-                "arch": args.arch,
-                "gold_label": gold,
-                "predicted_label": pred,
-                "correct": gold == pred,
-            }, ensure_ascii=False) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        "id": insc_id,
+                        "arch": args.arch,
+                        "gold_label": gold,
+                        "predicted_label": pred,
+                        "correct": gold == pred,
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
 
     print(f"\n── {args.arch} ──", file=sys.stderr)
     print(f"  macro_f1   : {cb_macro.fmt()}", file=sys.stderr)

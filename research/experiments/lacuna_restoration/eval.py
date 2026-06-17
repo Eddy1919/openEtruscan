@@ -9,6 +9,7 @@ for the interpretation.
 Usage:
     python research/experiments/lacuna_restoration/eval.py
 """
+
 from __future__ import annotations
 
 import json
@@ -65,9 +66,7 @@ def load_test_data(limit: int = 500, seed: int = 42) -> list[dict]:
         if not valid:
             continue
         pos = rng.choice(valid)
-        samples.append(
-            {"id": r["id"], "original": text, "target": text[pos], "mask_pos": pos}
-        )
+        samples.append({"id": r["id"], "original": text, "target": text[pos], "mask_pos": pos})
     return samples
 
 
@@ -151,9 +150,7 @@ def eval_char_mlm(samples: list[dict], model_dir: str | Path) -> tuple[float, fl
         mask_idx = pos + 1  # +1 for BOS
         if mask_idx >= config.max_length:
             continue
-        preds = model.predict_at_mask(
-            torch.tensor([ids]), torch.tensor([mask_idx]), top_k=3
-        )[0]
+        preds = model.predict_at_mask(torch.tensor([ids]), torch.tensor([mask_idx]), top_k=3)[0]
         chars = [tokenizer.id_to_char.get(cid, "?") for cid, _ in preds]
         _record(metrics, target, chars, _classify_position(text, pos))
 
@@ -181,9 +178,7 @@ def eval_xlmr_head(samples: list[dict], model_dir: str | Path) -> tuple[float, f
             )
 
         def forward(self, hidden_states, mask_positions):
-            batch_idx = torch.arange(
-                hidden_states.size(0), device=hidden_states.device
-            )
+            batch_idx = torch.arange(hidden_states.size(0), device=hidden_states.device)
             return self.head(hidden_states[batch_idx, mask_positions])
 
     head = CharPredictionHead(meta["hidden_dim"], meta["num_classes"])

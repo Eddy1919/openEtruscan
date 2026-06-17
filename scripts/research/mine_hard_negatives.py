@@ -182,15 +182,21 @@ def _stream_gcs_vocab(
             vocab[lang][word] = vec
             n_kept += 1
             if n_total % 50000 == 0:
-                logger.info("  streamed %d rows, kept %d (%s)", n_total, n_kept, dict(
-                    (k, len(v)) for k, v in vocab.items()
-                ))
+                logger.info(
+                    "  streamed %d rows, kept %d (%s)",
+                    n_total,
+                    n_kept,
+                    dict((k, len(v)) for k, v in vocab.items()),
+                )
     finally:
         proc.stdout.close()
         proc.wait()
-    logger.info("streamed %d rows total; kept %d across %s", n_total, n_kept, dict(
-        (k, len(v)) for k, v in vocab.items()
-    ))
+    logger.info(
+        "streamed %d rows total; kept %d across %s",
+        n_total,
+        n_kept,
+        dict((k, len(v)) for k, v in vocab.items()),
+    )
     return vocab
 
 
@@ -215,9 +221,9 @@ def _offline_mine_one_anchor(
         return [], []
 
     # Encode source word.
-    src_vec = encoder.encode(
-        [etr_word], normalize_embeddings=True, show_progress_bar=False
-    )[0].astype(np.float32)
+    src_vec = encoder.encode([etr_word], normalize_embeddings=True, show_progress_bar=False)[
+        0
+    ].astype(np.float32)
 
     # Stack the partition vectors into one matrix and dot.
     words = list(vocab[to_lang].keys())
@@ -248,10 +254,9 @@ def main() -> int:
         choices=["api", "offline-gcs"],
         default="offline-gcs",
         help="api: query prod /neural/rosetta (only works for in-vocab source words). "
-             "offline-gcs: stream labse-v1.jsonl from GCS + local LaBSE encode (works for all anchors).",
+        "offline-gcs: stream labse-v1.jsonl from GCS + local LaBSE encode (works for all anchors).",
     )
-    parser.add_argument("--api-url", default=DEFAULT_API,
-                        help="Used only when --mode=api.")
+    parser.add_argument("--api-url", default=DEFAULT_API, help="Used only when --mode=api.")
     parser.add_argument(
         "--gcs-path",
         default="gs://openetruscan-rosetta/embeddings/labse-v1.jsonl",
@@ -316,9 +321,7 @@ def _run_api(args: argparse.Namespace, anchors: list[dict[str, Any]]) -> int:
             pos = anchor["equivalent"]
             to_lang = anchor["equivalent_language"]
             try:
-                neighbours = _query_neighbours(
-                    args.api_url, etr, args.from_lang, to_lang, args.k
-                )
+                neighbours = _query_neighbours(args.api_url, etr, args.from_lang, to_lang, args.k)
             except Exception as exc:
                 logger.warning("API error on %r → skipping: %s", etr, exc)
                 n_skipped += 1
@@ -326,10 +329,7 @@ def _run_api(args: argparse.Namespace, anchors: list[dict[str, Any]]) -> int:
                 continue
 
             # Drop the correct positive (case-insensitive, light normalisation).
-            neg_pool = [
-                w for (w, _sim) in neighbours
-                if w.strip().lower() != pos.strip().lower()
-            ]
+            neg_pool = [w for (w, _sim) in neighbours if w.strip().lower() != pos.strip().lower()]
             row = {
                 "etruscan_word": etr,
                 "positive_equivalent": pos,
@@ -343,7 +343,11 @@ def _run_api(args: argparse.Namespace, anchors: list[dict[str, Any]]) -> int:
             n_written += 1
             logger.info(
                 "%d/%d  %s → %s : %d negatives",
-                i, len(anchors), etr, pos, len(neg_pool),
+                i,
+                len(anchors),
+                etr,
+                pos,
+                len(neg_pool),
             )
             time.sleep(args.rate_sleep)
 
@@ -392,7 +396,12 @@ def _run_offline_gcs(args: argparse.Namespace, anchors: list[dict[str, Any]]) ->
             preview = ", ".join(neg_words[:3])
             logger.info(
                 "%d/%d  %s → POS=%s  k=%d  top3=[%s]",
-                i, len(anchors), etr, pos, len(neg_words), preview,
+                i,
+                len(anchors),
+                etr,
+                pos,
+                len(neg_words),
+                preview,
             )
 
     logger.info("wrote %d rows → %s", n_written, args.output)

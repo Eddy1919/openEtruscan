@@ -8,7 +8,6 @@ Downloads or Uploads Neural Models cleanly.
 import os
 import argparse
 import shutil
-import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -32,13 +31,16 @@ def sync_upload():
     api = HfApi()
     print(f"Authenticating to {repo_id}...")
     try:
-        api.create_repo(repo_id=repo_id, repo_type="model", token=token, exist_ok=True, private=False)
+        api.create_repo(
+            repo_id=repo_id, repo_type="model", token=token, exist_ok=True, private=False
+        )
     except Exception as e:
         print(f"Repository namespace verification: {e}")
 
     print("Uploading Neural Matrix to Hugging Face...")
     api.upload_folder(folder_path=str(model_dir), repo_id=repo_id, repo_type="model", token=token)
     print(f"Deployment to {repo_id} Complete!")
+
 
 def sync_download():
     repo_id = "Eddy1919/openetruscan-classifier"
@@ -49,13 +51,16 @@ def sync_download():
     try:
         snapshot_download(repo_id=repo_id, local_dir=str(model_dir), repo_type="model")
         print(f"Download to {model_dir} Complete!")
-        
-        frontend_model_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "models"
+
+        frontend_model_dir = (
+            Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "models"
+        )
         frontend_model_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(model_dir, frontend_model_dir, dirs_exist_ok=True)
         print("Synced to frontend/public/models!")
     except Exception as e:
         print(f"Failed to download models: {e}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

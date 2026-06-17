@@ -57,9 +57,7 @@ class DataSource(Base):
     citation: Mapped[str] = mapped_column(Text, nullable=False)
     license: Mapped[str] = mapped_column(Text, nullable=False, default="unknown")
     url: Mapped[str | None] = mapped_column(Text)
-    provenance_baseline: Mapped[str] = mapped_column(
-        Text, nullable=False, default="unknown"
-    )
+    provenance_baseline: Mapped[str] = mapped_column(Text, nullable=False, default="unknown")
     retrieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False))
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -79,7 +77,7 @@ class Inscription(Base):
     phonetic: Mapped[str] = mapped_column(Text, nullable=False)
     old_italic: Mapped[str] = mapped_column(Text, nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # NLP & Clean Data Columns
     canonical_clean: Mapped[str | None] = mapped_column(Text)
     old_italic_v2: Mapped[str | None] = mapped_column(Text)
@@ -258,6 +256,7 @@ class ProvenanceAudit(Base):
     """
     Audit log for curatorial changes to an inscription's provenance status.
     """
+
     __tablename__ = "provenance_audits"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

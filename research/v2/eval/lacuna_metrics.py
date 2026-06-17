@@ -14,6 +14,7 @@ Inputs: a list of records each shaped like
 These records are produced by `pipelines/lacuna_jury.py`. Each metric
 function returns a float so the bootstrap harness can wrap it directly.
 """
+
 from __future__ import annotations
 
 import re

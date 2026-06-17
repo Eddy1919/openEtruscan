@@ -21,15 +21,14 @@ The script does not write to os.environ — callers that need the value as
 an env var (e.g. `google.generativeai`) should set it themselves after
 fetching.
 """
+
 from __future__ import annotations
 
 import functools
 import os
 import sys
 
-DEFAULT_PROJECT_ID = os.environ.get(
-    "SECRET_MANAGER_PROJECT_ID", "long-facet-427508-j2"
-)
+DEFAULT_PROJECT_ID = os.environ.get("SECRET_MANAGER_PROJECT_ID", "long-facet-427508-j2")
 
 # Logical-name → actual Secret Manager secret name mapping.
 # Lets pipeline code ask for "GOOGLE_API_KEY" without knowing whether the

@@ -36,9 +36,9 @@ class TestEvalPairs:
         from rosetta_eval_pairs import EVAL_PAIRS, VALID_CATEGORIES
 
         for p in EVAL_PAIRS:
-            assert p.category in VALID_CATEGORIES, (
-                f"{p.etr}→{p.lat} category={p.category!r} not in {VALID_CATEGORIES}"
-            )
+            assert (
+                p.category in VALID_CATEGORIES
+            ), f"{p.etr}→{p.lat} category={p.category!r} not in {VALID_CATEGORIES}"
 
     def test_eval_pairs_filter_by_confidence(self):
         from rosetta_eval_pairs import eval_pairs
@@ -125,7 +125,9 @@ class TestEvaluate:
         )
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["n_evaluated"] == 2
         assert report["n_skipped"] == 0
@@ -143,7 +145,9 @@ class TestEvaluate:
         )
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["precision_at_k"][1] == 0.0
         assert report["precision_at_k"][3] == 0.0
@@ -160,7 +164,9 @@ class TestEvaluate:
         )
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["n_evaluated"] == 1
         assert report["per_pair"][0]["rank_of_expected"] is None
@@ -182,7 +188,9 @@ class TestEvaluate:
         )
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["n_evaluated"] == 1
         assert report["n_skipped"] == 1
@@ -206,7 +214,9 @@ class TestEvaluate:
         monkeypatch.setattr(run_rosetta_eval, "_query_neighbours", fake)
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["n_evaluated"] == 1
         assert report["n_skipped"] == 0
@@ -222,19 +232,20 @@ class TestEvaluate:
             monkeypatch,
             {
                 "clan": ["filius"],
-                "apa": ["fratres"],          # miss
+                "apa": ["fratres"],  # miss
                 "tinia": ["iuppiter"],
             },
         )
 
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["by_category"]["kinship"]["n"] == 2
         assert report["by_category"]["kinship"]["precision_at_k"][1] == 0.5
         assert report["by_category"]["theonym"]["n"] == 1
         assert report["by_category"]["theonym"]["precision_at_k"][1] == 1.0
-
 
     def test_levenshtein_baseline_self_match(self, monkeypatch):
         """The Levenshtein baseline should rank an exact match first."""
@@ -253,7 +264,6 @@ class TestEvaluate:
         assert report["precision_at_k"][1] == 1.0
         assert report["per_pair"][0]["rank_of_expected"] == 1
 
-
     def test_levenshtein_pipeline_end_to_end(self, monkeypatch):
         """Test Levenshtein integration with coverage_at_threshold."""
         pairs = [EvalPair("fanu", "fanu", "sanctuary", "high", "test", "religious")]
@@ -270,6 +280,8 @@ class TestEvaluate:
         assert "coverage_at_threshold" in report
         assert 0.5 in report["coverage_at_threshold"]
         assert report["coverage_at_threshold"][0.5] >= 0.0
+
+
 # ---------------------------------------------------------------------------
 # Random baseline (analytical)
 # ---------------------------------------------------------------------------
@@ -285,7 +297,7 @@ class TestRandomBaseline:
         """
         import math
         from unittest.mock import patch
-        
+
         monkeypatch.setattr(run_rosetta_eval, "_get_vocab", lambda *args: ["x"] * 1000)
 
         # Use a valid category but override the field to exactly 10 members.
@@ -303,9 +315,7 @@ class TestRandomBaseline:
 
         # field@5 = 1 - C(990,5)/C(1000,5)
         expected_field = 1.0 - math.comb(990, 5) / math.comb(1000, 5)
-        assert result["precision_at_k_semantic_field"][5] == pytest.approx(
-            expected_field, rel=1e-6
-        )
+        assert result["precision_at_k_semantic_field"][5] == pytest.approx(expected_field, rel=1e-6)
         # Sanity: field > strict (semantic field is broader)
         assert result["precision_at_k_semantic_field"][5] > result["precision_at_k"][5]
 
@@ -316,7 +326,10 @@ class TestRandomBaseline:
             EvalPair("avil", "annus", "year", "high", "test", "time"),
         ]
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False, baseline="random",
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
+            baseline="random",
         )
         assert report["n_evaluated"] == 2
         assert report["n_skipped"] == 0
@@ -349,14 +362,15 @@ class TestRandomBaseline:
             },
         )
         report = run_rosetta_eval.evaluate(
-            api_url="https://test", pairs=pairs, pace=False,
+            api_url="https://test",
+            pairs=pairs,
+            pace=False,
         )
         assert report["n_evaluated"] == 4
         cov = report["coverage_at_threshold"]
         assert cov[0.85] == 1 / 4  # only p1 >= 0.85
         assert cov[0.70] == 2 / 4  # p1, p2 >= 0.70
         assert cov[0.50] == 3 / 4  # p1, p2, p3 >= 0.50
-
 
 
 # ---------------------------------------------------------------------------
@@ -372,41 +386,47 @@ class TestEvaluateGates:
             "by_category": {
                 "kinship": {
                     "precision_at_k": {1: 0.6, 3: 0.8, 5: 0.9, 10: 1.0},
-                    "n": 9, "median_rank": 1,
+                    "n": 9,
+                    "median_rank": 1,
                 },
             },
         }
 
     def test_pass_when_all_thresholds_met(self):
         ok, failures = run_rosetta_eval._evaluate_gates(
-            self._report(), "precision_at_5=0.40,precision_at_10=0.50",
+            self._report(),
+            "precision_at_5=0.40,precision_at_10=0.50",
         )
         assert ok
         assert failures == []
 
     def test_fail_when_threshold_missed(self):
         ok, failures = run_rosetta_eval._evaluate_gates(
-            self._report(), "precision_at_1=0.99",
+            self._report(),
+            "precision_at_1=0.99",
         )
         assert not ok
         assert "precision_at_1" in failures[0]
 
     def test_unknown_metric_fails_loudly(self):
         ok, failures = run_rosetta_eval._evaluate_gates(
-            self._report(), "fake_metric=0.5",
+            self._report(),
+            "fake_metric=0.5",
         )
         assert not ok
         assert "unknown gate metric" in failures[0]
 
     def test_per_category_gate_works(self):
         ok, _ = run_rosetta_eval._evaluate_gates(
-            self._report(), "kinship_precision_at_5=0.85",
+            self._report(),
+            "kinship_precision_at_5=0.85",
         )
         assert ok
 
     def test_per_category_gate_can_fail(self):
         ok, failures = run_rosetta_eval._evaluate_gates(
-            self._report(), "kinship_precision_at_1=0.99",
+            self._report(),
+            "kinship_precision_at_1=0.99",
         )
         assert not ok
         assert "kinship_precision_at_1" in failures[0]
@@ -443,21 +463,28 @@ class TestBenchmarkPreset:
         """
         # Stub _query_neighbours so we don't hit the network.
         monkeypatch.setattr(
-            run_rosetta_eval, "_query_neighbours",
+            run_rosetta_eval,
+            "_query_neighbours",
             lambda *args, **kwargs: [("dummy", 0.5)],
         )
         monkeypatch.setattr(run_rosetta_eval, "PER_REQUEST_DELAY_S", 0.0)
 
         # main() parses argv and prints "Split: test (N pairs)" — assert N matches
         # the test-split count, not the train-split count.
-        rc = run_rosetta_eval.main([
-            "--api-url", "https://test",
-            "--benchmark", "rosetta-eval-v1",
-            "--split", "train",          # should be overridden
-            "--min-confidence", "low",   # should be overridden
-            "--no-pace",
-            "--json",
-        ])
+        rc = run_rosetta_eval.main(
+            [
+                "--api-url",
+                "https://test",
+                "--benchmark",
+                "rosetta-eval-v1",
+                "--split",
+                "train",  # should be overridden
+                "--min-confidence",
+                "low",  # should be overridden
+                "--no-pace",
+                "--json",
+            ]
+        )
         assert rc == 0
 
         err = capsys.readouterr().err
@@ -466,27 +493,33 @@ class TestBenchmarkPreset:
         # Expected test-split count is in [20, 24] per the T1.3 contract.
         # Match the "Split: test (N pairs)" line.
         import re
+
         m = re.search(r"Split: test \((\d+) pairs\)", err)
         assert m is not None, f"split line not found in stderr: {err!r}"
         n_pairs = int(m.group(1))
-        assert 20 <= n_pairs <= 24, (
-            f"benchmark used wrong split: got {n_pairs} pairs, expected 20-24 (test)"
-        )
+        assert (
+            20 <= n_pairs <= 24
+        ), f"benchmark used wrong split: got {n_pairs} pairs, expected 20-24 (test)"
 
     def test_benchmark_does_not_warn_when_defaults_match(self, monkeypatch, capsys):
         """No override warning if the user didn't pass conflicting flags."""
         monkeypatch.setattr(
-            run_rosetta_eval, "_query_neighbours",
+            run_rosetta_eval,
+            "_query_neighbours",
             lambda *args, **kwargs: [("dummy", 0.5)],
         )
         monkeypatch.setattr(run_rosetta_eval, "PER_REQUEST_DELAY_S", 0.0)
 
-        rc = run_rosetta_eval.main([
-            "--api-url", "https://test",
-            "--benchmark", "rosetta-eval-v1",
-            "--no-pace",
-            "--json",
-        ])
+        rc = run_rosetta_eval.main(
+            [
+                "--api-url",
+                "https://test",
+                "--benchmark",
+                "rosetta-eval-v1",
+                "--no-pace",
+                "--json",
+            ]
+        )
         assert rc == 0
         err = capsys.readouterr().err
         assert "Benchmark: rosetta-eval-v1" in err
@@ -512,7 +545,9 @@ class TestRerank:
         import rerank as rerank_mod
 
         class _FakeCrossEncoder:
-            def __init__(self, name): self.name = name
+            def __init__(self, name):
+                self.name = name
+
             def predict(self, pairs):
                 # Reverse the order: the LAST candidate is most relevant
                 return [float(i) for i in range(len(pairs))]
@@ -523,6 +558,7 @@ class TestRerank:
         # The actual import is `from sentence_transformers import CrossEncoder`
         # inside the function, so patch the module level too.
         import sys as _sys
+
         fake_module = type(_sys)("sentence_transformers")
         fake_module.CrossEncoder = _FakeCrossEncoder  # type: ignore[attr-defined]
         monkeypatch.setitem(_sys.modules, "sentence_transformers", fake_module)
@@ -535,6 +571,7 @@ class TestRerank:
         """Empty input returns empty output without touching the model."""
         sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
         import rerank as rerank_mod
+
         rerank_mod._RERANK_MODEL_CACHE.clear()
         out = rerank_mod.rerank_candidates("query", [])
         assert out == []
@@ -544,11 +581,15 @@ class TestRerank:
         import rerank as rerank_mod
 
         class _FakeCE:
-            def __init__(self, name): pass
-            def predict(self, pairs): return [1.0 - i * 0.1 for i in range(len(pairs))]
+            def __init__(self, name):
+                pass
+
+            def predict(self, pairs):
+                return [1.0 - i * 0.1 for i in range(len(pairs))]
 
         rerank_mod._RERANK_MODEL_CACHE.clear()
         import sys as _sys
+
         fake_module = type(_sys)("sentence_transformers")
         fake_module.CrossEncoder = _FakeCE  # type: ignore[attr-defined]
         monkeypatch.setitem(_sys.modules, "sentence_transformers", fake_module)

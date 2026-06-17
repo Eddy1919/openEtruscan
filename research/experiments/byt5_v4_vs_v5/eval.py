@@ -8,6 +8,7 @@ exact-match accuracy + character error rate between the two adapters.
 CPU-safe: loads a fresh base model per adapter, merges LoRA weights
 with merge_and_unload(), and forces fp32 + greedy decoding.
 """
+
 import os
 import random
 from pathlib import Path
@@ -37,9 +38,7 @@ def extract_prediction(text: str) -> str:
 
 def load_merged_model(adapter_path: str):
     """Load a fresh byt5-small base, attach LoRA, merge, and return fp32 model."""
-    base = AutoModelForSeq2SeqLM.from_pretrained(
-        "google/byt5-small", torch_dtype=torch.float32
-    )
+    base = AutoModelForSeq2SeqLM.from_pretrained("google/byt5-small", torch_dtype=torch.float32)
     peft_model = PeftModel.from_pretrained(base, adapter_path)
     merged = peft_model.merge_and_unload()
     merged.eval()
@@ -79,12 +78,14 @@ def main():
         words_masked = words.copy()
         words_masked[mask_idx] = "<extra_id_0>"
         masked_text = " ".join(words_masked)
-        examples.append({
-            "id": r["id"],
-            "original": text,
-            "masked": masked_text,
-            "target": target,
-        })
+        examples.append(
+            {
+                "id": r["id"],
+                "original": text,
+                "masked": masked_text,
+                "target": target,
+            }
+        )
 
     print(f"Prepared {len(examples)} evaluation examples.\n")
 
@@ -92,7 +93,7 @@ def main():
 
     gen_config = GenerationConfig(
         max_new_tokens=32,
-        num_beams=1,          # greedy — avoids beam-search early-stop artifacts
+        num_beams=1,  # greedy — avoids beam-search early-stop artifacts
         do_sample=False,
         decoder_start_token_id=0,
     )

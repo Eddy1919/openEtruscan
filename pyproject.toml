@@ -91,7 +91,12 @@ dev = [
     "pytest-cov>=4.0",
     "aiosqlite>=0.19",
     "httpx>=0.25",
-    "ruff>=0.4",
+    # Lint/format/type tooling is pinned EXACTLY to the versions in
+    # .pre-commit-config.yaml so local runs, pre-commit, and CI agree
+    # byte-for-byte (a minor ruff bump silently reformats the tree).
+    # Keep these two in lockstep with that file.
+    "ruff==0.4.10",
+    "mypy==1.10.0",
     "semgrep>=1.60",
     "safety>=3.0",
     # testcontainers spins a real Postgres + pgvector locally for tests that
@@ -130,11 +135,18 @@ markers = [
 [tool.ruff]
 target-version = "py310"
 line-length = 100
-exclude = ["scripts/"]
 
 [tool.ruff.lint]
 select = ["F", "E", "B", "UP"]
 ignore = ["B904", "E501", "F821", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Training/eval entrypoints set env vars and sys.path before importing heavy
+# ML libs; their imports are intentionally not at the top of the file.
+"scripts/**" = ["E402"]
+"eval/**" = ["E402"]
+"evals/**" = ["E402"]
+"tests/conftest.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.10"

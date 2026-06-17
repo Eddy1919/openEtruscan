@@ -31,6 +31,7 @@ Filtering rules:
 This script does NOT call LLMs. It produces the raw candidate pool that
 `pipelines/lacuna_jury.py` then processes.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -121,18 +122,28 @@ def _walk_corpus(path: Path) -> Iterator[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--corpus", type=Path, action="append", required=True,
-                    help="Corpus file path. Pass multiple times to scan across "
-                         "id namespaces (publication-id JSONL + integer-DB-id "
-                         "JSONL). Each file is mined independently.")
-    ap.add_argument("--silver-labels", type=Path,
-                    default=Path("research/data/openetruscan_labels.csv"),
-                    help="v1 silver labels for inscription_type annotation.")
-    ap.add_argument("--out", type=Path, required=True,
-                    help="Output JSONL of mined candidate rows.")
-    ap.add_argument("--prefer-field", choices=("raw_text", "canonical_transliterated"),
-                    default="canonical_transliterated",
-                    help="Which corpus column to scan for restorations.")
+    ap.add_argument(
+        "--corpus",
+        type=Path,
+        action="append",
+        required=True,
+        help="Corpus file path. Pass multiple times to scan across "
+        "id namespaces (publication-id JSONL + integer-DB-id "
+        "JSONL). Each file is mined independently.",
+    )
+    ap.add_argument(
+        "--silver-labels",
+        type=Path,
+        default=Path("research/data/openetruscan_labels.csv"),
+        help="v1 silver labels for inscription_type annotation.",
+    )
+    ap.add_argument("--out", type=Path, required=True, help="Output JSONL of mined candidate rows.")
+    ap.add_argument(
+        "--prefer-field",
+        choices=("raw_text", "canonical_transliterated"),
+        default="canonical_transliterated",
+        help="Which corpus column to scan for restorations.",
+    )
     args = ap.parse_args(argv)
 
     silver_types = _load_silver_types(args.silver_labels)
@@ -148,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     sink = args.out.open("w")
     n_kept = n_skipped_quality = n_skipped_multi = n_skipped_edge = 0
     n_skipped_content = 0
+
     def _walk_all() -> Iterator[dict]:
         for p in args.corpus:
             yield from _walk_corpus(p)

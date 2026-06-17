@@ -1,5 +1,5 @@
 import csv
-import sys
+
 
 def main():
     csv_file = "openetruscan_clean.csv"
@@ -15,11 +15,11 @@ def main():
     print("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS year_to INTEGER;")
     print("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS intact_token_ratio REAL;")
 
-    with open(csv_file, "r", encoding="utf-8") as f:
+    with open(csv_file, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             record_id = row["id"].replace("'", "''")
-            
+
             # Helper to safely quote strings or emit NULL
             def q(val):
                 if not val.strip():
@@ -37,7 +37,7 @@ def main():
             year_to = q_num(row["year_to"])
             canonical_words_only = q(row["canonical_words_only"])
             intact_token_ratio = q_num(row["intact_token_ratio"])
-            
+
             sql = f"""UPDATE inscriptions SET
                 translation = {translation},
                 year_from = {year_from},
@@ -45,10 +45,11 @@ def main():
                 canonical_words_only = {canonical_words_only},
                 intact_token_ratio = {intact_token_ratio}
                 WHERE id = '{record_id}';"""
-            
+
             print(sql)
 
     print("COMMIT;")
+
 
 if __name__ == "__main__":
     main()

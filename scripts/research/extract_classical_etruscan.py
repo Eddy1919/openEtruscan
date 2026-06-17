@@ -77,8 +77,7 @@ GREEK_GLOSS_PATTERNS = [
 
 # Editorial / apparatus noise we strip from cleaned passages
 APPARATUS_NOISE = re.compile(
-    r"(?:\s\b[A-Z]\s\b\d+\b|\s\b[A-Z]{1,3}\s+[a-z]{1,3}\b|"
-    r"\s\b[A-Z][12]\b|\s\bcod\.?\b)",
+    r"(?:\s\b[A-Z]\s\b\d+\b|\s\b[A-Z]{1,3}\s+[a-z]{1,3}\b|" r"\s\b[A-Z][12]\b|\s\bcod\.?\b)",
     re.UNICODE,
 )
 
@@ -136,27 +135,32 @@ def _is_target_lang(xml_path: Path) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--formatted-root", default=str(
+        "--formatted-root",
+        default=str(
             Path(__file__).resolve().parent.parent.parent.parent
-            / "data" / "classical_texts" / "formatted"
+            / "data"
+            / "classical_texts"
+            / "formatted"
         ),
     )
     parser.add_argument(
-        "--passages-path", required=True,
+        "--passages-path",
+        required=True,
         help="JSONL output: every Etruscan-mentioning paragraph",
     )
     parser.add_argument(
-        "--bilingual-glosses-path", required=True,
+        "--bilingual-glosses-path",
+        required=True,
         help="JSONL output: regex-extracted attested bilingual pairs",
     )
     parser.add_argument(
-        "--include-authors", default=None,
+        "--include-authors",
+        default=None,
         help="Comma-separated substring filter for author dirs (default: all)",
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     formatted_root = Path(args.formatted_root)
     if not formatted_root.exists():
@@ -168,9 +172,9 @@ def main() -> int:
         include = [s.strip() for s in args.include_authors.split(",")]
 
     xml_files = [
-        p for p in formatted_root.rglob("*.xml")
-        if _is_target_lang(p)
-        and (include is None or any(s in str(p) for s in include))
+        p
+        for p in formatted_root.rglob("*.xml")
+        if _is_target_lang(p) and (include is None or any(s in str(p) for s in include))
     ]
     logger.info("Will scan %d original-language XML files", len(xml_files))
 
@@ -183,8 +187,10 @@ def main() -> int:
     n_files_with_match = 0
     by_author: dict[str, int] = {}
 
-    with passages_path.open("w", encoding="utf-8") as f_pass, \
-         glosses_path.open("w", encoding="utf-8") as f_gl:
+    with (
+        passages_path.open("w", encoding="utf-8") as f_pass,
+        glosses_path.open("w", encoding="utf-8") as f_gl,
+    ):
         for x in sorted(xml_files):
             meta = _file_meta(x, formatted_root)
             paras = _extract_paragraphs(x)
@@ -198,22 +204,28 @@ def main() -> int:
                 by_author[meta["author"]] = by_author.get(meta["author"], 0) + 1
                 # Probe gloss patterns
                 patterns = (
-                    LATIN_GLOSS_PATTERNS if meta["language"] == "Latin"
-                    else GREEK_GLOSS_PATTERNS
+                    LATIN_GLOSS_PATTERNS if meta["language"] == "Latin" else GREEK_GLOSS_PATTERNS
                 )
                 for pat in patterns:
                     for m in pat.finditer(para):
                         gd = m.groupdict()
-                        f_gl.write(json.dumps(
-                            {**meta, "match": m.group(0)[:300], **gd},
-                            ensure_ascii=False,
-                        ) + "\n")
+                        f_gl.write(
+                            json.dumps(
+                                {**meta, "match": m.group(0)[:300], **gd},
+                                ensure_ascii=False,
+                            )
+                            + "\n"
+                        )
                         n_glosses += 1
             if file_had_match:
                 n_files_with_match += 1
 
-    logger.info("DONE: %d passages, %d gloss-pattern hits, %d files contributing",
-                n_passages, n_glosses, n_files_with_match)
+    logger.info(
+        "DONE: %d passages, %d gloss-pattern hits, %d files contributing",
+        n_passages,
+        n_glosses,
+        n_files_with_match,
+    )
     logger.info("Top contributing authors:")
     for author, n in sorted(by_author.items(), key=lambda x: -x[1])[:15]:
         logger.info("  %s: %d", author, n)

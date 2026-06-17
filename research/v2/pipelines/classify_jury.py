@@ -33,6 +33,7 @@ This file deliberately does NOT call the APIs from this script's tests; an
 operator runs it with keys configured. The schema and prompts are fixed so
 that re-runs are reproducible across providers.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,6 +48,7 @@ from collections.abc import Callable, Iterator
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _secrets import get_secret  # noqa: E402
+
 
 def _resolve_codebook(language: str) -> Path:
     """Resolve `codebooks/{language}/classification.md` from the repo layout."""
@@ -110,8 +112,10 @@ class Provider:
 # Each adapter is lazy-imported so the script runs even when only one
 # provider's SDK is installed.
 
+
 def _make_anthropic_vertex(model: str) -> Provider:
     """Claude via Vertex AI. Uses Application Default Credentials — no API key."""
+
     def invoke(system: str, user: str) -> str:
         from anthropic import AnthropicVertex  # type: ignore
 
@@ -173,6 +177,7 @@ def _make_vertex_maas(model: str) -> Provider:
     Path uses /v1/ — the /v1beta1/ form is NOT current and returns 404 even
     for enabled models. Verified by the Console "Use this model" snippet.
     """
+
     def invoke(system: str, user: str) -> str:
         from google.auth import default  # type: ignore
         from google.auth.transport.requests import Request  # type: ignore
@@ -299,25 +304,41 @@ def load_completed_keys(path: Path) -> set[tuple[str, str]]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--test-pool", type=Path, required=True,
-                    help="Frozen test JSONL produced by classify_split.py")
-    ap.add_argument("--out", type=Path, required=True,
-                    help="Append-mode JSONL of (model, id, label, …) rows.")
-    ap.add_argument("--providers", nargs="+",
-                    default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"],
-                    help="Provider names from PROVIDER_REGISTRY. "
-                         "Default 3-model jury: Claude (Vertex), Gemini, DeepSeek (Vertex MaaS). "
-                         "All bill to the same GCP project; no separate API keys needed.")
-    ap.add_argument("--max-rows", type=int, default=0,
-                    help="Smoke test: cap rows per provider. 0 = no cap.")
-    ap.add_argument("--sleep", type=float, default=0.5,
-                    help="Seconds to sleep between API calls (politeness).")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Print the prompts that WOULD be sent, do not call any API.")
-    ap.add_argument("--language", default="etr",
-                    help="ISO-639-3 code selecting which codebook to use. "
-                         "Currently supported: etr. Others (osc, fal, rae) are "
-                         "scaffolded but the codebooks are still TODOs.")
+    ap.add_argument(
+        "--test-pool",
+        type=Path,
+        required=True,
+        help="Frozen test JSONL produced by classify_split.py",
+    )
+    ap.add_argument(
+        "--out", type=Path, required=True, help="Append-mode JSONL of (model, id, label, …) rows."
+    )
+    ap.add_argument(
+        "--providers",
+        nargs="+",
+        default=["claude-haiku-4-5", "gemini-2.5-pro", "llama-4-maverick"],
+        help="Provider names from PROVIDER_REGISTRY. "
+        "Default 3-model jury: Claude (Vertex), Gemini, DeepSeek (Vertex MaaS). "
+        "All bill to the same GCP project; no separate API keys needed.",
+    )
+    ap.add_argument(
+        "--max-rows", type=int, default=0, help="Smoke test: cap rows per provider. 0 = no cap."
+    )
+    ap.add_argument(
+        "--sleep", type=float, default=0.5, help="Seconds to sleep between API calls (politeness)."
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the prompts that WOULD be sent, do not call any API.",
+    )
+    ap.add_argument(
+        "--language",
+        default="etr",
+        help="ISO-639-3 code selecting which codebook to use. "
+        "Currently supported: etr. Others (osc, fal, rae) are "
+        "scaffolded but the codebooks are still TODOs.",
+    )
     args = ap.parse_args(argv)
 
     codebook_path = _resolve_codebook(args.language)
@@ -387,17 +408,23 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception as e:  # noqa: BLE001 — log and skip
                     errors += 1
                     print(f"  [{provider_name} {row['id']}] api_error: {e}", file=sys.stderr)
-                    sink.write(json.dumps({
-                        "model": provider_name,
-                        "id": row["id"],
-                        "label": "unsure",
-                        "confidence": "low",
-                        "rationale": "",
-                        "features": [],
-                        "alternates_considered": [],
-                        "codebook_version": "v2.0",
-                        "parse_error": f"api_error: {e}",
-                    }, ensure_ascii=False) + "\n")
+                    sink.write(
+                        json.dumps(
+                            {
+                                "model": provider_name,
+                                "id": row["id"],
+                                "label": "unsure",
+                                "confidence": "low",
+                                "rationale": "",
+                                "features": [],
+                                "alternates_considered": [],
+                                "codebook_version": "v2.0",
+                                "parse_error": f"api_error: {e}",
+                            },
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    )
                     sink.flush()
                     time.sleep(args.sleep)
                     continue
@@ -407,8 +434,10 @@ def main(argv: list[str] | None = None) -> int:
                 sink.flush()
                 completed += 1
                 if completed % 25 == 0:
-                    print(f"  progress: {completed}/{total - skipped} (errors={errors})",
-                          file=sys.stderr)
+                    print(
+                        f"  progress: {completed}/{total - skipped} (errors={errors})",
+                        file=sys.stderr,
+                    )
                 time.sleep(args.sleep)
     finally:
         sink.close()

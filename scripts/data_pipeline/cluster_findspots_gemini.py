@@ -5,40 +5,44 @@ import urllib.error
 import time
 from pathlib import Path
 
+
 def get_gemini_api_key():
     try:
-        with open(".env", "r") as f:
+        with open(".env") as f:
             for line in f:
                 if line.startswith("GEMINI_API_KEY="):
-                    return line.strip().split("=")[1].strip('"\'')
+                    return line.strip().split("=")[1].strip("\"'")
     except Exception:
         pass
     return None
 
+
 def call_gemini(api_key, system_prompt, chunks):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key={api_key}"
-    
+
     payload = {
-        "contents": [{
-            "parts": [
-                {"text": system_prompt},
-                {"text": "Here are the strings to cluster:\n" + "\n".join([f"ID {c[0]}: {c[1]}" for c in chunks])}
-            ]
-        }],
-        "generationConfig": {
-            "temperature": 0.0,
-            "responseMimeType": "application/json"
-        }
+        "contents": [
+            {
+                "parts": [
+                    {"text": system_prompt},
+                    {
+                        "text": "Here are the strings to cluster:\n"
+                        + "\n".join([f"ID {c[0]}: {c[1]}" for c in chunks])
+                    },
+                ]
+            }
+        ],
+        "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json"},
     }
-    
-    data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
-    
+
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
     try:
         with urllib.request.urlopen(req) as response:
             res_body = response.read()
             res_json = json.loads(res_body)
-            raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
+            raw_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
             return json.loads(raw_text)
     except urllib.error.HTTPError as e:
         print(f"HTTP Error: {e.code}")
@@ -47,6 +51,7 @@ def call_gemini(api_key, system_prompt, chunks):
     except Exception as e:
         print(f"API Error: {e}")
         return None
+
 
 def main():
     api_key = get_gemini_api_key()
@@ -58,7 +63,9 @@ def main():
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    cur.execute("SELECT id, original_string FROM unique_findspots WHERE cluster_name IS NULL OR status='PENDING'")
+    cur.execute(
+        "SELECT id, original_string FROM unique_findspots WHERE cluster_name IS NULL OR status='PENDING'"
+    )
     rows = cur.fetchall()
 
     if not rows:
@@ -85,11 +92,11 @@ Do not return anything else. Output pure JSON. Make sure you return an object fo
 """
 
     BATCH_SIZE = 40
-    
+
     for i in range(0, len(rows), BATCH_SIZE):
-        batch = rows[i:i + BATCH_SIZE]
+        batch = rows[i : i + BATCH_SIZE]
         print(f"Processing batch {i} to {i+len(batch)} / {len(rows)}...")
-        
+
         result = call_gemini(api_key, SYSTEM_PROMPT, batch)
         if result:
             update_data = []
@@ -100,24 +107,28 @@ Do not return anything else. Output pure JSON. Make sure you return an object fo
                     lat = item.get("approx_lat")
                     lon = item.get("approx_lon")
                     update_data.append((cluster, lat, lon, "CLUSTER_GENERATED", obj_id))
-                except Exception as e:
+                except Exception:
                     print(f"Skipping malformed json object: {item}")
-                    
+
             if update_data:
-                cur.executemany("""
+                cur.executemany(
+                    """
                     UPDATE unique_findspots 
                     SET cluster_name=?, gemini_lat=?, gemini_lon=?, status=?
                     WHERE id=?
-                """, update_data)
+                """,
+                    update_data,
+                )
                 conn.commit()
                 print(f"Successfully committed batch {i}.")
         else:
             print("Failed to process chunk. Halting to prevent infinite loop.")
             break
-            
+
         time.sleep(3)
 
     conn.close()
+
 
 if __name__ == "__main__":
     main()

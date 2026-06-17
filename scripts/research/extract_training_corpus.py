@@ -56,7 +56,7 @@ def main() -> int:
 
     n_brackets = 0
     for row in rows:
-        rec = dict(zip(cols, row))
+        rec = dict(zip(cols, row, strict=False))
         # ByT5 training expects `raw_text` and `has_brackets`
         raw = rec.get("raw_text") or rec.get("canonical_clean") or ""
         has_brackets = "[" in raw and "]" in raw
@@ -72,7 +72,9 @@ def main() -> int:
             "translation": rec.get("translation"),
             "year_from": rec.get("year_from"),
             "year_to": rec.get("year_to"),
-            "intact_token_ratio": float(rec["intact_token_ratio"]) if rec.get("intact_token_ratio") is not None else None,
+            "intact_token_ratio": float(rec["intact_token_ratio"])
+            if rec.get("intact_token_ratio") is not None
+            else None,
         }
         print(json.dumps(obj, ensure_ascii=False))
 

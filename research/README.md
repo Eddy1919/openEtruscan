@@ -21,6 +21,9 @@ research strand lives here.
 | [`BIBLIOGRAPHY.md`](BIBLIOGRAPHY.md) | Consolidated references: Etruscan philology, ML architectures, datasets, conventions. | When citing or following primary sources. |
 | [`ROADMAP.md`](ROADMAP.md) | Forward-looking research plan: priorities, hypotheses still worth testing, scope boundaries, what's *not* in scope. | When deciding what the next investment should be. |
 | [`WBS.md`](WBS.md) | Work-breakdown structure: every research deliverable broken down into discrete tasks with acceptance criteria, estimated effort, dependencies. | When picking up a task to actually execute. |
+| [`EXECUTION_WBS.md`](EXECUTION_WBS.md) | The *execution-ready* subset of `WBS.md` — the science roadmap (defensible eval, v4 head-to-head, primary-source mining) as one-PR-per-task blocks. | When running the next batch of science tasks. |
+| [`SOTA_ROADMAP.md`](SOTA_ROADMAP.md) | The *research-grade infrastructure* roadmap — what makes the science citable. Runs in parallel with `EXECUTION_WBS.md`, same one-PR-per-task discipline. | When hardening the project into a citable artifact. |
+| [`v2/`](v2/) | OpenEtruscan v2: gold annotation + frozen benchmarks (LLM-jury labelling, pre-registered evals). Has its own [README](v2/README.md) and [`PRE_REGISTRATION.md`](v2/PRE_REGISTRATION.md). | When working on gold sets or pre-registered v2 benchmarks. |
 | [`notes/`](notes/) | Topic-specific deep-dives that don't yet warrant promotion to a top-level doc. | When you want to know what was tried for a sub-problem. |
 
 ## Companion artefacts (not in this directory)

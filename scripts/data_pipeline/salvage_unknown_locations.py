@@ -8,18 +8,18 @@ import urllib.error
 
 # Setup paths
 repo_root = Path(__file__).resolve().parent.parent.parent
-db_dir = repo_root / 'data' / 'cie' / 'databases'
-unknown_db = db_dir / 'cie_etruscan_unknown.db'
-report_path = repo_root / 'data' / 'cie' / 'salvaged_locations_report.md'
+db_dir = repo_root / "data" / "cie" / "databases"
+unknown_db = db_dir / "cie_etruscan_unknown.db"
+report_path = repo_root / "data" / "cie" / "salvaged_locations_report.md"
 
 # Load API Key manually if dotenv is not available
 env_path = repo_root / ".env"
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key and env_path.exists():
-    with open(env_path, 'r') as f:
+    with open(env_path) as f:
         for line in f:
             if line.startswith("GEMINI_API_KEY="):
-                api_key = line.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                api_key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
                 break
 
 if not api_key:
@@ -33,23 +33,21 @@ gemini_schema = {
     "properties": {
         "found_location": {
             "type": "BOOLEAN",
-            "description": "True if a location can be extracted from the commentary."
+            "description": "True if a location can be extracted from the commentary.",
         },
         "extracted_toponym": {
             "type": "STRING",
-            "description": "The exact Latin or Italian location phrase from the text (e.g. 'Clusii'). Null if none."
+            "description": "The exact Latin or Italian location phrase from the text (e.g. 'Clusii'). Null if none.",
         },
         "modern_guess": {
             "type": "STRING",
-            "description": "Your best guess mapping the Latin toponym to a modern Italian place (e.g. 'Chiusi'). Null if none."
+            "description": "Your best guess mapping the Latin toponym to a modern Italian place (e.g. 'Chiusi'). Null if none.",
         },
-        "reasoning": {
-            "type": "STRING",
-            "description": "Brief explanation."
-        }
+        "reasoning": {"type": "STRING", "description": "Brief explanation."},
     },
-    "required": ["found_location"]
+    "required": ["found_location"],
 }
+
 
 def call_gemini(prompt):
     data = {
@@ -57,17 +55,19 @@ def call_gemini(prompt):
         "generationConfig": {
             "responseMimeType": "application/json",
             "responseSchema": gemini_schema,
-            "temperature": 0.1
-        }
+            "temperature": 0.1,
+        },
     }
-    
-    req = urllib.request.Request(gemini_url, json.dumps(data).encode('utf-8'), {'Content-Type': 'application/json'})
+
+    req = urllib.request.Request(
+        gemini_url, json.dumps(data).encode("utf-8"), {"Content-Type": "application/json"}
+    )
     try:
         with urllib.request.urlopen(req) as response:
-            res_body = response.read().decode('utf-8')
+            res_body = response.read().decode("utf-8")
             res_json = json.loads(res_body)
             # Extracted text is deeply nested in Gemini payload
-            text_resp = res_json['candidates'][0]['content']['parts'][0]['text']
+            text_resp = res_json["candidates"][0]["content"]["parts"][0]["text"]
             return json.loads(text_resp)
     except urllib.error.HTTPError as e:
         print(f"HTTP Error: {e.code} - {e.read().decode('utf-8')}")
@@ -76,6 +76,7 @@ def call_gemini(prompt):
         print(f"Error: {e}")
         return None
 
+
 def salvage_locations():
     if not unknown_db.exists():
         print(f"File not found: {unknown_db}")
@@ -83,7 +84,7 @@ def salvage_locations():
 
     conn = sqlite3.connect(unknown_db)
     cur = conn.cursor()
-    
+
     cur.execute("""
         SELECT cie_id, transliterated, latin_commentary 
         FROM cie_review 
@@ -91,10 +92,10 @@ def salvage_locations():
         AND LENGTH(latin_commentary) > 20
     """)
     rows = cur.fetchall()
-    
+
     results = []
     print(f"Found {len(rows)} candidates for location salvage.")
-    
+
     for row in rows:
         cie_id, transliterated, commentary = row
         prompt = (
@@ -105,34 +106,41 @@ def salvage_locations():
             f"Text: {transliterated}\n"
             f"Commentary: {commentary}"
         )
-        
+
         data = call_gemini(prompt)
         if data and data.get("found_location"):
-            results.append({
-                "cie_id": cie_id,
-                "text": transliterated,
-                "commentary_snippet": commentary[:150] + "...",
-                "extracted": data.get("extracted_toponym"),
-                "modern": data.get("modern_guess"),
-                "reasoning": data.get("reasoning")
-            })
-        print('.', end='', flush=True)
+            results.append(
+                {
+                    "cie_id": cie_id,
+                    "text": transliterated,
+                    "commentary_snippet": commentary[:150] + "...",
+                    "extracted": data.get("extracted_toponym"),
+                    "modern": data.get("modern_guess"),
+                    "reasoning": data.get("reasoning"),
+                }
+            )
+        print(".", end="", flush=True)
         time.sleep(0.5)
-            
+
     print(f"\nSalvaged {len(results)} locations.")
-    
+
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("# [GATE 1] Location Salvage Review Report\n\n")
-        f.write("The Gemini LLM has analyzed the `latin_commentary` of records missing a findspot. Please review the extracted locations below.\n\n")
-        
+        f.write(
+            "The Gemini LLM has analyzed the `latin_commentary` of records missing a findspot. Please review the extracted locations below.\n\n"
+        )
+
         f.write("| CIE ID | Extracted Toponym | Modern Guess | Reasoning | Text |\n")
         f.write("| :--- | :--- | :--- | :--- | :--- |\n")
         for res in results:
-            text_snip = str(res['text']).replace('\n', ' ')[:30] + "..." if res['text'] else ""
-            f.write(f"| {res['cie_id']} | **{res['extracted']}** | {res['modern']} | {res['reasoning']} | {text_snip} |\n")
-            
+            text_snip = str(res["text"]).replace("\n", " ")[:30] + "..." if res["text"] else ""
+            f.write(
+                f"| {res['cie_id']} | **{res['extracted']}** | {res['modern']} | {res['reasoning']} | {text_snip} |\n"
+            )
+
     print(f"Report written to {report_path}")
     conn.close()
+
 
 if __name__ == "__main__":
     salvage_locations()

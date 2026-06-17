@@ -90,9 +90,7 @@ def _cache_key(text: str, top_k: int) -> str:
 def _cache_get(key: str) -> dict | None:
     if _cache_conn is None:
         return None
-    row = _cache_conn.execute(
-        "SELECT result FROM predictions WHERE key = ?", (key,)
-    ).fetchone()
+    row = _cache_conn.execute("SELECT result FROM predictions WHERE key = ?", (key,)).fetchone()
     if row:
         return json.loads(row[0])
     return None
@@ -227,6 +225,7 @@ async def restore(req: RestoreRequest):
         # answering healthchecks + can fail other concurrent requests
         # fast instead of hanging them.
         import asyncio
+
         await asyncio.to_thread(_ensure_model)
     except Exception as exc:
         logger.exception("Model load failed")

@@ -15,6 +15,7 @@ Usage:
         --jury research/data/lacuna_jury_raw.jsonl \\
         --out research/private/evaluation/lacuna_v2_0_2.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -87,14 +88,14 @@ def main(argv: list[str] | None = None) -> int:
         if not clean:
             summary["per_model"][model] = {"n": 0, "n_dirty_dropped": n_dirty}
             continue
-        span_ci = bootstrap_ci(clean, span_exact_match,
-                               n_resamples=args.n_resamples, seed=args.seed)
-        char1_ci = bootstrap_ci(clean, char_acc_top1,
-                                n_resamples=args.n_resamples, seed=args.seed)
-        char3_ci = bootstrap_ci(clean, char_acc_top3,
-                                n_resamples=args.n_resamples, seed=args.seed)
-        halluc_ci = bootstrap_ci(clean, hallucination_rate,
-                                 n_resamples=args.n_resamples, seed=args.seed)
+        span_ci = bootstrap_ci(
+            clean, span_exact_match, n_resamples=args.n_resamples, seed=args.seed
+        )
+        char1_ci = bootstrap_ci(clean, char_acc_top1, n_resamples=args.n_resamples, seed=args.seed)
+        char3_ci = bootstrap_ci(clean, char_acc_top3, n_resamples=args.n_resamples, seed=args.seed)
+        halluc_ci = bootstrap_ci(
+            clean, hallucination_rate, n_resamples=args.n_resamples, seed=args.seed
+        )
         summary["per_model"][model] = {
             "n": len(clean),
             "n_dirty_dropped": n_dirty,

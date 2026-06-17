@@ -90,7 +90,9 @@ def main() -> None:
     print()
     for idx in sorted(split_map.keys()):
         pair = EVAL_PAIRS[idx]
-        print(f'  {idx:2d} {pair.etr:12s} → {pair.lat:14s} [{pair.category:10s} {pair.confidence:6s}] {split_map[idx]}')
+        print(
+            f"  {idx:2d} {pair.etr:12s} → {pair.lat:14s} [{pair.category:10s} {pair.confidence:6s}] {split_map[idx]}"
+        )
 
 
 if __name__ == "__main__":

@@ -47,13 +47,9 @@ def upgrade() -> None:
             "ADD COLUMN IF NOT EXISTS source_code TEXT NOT NULL DEFAULT 'unknown'"
         )
     )
+    op.execute(sa.text("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS source_detail TEXT"))
     op.execute(
-        sa.text("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS source_detail TEXT")
-    )
-    op.execute(
-        sa.text(
-            "ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS original_script_entry TEXT"
-        )
+        sa.text("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS original_script_entry TEXT")
     )
 
 

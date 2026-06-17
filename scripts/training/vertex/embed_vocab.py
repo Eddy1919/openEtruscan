@@ -55,9 +55,7 @@ def _ensure_hf_stack() -> None:
         except ImportError:
             pkgs.append(pkg)
     if pkgs:
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--quiet", *pkgs]
-        )
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
 # Keep tokens that are "real-looking words" — at least 2 unicode-letter chars,
@@ -81,8 +79,9 @@ SCRIPT_REQUIRED = {
 }
 
 
-def _build_vocab(language_code: str, top_n: int, max_articles: int | None,
-                 log: logging.Logger) -> list[str]:
+def _build_vocab(
+    language_code: str, top_n: int, max_articles: int | None, log: logging.Logger
+) -> list[str]:
     """Stream Wikipedia for ``language_code`` (HF 2-letter), tokenise, return
     top-``top_n`` tokens by raw frequency.
 
@@ -122,7 +121,10 @@ def _build_vocab(language_code: str, top_n: int, max_articles: int | None,
         if n_articles % 5000 == 0:
             log.info(
                 "  [%s] %d articles, %d unique tokens, off-script dropped=%d, elapsed=%.0fs",
-                language_code, n_articles, len(counts), n_dropped_offscript,
+                language_code,
+                n_articles,
+                len(counts),
+                n_dropped_offscript,
                 time.time() - t0,
             )
         if max_articles is not None and n_articles >= max_articles:
@@ -130,13 +132,18 @@ def _build_vocab(language_code: str, top_n: int, max_articles: int | None,
 
     log.info(
         "[%s] DONE: %d articles, %d unique tokens, off-script dropped=%d; taking top %d",
-        language_code, n_articles, len(counts), n_dropped_offscript, top_n,
+        language_code,
+        n_articles,
+        len(counts),
+        n_dropped_offscript,
+        top_n,
     )
     return [w for w, _ in counts.most_common(top_n)]
 
 
-def _embed_and_write(words_by_lang: dict[str, list[str]], output_path: Path,
-                     log: logging.Logger) -> int:
+def _embed_and_write(
+    words_by_lang: dict[str, list[str]], output_path: Path, log: logging.Logger
+) -> int:
     """Mean-pool + L2-normalise every word's XLM-R-base contextual rep.
     Stream-writes to ``output_path`` so RAM stays bounded (200k * 768 * 4
     = 614 MB if held in memory)."""
@@ -165,8 +172,11 @@ def _embed_and_write(words_by_lang: dict[str, list[str]], output_path: Path,
                 # max_length=16 is plenty — these are single words, XLM-R
                 # SentencePiece will rarely split a word into >10 pieces.
                 enc = tok(
-                    batch, return_tensors="pt", padding=True,
-                    truncation=True, max_length=16,
+                    batch,
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                    max_length=16,
                 ).to(device)
                 with torch.no_grad():
                     out = model(**enc).last_hidden_state
@@ -176,17 +186,23 @@ def _embed_and_write(words_by_lang: dict[str, list[str]], output_path: Path,
                 pooled = F.normalize(pooled, p=2, dim=1)
                 vecs = pooled.cpu().tolist()
                 for w, v in zip(batch, vecs, strict=True):
-                    f.write(json.dumps(
-                        {"language": lang_code, "word": w, "vector": v},
-                        ensure_ascii=False,
-                    ) + "\n")
+                    f.write(
+                        json.dumps(
+                            {"language": lang_code, "word": w, "vector": v},
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    )
                     n_total += 1
                 if (i // BATCH) % 50 == 0:
                     elapsed = time.time() - t0
                     rate = (i + len(batch)) / elapsed if elapsed > 0 else 0
                     log.info(
                         "  [%s] %d/%d (%.0f w/s)",
-                        lang_code, i + len(batch), len(words), rate,
+                        lang_code,
+                        i + len(batch),
+                        len(words),
+                        rate,
                     )
     return n_total
 
@@ -196,13 +212,14 @@ def main() -> int:
     parser.add_argument("--output_path", required=True)
     parser.add_argument("--top_n", type=int, default=100_000)
     parser.add_argument(
-        "--max_articles", type=int, default=None,
+        "--max_articles",
+        type=int,
+        default=None,
         help="Optional safety cap on articles per language (debugging).",
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     log = logging.getLogger("embed_vocab")
 
     _ensure_hf_stack()

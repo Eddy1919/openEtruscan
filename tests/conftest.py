@@ -327,9 +327,14 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     on_postgres = _is_postgres_url(explicit) or _testcontainers_available()
     if on_postgres:
         return
-    skip_pg = pytest.mark.skip(reason="requires Postgres backend (set DATABASE_URL or install testcontainers)")
+    skip_pg = pytest.mark.skip(
+        reason="requires Postgres backend (set DATABASE_URL or install testcontainers)"
+    )
     for item in items:
-        if any(m.name in {"requires_postgres", "requires_postgis", "requires_pgvector"} for m in item.iter_markers()):
+        if any(
+            m.name in {"requires_postgres", "requires_postgis", "requires_pgvector"}
+            for m in item.iter_markers()
+        ):
             item.add_marker(skip_pg)
 
 

@@ -21,6 +21,7 @@ Output column order is content-first, metadata-second, filtering-knobs-last:
 If the Larth CSV is not present, this script will download it from
 the upstream GitHub repo.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,14 +31,20 @@ import urllib.request
 from pathlib import Path
 
 LARTH_URL = (
-    "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/"
-    "main/Data/Etruscan.csv"
+    "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/" "main/Data/Etruscan.csv"
 )
 
 OUTPUT_COLS = [
-    "id", "raw_text", "canonical_transliterated", "canonical_italic",
-    "canonical_words_only", "translation", "year_from", "year_to",
-    "intact_token_ratio", "data_quality",
+    "id",
+    "raw_text",
+    "canonical_transliterated",
+    "canonical_italic",
+    "canonical_words_only",
+    "translation",
+    "year_from",
+    "year_to",
+    "intact_token_ratio",
+    "data_quality",
 ]
 
 
@@ -72,12 +79,10 @@ def build_larth_index(path: Path) -> dict[str, dict[str, str]]:
 
 def merge(larth_path: Path, norm_path: Path, out_path: Path) -> dict[str, int]:
     larth = build_larth_index(larth_path)
-    counts = {"id_in_larth": 0, "got_translation": 0, "got_year": 0,
-              "cie_only": 0, "total": 0}
+    counts = {"id_in_larth": 0, "got_translation": 0, "got_year": 0, "cie_only": 0, "total": 0}
     with norm_path.open() as fin, out_path.open("w", newline="") as fout:
         reader = csv.DictReader(fin)
-        writer = csv.DictWriter(fout, fieldnames=OUTPUT_COLS,
-                                quoting=csv.QUOTE_MINIMAL)
+        writer = csv.DictWriter(fout, fieldnames=OUTPUT_COLS, quoting=csv.QUOTE_MINIMAL)
         writer.writeheader()
         for row in reader:
             counts["total"] += 1
@@ -100,14 +105,17 @@ def merge(larth_path: Path, norm_path: Path, out_path: Path) -> dict[str, int]:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("--larth", type=Path,
-                   default=Path("/tmp/larth_etruscan.csv"))
-    p.add_argument("--normalized", type=Path,
-                   default=Path("/home/edoardo/Documents/openEtruscan/"
-                                "openetruscan_normalized.csv"))
-    p.add_argument("--output", type=Path,
-                   default=Path("/home/edoardo/Documents/openEtruscan/"
-                                "openetruscan_clean.csv"))
+    p.add_argument("--larth", type=Path, default=Path("/tmp/larth_etruscan.csv"))
+    p.add_argument(
+        "--normalized",
+        type=Path,
+        default=Path("/home/edoardo/Documents/openEtruscan/" "openetruscan_normalized.csv"),
+    )
+    p.add_argument(
+        "--output",
+        type=Path,
+        default=Path("/home/edoardo/Documents/openEtruscan/" "openetruscan_clean.csv"),
+    )
     args = p.parse_args()
 
     ensure_larth(args.larth)
@@ -118,14 +126,22 @@ def main() -> int:
     c = merge(args.larth, args.normalized, args.output)
     t = c["total"]
     print(f"wrote {t:,} rows to {args.output}", file=sys.stderr)
-    print(f"  ID found in Larth        : {c['id_in_larth']:,}  ({100*c['id_in_larth']/t:.1f}%)",
-          file=sys.stderr)
-    print(f"  CIE-only (no Larth row)  : {c['cie_only']:,}  ({100*c['cie_only']/t:.1f}%)",
-          file=sys.stderr)
-    print(f"  got translation column   : {c['got_translation']:,}  ({100*c['got_translation']/t:.1f}%)",
-          file=sys.stderr)
-    print(f"  got year_from / year_to  : {c['got_year']:,}  ({100*c['got_year']/t:.1f}%)",
-          file=sys.stderr)
+    print(
+        f"  ID found in Larth        : {c['id_in_larth']:,}  ({100*c['id_in_larth']/t:.1f}%)",
+        file=sys.stderr,
+    )
+    print(
+        f"  CIE-only (no Larth row)  : {c['cie_only']:,}  ({100*c['cie_only']/t:.1f}%)",
+        file=sys.stderr,
+    )
+    print(
+        f"  got translation column   : {c['got_translation']:,}  ({100*c['got_translation']/t:.1f}%)",
+        file=sys.stderr,
+    )
+    print(
+        f"  got year_from / year_to  : {c['got_year']:,}  ({100*c['got_year']/t:.1f}%)",
+        file=sys.stderr,
+    )
     return 0
 
 

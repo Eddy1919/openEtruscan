@@ -19,6 +19,7 @@ Priority order (first match wins):
 Output: openetruscan_labels.csv with columns:
    id, label, confidence, signal_source
 """
+
 from __future__ import annotations
 
 import csv
@@ -36,25 +37,88 @@ OUT_CSV = Path("/home/edoardo/Documents/openEtruscan/openetruscan_labels.csv")
 
 # Tomb / death / kinship-on-tomb terms
 FUNERARY_ETR = {
-    "suθi", "suθina", "suθiθ", "σuθi", "σuθiθ", "σuθic",
-    "lupu", "lupuce", "svalce", "svalθas", "avils", "avil",
-    "murce", "ceriχunce", "tamera", "ceχa", "hinthial",
-    "lautni", "lavtni", "puia", "clan", "sec", "ati", "papacs",
-    "nefts", "huσur", "θapna", "zivas", "clenaraśi", "atiu", "atial",
+    "suθi",
+    "suθina",
+    "suθiθ",
+    "σuθi",
+    "σuθiθ",
+    "σuθic",
+    "lupu",
+    "lupuce",
+    "svalce",
+    "svalθas",
+    "avils",
+    "avil",
+    "murce",
+    "ceriχunce",
+    "tamera",
+    "ceχa",
+    "hinthial",
+    "lautni",
+    "lavtni",
+    "puia",
+    "clan",
+    "sec",
+    "ati",
+    "papacs",
+    "nefts",
+    "huσur",
+    "θapna",
+    "zivas",
+    "clenaraśi",
+    "atiu",
+    "atial",
 }
 
 # Dedication verbs + Etruscan pantheon
 DEDICATORY_ETR = {
-    "turce", "mulvanice", "muluvanice", "mulu",
-    "alpan", "fleres", "flerχva", "cver",
-    "aisera", "ais", "eiser", "aisna", "tuθina", "tmia",
+    "turce",
+    "mulvanice",
+    "muluvanice",
+    "mulu",
+    "alpan",
+    "fleres",
+    "flerχva",
+    "cver",
+    "aisera",
+    "ais",
+    "eiser",
+    "aisna",
+    "tuθina",
+    "tmia",
     # deities
-    "tinia", "tinśi", "uni", "unial", "menerva", "menrvas",
-    "θesan", "θeśan", "turan", "fuflunś", "fufluns",
-    "hercle", "selva", "selvans", "caθa", "leθn", "vetsl",
-    "śuri", "śuris", "saucne", "aritimi", "aplu", "sethlans",
-    "turms", "heramaśva", "θemiasa", "śacni", "śacnicla",
-    "thufltha", "θuflθa", "θuflθicla", "rath",
+    "tinia",
+    "tinśi",
+    "uni",
+    "unial",
+    "menerva",
+    "menrvas",
+    "θesan",
+    "θeśan",
+    "turan",
+    "fuflunś",
+    "fufluns",
+    "hercle",
+    "selva",
+    "selvans",
+    "caθa",
+    "leθn",
+    "vetsl",
+    "śuri",
+    "śuris",
+    "saucne",
+    "aritimi",
+    "aplu",
+    "sethlans",
+    "turms",
+    "heramaśva",
+    "θemiasa",
+    "śacni",
+    "śacnicla",
+    "thufltha",
+    "θuflθa",
+    "θuflθicla",
+    "rath",
 }
 
 VOTIVE_ETR = {
@@ -63,25 +127,63 @@ VOTIVE_ETR = {
 }
 
 LEGAL_ETR = {
-    "zilχ", "zilχnu", "zilc", "zilaθ", "zilaχnθas", "zilacal", "zilci",
-    "eprθnev", "purθ", "marunuχ", "lucair", "cepen", "tenu", "camθi",
-    "amce", "eslz", "parχis", "tenθas", "naper",
+    "zilχ",
+    "zilχnu",
+    "zilc",
+    "zilaθ",
+    "zilaχnθas",
+    "zilacal",
+    "zilci",
+    "eprθnev",
+    "purθ",
+    "marunuχ",
+    "lucair",
+    "cepen",
+    "tenu",
+    "camθi",
+    "amce",
+    "eslz",
+    "parχis",
+    "tenθas",
+    "naper",
 }
 
 BOUNDARY_ETR = {
-    "tular", "tularias", "rasna", "raśnas", "raśneś",
-    "spura", "spural", "spurana", "meθlum", "meθlumθ", "methlumθ",
+    "tular",
+    "tularias",
+    "rasna",
+    "raśnas",
+    "raśneś",
+    "spura",
+    "spural",
+    "spurana",
+    "meθlum",
+    "meθlumθ",
+    "methlumθ",
     "vaχr",
 }
 
 COMMERCIAL_ETR = {
-    "presnts", "pruχ", "aska", "culiχna", "θafna", "qutum",
+    "presnts",
+    "pruχ",
+    "aska",
+    "culiχna",
+    "θafna",
+    "qutum",
 }
 
 # Vessel-mark indicators (when paired with "mi" → ownership)
 VESSEL_ETR = {
-    "aska", "culiχna", "θafna", "qutum", "pruχ",
-    "lekythos", "skyphos", "kylix", "olla", "aryballos",
+    "aska",
+    "culiχna",
+    "θafna",
+    "qutum",
+    "pruχ",
+    "lekythos",
+    "skyphos",
+    "kylix",
+    "olla",
+    "aryballos",
 }
 
 
@@ -161,8 +263,8 @@ RE_DEITY_JUNK = re.compile(
 # Reasoning hierarchy
 # -----------------------------------------------------------------------
 
-def label_row(canonical: str, translation: str, words_only: str
-              ) -> tuple[str | None, str, str]:
+
+def label_row(canonical: str, translation: str, words_only: str) -> tuple[str | None, str, str]:
     """Return (label, confidence, signal_source). label=None means SKIP."""
     canon_tokens = set(tokenize(canonical.lower()))
     words_tokens = set(tokenize(words_only.lower()))
@@ -242,6 +344,7 @@ def label_row(canonical: str, translation: str, words_only: str
 # Driver
 # -----------------------------------------------------------------------
 
+
 def main() -> None:
     # Load gold labels (these always win)
     gold: dict[str, tuple[str, str]] = {}
@@ -260,10 +363,14 @@ def main() -> None:
         rid = r["id"]
         if rid in gold:
             label, conf = gold[rid]
-            out_rows.append({
-                "id": rid, "label": label, "confidence": conf,
-                "signal_source": "gold:claude_hand_label",
-            })
+            out_rows.append(
+                {
+                    "id": rid,
+                    "label": label,
+                    "confidence": conf,
+                    "signal_source": "gold:claude_hand_label",
+                }
+            )
             continue
         label, conf, source = label_row(
             canonical=r["canonical_transliterated"],
@@ -272,10 +379,14 @@ def main() -> None:
         )
         if label is None:
             continue
-        out_rows.append({
-            "id": rid, "label": label, "confidence": conf,
-            "signal_source": source,
-        })
+        out_rows.append(
+            {
+                "id": rid,
+                "label": label,
+                "confidence": conf,
+                "signal_source": source,
+            }
+        )
 
     with OUT_CSV.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["id", "label", "confidence", "signal_source"])

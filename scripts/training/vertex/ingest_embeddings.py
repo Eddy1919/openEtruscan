@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import io
 import json
 import logging
 import subprocess
@@ -59,7 +58,10 @@ async def _stream_gcs_jsonl(uri: str) -> AsyncIterator[dict]:
     """
     if uri.startswith("gs://"):
         proc = await asyncio.create_subprocess_exec(
-            "gcloud", "storage", "cat", uri,
+            "gcloud",
+            "storage",
+            "cat",
+            uri,
             stdout=subprocess.PIPE,
         )
         assert proc.stdout is not None
@@ -159,14 +161,16 @@ async def _ingest_one_file(
             if not (lang and word and isinstance(vec, list)):
                 continue
             embedder = etr_embedder if lang == "ett" else base_embedder
-            chunk.append({
-                "language": lang,
-                "word": word.lower(),
-                "vector": _vector_to_pgvector(vec),
-                "source": embedder,
-                "embedder": embedder,
-                "embedder_revision": revision,
-            })
+            chunk.append(
+                {
+                    "language": lang,
+                    "word": word.lower(),
+                    "vector": _vector_to_pgvector(vec),
+                    "source": embedder,
+                    "embedder": embedder,
+                    "embedder_revision": revision,
+                }
+            )
             by_lang[lang] = by_lang.get(lang, 0) + 1
             total += 1
             if len(chunk) >= chunk_size:
@@ -186,31 +190,35 @@ async def _ingest_one_file(
 async def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--gcs-uri", action="append", required=True,
+        "--gcs-uri",
+        action="append",
+        required=True,
         help="May be repeated; one or more gs://... JSONL files",
     )
     parser.add_argument(
-        "--base-embedder", default="xlm-roberta-base",
+        "--base-embedder",
+        default="xlm-roberta-base",
         help="Stored as `embedder` for lat/grc rows (vanilla XLM-R)",
     )
     parser.add_argument(
-        "--embedder", default=None,
+        "--embedder",
+        default=None,
         help="Stored as `embedder` for ett rows. T2.3+ canonical flag. "
-             "Set to e.g. 'xlmr-lora' for the v4 ingest. If unset, falls "
-             "back to --etr-embedder-tag.",
+        "Set to e.g. 'xlmr-lora' for the v4 ingest. If unset, falls "
+        "back to --etr-embedder-tag.",
     )
     parser.add_argument(
-        "--etr-embedder-tag", default="xlm-roberta-base+etr-lora-v3",
+        "--etr-embedder-tag",
+        default="xlm-roberta-base+etr-lora-v3",
         help="DEPRECATED: pre-T2.3 alias for --embedder. Kept for "
-             "backward compat with the v3 ingest invocation. Prefer "
-             "--embedder for new work.",
+        "backward compat with the v3 ingest invocation. Prefer "
+        "--embedder for new work.",
     )
     parser.add_argument("--revision", default="v3")
     parser.add_argument("--chunk-size", type=int, default=500)
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     # Resolve the ett-side embedder label: --embedder wins, falling back to
     # --etr-embedder-tag for compat. Surface the resolution so audit logs
@@ -218,7 +226,9 @@ async def main() -> int:
     etr_embedder_resolved = args.embedder or args.etr_embedder_tag
     logger.info(
         "ett-embedder=%r  base-embedder=%r  revision=%r",
-        etr_embedder_resolved, args.base_embedder, args.revision,
+        etr_embedder_resolved,
+        args.base_embedder,
+        args.revision,
     )
 
     _, session_maker = get_engine()
@@ -230,9 +240,12 @@ async def main() -> int:
     for uri in args.gcs_uri:
         logger.info("Streaming %s", uri)
         per_file = await _ingest_one_file(
-            session_maker, uri,
-            args.base_embedder, etr_embedder_resolved,
-            args.revision, args.chunk_size,
+            session_maker,
+            uri,
+            args.base_embedder,
+            etr_embedder_resolved,
+            args.revision,
+            args.chunk_size,
         )
         for k, v in per_file.items():
             grand_total[k] = grand_total.get(k, 0) + v

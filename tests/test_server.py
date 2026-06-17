@@ -242,7 +242,9 @@ async def test_promote_provenance_happy_path(client: AsyncClient, sample_data, m
     assert "CIE I 1234" in (latest["notes"] or "")
 
 
-async def test_promote_provenance_rejects_invalid_status(client: AsyncClient, sample_data, monkeypatch):
+async def test_promote_provenance_rejects_invalid_status(
+    client: AsyncClient, sample_data, monkeypatch
+):
     """Invalid status must 400, not 500 — guards the DB CHECK constraint."""
     from openetruscan.core.config import settings
 
@@ -340,8 +342,10 @@ async def test_neural_restore_proxies_when_byt5_url_set(
 
     class _FakeResp:
         status_code = 200
+
         def raise_for_status(self):
             pass
+
         def json(self):
             return {"predictions": [{"restored": "larθal", "score": 0.9}]}
 
@@ -361,9 +365,9 @@ async def test_neural_restore_proxies_when_byt5_url_set(
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["predictions"][0]["restored"] == "larθal"
-    assert calls == ["https://byt5.example/restore"], (
-        "expected exactly one upstream call to the proxied service"
-    )
+    assert calls == [
+        "https://byt5.example/restore"
+    ], "expected exactly one upstream call to the proxied service"
 
 
 async def test_admin_endpoint_returns_503_when_token_unconfigured(
@@ -539,7 +543,8 @@ async def test_repo_search_has_trismegistos(db_session, sample_data):
 
 
 async def test_rosetta_unknown_embedder_returns_400(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Unknown alias on ``?embedder=`` → 400 with the valid-aliases list."""
     response = await client.get(
@@ -553,7 +558,8 @@ async def test_rosetta_unknown_embedder_returns_400(
 
 
 async def test_rosetta_default_response_echoes_labse_alias(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Default call (no ``?embedder=``) echoes ``embedder: 'LaBSE'`` in the
     response body. Used by the eval harness's head-to-head logic to confirm
@@ -566,10 +572,12 @@ async def test_rosetta_default_response_echoes_labse_alias(
     except Exception as exc:  # noqa: BLE001 — same skip pattern as test_multilingual
         if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
             import pytest
+
             pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
         raise
     if response.status_code == 500:
         import pytest
+
         pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
     assert response.status_code == 200
     body = response.json()
@@ -577,7 +585,8 @@ async def test_rosetta_default_response_echoes_labse_alias(
 
 
 async def test_rosetta_xlmr_lora_v4_alias_resolves(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Explicit ``?embedder=xlmr-lora-v4`` is accepted (resolves to the
     on-disk partition); response echoes it back. Empty neighbours is fine —
@@ -588,17 +597,20 @@ async def test_rosetta_xlmr_lora_v4_alias_resolves(
             "/neural/rosetta",
             params={
                 "word": "definitely-not-real-t2-3-v4",
-                "from": "ett", "to": "lat",
+                "from": "ett",
+                "to": "lat",
                 "embedder": "xlmr-lora-v4",
             },
         )
     except Exception as exc:  # noqa: BLE001
         if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
             import pytest
+
             pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
         raise
     if response.status_code == 500:
         import pytest
+
         pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
     assert response.status_code == 200
     body = response.json()
@@ -606,7 +618,8 @@ async def test_rosetta_xlmr_lora_v4_alias_resolves(
 
 
 async def test_rosetta_vocab_cache_keyed_by_embedder(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """The vocab endpoint accepts ``?embedder=`` and the cache key
     distinguishes partitions — same lang under different embedders must
@@ -625,10 +638,12 @@ async def test_rosetta_vocab_cache_keyed_by_embedder(
     except Exception as exc:  # noqa: BLE001
         if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
             import pytest
+
             pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
         raise
     if resp_labse.status_code == 500 or resp_v4.status_code == 500:
         import pytest
+
         pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
     assert resp_labse.status_code == 200
     assert resp_v4.status_code == 200
@@ -637,7 +652,8 @@ async def test_rosetta_vocab_cache_keyed_by_embedder(
 
 
 async def test_rosetta_vocab_unknown_embedder_returns_400(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Same alias-validation contract as /neural/rosetta."""
     response = await client.get(
@@ -653,7 +669,8 @@ async def test_rosetta_vocab_unknown_embedder_returns_400(
 
 
 async def test_rosetta_unknown_track_returns_400(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Invalid track value → 400 with the valid list."""
     response = await client.get(
@@ -665,7 +682,8 @@ async def test_rosetta_unknown_track_returns_400(
 
 
 async def test_rosetta_response_carries_margin_and_track(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """Every response carries the resolved track + (possibly null) margin."""
     try:
@@ -676,19 +694,22 @@ async def test_rosetta_response_carries_margin_and_track(
     except Exception as exc:  # noqa: BLE001
         if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
             import pytest
+
             pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
         raise
     if response.status_code == 500:
         import pytest
+
         pytest.skip("language_word_embeddings table not available (no pgvector in test image)")
     body = response.json()
     assert response.status_code == 200
-    assert body.get("track") == "all"   # default
-    assert "margin" in body              # null is fine; key must exist
+    assert body.get("track") == "all"  # default
+    assert "margin" in body  # null is fine; key must exist
 
 
 async def test_rosetta_min_margin_validates_bounds(
-    client: AsyncClient, sample_data,
+    client: AsyncClient,
+    sample_data,
 ):
     """min_margin must be in [0, 1]."""
     response = await client.get(

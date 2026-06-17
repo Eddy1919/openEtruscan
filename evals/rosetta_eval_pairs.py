@@ -73,13 +73,9 @@ class EvalPair:
         object.__setattr__(self, "etr", unicodedata.normalize("NFC", self.etr).lower())
         object.__setattr__(self, "lat", unicodedata.normalize("NFC", self.lat).lower())
         if self.category not in VALID_CATEGORIES + ("uncategorised",):
-            raise ValueError(
-                f"EvalPair category {self.category!r} not in {VALID_CATEGORIES}"
-            )
+            raise ValueError(f"EvalPair category {self.category!r} not in {VALID_CATEGORIES}")
         if self.split not in VALID_SPLITS:
-            raise ValueError(
-                f"EvalPair split {self.split!r} not in {VALID_SPLITS}"
-            )
+            raise ValueError(f"EvalPair split {self.split!r} not in {VALID_SPLITS}")
 
 
 # ── Split assignments ───────────────────────────────────────────────────
@@ -98,26 +94,40 @@ EVAL_PAIRS: list[EvalPair] = [
     EvalPair("nefts", "nepos", "nephew/grandson", "high", "Bonfante 2002 §99", "kinship", "train"),
     EvalPair("ruva", "frater", "brother", "medium", "Bonfante 2002 §99", "kinship", "train"),
     EvalPair("papa", "avus", "grandfather", "medium", "Wallace 2008 §3.4", "kinship", "test"),
-    EvalPair("lautn", "familia", "family/lineage", "high", "Pallottino 1968 §47", "kinship", "test"),
+    EvalPair(
+        "lautn", "familia", "family/lineage", "high", "Pallottino 1968 §47", "kinship", "test"
+    ),
     # Civic / magistracies
     EvalPair("zilaθ", "praetor", "magistrate", "high", "Bonfante 2002 §83", "civic", "train"),
     EvalPair("zilθ", "praetor", "magistrate", "high", "Wallace 2008 §3.5", "civic", "test"),
-    EvalPair("maru", "magister", "magistracy title", "medium", "Bonfante 2002 §83", "civic", "train"),
+    EvalPair(
+        "maru", "magister", "magistracy title", "medium", "Bonfante 2002 §83", "civic", "train"
+    ),
     EvalPair("cepen", "sacerdos", "priest", "medium", "Wallace 2008 §3.5", "civic", "train"),
     EvalPair("spura", "civitas", "city/state", "high", "Bonfante 2002 §85", "civic", "train"),
     EvalPair("methlum", "civitas", "community", "medium", "Pallottino 1968 §50", "civic", "test"),
     EvalPair("tular", "fines", "boundaries", "high", "Bonfante 2002 §86", "civic", "train"),
-    EvalPair("rasna", "etruscus", "Etruscan (ethnonym)", "high", "Bonfante 2002 §1", "civic", "train"),
+    EvalPair(
+        "rasna", "etruscus", "Etruscan (ethnonym)", "high", "Bonfante 2002 §1", "civic", "train"
+    ),
     # Funerary / religious
     EvalPair("suθi", "sepulcrum", "tomb", "high", "Bonfante 2002 §90", "religious", "test"),
-    EvalPair("ais", "deus", "god (loanword family)", "medium", "Wallace 2008 §3.6", "religious", "train"),
+    EvalPair(
+        "ais", "deus", "god (loanword family)", "medium", "Wallace 2008 §3.6", "religious", "train"
+    ),
     EvalPair("aiser", "dei", "gods", "medium", "Wallace 2008 §3.6", "religious", "train"),
-    EvalPair("fler", "sacrum", "sacred offering", "medium", "Bonfante 2002 §93", "religious", "train"),
-    EvalPair("flerχva", "sacra", "sacred things", "medium", "Bonfante 2002 §93", "religious", "test"),
+    EvalPair(
+        "fler", "sacrum", "sacred offering", "medium", "Bonfante 2002 §93", "religious", "train"
+    ),
+    EvalPair(
+        "flerχva", "sacra", "sacred things", "medium", "Bonfante 2002 §93", "religious", "test"
+    ),
     EvalPair("fanu", "fanum", "sacred place", "medium", "Wallace 2008 §3.6", "religious", "train"),
     # Time / calendar
     EvalPair("avil", "annus", "year", "high", "Bonfante 2002 §82", "time", "train"),
-    EvalPair("avils", "annorum", "of years (genitive)", "high", "Bonfante 2002 §82", "time", "train"),
+    EvalPair(
+        "avils", "annorum", "of years (genitive)", "high", "Bonfante 2002 §82", "time", "train"
+    ),
     EvalPair("tiur", "mensis", "month", "high", "Bonfante 2002 §82", "time", "test"),
     EvalPair("usil", "sol", "sun", "high", "Bonfante 2002 §82", "time", "train"),
     EvalPair("tiu", "luna", "moon", "medium", "Pallottino 1968 §52", "time", "test"),
@@ -140,7 +150,9 @@ EVAL_PAIRS: list[EvalPair] = [
     EvalPair("lupuce", "mortuus", "died", "high", "Bonfante 2002 §75", "verb", "train"),
     EvalPair("svalce", "vixit", "lived", "high", "Bonfante 2002 §75", "verb", "train"),
     EvalPair("ame", "est", "is/was", "medium", "Wallace 2008 §3.8", "verb", "train"),
-    EvalPair("zinace", "scripsit", "wrote/inscribed", "medium", "Wallace 2008 §3.8", "verb", "train"),
+    EvalPair(
+        "zinace", "scripsit", "wrote/inscribed", "medium", "Wallace 2008 §3.8", "verb", "train"
+    ),
     EvalPair("zich", "scribere", "to write", "medium", "Bonfante 2002 §75", "verb", "train"),
     EvalPair("ziχ", "scriptura", "writing/script", "medium", "Bonfante 2002 §75", "verb", "test"),
     # Theonyms
@@ -148,15 +160,23 @@ EVAL_PAIRS: list[EvalPair] = [
     EvalPair("uni", "iuno", "Juno", "high", "Bonfante 2002 §93", "theonym", "train"),
     EvalPair("menrva", "minerva", "Minerva", "high", "Bonfante 2002 §93", "theonym", "train"),
     EvalPair("aita", "dis", "Hades/Dis", "high", "Bonfante 2002 §93", "theonym", "test"),
-    EvalPair("φersipnai", "proserpina", "Persephone", "high", "Bonfante 2002 §93", "theonym", "train"),
+    EvalPair(
+        "φersipnai", "proserpina", "Persephone", "high", "Bonfante 2002 §93", "theonym", "train"
+    ),
     EvalPair("turan", "venus", "Venus", "high", "Bonfante 2002 §93", "theonym", "train"),
     EvalPair("turms", "mercurius", "Mercury", "high", "Bonfante 2002 §93", "theonym", "test"),
-    EvalPair("fufluns", "bacchus", "Bacchus/Dionysus", "high", "Bonfante 2002 §93", "theonym", "train"),
+    EvalPair(
+        "fufluns", "bacchus", "Bacchus/Dionysus", "high", "Bonfante 2002 §93", "theonym", "train"
+    ),
     EvalPair("hercle", "hercules", "Hercules", "high", "Bonfante 2002 §93", "theonym", "test"),
     EvalPair("nethuns", "neptunus", "Neptune", "high", "Bonfante 2002 §93", "theonym", "test"),
     # Onomastic praenomina
-    EvalPair("avle", "aulus", "Aulus (praenomen)", "high", "Bonfante 2002 §62", "onomastic", "test"),
-    EvalPair("vel", "velius", "Velius (praenomen)", "medium", "Bonfante 2002 §62", "onomastic", "test"),
+    EvalPair(
+        "avle", "aulus", "Aulus (praenomen)", "high", "Bonfante 2002 §62", "onomastic", "test"
+    ),
+    EvalPair(
+        "vel", "velius", "Velius (praenomen)", "medium", "Bonfante 2002 §62", "onomastic", "test"
+    ),
     EvalPair("larθ", "lars", "Lars (praenomen)", "high", "Bonfante 2002 §62", "onomastic", "train"),
 ]
 

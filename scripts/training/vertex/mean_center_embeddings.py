@@ -46,14 +46,15 @@ def main() -> int:
     parser.add_argument("--input_path", required=True)
     parser.add_argument("--output_path", required=True)
     parser.add_argument(
-        "--pca-remove", type=int, default=0,
+        "--pca-remove",
+        type=int,
+        default=0,
         help="If >0, drop the top-K principal components after centering "
-             "(per language). 2-3 is the standard 'all-but-the-top' setting.",
+        "(per language). 2-3 is the standard 'all-but-the-top' setting.",
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     log = logging.getLogger("mean_center")
 
     _ensure_numpy()
@@ -121,7 +122,9 @@ def main() -> int:
             pca_components[lang] = Vt[: args.pca_remove]  # (K, dim)
             log.info(
                 "  lang=%s sampled=%d PCs.shape=%s",
-                lang, len(vecs), pca_components[lang].shape,
+                lang,
+                len(vecs),
+                pca_components[lang].shape,
             )
 
     # ── Pass 2: rewrite ─────────────────────────────────────────────────

@@ -51,6 +51,7 @@ def get_reranker(model_name: str | None = None) -> Any:
     # Import lazily so harness consumers that don't use rerank don't
     # pay the sentence-transformers dependency.
     from sentence_transformers import CrossEncoder  # type: ignore[import-untyped]
+
     logger.info("loading cross-encoder %s", name)
     model = CrossEncoder(name)
     _RERANK_MODEL_CACHE[name] = model

@@ -73,11 +73,13 @@ def test_smart_truncate_long_passage_with_multiple_keywords_merges_windows(m):
     # ±1500-char windows around any keyword.
     head = "y" * 3000
     tail = "z" * 3000
-    sep = "g" * 4000   # > 2 × 1500, so windows around adjacent keywords don't overlap
+    sep = "g" * 4000  # > 2 × 1500, so windows around adjacent keywords don't overlap
     # Pad each keyword with whitespace so the `\b` word boundary in the
     # keyword regex actually matches (yyTusci would not — both `y` and `T`
     # are word characters).
-    text = head + " " + sep + " Tusci " + sep + " Etrusci " + sep + " Tyrrhenians " + sep + " " + tail
+    text = (
+        head + " " + sep + " Tusci " + sep + " Etrusci " + sep + " Tyrrhenians " + sep + " " + tail
+    )
     out, truncated = m._smart_truncate(text)
     assert truncated is True
     # All three keywords still present after windowing.
@@ -112,7 +114,7 @@ def test_parse_model_output_strict_list_round_trip(m):
 
 
 def test_parse_model_output_strips_markdown_fence(m):
-    raw = "```json\n[{\"x\": 1}]\n```"
+    raw = '```json\n[{"x": 1}]\n```'
     assert m._parse_model_output(raw) == [{"x": 1}]
 
 
@@ -217,8 +219,8 @@ def test_load_resume_state_counts_only_processed_status(m, tmp_path):
     rows = [
         {"passage_index": 0, "status": "processed", "n_glosses": 0},
         {"passage_index": 1, "status": "processed", "n_glosses": 1},
-        {"passage_index": 2, "status": "parse_error"},   # not "processed" → skip
-        {"passage_index": 3, "status": "api_error"},     # not "processed" → skip
+        {"passage_index": 2, "status": "parse_error"},  # not "processed" → skip
+        {"passage_index": 3, "status": "api_error"},  # not "processed" → skip
         {"passage_index": 4, "status": "processed", "n_glosses": 0},
     ]
     p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")

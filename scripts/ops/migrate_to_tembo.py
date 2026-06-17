@@ -43,6 +43,7 @@ Usage:
       --target-url 'postgresql://USER:PWD@HOST:5432/DB?sslmode=require' \\
       --dump-file /tmp/openetruscan.dump
 """
+
 from __future__ import annotations
 
 import argparse
@@ -239,7 +240,8 @@ def psql_restore_cmd(target_url: str, dump_file: Path | None) -> list[str]:
     args = [
         "psql",
         target_url,
-        "-v", "ON_ERROR_STOP=1",
+        "-v",
+        "ON_ERROR_STOP=1",
         "--single-transaction",
     ]
     if dump_file:
@@ -348,7 +350,8 @@ def verify_target(target_url: str, dry_run: bool) -> bool:
     for name, sql in VERIFY_QUERIES:
         res = subprocess.run(
             ["psql", target_url, "-X", "-A", "-t", "-c", sql],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         if res.returncode != 0:
             err(f"verify [{name}] FAILED: {res.stderr.strip()}")
@@ -414,22 +417,38 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__.splitlines()[0],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    ap.add_argument("--target-url", required=True,
-                    help="Tembo connection URL: postgresql://USER:PWD@HOST:PORT/DB?sslmode=require")
+    ap.add_argument(
+        "--target-url",
+        required=True,
+        help="Tembo connection URL: postgresql://USER:PWD@HOST:PORT/DB?sslmode=require",
+    )
     ap.add_argument("--source-project", default=DEFAULT_SOURCE_PROJECT)
     ap.add_argument("--source-region", default=DEFAULT_SOURCE_REGION)
     ap.add_argument("--source-instance", default=DEFAULT_SOURCE_INSTANCE)
     ap.add_argument("--source-db", default=DEFAULT_SOURCE_DB)
     ap.add_argument("--source-user", default=DEFAULT_SOURCE_USER)
-    ap.add_argument("--source-secret", default=DEFAULT_SOURCE_SECRET,
-                    help="Secret Manager name holding the DATABASE_URL (we only read the password).")
+    ap.add_argument(
+        "--source-secret",
+        default=DEFAULT_SOURCE_SECRET,
+        help="Secret Manager name holding the DATABASE_URL (we only read the password).",
+    )
     ap.add_argument("--proxy-port", type=int, default=PROXY_LOCAL_PORT)
-    ap.add_argument("--dump-file", type=Path, default=None,
-                    help="Local file to write the dump to. If omitted, the dump is streamed pg_dump | psql.")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Validate environment and print every command without executing destructive ones.")
-    ap.add_argument("--skip-verify", action="store_true",
-                    help="Skip post-restore verification. Not recommended.")
+    ap.add_argument(
+        "--dump-file",
+        type=Path,
+        default=None,
+        help="Local file to write the dump to. If omitted, the dump is streamed pg_dump | psql.",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate environment and print every command without executing destructive ones.",
+    )
+    ap.add_argument(
+        "--skip-verify",
+        action="store_true",
+        help="Skip post-restore verification. Not recommended.",
+    )
     args = ap.parse_args(argv)
 
     step("pre-flight")
@@ -460,9 +479,7 @@ def main(argv: list[str] | None = None) -> int:
         ok(f"password retrieved (length {len(password)} chars)")
 
     with cloud_sql_proxy(icn, args.proxy_port, args.dry_run):
-        source_url = make_source_url(
-            args.source_user, password, args.proxy_port, args.source_db
-        )
+        source_url = make_source_url(args.source_user, password, args.proxy_port, args.source_db)
         run_dump_and_restore(source_url, args.target_url, args.dump_file, args.dry_run)
 
     if not args.skip_verify:

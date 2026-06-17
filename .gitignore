@@ -20,6 +20,9 @@ ENV/
 # IDE
 .vscode/
 .idea/
+# Multi-root workspace files reference machine-specific sibling paths
+# (e.g. ../openEtruscan-frontend); keep them local.
+*.code-workspace
 *.swp
 *.swo
 *~
@@ -60,21 +63,20 @@ htmlcov/
 # through review; nginx.dev.conf is for local-only experiments).
 nginx.dev.conf
 
-# ML model artifacts
-data/models/
+# ML model artifacts (pickled estimators, anywhere in the tree)
 *.pkl
 *.joblib
-data/cie/*.pdf
-data/cie/pages/
-data/cie/progress.json
-data/cie/ingest.log
-data/cie/full_extraction.json
 .vercel
 .env*.local
 
+# Local data artifacts — DVC-tracked (gs://openetruscan-data-dvc) or
+# regeneratable from the pipelines; never committed as blobs. Only the
+# directory README is tracked (it documents provenance + how to restore).
+/data/*
+!/data/README.md
+
 # Local security audit (contains grep patterns for secrets — keep local)
 scripts/security_check.sh
-/data
 
 # Ultralytics YOLO runs
 runs/

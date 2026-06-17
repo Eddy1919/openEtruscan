@@ -136,7 +136,8 @@ def train_etruscan_adapter(
 
     logger.info(
         "Loaded %d inscriptions; tokenising with %s",
-        len(inscriptions), base_model,
+        len(inscriptions),
+        base_model,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(base_model)
@@ -167,9 +168,7 @@ def train_etruscan_adapter(
     dataset = Dataset.from_dict({"text": inscriptions})
     dataset = dataset.map(_tokenise, batched=True, remove_columns=["text"])
 
-    collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=True, mlm_probability=0.15
-    )
+    collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 
     training_args = TrainingArguments(
         output_dir=str(output_dir / "_trainer"),

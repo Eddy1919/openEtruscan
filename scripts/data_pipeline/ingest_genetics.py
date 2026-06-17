@@ -56,7 +56,6 @@ def parse_date(date_str: str) -> tuple[int | None, int | None]:
         return None, None
 
 
-
 def sniff_columns(headers: list[str]) -> dict[str, str]:
     """Dynamically map known AADR or generic column names to our schema."""
     mapping = {}
@@ -77,7 +76,11 @@ def sniff_columns(headers: list[str]) -> dict[str, str]:
         # Temporal mapping
         if "date mean in bp" in hl:
             mapping["date"] = h
-        elif ("date" in hl and "mean" in hl) or ("date" in hl and "bp" in hl) or ("date" in hl and "date" not in mapping):
+        elif (
+            ("date" in hl and "mean" in hl)
+            or ("date" in hl and "bp" in hl)
+            or ("date" in hl and "date" not in mapping)
+        ):
             mapping["date"] = h
 
         # Genetic mapping
@@ -101,8 +104,6 @@ def sniff_columns(headers: list[str]) -> dict[str, str]:
             mapping["c14"] = h
 
     return mapping
-
-
 
 
 def ingest_genetics(file_path: Path, delimiter: str = "\t"):

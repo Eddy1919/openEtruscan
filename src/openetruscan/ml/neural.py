@@ -67,13 +67,14 @@ class AlphaFocalLoss(nn.Module):
     α-balanced Focal Loss: FL(pt) = -αt (1 - pt)^γ log(pt)
     Designed to address class imbalance by focusing on hard examples and weighting by rare classes.
     """
+
     def __init__(self, alpha: torch.Tensor, gamma: float = 2.0):
         super().__init__()
         self.alpha = alpha
         self.gamma = gamma
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        ce_loss = F.cross_entropy(inputs, targets, reduction='none', weight=self.alpha)
+        ce_loss = F.cross_entropy(inputs, targets, reduction="none", weight=self.alpha)
         pt = torch.exp(-ce_loss)
         focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
         return focal_loss
@@ -564,9 +565,10 @@ class NeuralClassifier:
 
         # Filter out classes with < 2 samples to allow stratified split
         from collections import Counter
+
         counts = Counter(labels)
         valid_indices = [i for i, lbl in enumerate(labels) if counts[lbl] >= 2]
-        
+
         if len(valid_indices) < len(texts):
             if verbose:
                 removed = set(lbl for lbl, c in counts.items() if c < 2)
@@ -649,11 +651,11 @@ class NeuralClassifier:
         # α-balanced Focal Loss (γ=2.0)
         class_counts = torch.bincount(y_train_t, minlength=num_classes).float()
         alpha = len(y_train_t) / (num_classes * class_counts.clamp(min=1))
-        
+
         if verbose:
             weight_info = {self.labels[i]: f"{alpha[i]:.2f}" for i in range(num_classes)}
             print(f"  α-Weights: {weight_info}")
-            
+
         criterion = AlphaFocalLoss(alpha=alpha.to(x_train_t.device), gamma=2.0)
 
         best_val_f1 = 0.0
@@ -925,8 +927,7 @@ class LacunaeRestorer:
 
         if model_uri not in _LACUNA_MODEL_PATHS:
             raise ValueError(
-                f"Unknown lacunae model_uri {model_uri!r}. "
-                f"Known: {list(_LACUNA_MODEL_PATHS)}"
+                f"Unknown lacunae model_uri {model_uri!r}. " f"Known: {list(_LACUNA_MODEL_PATHS)}"
             )
         head_dir, adapter_dir = _LACUNA_MODEL_PATHS[model_uri]
 
@@ -976,9 +977,7 @@ class LacunaeRestorer:
         import re
 
         if "[...]" in text:
-            raise ValueError(
-                "Cannot predict unbounded lacunae `[...]`. Specify width with `[..]`."
-            )
+            raise ValueError("Cannot predict unbounded lacunae `[...]`. Specify width with `[..]`.")
 
         out_chars: list[str] = []
         mask_positions: list[int] = []
@@ -1015,8 +1014,12 @@ class LacunaeRestorer:
             # so they don't poison the context.
             masked = "".join(c for c in chars if c != "\x00")
 
-            encoded = self.tokenizer(masked, return_tensors="pt", truncation=True, max_length=self.max_len)
-            mask_idx_tensor = (encoded.input_ids[0] == self.tokenizer.mask_token_id).nonzero(as_tuple=True)[0]
+            encoded = self.tokenizer(
+                masked, return_tensors="pt", truncation=True, max_length=self.max_len
+            )
+            mask_idx_tensor = (encoded.input_ids[0] == self.tokenizer.mask_token_id).nonzero(
+                as_tuple=True
+            )[0]
             if len(mask_idx_tensor) == 0:
                 results.append({"position": pos, "predictions": {}})
                 continue
