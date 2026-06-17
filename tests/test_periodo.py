@@ -11,6 +11,8 @@ import pytest
 from openetruscan.core.periodo import (
     ETRUSCAN_PERIODS,
     PERIODO_BASE,
+    century_representative_year,
+    enrich_timeline_buckets,
     period_for_label,
     period_for_year,
     periodo_uri_for_label,
@@ -97,3 +99,30 @@ class TestUris:
 def test_year_and_label_agree_for_canonical_dates():
     # A clearly-archaic year and the "archaic" label resolve to the same period.
     assert period_for_year(-520) == period_for_label("archaic")
+
+
+class TestTimelineEnrichment:
+    def test_representative_year_is_bucket_midpoint(self):
+        # Postgres bucket -500 spans -599..-500; its midpoint is -550.
+        assert century_representative_year(-500) == -550
+        assert century_representative_year(100) == 150
+
+    def test_enriches_buckets_with_period(self):
+        buckets = [{"century": -500, "count": 42}, {"century": -300, "count": 17}]
+        out = enrich_timeline_buckets(buckets)
+        # -500 bucket midpoint -550 → Archaic; -300 bucket midpoint -350 → Classical.
+        assert out[0]["count"] == 42  # original fields preserved
+        assert out[0]["period_label"] == "Archaic Etruscan Age"
+        assert out[0]["period_uri"] == "http://n2t.net/ark:/99152/p03dzfbdcxr"
+        assert out[1]["period_label"] == "Classical Etruscan Age"
+
+    def test_out_of_era_bucket_gets_null_period(self):
+        [out] = enrich_timeline_buckets([{"century": 200, "count": 5}])
+        assert out["period_id"] is None
+        assert out["period_label"] is None
+        assert out["period_uri"] is None
+        assert out["count"] == 5
+
+    def test_none_century_is_safe(self):
+        [out] = enrich_timeline_buckets([{"century": None, "count": 1}])
+        assert out["period_id"] is None

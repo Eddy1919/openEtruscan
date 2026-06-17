@@ -31,6 +31,8 @@ __all__ = [
     "period_for_label",
     "periodo_uri_for_year",
     "periodo_uri_for_label",
+    "century_representative_year",
+    "enrich_timeline_buckets",
 ]
 
 PERIODO_BASE = "http://n2t.net/ark:/99152/"
@@ -111,3 +113,39 @@ def periodo_uri_for_year(year: int | None) -> str | None:
 def periodo_uri_for_label(label: str | None) -> str | None:
     period = period_for_label(label)
     return period.uri if period else None
+
+
+def century_representative_year(century: int) -> int:
+    """
+    Mid-year of a ``date_approx / 100 * 100`` timeline bucket.
+
+    Postgres integer division truncates toward zero, so a BCE bucket keyed
+    ``-500`` actually spans the years ``-599 … -500``; its midpoint is ``-550``.
+    CE buckets (rare here) span upward from their key.
+    """
+    return century - 50 if century < 0 else century + 50
+
+
+def enrich_timeline_buckets(buckets: list[dict]) -> list[dict]:
+    """
+    Attach PeriodO period fields to ``{"century", "count"}`` timeline rows.
+
+    Adds ``period_id`` / ``period_label`` / ``period_uri`` (all None when the
+    bucket's representative year falls outside the Etruscan era). Pure — the DB
+    layer calls this so the wiring stays unit-testable.
+    """
+    enriched: list[dict] = []
+    for bucket in buckets:
+        century = bucket.get("century")
+        period = (
+            period_for_year(century_representative_year(century)) if century is not None else None
+        )
+        enriched.append(
+            {
+                **bucket,
+                "period_id": period.periodo_id if period else None,
+                "period_label": period.label_en if period else None,
+                "period_uri": period.uri if period else None,
+            }
+        )
+    return enriched

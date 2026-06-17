@@ -74,6 +74,10 @@ into `inscription_to_jsonld`.
   Peripleo ingests it next to the gazetteer refs) and as a `dcterms:temporal`
   property (`{"id": "<ark>", "label": ...}`) for plain RDF consumers. URIs are
   canonical PeriodO ARKs (`http://n2t.net/ark:/99152/<id>`).
+- **Timeline.** `/stats/timeline` tags each century bucket with the PeriodO
+  period for its midpoint (`period_id` / `period_label` / `period_uri`), so the
+  timeline UI is joinable on chronology too. The enrichment
+  (`enrich_timeline_buckets`) is pure and unit-tested; the DB layer just calls it.
 
 ## Next steps (planned)
 

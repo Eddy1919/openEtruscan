@@ -13,6 +13,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from openetruscan.db.models import Inscription, Entity, Clan, Relationship
 from openetruscan.core.corpus import Inscription as InscriptionData, SearchResults
+from openetruscan.core.periodo import enrich_timeline_buckets
 
 
 class InscriptionRepository:
@@ -479,11 +480,15 @@ class InscriptionRepository:
 
     async def get_timeline_stats(self) -> list[dict[str, Any]]:
         """
-        Aggregate inscriptions by century.
+        Aggregate inscriptions by century, tagged with the PeriodO period.
+
+        Each bucket carries the PeriodO period (id/label/uri) for its midpoint,
+        so the timeline is joinable on chronology the same way the LOD feed is.
         """
         stmt = "SELECT date_approx / 100 * 100 as century, count(*) FROM inscriptions WHERE date_approx IS NOT NULL GROUP BY century ORDER BY century"
         result = await self.session.execute(text(stmt))
-        return [{"century": row[0], "count": row[1]} for row in result.fetchall()]
+        buckets = [{"century": row[0], "count": row[1]} for row in result.fetchall()]
+        return enrich_timeline_buckets(buckets)
 
     async def concordance(
         self, query: str, limit: int = 2000, context: int = 40
