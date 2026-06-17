@@ -79,8 +79,37 @@ into `inscription_to_jsonld`.
   timeline UI is joinable on chronology too. The enrichment
   (`enrich_timeline_buckets`) is pure and unit-tested; the DB layer just calls it.
 
-## Next steps (planned)
+## Recogito round-trip (done)
 
-- **Recogito round-trip.** Export the v2 LLM-jury adjudication queue to
-  [Recogito](https://recogito.pelagios.org)-importable annotations so human
-  philologists adjudicate in the community's own tool, then re-import decisions.
+[Recogito](https://recogito.pelagios.org) is Pelagios's collaborative annotation
+tool. The v2 LLM-jury adjudication queue can now go out to it and come back. The
+parse/harvest core is [`openetruscan.core.recogito`](../src/openetruscan/core/recogito.py)
+(pure, unit-tested in [`tests/test_recogito.py`](../tests/test_recogito.py)).
+
+```bash
+# Out: jury split-decisions → a CSV a philologist uploads to Recogito.
+python scripts/research/export_recogito.py \
+    --queue research/v2/handoff/v2.0-etr/adjudication_queue.csv \
+    --output /tmp/recogito_upload.csv
+
+# In: Recogito's annotation export → harvest two things.
+python scripts/research/import_recogito.py --export /tmp/recogito_annotations.csv \
+    --links-out data/pleiades_link_queue.jsonl \
+    --decisions-out /tmp/adjudicated.csv
+```
+
+What the import harvests:
+
+- **Place links** — PLACE annotations resolved to a Pleiades URI become
+  findspot → Pleiades proposals, written in the *same queue format*
+  `propose_pleiades_links.py` emits (tagged `source: recogito`). They flow
+  straight through `review_pleiades_links.py` into `pleiades_mapping.yaml` — so
+  Recogito is a second, human-curated source for the place axis above. The loop
+  closes.
+- **Classification decisions** — per-document TAGS become the philologist's
+  adjudication decision (`id, decision_tags` CSV), to fold back into the v2
+  gold set.
+
+CSV parsing is tolerant of Recogito's cross-version header naming
+(case-insensitive alias map), so an export from any recent Recogito version
+parses.
