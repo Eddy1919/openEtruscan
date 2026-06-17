@@ -15,6 +15,8 @@ from pathlib import Path
 
 import yaml
 
+from openetruscan.core.periodo import period_for_year
+
 logger = logging.getLogger(__name__)
 
 PLEIADES_BASE = "https://pleiades.stoa.org/places/"
@@ -131,6 +133,7 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
 
     tm_uri = get_trismegistos_uri(inscription.id)
     eagle_uri = get_eagle_uri(inscription.id)
+    period = period_for_year(getattr(inscription, "date_approx", None))
 
     annotation = {
         "@context": [
@@ -183,6 +186,20 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
                 "purpose": "identifying",
             }
         )
+
+    # Temporal axis: link the inscription's date to a PeriodO period definition,
+    # completing the Pelagios place + time triad. Emitted both as an identifying
+    # body (so Peripleo picks it up alongside the gazetteer refs) and as a
+    # dcterms:temporal property for plain RDF consumers.
+    if period is not None:
+        annotation["body"].append(
+            {
+                "type": "SpecificResource",
+                "source": period.uri,
+                "purpose": "identifying",
+            }
+        )
+        annotation["dcterms:temporal"] = {"id": period.uri, "label": period.label_en}
 
     # 4. Handle Spatial selectors if coordinates are present
     # Upgrade to Gold Standard: GeoJSON Point geometries for Peripleo 3 compliance
