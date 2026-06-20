@@ -82,6 +82,24 @@ class TestEnrichedJsonLD:
         ]
         assert any(urlparse(s).hostname == "www.trismegistos.org" for s in sources)
 
+    def test_jsonld_uses_row_pleiades_id_when_mapping_misses(self):
+        # The findspot→id YAML doesn't cover this row, but its pleiades_id column
+        # does — the feed must still emit the Pleiades link.
+        insc = Inscription(
+            id="ET_Vc_1.1",
+            raw_text="mi velthur",
+            canonical="mi velthur",
+            findspot="an unmapped findspot string",
+            pleiades_id="413291",
+        )
+        jsonld = inscription_to_jsonld(insc)
+        sources = [
+            b.get("source", "")
+            for b in jsonld.get("body", [])
+            if isinstance(b, dict) and b.get("purpose") == "identifying"
+        ]
+        assert "https://pleiades.stoa.org/places/413291" in sources
+
     @patch("openetruscan.api.lod._load_eagle_mapping", return_value={"ET_Cr_1.1": "EDR000001"})
     def test_jsonld_includes_eagle_uri(self, mock_map):
         insc = Inscription(
