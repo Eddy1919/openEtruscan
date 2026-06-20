@@ -98,7 +98,13 @@ def main() -> None:
     ap.add_argument("--gazetteer", type=Path, default=DEFAULT_GAZETTEER)
     ap.add_argument("--mapping", type=Path, default=DEFAULT_MAPPING)
     ap.add_argument("--output", type=Path, default=DEFAULT_QUEUE)
-    ap.add_argument("--threshold", type=float, default=0.84, help="Min match score (default 0.84).")
+    ap.add_argument(
+        "--threshold",
+        type=float,
+        default=0.90,
+        help="Min match score (default 0.90, tuned against the live corpus; "
+        "0.84 admits false positives like 'Clusino GA.'→the lake Clusinus).",
+    )
     ap.add_argument("--top-k", type=int, default=3, help="Max candidates per findspot.")
     ap.add_argument(
         "--include-empty",

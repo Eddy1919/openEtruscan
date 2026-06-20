@@ -53,6 +53,33 @@ Design notes:
   `?has_provenance` / the search facets see it), run the existing reconcile/
   enrichment path.
 
+### Tuning (against the live corpus, 838 distinct findspots / 5,932 inscriptions)
+
+The default threshold is **0.90**, chosen from a coverage/precision sweep:
+
+| threshold | findspots matched | inscriptions covered |
+| --- | --- | --- |
+| 1.00 (exact stem) | 57 | 1,174 (53%) |
+| 0.90 (default) | 75 | 1,280 (58%) |
+| 0.84 (old default) | 90 | 1,328 (60%) |
+
+The extra recall below 0.90 is mostly *wrong*: `Clusino GA.` → the lake
+*Clusinus* instead of the city, modern museum cities (`Parisiis` → `Parsiana`),
+and position descriptors (`in fronte DA.`). Since this is a review queue, a
+higher threshold keeps reviewer signal-to-noise high; lower it with
+`--threshold` if you want to sweep the long tail by hand.
+
+Two findings fed back into the matcher: adding `cum` and museum/collection words
+(`in museo publico`, `cum agro`) to the stopword set recovered ~70 inscriptions
+that were scoring just under threshold; and matching is **stem-prefix indexed**
+(`prefix_len`) because a full O(findspots·places) `difflib` pass over the ~11k
+gazetteer places does not finish — the indexed path runs in ~2s.
+
+Known precision gaps still open (not threshold-fixable): **place-type
+disambiguation** (prefer settlements over lakes/rivers — the gazetteer carries
+feature types) and **non-findspot strings** (catalogue sigla like `GA.`/`FA.`,
+pure museum provenance) that should be filtered before matching.
+
 ## Time axis — PeriodO (done)
 
 Every dated inscription now links to a [PeriodO](https://perio.do) period

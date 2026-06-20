@@ -48,6 +48,14 @@ class TestNormalize:
     def test_punctuation_becomes_separators(self):
         assert normalize_place_name("Clusii (in-agro)") == "clusii"
 
+    def test_strips_cum_conjunction(self):
+        # "Clusium cum agro" must reduce to the place, not score below threshold.
+        assert normalize_place_name("Clusium cum agro") == "clusium"
+
+    def test_strips_museum_scaffolding(self):
+        assert normalize_place_name("Clusii in museo publico") == "clusii"
+        assert normalize_place_name("Volaterris in museo Guarnacci") == "volaterris guarnacci"
+
     def test_empty(self):
         assert normalize_place_name("") == ""
         assert normalize_place_name("   ") == ""
@@ -136,6 +144,15 @@ class TestProposeLinks:
         findspots = ["Clusii", "Perusiae", "nonsense-place"]
         proposals = propose_links(findspots, GAZETTEER)
         assert [p.findspot for p in proposals] == findspots
+
+    def test_cum_phrase_matches_place(self):
+        [proposal] = propose_links(["Clusium cum agro"], GAZETTEER)
+        assert proposal.best is not None and proposal.best.pleiades_id == "413047"
+
+    def test_prefix_index_and_full_scan_agree_on_real_match(self):
+        indexed = propose_links(["Clusii in agro"], GAZETTEER, prefix_len=3)
+        full = propose_links(["Clusii in agro"], GAZETTEER, prefix_len=0)
+        assert indexed[0].best.pleiades_id == full[0].best.pleiades_id == "413047"
 
 
 @pytest.mark.parametrize(
