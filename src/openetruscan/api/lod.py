@@ -130,6 +130,13 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
     pleiades_uri = None
     if inscription.findspot:
         pleiades_uri = get_pleiades_uri(inscription.findspot)
+    # Fall back to the row's own pleiades_id column: the findspot→id YAML mapping
+    # doesn't cover every already-linked row, and without this the feed silently
+    # drops Pleiades links the DB already holds.
+    if not pleiades_uri:
+        pid = getattr(inscription, "pleiades_id", None)
+        if pid:
+            pleiades_uri = f"{PLEIADES_BASE}{pid}"
 
     tm_uri = get_trismegistos_uri(inscription.id)
     eagle_uri = get_eagle_uri(inscription.id)

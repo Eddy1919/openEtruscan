@@ -10,6 +10,8 @@ dataset record. The LOD emission lives in
 This page documents the workflows that *grow* that linked data. The triad
 Pelagios cares about is **place + time + people**; we already emit people
 (SNAP prosopography, [`snap_exporter.py`](../src/openetruscan/api/snap_exporter.py)).
+To actually join the Pelagios graph, see the prerequisites and submission steps
+in [`PELAGIOS_REGISTRATION.md`](PELAGIOS_REGISTRATION.md).
 
 ## Raising Pleiades coverage (place axis)
 
