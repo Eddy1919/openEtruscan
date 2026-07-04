@@ -16,7 +16,7 @@ COPY src/ src/
 # neural-inference (onnxruntime) is lightweight; neural (torch) is NOT included.
 # telemetry pulls in opentelemetry SDK (~30 MB on disk, no torch/transformers).
 RUN pip install --no-cache-dir --prefix=/install \
-    ".[server,postgres,prosopography,stats,lod,neural-inference,telemetry]"
+    ".[server,prosopography,stats,lod,neural-inference,telemetry]"
 
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────
