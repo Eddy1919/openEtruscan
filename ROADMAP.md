@@ -201,7 +201,7 @@ These are tracked elsewhere but listed for completeness:
 
 - **`place_findspot` retrieval gap** — current NDCG@10 is 0.39 because
   PostgreSQL FTS doesn't stem across Latin morphological variants.
-  Three remediation paths in `evals/README.md`. Low priority: existing
+  Three remediation paths in `eval/harness/README.md`. Low priority: existing
   `place_pleiades` (0.80) covers most user-visible queries.
 - **Prosopography category for the eval** — deferred until entity
   extraction is cleaned up. The existing graph is dominated by

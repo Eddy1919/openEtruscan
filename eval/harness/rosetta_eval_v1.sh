@@ -17,8 +17,8 @@
 # Pipe to a file (or --output), or send to stdout for piping into jq.
 #
 # Usage:
-#   bash evals/rosetta_eval_v1.sh --api-url https://api.openetruscan.com
-#   bash evals/rosetta_eval_v1.sh --api-url http://localhost:8000 --output eval/v1.json
+#   bash eval/harness/rosetta_eval_v1.sh --api-url https://api.openetruscan.com
+#   bash eval/harness/rosetta_eval_v1.sh --api-url http://localhost:8000 --output eval/v1.json
 #
 # Reproducibility notes: research/notes/reproduce-rosetta-eval-v1.md
 

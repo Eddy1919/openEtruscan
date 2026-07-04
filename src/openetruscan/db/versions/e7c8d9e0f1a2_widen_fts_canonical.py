@@ -41,7 +41,7 @@ container is still serving the old column).
 After this migration, the eval categories that depend on structured
 metadata (place_pleiades, place_findspot, chronology, cross_corpus) should
 go from 0.0 to a measurable signal. Once verified, the default gate in
-``evals/run_search_eval.py`` is tightened to enforce them.
+``eval/harness/run_search_eval.py`` is tightened to enforce them.
 """
 
 from collections.abc import Sequence

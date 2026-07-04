@@ -18,12 +18,12 @@ PR.
 ### M1.1 — Levenshtein baseline
 
 - **Deliverable:** `--baseline=levenshtein` mode in
-  [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py). Ranks
+  [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py). Ranks
   Latin candidates by edit distance to the Etruscan query (over the
   full Latin vocab present in `language_word_embeddings`), produces
   the same metric tables as the model run.
 - **Acceptance:**
-  - `python evals/run_rosetta_eval.py --baseline=levenshtein --json`
+  - `python eval/harness/run_rosetta_eval.py --baseline=levenshtein --json`
     returns a complete report with the same shape as the model run.
   - Test added: `tests/test_rosetta_eval.py` verifies the baseline
     produces non-zero precision when the source word is present
@@ -45,7 +45,7 @@ PR.
 
 ### M1.3 — Held-out anchor split
 
-- **Deliverable:** `evals/rosetta_eval_pairs.py` declares an explicit
+- **Deliverable:** `eval/harness/rosetta_eval_pairs.py` declares an explicit
   `EVAL_SPLIT` field per pair (`train` / `test`). Default split:
   ~40 train / ~22 test, stratified by category and confidence tier.
   Helper `eval_pairs(split=...)` to filter.

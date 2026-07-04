@@ -2553,7 +2553,7 @@ async def _get_reranker():
 # Period vocabulary maps to (date_min, date_max) inclusive bounds in the
 # corpus's native date_approx encoding (negative = BCE).
 #
-# Bucket boundaries match `evals/build_eval_set.py` so the eval is the
+# Bucket boundaries match `eval/harness/build_eval_set.py` so the eval is the
 # ground truth for "what does 'archaic' mean here". If the boundaries
 # change, update both files together.
 _PERIOD_RANGES: dict[str, tuple[int, int]] = {

@@ -30,8 +30,8 @@ research strand lives here.
 
 | Artefact | Location | Purpose |
 |---|---|---|
-| Eval harness + metric definitions | [`/evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py), [`/evals/latin_semantic_fields.py`](../evals/latin_semantic_fields.py), [`/evals/rosetta_eval_pairs.py`](../evals/rosetta_eval_pairs.py) | The reproducible benchmark. |
-| Eval-pair corpus | [`/evals/rosetta_eval_pairs.py`](../evals/rosetta_eval_pairs.py) | The 62 curated Etruscan↔Latin anchor pairs (Bonfante 2002, Wallace 2008, Pallottino 1968) used to grade retrieval quality. |
+| Eval harness + metric definitions | [`/eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py), [`/eval/harness/latin_semantic_fields.py`](../eval/harness/latin_semantic_fields.py), [`/eval/harness/rosetta_eval_pairs.py`](../eval/harness/rosetta_eval_pairs.py) | The reproducible benchmark. |
+| Eval-pair corpus | [`/eval/harness/rosetta_eval_pairs.py`](../eval/harness/rosetta_eval_pairs.py) | The 62 curated Etruscan↔Latin anchor pairs (Bonfante 2002, Wallace 2008, Pallottino 1968) used to grade retrieval quality. |
 | Production embedding pipeline | [`/scripts/training/vertex/`](../scripts/training/vertex/) | LoRA training, vocabulary embedding (LaBSE, XLM-R), DB ingest. See the README in that directory. |
 | Research extraction tools | [`/scripts/research/`](../scripts/research/) | Tools that mine the Perseus classical corpus for primary-source bilingual evidence. |
 | Primary-source corpus | [`/data/classical_texts/`](../data/classical_texts/) (gitignored, ~5 GB) | Perseus Digital Library `canonical-latinLit` and `canonical-greekLit` mirrors. |

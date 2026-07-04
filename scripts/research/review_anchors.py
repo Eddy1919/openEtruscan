@@ -104,7 +104,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO_ROOT / "evals"))
+sys.path.insert(0, str(REPO_ROOT / "eval/harness"))
 
 DEFAULT_RAW = REPO_ROOT / "research" / "anchors" / "llm_anchors_raw.jsonl"
 DEFAULT_KEEP = REPO_ROOT / "research" / "anchors" / "attested.jsonl"

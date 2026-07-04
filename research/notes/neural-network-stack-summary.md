@@ -13,7 +13,7 @@
 | 3 | **ByT5 lacunae restorer** | ✅ live in prod | [`src/openetruscan/ml/lacuna.py`](../../src/openetruscan/ml/lacuna.py) | 2 — strongest single neural product, room for scaling |
 | 4 | **CharCNN + Transformer inscription classifier** | ✅ live in prod | [`src/openetruscan/ml/classifier.py`](../../src/openetruscan/ml/classifier.py) | 4 — saturated at F1=0.99, no obvious next move |
 | 5 | **Char-level MLM + LoRA char-head** | ✅ trained, ❌ unused | `gs://openetruscan-rosetta/models/{char-mlm-v1, lora-char-head-v1}` | 3 — primitive for restoration + decipherment work |
-| 6 | **Cross-encoder rerank** | ❌ negative result, kept for replay | [`evals/rerank.py`](../../evals/rerank.py) | 6 — won't help retrieval; reserved for re-running with a domain-pretrained reranker |
+| 6 | **Cross-encoder rerank** | ❌ negative result, kept for replay | [`eval/harness/rerank.py`](../../eval/harness/rerank.py) | 6 — won't help retrieval; reserved for re-running with a domain-pretrained reranker |
 | 7 | **YOLO glyph detector (CV pipeline)** | 🟡 v0 scaffolded, no real training data | [`src/cv_pipeline/`](../../src/cv_pipeline/) | **1 — biggest leverage; gated on philologist labelling** |
 
 The two priority-1 workstreams (LaBSE retrieval + CV glyph detection) are the system's structural growth axes. Everything else is either saturated, blocked, or a documented failure.
@@ -168,7 +168,7 @@ This workstream is the **highest-leverage piece of dormant work in the codebase.
 
 ### What's there
 
-[`evals/rerank.py`](../../evals/rerank.py) — wraps `BAAI/bge-reranker-v2-m3` (sentence-transformers `CrossEncoder`), reorders the top-N LaBSE candidates per query, returns top-k by cross-encoder score. Wired into the eval harness via `--rerank`.
+[`eval/harness/rerank.py`](../../eval/harness/rerank.py) — wraps `BAAI/bge-reranker-v2-m3` (sentence-transformers `CrossEncoder`), reorders the top-N LaBSE candidates per query, returns top-k by cross-encoder score. Wired into the eval harness via `--rerank`.
 
 ### What works
 

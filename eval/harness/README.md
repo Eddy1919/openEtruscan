@@ -1,9 +1,8 @@
-# Search-quality eval
+# Search-quality eval — harness
 
-> **Not to be confused with [`eval/`](../eval/README.md).** This directory
-> (`evals/`, plural) is the eval **harness** — the scripts and gold-set
-> generators. The **committed JSON results** of frozen benchmark runs live in
-> `eval/` (singular).
+This is the eval **harness**: the scripts and gold-set generators. The
+**committed JSON results** of frozen benchmark runs live one level up in
+[`eval/`](../README.md).
 
 This directory holds a reproducible evaluation harness for `/search/hybrid`
 based on authority-controlled ground truth: Pleiades place IDs, Trismegistos
@@ -59,16 +58,16 @@ grows. This eval gives us:
 
 ```bash
 # rebuild the gold set against current prod (slow — pages the whole corpus)
-python evals/build_eval_set.py
+python eval/harness/build_eval_set.py
 
 # evaluate prod, default gates
-python evals/run_search_eval.py --api-url https://api.openetruscan.com
+python eval/harness/run_search_eval.py --api-url https://api.openetruscan.com
 
 # get a structured report
-python evals/run_search_eval.py --api-url https://api.openetruscan.com --json
+python eval/harness/run_search_eval.py --api-url https://api.openetruscan.com --json
 
 # custom gates (fail if any threshold is missed)
-python evals/run_search_eval.py --gate "lexical=0.40,place_pleiades=0.30"
+python eval/harness/run_search_eval.py --gate "lexical=0.40,place_pleiades=0.30"
 ```
 
 In CI the harness runs as the `search-quality` job in `.github/workflows/ci.yml`,

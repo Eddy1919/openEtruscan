@@ -105,13 +105,13 @@ can negotiate the threshold.
 
 **Goal:** a PR that regresses `model.field@10` below 0.10 fails the
 build. We already have the gate primitive in
-[`run_rosetta_eval.py:_evaluate_gates`](../evals/run_rosetta_eval.py) —
+[`run_rosetta_eval.py:_evaluate_gates`](../eval/harness/run_rosetta_eval.py) —
 this task wires it into CI.
 
 **Files to touch:**
 
 - Cloud Build config: add a step
-  `python evals/run_rosetta_eval.py --benchmark=rosetta-eval-v1 --gate "precision_at_10_semantic_field=0.10" --api-url ${_API_URL}`.
+  `python eval/harness/run_rosetta_eval.py --benchmark=rosetta-eval-v1 --gate "precision_at_10_semantic_field=0.10" --api-url ${_API_URL}`.
 - The `--api-url` is a *staging* API for PR gating, prod for nightly.
 
 **Decision:** gate against staging-API for PRs (cheap) vs prod-API
@@ -121,7 +121,7 @@ hits prod.
 **Acceptance command:**
 
 ```bash
-python evals/run_rosetta_eval.py --benchmark=rosetta-eval-v1 \
+python eval/harness/run_rosetta_eval.py --benchmark=rosetta-eval-v1 \
   --baseline=random --gate "precision_at_10_semantic_field=0.10" \
   --api-url <staging>
 # exit 0 means the gate held; exit 1 means we'd block a PR
@@ -180,7 +180,7 @@ bootstrap CI. `0.1875 ± 0.06 (95% CI, n=16)` instead of `0.1875`.
 
 **Files to touch:**
 
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py) — add
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py) — add
   `_bootstrap_ci(hits, n, n_resamples=10_000)` and call it per metric.
 - Report shape gains a `precision_at_k_ci_95` sibling to
   `precision_at_k`.
@@ -189,7 +189,7 @@ bootstrap CI. `0.1875 ± 0.06 (95% CI, n=16)` instead of `0.1875`.
 **Acceptance command:**
 
 ```bash
-python evals/run_rosetta_eval.py --benchmark=rosetta-eval-v1 \
+python eval/harness/run_rosetta_eval.py --benchmark=rosetta-eval-v1 \
   --baseline=random --api-url <prod> --json | \
   jq '.precision_at_k_ci_95["10"]'
 # must produce a [lo, hi] pair where lo <= precision_at_k["10"] <= hi
@@ -216,7 +216,7 @@ friction.
 **Files to touch:**
 
 - `replicate/Dockerfile` — pinned-deps image that wraps
-  `evals/rosetta_eval_v1.sh`.
+  `eval/harness/rosetta_eval_v1.sh`.
 - `replicate/README.md` — one-paragraph instructions.
 - CI: build + push to `ghcr.io/eddy1919/openetruscan-replicate:rosetta-eval-v1`.
 
@@ -273,8 +273,8 @@ land as a positive result.
 
 **Files to touch:**
 
-- `evals/significance.py` — new module with paired-bootstrap math.
-- `evals/rosetta_eval_v1.sh` — emit a top-level `comparisons` key with
+- `eval/harness/significance.py` — new module with paired-bootstrap math.
+- `eval/harness/rosetta_eval_v1.sh` — emit a top-level `comparisons` key with
   paired p-values for each model-pair.
 - FINDINGS.md table gains a "p-value (vs LaBSE)" column.
 
@@ -335,7 +335,7 @@ time. Updates from a nightly Cloud Build job.
   Vercel app) — reads the latest `eval/rosetta-eval-v1-*.json` from
   the repo via the GitHub raw API.
 - Cloud Build trigger: nightly cron at 03:00 UTC running
-  `evals/rosetta_eval_v1.sh --output auto` and pushing the new JSON
+  `eval/harness/rosetta_eval_v1.sh --output auto` and pushing the new JSON
   to main via a bot account.
 
 **Effort:** 2 days.

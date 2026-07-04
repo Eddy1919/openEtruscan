@@ -40,7 +40,7 @@ steps:
         pip install --quiet --no-cache-dir httpx
         # The orchestrator drops a JSON onto stdout if --output is unset.
         # We capture it for the upload step.
-        bash evals/rosetta_eval_v1.sh --api-url ${_API_URL} > /workspace/eval.json
+        bash eval/harness/rosetta_eval_v1.sh --api-url ${_API_URL} > /workspace/eval.json
         echo "Eval JSON size: $$(wc -c < /workspace/eval.json) bytes"
         # Print headline numbers so the build log is self-documenting.
         python <<'PY'

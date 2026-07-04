@@ -145,7 +145,6 @@ ignore = ["B904", "E501", "F821", "B008"]
 # ML libs; their imports are intentionally not at the top of the file.
 "scripts/**" = ["E402"]
 "eval/**" = ["E402"]
-"evals/**" = ["E402"]
 "tests/conftest.py" = ["E402"]
 
 [tool.mypy]

@@ -13,19 +13,19 @@ Usage
 -----
 
     # Default: hit prod, report the standard table.
-    python evals/run_rosetta_eval.py
+    python eval/harness/run_rosetta_eval.py
 
     # Local API or a staging deploy.
-    python evals/run_rosetta_eval.py --api-url http://localhost:8000
+    python eval/harness/run_rosetta_eval.py --api-url http://localhost:8000
 
     # Machine-readable output (for piping into a CI gate).
-    python evals/run_rosetta_eval.py --json
+    python eval/harness/run_rosetta_eval.py --json
 
     # Tighter source-language selection (e.g. only test theonyms):
-    python evals/run_rosetta_eval.py --category theonym
+    python eval/harness/run_rosetta_eval.py --category theonym
 
     # CI gate: pass-fail at the given precision@k threshold.
-    python evals/run_rosetta_eval.py --gate "precision_at_5=0.40"
+    python eval/harness/run_rosetta_eval.py --gate "precision_at_5=0.40"
 
 What "precision@k" means here
 -----------------------------
@@ -420,7 +420,7 @@ def evaluate(
     # "Was ANY Latin word from the expected category's vocabulary in top-k?"
     # Softer + more honest about what cross-language word-vector retrieval
     # actually does: it identifies semantic neighbourhoods, not exact lemma
-    # equivalences. See evals/latin_semantic_fields.py for the field
+    # equivalences. See eval/harness/latin_semantic_fields.py for the field
     # vocabularies (curated from the eval set + standard synonyms).
     p_at_k_field: dict[int, float] = {}
     for k in DEFAULT_K_VALUES:

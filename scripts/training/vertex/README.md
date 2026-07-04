@@ -65,7 +65,7 @@ python ingest_embeddings.py \
 **Run the eval** (no compute, just hits the public API):
 
 ```bash
-python evals/run_rosetta_eval.py \
+python eval/harness/run_rosetta_eval.py \
   --api-url https://api.openetruscan.com --json
 ```
 

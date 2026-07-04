@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 # Make the eval helpers importable — same path the script uses.
-sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
 
 from rosetta_eval_pairs import EvalPair  # noqa: E402
 
@@ -541,7 +541,7 @@ class TestRerank:
         """Construct a fake CrossEncoder that returns scores inversely
         proportional to the candidate's bi-encoder rank — so the rerank
         pass should swap the order."""
-        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
         import rerank as rerank_mod
 
         class _FakeCrossEncoder:
@@ -569,7 +569,7 @@ class TestRerank:
 
     def test_rerank_empty_candidates(self, monkeypatch):
         """Empty input returns empty output without touching the model."""
-        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
         import rerank as rerank_mod
 
         rerank_mod._RERANK_MODEL_CACHE.clear()
@@ -577,7 +577,7 @@ class TestRerank:
         assert out == []
 
     def test_rerank_top_k_truncates(self, monkeypatch):
-        sys.path.insert(0, str(Path(__file__).parent.parent / "evals"))
+        sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
         import rerank as rerank_mod
 
         class _FakeCE:

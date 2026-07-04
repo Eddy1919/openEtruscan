@@ -82,7 +82,7 @@ ranks Latin candidates by edit distance to the Etruscan source word.
 
 **Files to touch:**
 
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py)
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py)
 - [`tests/test_rosetta_eval.py`](../tests/test_rosetta_eval.py) (or create if absent)
 
 **Steps:**
@@ -106,14 +106,14 @@ ranks Latin candidates by edit distance to the Etruscan source word.
 
 **Output:**
 
-- New CLI flag: `python evals/run_rosetta_eval.py --baseline=levenshtein --json`
+- New CLI flag: `python eval/harness/run_rosetta_eval.py --baseline=levenshtein --json`
   produces a complete report.
 - Possibly: new endpoint `GET /neural/rosetta/vocab?lang=lat`.
 
 **Acceptance command:**
 
 ```bash
-python evals/run_rosetta_eval.py --baseline=levenshtein --json \
+python eval/harness/run_rosetta_eval.py --baseline=levenshtein --json \
   --api-url https://api.openetruscan.com \
   | jq '.precision_at_k, .precision_at_k_semantic_field, .n_evaluated'
 ```
@@ -133,7 +133,7 @@ random retrieval given the Latin vocab size.
 
 **Files to touch:**
 
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py)
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py)
 - [`tests/test_rosetta_eval.py`](../tests/test_rosetta_eval.py)
 
 **Steps:**
@@ -153,13 +153,13 @@ random retrieval given the Latin vocab size.
 
 **Output:**
 
-- `python evals/run_rosetta_eval.py --baseline=random` runs in <1s
+- `python eval/harness/run_rosetta_eval.py --baseline=random` runs in <1s
   and produces a complete report.
 
 **Acceptance command:**
 
 ```bash
-python evals/run_rosetta_eval.py --baseline=random --json \
+python eval/harness/run_rosetta_eval.py --baseline=random --json \
   | jq '{strict: .precision_at_k, field: .precision_at_k_semantic_field}'
 ```
 
@@ -179,8 +179,8 @@ with a stratified train/test split, and default the harness to test.
 
 **Files to touch:**
 
-- [`evals/rosetta_eval_pairs.py`](../evals/rosetta_eval_pairs.py)
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py)
+- [`eval/harness/rosetta_eval_pairs.py`](../eval/harness/rosetta_eval_pairs.py)
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py)
 - [`tests/test_rosetta_eval_pairs.py`](../tests/test_rosetta_eval_pairs.py)
 
 **Steps:**
@@ -189,7 +189,7 @@ with a stratified train/test split, and default the harness to test.
    future row added without thought ends up in the held-out half —
    safer for accidental train-leakage than the other way around).
 2. Generate the split deterministically in a one-shot script
-   `evals/_generate_eval_split.py` (kept in repo for reproducibility):
+   `eval/harness/_generate_eval_split.py` (kept in repo for reproducibility):
    - Group pairs by `(category, confidence)` strata.
    - Within each stratum, take ~⌊n × 22/62⌋ to test, rest to train.
    - Use `random.Random(seed=20260510).shuffle` so the split is
@@ -216,7 +216,7 @@ with a stratified train/test split, and default the harness to test.
 
 ```bash
 python -c "
-from evals.rosetta_eval_pairs import EVAL_PAIRS, eval_pairs
+from rosetta_eval_pairs import EVAL_PAIRS, eval_pairs
 train = [p for p in EVAL_PAIRS if p.split == 'train']
 test  = [p for p in EVAL_PAIRS if p.split == 'test']
 overlap = {(p.etr,p.lat) for p in train} & {(p.etr,p.lat) for p in test}
@@ -244,7 +244,7 @@ Must print `OK` and the right counts.
 **Files to touch:**
 
 - [`src/openetruscan/api/server.py`](../src/openetruscan/api/server.py) (verify cosines are returned — they already are, see line that emits `cosine` in the rosetta endpoint)
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py)
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py)
 - [`tests/test_rosetta_eval.py`](../tests/test_rosetta_eval.py)
 - [`research/FINDINGS.md`](FINDINGS.md) — fix stale "stub" claim
 
@@ -274,7 +274,7 @@ Must print `OK` and the right counts.
 **Acceptance command:**
 
 ```bash
-python evals/run_rosetta_eval.py --json \
+python eval/harness/run_rosetta_eval.py --json \
   --api-url https://api.openetruscan.com \
   | jq '.coverage_at_threshold | to_entries | map({thr: .key, frac: .value})'
 ```
@@ -296,9 +296,9 @@ split, metric definitions.
 
 **Files to touch:**
 
-- New: `evals/rosetta_eval_v1.sh` (the entrypoint)
+- New: `eval/harness/rosetta_eval_v1.sh` (the entrypoint)
 - New: [`research/notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md)
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py): add
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py): add
   `--benchmark=rosetta-eval-v1` switch that locks all flags
 
 **Steps:**
@@ -310,7 +310,7 @@ split, metric definitions.
      *protocol*, not a model)
    - all 4 baselines: random, levenshtein, model under test
    - report fields: strict@k, field@k, coverage@thr, by_category, by_confidence
-2. `evals/rosetta_eval_v1.sh` takes `--api-url` and produces a
+2. `eval/harness/rosetta_eval_v1.sh` takes `--api-url` and produces a
    single JSON `eval/rosetta-eval-v1-<UTC-timestamp>.json` with all
    four runs concatenated under top-level keys
    `{random, levenshtein, model}`.
@@ -323,13 +323,13 @@ split, metric definitions.
 
 **Output:**
 
-- One-shot script `bash evals/rosetta_eval_v1.sh > /tmp/eval.json`.
+- One-shot script `bash eval/harness/rosetta_eval_v1.sh > /tmp/eval.json`.
 - Reproducibility note in `research/notes/`.
 
 **Acceptance command:**
 
 ```bash
-bash evals/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
+bash eval/harness/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
   > /tmp/rosetta-eval-v1.json
 jq '{
   random_strict_at_10: .random.precision_at_k["10"],
@@ -513,9 +513,9 @@ and v4 against `rosetta-eval-v1`.
 
 **Files to touch:**
 
-- [`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py) — pass
+- [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py) — pass
   `embedder` through to API calls
-- `evals/rosetta_eval_v1.sh` — emit two model rows (`labse`, `v4`)
+- `eval/harness/rosetta_eval_v1.sh` — emit two model rows (`labse`, `v4`)
   in the JSON
 
 **Steps:**
@@ -534,7 +534,7 @@ and v4 against `rosetta-eval-v1`.
 **Acceptance command:**
 
 ```bash
-bash evals/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
+bash eval/harness/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
   > /tmp/v1-headtohead.json
 jq '{
   random:      .random.precision_at_k_semantic_field["10"],
@@ -806,7 +806,7 @@ table; declare success or honest negative result.
 
 **Files to touch:**
 
-- `evals/rosetta_eval_v1.sh` — add the new model
+- `eval/harness/rosetta_eval_v1.sh` — add the new model
 - [`research/FINDINGS.md`](FINDINGS.md) — update the table
 
 **Acceptance criterion** (from research/ROADMAP.md M3.3):
@@ -820,7 +820,7 @@ table; declare success or honest negative result.
 **Acceptance command:**
 
 ```bash
-bash evals/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
+bash eval/harness/rosetta_eval_v1.sh --api-url https://api.openetruscan.com \
   > /tmp/v1-with-attested.json
 jq '{
   baseline:    .labse.precision_at_k_semantic_field["5"],
@@ -879,10 +879,10 @@ as follows:
 | **P1 — Defensible eval** | | | |
 | T1.1 Levenshtein retrieval baseline | `--baseline=levenshtein` mode + `/neural/rosetta/vocab` endpoint. Strict@10 = 0, field@10 = 0; coverage@0.5 = 0.955 (anchored to surface form) | [#14](https://github.com/Eddy1919/openEtruscan/pull/14) | ✅ |
 | T1.2 Random retrieval baseline | `--baseline=random` + analytical `k/V` and `1−C(V−F,k)/C(V,k)` arms | [#15](https://github.com/Eddy1919/openEtruscan/pull/15) | ✅ |
-| T1.3 Held-out 40/22 anchor split | `evals/rosetta_eval_pairs.py` with `split` of `train` or `test`; `min_confidence` filter | [#16](https://github.com/Eddy1919/openEtruscan/pull/16) | ✅ |
+| T1.3 Held-out 40/22 anchor split | `eval/harness/rosetta_eval_pairs.py` with `split` of `train` or `test`; `min_confidence` filter | [#16](https://github.com/Eddy1919/openEtruscan/pull/16) | ✅ |
 | T1.4 Threshold-aware coverage | `coverage@{0.50, 0.70, 0.85}` cosine; correctly anchored to *target-side surface form* | [#17](https://github.com/Eddy1919/openEtruscan/pull/17) | ✅ |
 | T1.4b Integration glue | All 4 baseline columns side-by-side in one report shape | [#19](https://github.com/Eddy1919/openEtruscan/pull/19) | ✅ |
-| T1.5 Frozen `rosetta-eval-v1` | `--benchmark=rosetta-eval-v1` switch + `evals/rosetta_eval_v1.sh` orchestrator. **First frozen run:** model field@10 = 0.1875 | [#20](https://github.com/Eddy1919/openEtruscan/pull/20) | ✅ |
+| T1.5 Frozen `rosetta-eval-v1` | `--benchmark=rosetta-eval-v1` switch + `eval/harness/rosetta_eval_v1.sh` orchestrator. **First frozen run:** model field@10 = 0.1875 | [#20](https://github.com/Eddy1919/openEtruscan/pull/20) | ✅ |
 | **P2 — etr-lora-v4 head-to-head** | | | |
 | T2.1 Parameterise embed script | `--embedder` + `--revision` flags; `--corpus` accepts local paths | inside [#30](https://github.com/Eddy1919/openEtruscan/pull/30) | ✅ |
 | T2.2 Embed prod vocab through v4 | 8,905 ett vectors at `(xlmr-lora, v4)`; Vertex job `xlmr-embed-ett-20260510-200031` | inside [#30](https://github.com/Eddy1919/openEtruscan/pull/30) | ✅ |

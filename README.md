@@ -301,5 +301,5 @@ What stays here (and gets first billing in this README):
 
 ### v0.5.0 infrastructure
 - **Cloud Run neural restoration**: ByT5 lacunae restoration is served from a dedicated Cloud Run inference service (`services/byt5-restorer/`).
-- **CI/CD eval gates**: hybrid-search NDCG@10 gates seeded with real DB queries (`evals/search_eval_queries.jsonl`).
+- **CI/CD eval gates**: hybrid-search NDCG@10 gates seeded with real DB queries (`eval/harness/search_eval_queries.jsonl`).
 - **Admin curatorial UI**: provenance promotion workflow in the Inscription viewer (`ProvenancePromoteModal.tsx`).

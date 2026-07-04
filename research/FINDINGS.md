@@ -265,7 +265,7 @@ Three problems with this framing:
 
 ### The new metrics
 
-[`evals/run_rosetta_eval.py`](../evals/run_rosetta_eval.py) now
+[`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py) now
 computes both:
 
 * **`precision_at_k` (strict-lexical)** — the original metric.
@@ -276,7 +276,7 @@ computes both:
   `civic`, `religious`, `time`, `numeral`, `verb`, `theonym`,
   `onomastic`. Per-category Latin reference vocabularies are
   curated in
-  [`evals/latin_semantic_fields.py`](../evals/latin_semantic_fields.py)
+  [`eval/harness/latin_semantic_fields.py`](../eval/harness/latin_semantic_fields.py)
   — derived from the eval set's expected lemmas plus standard
   morphological / synonym extensions an undergrad classics student
   would unambiguously assign to the same field.
@@ -464,7 +464,7 @@ Acknowledging where we still fall short of publishable rigour:
    words to be reviewed.
 
 4. ~~**Reproducibility.**~~ **Addressed in T1.5 + T3.2.**
-   [`bash evals/rosetta_eval_v1.sh --api-url ... --output auto`](../evals/rosetta_eval_v1.sh)
+   [`bash eval/harness/rosetta_eval_v1.sh --api-url ... --output auto`](../eval/harness/rosetta_eval_v1.sh)
    is the single reproducer; the manifest in
    [`research/notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md)
    pins commit hashes, GCS object md5s, alembic head, and the
@@ -489,7 +489,7 @@ Acknowledging where we still fall short of publishable rigour:
 
 ```bash
 # Eval against the live API (which reads from prod corpus DB):
-python evals/run_rosetta_eval.py \
+python eval/harness/run_rosetta_eval.py \
   --api-url https://api.openetruscan.com \
   --json > /tmp/eval.json
 

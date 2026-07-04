@@ -15,7 +15,7 @@ across runs, giving us an honest delta to compare against.
 ## One-line reproduction
 
 ```bash
-bash evals/rosetta_eval_v1.sh \
+bash eval/harness/rosetta_eval_v1.sh \
   --api-url https://api.openetruscan.com \
   --output auto
 ```
@@ -29,9 +29,9 @@ omitted, the JSON goes to stdout.
 
 | Component | Pinned value | Source of truth |
 |---|---|---|
-| Eval split | `test` (22 pairs) | [`evals/rosetta_eval_pairs.py`](../../evals/rosetta_eval_pairs.py) — `split="test"` rows |
-| Min-confidence filter | `medium` (drops `low`-confidence pairs) | [`evals/run_rosetta_eval.py`](../../evals/run_rosetta_eval.py) `BENCHMARK_PRESETS["rosetta-eval-v1"]` |
-| Semantic fields | committed in repo, no external dep | [`evals/latin_semantic_fields.py`](../../evals/latin_semantic_fields.py) |
+| Eval split | `test` (22 pairs) | [`eval/harness/rosetta_eval_pairs.py`](../../eval/harness/rosetta_eval_pairs.py) — `split="test"` rows |
+| Min-confidence filter | `medium` (drops `low`-confidence pairs) | [`eval/harness/run_rosetta_eval.py`](../../eval/harness/run_rosetta_eval.py) `BENCHMARK_PRESETS["rosetta-eval-v1"]` |
+| Semantic fields | committed in repo, no external dep | [`eval/harness/latin_semantic_fields.py`](../../eval/harness/latin_semantic_fields.py) |
 | Strict-lexical metric | "exact expected Latin lemma in top-k" | `evaluate()` in `run_rosetta_eval.py` |
 | Semantic-field metric | "any Latin word from the right semantic field in top-k" | `evaluate()` in `run_rosetta_eval.py` |
 | Coverage thresholds | `{0.50, 0.70, 0.85}` cosine | `evaluate()` in `run_rosetta_eval.py` |
@@ -61,10 +61,10 @@ historical run bit-for-bit.
 
 | File | Pinned hash (at v1 freeze) |
 |---|---|
-| `evals/rosetta_eval_pairs.py` | `2530765` ([T1.3] Held-out 40/22 anchor split) |
-| `evals/latin_semantic_fields.py` | `5ff53d9` (chore: fix linting errors — semantic-field vocab) |
-| `evals/run_rosetta_eval.py` | bumped per task; see `git log -- evals/run_rosetta_eval.py` |
-| `evals/rosetta_eval_v1.sh` | bumped per task; see `git log -- evals/rosetta_eval_v1.sh` |
+| `eval/harness/rosetta_eval_pairs.py` | `2530765` ([T1.3] Held-out 40/22 anchor split) |
+| `eval/harness/latin_semantic_fields.py` | `5ff53d9` (chore: fix linting errors — semantic-field vocab) |
+| `eval/harness/run_rosetta_eval.py` | bumped per task; see `git log -- eval/harness/run_rosetta_eval.py` |
+| `eval/harness/rosetta_eval_v1.sh` | bumped per task; see `git log -- eval/harness/rosetta_eval_v1.sh` |
 
 When you update the benchmark in a way that *changes the numbers*, bump
 the label (`rosetta-eval-v2`) — never re-purpose an existing label.
@@ -134,7 +134,7 @@ is committed to `eval/`.
 1. Bump the relevant commit hashes in the table above (or copy this doc
    to `reproduce-rosetta-eval-v<N+1>.md` for a semantically-breaking
    change).
-2. Re-run `bash evals/rosetta_eval_v1.sh --output auto`.
+2. Re-run `bash eval/harness/rosetta_eval_v1.sh --output auto`.
 3. Append a row to the **Run log** above.
 4. Commit the new `eval/rosetta-eval-v1-*.json` file alongside the doc
    update.

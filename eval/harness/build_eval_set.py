@@ -28,9 +28,9 @@ Each query carries explicit ``methodology`` metadata so eval consumers can
 decide which categories they trust.
 
 Run from repo root:
-    python evals/build_eval_set.py [--api-url https://api.openetruscan.com]
+    python eval/harness/build_eval_set.py [--api-url https://api.openetruscan.com]
 
-Writes ``evals/search_eval_queries.jsonl``.
+Writes ``eval/harness/search_eval_queries.jsonl``.
 """
 
 from __future__ import annotations

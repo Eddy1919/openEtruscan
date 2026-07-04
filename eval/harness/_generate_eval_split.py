@@ -5,7 +5,7 @@ This script was run ONCE to produce the split assignments that are now
 hardcoded in ``rosetta_eval_pairs.py``. It is kept in the repo for
 reproducibility — anyone can verify the split by running::
 
-    python evals/_generate_eval_split.py
+    python eval/harness/_generate_eval_split.py
 
 and comparing the output to the ``split`` values in ``rosetta_eval_pairs.py``.
 
