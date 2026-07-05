@@ -1,0 +1,203 @@
+# =============================================================================
+# OpenEtruscan — Lemnian Alphabet Adapter
+# =============================================================================
+# Lemnian: a Tyrsenian language attested on the island of Lemnos (Aegean Sea).
+# Only ~2 inscriptions known, most notably the Lemnos Stele (6th century BCE).
+# Closely related to Etruscan — key evidence for the Tyrsenian language family.
+# Uses a local Greek-derived alphabet (Western Greek variant).
+# =============================================================================
+
+language_id: lemnian
+display_name: Lemnian
+iso_639_3: xle
+script: old_italic
+unicode_range: [0x10300, 0x1032F]
+direction: rtl  # The Lemnos Stele is boustrophedon
+
+# =============================================================================
+# ALPHABET
+# Lemnian uses a Western Greek-derived alphabet adapted locally on Lemnos.
+# Like Etruscan, it lacks voiced stops /b/, /d/, /g/.
+# Unlike Etruscan, Lemnian may retain /o/ (debated — see alphabet entry).
+# The script is mapped to Old Italic Unicode for consistency, since no
+# dedicated Lemnian block exists.
+# =============================================================================
+alphabet:
+  a:
+    unicode: "\U00010300"
+    ipa: "a"
+    variants: ["A", "a"]
+
+  e:
+    unicode: "\U00010304"
+    ipa: "e"
+    variants: ["E", "e"]
+
+  v:
+    unicode: "\U00010305"
+    ipa: "v"
+    variants: ["V", "v", "W", "w"]
+    notes: "Labial — uncertain phonetic value"
+
+  z:
+    unicode: "\U00010306"
+    ipa: "ts"
+    variants: ["Z", "z"]
+    notes: "Voiceless affricate /ts/ (as in Etruscan)"
+
+  h:
+    unicode: "\U00010307"
+    ipa: "h"
+    variants: ["H", "h"]
+
+  θ:
+    unicode: "\U00010308"
+    ipa: "tʰ"
+    variants: ["TH", "Th", "th", "θ", "Θ"]
+    notes: "Aspirated dental stop"
+
+  i:
+    unicode: "\U00010309"
+    ipa: "i"
+    variants: ["I", "i"]
+
+  k:
+    unicode: "\U0001030A"
+    ipa: "k"
+    variants: ["K", "k", "C", "c"]
+
+  l:
+    unicode: "\U0001030B"
+    ipa: "l"
+    variants: ["L", "l"]
+
+  m:
+    unicode: "\U0001030C"
+    ipa: "m"
+    variants: ["M", "m"]
+
+  n:
+    unicode: "\U0001030D"
+    ipa: "n"
+    variants: ["N", "n"]
+
+  o:
+    unicode: "\U0001030F"
+    ipa: "o"
+    variants: ["O", "o"]
+    notes: "Unlike Etruscan, Lemnian may have retained /o/ — debated"
+
+  p:
+    unicode: "\U00010310"
+    ipa: "p"
+    variants: ["P", "p"]
+
+  ś:
+    unicode: "\U00010311"
+    ipa: "ʃ"
+    variants: ["Ś", "ś", "SH", "Sh", "sh", "S2", "s2"]
+    notes: "Palatalized sibilant (as in Etruscan ś)"
+
+  r:
+    unicode: "\U00010313"
+    ipa: "r"
+    variants: ["R", "r"]
+
+  s:
+    unicode: "\U00010314"
+    ipa: "s"
+    variants: ["S", "s"]
+
+  t:
+    unicode: "\U00010315"
+    ipa: "t"
+    variants: ["T", "t"]
+
+  u:
+    unicode: "\U00010316"
+    ipa: "u"
+    variants: ["U", "u"]
+
+  φ:
+    unicode: "\U00010318"
+    ipa: "pʰ"
+    variants: ["PH", "Ph", "ph", "φ", "Φ"]
+    notes: "Aspirated bilabial stop"
+
+  χ:
+    unicode: "\U00010317"
+    ipa: "kʰ"
+    variants: ["CH", "Ch", "ch", "KH", "Kh", "kh", "χ", "Χ"]
+    notes: "Aspirated velar stop"
+
+# =============================================================================
+# EQUIVALENCE CLASSES
+# =============================================================================
+equivalence_classes:
+  aspirated_dental:
+    canonical: "θ"
+    members: ["th", "TH", "Th", "θ", "Θ"]
+  aspirated_bilabial:
+    canonical: "φ"
+    members: ["ph", "PH", "Ph", "φ", "Φ"]
+  aspirated_velar:
+    canonical: "χ"
+    members: ["ch", "CH", "Ch", "kh", "KH", "Kh", "χ", "Χ"]
+  palatalized_sibilant:
+    canonical: "ś"
+    members: ["sh", "SH", "Sh", "ś", "Ś", "s2", "S2"]
+
+# =============================================================================
+# PHONOTACTICS
+# Lemnian phonology is poorly understood due to the tiny corpus.
+# Constraints are inferred from the Lemnos Stele and parallels with Etruscan.
+# =============================================================================
+phonotactics:
+  forbidden_word_final: []
+  forbidden_clusters: []
+  max_consonant_cluster: 3
+  vowels: ["a", "e", "i", "o", "u"]
+  notes: "Lemnian may retain /o/ (unlike Etruscan). Corpus too small for firm phonotactic rules."
+
+# =============================================================================
+# ONOMASTICS
+# Names from the Lemnos Stele and potsherds. Very limited data.
+# =============================================================================
+onomastics:
+  formula_order:
+    - praenomen
+    - patronymic
+    - gentilicium
+
+  genitive_markers:
+    male: ["-s", "-ale", "-si"]
+    female: ["-s", "-ale"]
+
+  gender_markers:
+    male_endings: []
+    female_endings: ["-a", "-ia"]
+    female_gentilicium_suffix: ["-ia"]
+
+  known_praenomina:
+    male:
+      - hulaie
+      - holaiez
+      - naphoth
+      - ziazi
+      - sivai
+      - aker
+    female: []
+    # NOTE: With only ~2 inscriptions, all attributions are speculative.
+    # The following forms were removed from praenomina as they are likely
+    # not personal names:
+    #   φokiasiale — probably a toponymic adjective (cf. Greek Φωκαιεύς)
+    #   tavarzio   — possibly a locative or ethnonym
+    #   morail     — debated; could be a verbal form
+
+  known_gentilicia:
+    - vanalaśial
+    - holaieś
+    - zeronaiθ
+    - maraś
+    - aviś
+    - šialχveiz

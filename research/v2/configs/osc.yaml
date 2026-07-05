@@ -1,0 +1,41 @@
+# Language config for Oscan (osc). STUB — not yet active.
+# Populate when the codebooks/osc/ codebooks are drafted.
+
+language: osc
+language_name: Oscan
+codebook_dir: research/v2/codebooks/osc
+
+corpus:
+  - gs://openetruscan-rosetta/corpus/imagines_italicae_oscan.jsonl   # TODO: stage
+
+silver_labels: null   # TODO: weak-labeling pipeline for Oscan
+
+allowed_classes:
+  - funerary
+  - ownership
+  - dedicatory
+  - votive
+  - legal
+  - civic
+  - coin_legend
+  - boundary
+
+source_tag_heuristic: crawford_2011
+
+jury_defaults:
+  providers:
+    - claude-opus-4-7
+    - gemini-2.5-pro
+    - llama-4-maverick
+  vertex_project: your-gcp-project-id
+  vertex_region: europe-west1
+  maas_vertex_region: us-east5
+  secret_manager_project: your-gcp-project-id
+  gemini_secret_name: oe-gemini-api-key
+
+eval:
+  n_test: 200    # smaller corpus → smaller test split
+  seed: 42
+  bootstrap_n_resamples: 10000
+  significance_alpha: 0.05
+  krippendorff_target: 0.80

@@ -1,0 +1,79 @@
+# OpenEtruscan Platform Architecture
+
+OpenEtruscan is a decoupled, multi-tier digital humanities platform designed for high-performance epigraphic analysis.
+
+## Core Stack Overview
+
+```mermaid
+graph TD
+    subgraph Frontend [Next.js 15 Client]
+        A[App Router] --> B[React Components]
+        B --> C[Leaflet Maps]
+        B --> D[Chart.js Stats]
+        B --> E[ONNX Runtime Web]
+    end
+
+    subgraph Backend [FastAPI Python Server]
+        F[FastAPI Router] --> G[Limiter/Middleware]
+        F --> H[InscriptionRepository]
+        H --> I[SQLAlchemy Async]
+        F --> J[Normalizer Engine]
+        F --> K[ML/Classifier Inference]
+    end
+
+    subgraph Data [PostgreSQL + PostGIS + pgvector]
+        L[(Consolidated Database)]
+        I --> L
+        L --> M[PostGIS ST_AsMVT]
+        L --> N[pgvector HNSW]
+    end
+
+    Frontend -- REST API --> Backend
+    Backend -- Vector Tiles (PBF) --> Frontend
+```
+
+## Component Breakdown
+
+### 1. The Normalizer Engine (`core/normalizer.py`)
+The "heart" of the system. It handles the transformation of varied epigraphic transcription systems into a canonical phonological representation.
+
+```mermaid
+sequenceDiagram
+    participant U as User Input
+    participant D as Detector
+    participant P as Preprocessor (LaTeX/Unicode)
+    participant F as Folder (Variants -> Canonical)
+    participant V as Validator (Phonotactics)
+    participant O as Output (IPA/Unicode)
+
+    U->>D: Raw String
+    D->>P: Identification
+    P->>F: Clean Transliteration
+    F->>V: Canonical Mapping
+    V->>O: Result Object
+```
+
+### 2. Database Layer (`db/repository.py`)
+A repository pattern using `SQLAlchemy 2.0` and `pgvector`.
+- **Spatial**: PostGIS-backed proximity queries against findspot geometries. The `genetic_samples` join table exists in the schema as a placeholder for future archaeogenetic data integration; it is not currently populated (see ROADMAP).
+- **Semantic**: `halfvec(3072)` embeddings from `text-embedding-004` over the 6,633-inscription corpus. See the §Provenance disclosure section in [`README.md`](../README.md) for the breakdown into documented- and undocumented-provenance tiers.
+- **Tiles**: Direct `ST_AsMVT` generation for vector-tile mapping.
+
+### 3. API Middleware (`api/server.py`)
+- **Rate Limiting**: Per-endpoint windowed limiting using `slowapi`.
+- **Content Negotiation**: Support for JSON, CSV, and GeoJSON exports.
+- **Documentation**: Automatic OpenAPI 3.1 generation with Pydantic v2 schemas.
+
+## Data Flow: Search Request
+
+```mermaid
+flowchart LR
+    A[Client UI] --> B{Search Type?}
+    B -- Full Text --> C[PG FTS tsvector]
+    B -- Semantic --> D[Gemini Embedding + pgvector]
+    B -- Spatial --> E[PostGIS ST_DWithin]
+    C --> F[Repository Aggregation]
+    D --> F
+    E --> F
+    F --> G[JSON Response]
+```

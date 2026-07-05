@@ -1,0 +1,90 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "OpenEtruscan",
+  "description": "Open-source platform for Etruscan epigraphy. Unifies the inscriptions into one corpus of 6,633 records (the cleaned public dataset is a 6,567-row subset), publishes them as Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with Etruscan-side LoRA) that embeds Etruscan and Latin in a shared vector space. Includes a frozen benchmark (rosetta-eval-v1) with random, Levenshtein, and model baselines, and instructions to reproduce it.",
+  "identifier": "https://doi.org/10.5281/zenodo.20075836",
+  "version": "1.0.0",
+  "dateCreated": "2025-04-09",
+  "dateModified": "2026-05-24",
+  "datePublished": "2026-05-24",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "codeRepository": "https://github.com/Eddy1919/openEtruscan",
+  "url": "https://www.openetruscan.com",
+  "issueTracker": "https://github.com/Eddy1919/openEtruscan/issues",
+  "programmingLanguage": [
+    "Python",
+    "TypeScript",
+    "SQL"
+  ],
+  "runtimePlatform": "Python 3.10+",
+  "operatingSystem": "Linux",
+  "softwareRequirements": [
+    "Python >= 3.10",
+    "PostgreSQL + pgvector",
+    "Docker (deployment)"
+  ],
+  "keywords": [
+    "etruscan",
+    "epigraphy",
+    "ancient-languages",
+    "digital-humanities",
+    "low-resource-nlp",
+    "cross-lingual-embeddings",
+    "linked-open-data",
+    "pelagios-network",
+    "LaBSE",
+    "XLM-R",
+    "LoRA"
+  ],
+  "applicationCategory": "Digital Humanities / Computational Linguistics",
+  "developmentStatus": "active",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Edoardo",
+      "familyName": "Panichi",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Independent researcher"
+      }
+    }
+  ],
+  "maintainer": {
+    "@type": "Person",
+    "givenName": "Edoardo",
+    "familyName": "Panichi"
+  },
+  "sameAs": "https://doi.org/10.5281/zenodo.20075836",
+  "isPartOf": [
+    {
+      "@type": "ResearchProject",
+      "name": "OpenEtruscan",
+      "url": "https://www.openetruscan.com"
+    },
+    {
+      "@type": "ResearchProject",
+      "name": "Pelagios Network",
+      "url": "https://pelagios.org/",
+      "description": "International network of linked open data for the ancient world. OpenEtruscan contributes to the People, Place, and Registry working groups; aligns findspots with Pleiades and prosopography with the Pelagios People graph."
+    }
+  ],
+  "referencePublication": [
+    {
+      "@type": "Dataset",
+      "name": "OpenEtruscan corpus v1 — unified Etruscan inscriptions",
+      "description": "ML-ready cleaned corpus of 6,567 unified Etruscan inscriptions. Derived from Larth Dataset (Vico & Spanakis 2023) and CIE Vol. I.",
+      "url": "https://www.openetruscan.com/data"
+    },
+    {
+      "@type": "Dataset",
+      "name": "Larth Dataset",
+      "author": [
+        {"@type": "Person", "givenName": "A.", "familyName": "Vico"},
+        {"@type": "Person", "givenName": "G.", "familyName": "Spanakis"}
+      ],
+      "datePublished": "2023"
+    }
+  ],
+  "funding": "Self-funded research project."
+}

@@ -1,0 +1,38 @@
+# Language config for Raetian (rae). STUB — not yet active.
+
+language: rae
+language_name: Raetian
+codebook_dir: research/v2/codebooks/rae
+
+corpus:
+  - gs://openetruscan-rosetta/corpus/schumacher_2004_raetian.jsonl   # TODO: stage
+
+silver_labels: null
+
+# Corpus is too small (~400 short votive inscriptions) to support fine-grained
+# typology. Start with a collapsed 4-class taxonomy.
+allowed_classes:
+  - votive
+  - funerary
+  - ownership
+  - unsure_typology
+
+source_tag_heuristic: schumacher_2004
+
+jury_defaults:
+  providers:
+    - claude-opus-4-7
+    - gemini-2.5-pro
+    - llama-4-maverick
+  vertex_project: your-gcp-project-id
+  vertex_region: europe-west1
+  maas_vertex_region: us-east5
+  secret_manager_project: your-gcp-project-id
+  gemini_secret_name: oe-gemini-api-key
+
+eval:
+  n_test: 80     # tiny corpus → small test, wide CIs
+  seed: 42
+  bootstrap_n_resamples: 10000
+  significance_alpha: 0.05
+  krippendorff_target: 0.75   # lower bar because n is so small

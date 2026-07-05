@@ -1,0 +1,13 @@
+data/**
+.venv/**
+dist/**
+frontend/.next/**
+frontend/node_modules/**
+node_modules/**
+postgres_data/**
+.git/**
+*.pdf
+*.tar.gz
+*.dylib
+*.pyc
+__pycache__/**

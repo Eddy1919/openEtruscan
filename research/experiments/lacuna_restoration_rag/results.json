@@ -1,0 +1,41 @@
+{
+  "task": "retrieval-augmented Etruscan lacuna restoration",
+  "test_set": "66 clean-gold tasks (dedup), width-1-dominated (43/66)",
+  "retriever": "char-3gram cosine over 5932-inscription corpus, leakage-excluded",
+  "k_parallels": 8,
+  "seed": 42,
+  "n_resamples": 10000,
+  "conditions": {
+    "gemini-3.1-pro-preview": {
+      "n_both_answered": 44,
+      "single_shot_span_exact": 0.295,
+      "rag_span_exact": 0.523
+    },
+    "gemini-3.5-flash": {
+      "n_both_answered": 66,
+      "single_shot_span_exact": 0.258,
+      "rag_span_exact": 0.379
+    }
+  },
+  "leakage_ablation_flash": {
+    "n": 66,
+    "single_shot": 0.258,
+    "rag_full": 0.379,
+    "rag_noleak": 0.333,
+    "note": "answer-revealing parallels present in only 11/66 tasks; pure-generalization subset (n=55): single 0.236 -> rag 0.309"
+  },
+  "calibration_pro_rag": {
+    "high": 0.808,
+    "medium": 0.222,
+    "low": 0.083
+  },
+  "calibration_flash_rag": {
+    "high": 0.545,
+    "medium": 0.056,
+    "low": 0.0
+  },
+  "paired_bootstrap": {
+    "flash_rag_vs_single": "+0.121, p=0.025",
+    "pro_rag_vs_single": "+0.227, p<0.001 (n=44 answered)"
+  }
+}

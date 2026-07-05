@@ -1,0 +1,47 @@
+# Language config for Etruscan (etr).
+#
+# The pipelines under research/v2/pipelines/ read this file when --language=etr
+# is passed (or when LANG=etr in the Makefile). All paths are repo-relative
+# or gs:// URIs; corpus locations are intentionally non-secret.
+
+language: etr
+language_name: Etruscan
+codebook_dir: research/v2/codebooks/etr
+
+corpus:
+  # Read in order; later sources do NOT override earlier on id collision.
+  # Publication-id source (Pallottino-Rix / CIE / ETP) joins the silver labels.
+  # Integer-DB-id source extends coverage to rows that lack a publication id.
+  - gs://openetruscan-rosetta/corpus/etruscan-prod-v2.jsonl
+  - gs://openetruscan-rosetta/corpus/etruscan-prod-rawtext-v3.jsonl
+
+silver_labels: research/data/openetruscan_labels.csv
+
+allowed_classes:
+  - funerary
+  - ownership
+  - dedicatory
+  - votive
+  - legal
+  - boundary
+  - commercial
+
+source_tag_heuristic: pallottino_rix   # see pipelines/classify_split.py::_source_tag
+
+jury_defaults:
+  providers:
+    - claude-opus-4-7        # pending Vertex quota grant
+    - gemini-2.5-pro
+    - llama-4-maverick
+  vertex_project: your-gcp-project-id
+  vertex_region: europe-west1
+  maas_vertex_region: us-east5
+  secret_manager_project: your-gcp-project-id
+  gemini_secret_name: oe-gemini-api-key
+
+eval:
+  n_test: 400
+  seed: 42
+  bootstrap_n_resamples: 10000
+  significance_alpha: 0.05
+  krippendorff_target: 0.80

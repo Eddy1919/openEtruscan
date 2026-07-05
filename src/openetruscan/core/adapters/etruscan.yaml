@@ -1,0 +1,246 @@
+# =============================================================================
+# OpenEtruscan — Etruscan Alphabet Adapter
+# =============================================================================
+# This YAML file defines everything the normalizer needs to handle Etruscan.
+# To support a new language, copy this file and fill in your own alphabet.
+# =============================================================================
+
+language_id: etruscan
+display_name: Etruscan
+iso_639_3: ett
+script: old_italic
+unicode_range: [0x10300, 0x1032F]
+direction: rtl  # Etruscan is predominantly right-to-left
+
+# =============================================================================
+# ALPHABET
+# Each entry: canonical → Unicode Old Italic codepoint, IPA, known variants
+# Canonical form uses philological convention (lowercase Latin + IPA symbols)
+# =============================================================================
+alphabet:
+  a:
+    unicode: "\U00010300"
+    ipa: "a"
+    variants: ["A", "a"]
+
+  c:
+    unicode: "\U00010302"
+    ipa: "k"
+    variants: ["C", "c", "k", "K"]
+    notes: "Used for /k/ before e/i in archaic texts"
+
+  e:
+    unicode: "\U00010304"
+    ipa: "e"
+    variants: ["E", "e"]
+
+  v:
+    unicode: "\U00010305"
+    ipa: "v"
+    variants: ["V", "v", "w", "W"]
+    notes: "Labial fricative or approximant"
+
+  z:
+    unicode: "\U00010306"
+    ipa: "ts"
+    variants: ["Z", "z"]
+    notes: "/ts/ or /dz/"
+
+  h:
+    unicode: "\U00010307"
+    ipa: "h"
+    variants: ["H", "h"]
+    notes: "Nearly always word-initial"
+
+  θ:
+    unicode: "\U00010308"
+    ipa: "tʰ"
+    variants: ["TH", "Th", "th", "θ", "Θ", "t'", "T'", "THH", "thh"]
+    notes: "Aspirated dental stop. Often written 'th' in CIE. Variants include t' and digraphs."
+
+  i:
+    unicode: "\U00010309"
+    ipa: "i"
+    variants: ["I", "i"]
+
+  k:
+    unicode: "\U0001030A"
+    ipa: "k"
+    variants: ["K", "k"]
+    notes: "Used for /k/ before a in archaic texts"
+
+  l:
+    unicode: "\U0001030B"
+    ipa: "l"
+    variants: ["L", "l"]
+
+  m:
+    unicode: "\U0001030C"
+    ipa: "m"
+    variants: ["M", "m"]
+
+  n:
+    unicode: "\U0001030D"
+    ipa: "n"
+    variants: ["N", "n"]
+
+  p:
+    unicode: "\U00010310"
+    ipa: "p"
+    variants: ["P", "p"]
+
+  ś:
+    unicode: "\U00010311"
+    ipa: "ʃ"
+    variants: ["Ś", "ś", "SH", "Sh", "sh", "S2", "s2", "S'", "s'", "SS", "ss", "S-acute"]
+    notes: "Palatalized sibilant. Written 'sh' or 's-acute'. SS used in late CIE."
+
+  q:
+    unicode: "\U00010312"
+    ipa: "k"
+    variants: ["Q", "q"]
+    notes: "Used for /k/ before u in archaic texts"
+
+  r:
+    unicode: "\U00010313"
+    ipa: "r"
+    variants: ["R", "r"]
+
+  ξ:
+    unicode: "\U0001030E"
+    ipa: "s"
+    variants: ["ξ"]
+    notes: "ES / four-stroke sigma (U+1030E). Some scholars distinguish this from ś (SHE, U+10311). Mapped as alias for normalisation."
+
+  s:
+    unicode: "\U00010314"
+    ipa: "s"
+    variants: ["S", "s"]
+
+  t:
+    unicode: "\U00010315"
+    ipa: "t"
+    variants: ["T", "t"]
+
+  u:
+    unicode: "\U00010316"
+    ipa: "u"
+    variants: ["U", "u"]
+
+  φ:
+    unicode: "\U00010318"
+    ipa: "pʰ"
+    variants: ["PH", "Ph", "ph", "φ", "Φ", "p'", "P'", "PHH", "phh"]
+    notes: "Aspirated bilabial stop"
+
+  χ:
+    unicode: "\U00010317"
+    ipa: "kʰ"
+    variants: ["CH", "Ch", "ch", "KH", "Kh", "kh", "χ", "Χ", "k'", "K'", "CHH", "chh"]
+    notes: "Aspirated velar stop"
+
+  f:
+    unicode: "\U0001031A"
+    ipa: "f"
+    variants: ["F", "f"]
+    notes: "Late Etruscan letter, replaced 'vh' digraph"
+
+# =============================================================================
+# EQUIVALENCE CLASSES
+# Groups of characters that scholars use interchangeably.
+# The normalizer maps all variants to the canonical (first) form.
+# =============================================================================
+equivalence_classes:
+  aspirated_dental:
+    canonical: "θ"
+    members: ["th", "TH", "Th", "θ", "Θ"]
+  aspirated_bilabial:
+    canonical: "φ"
+    members: ["ph", "PH", "Ph", "φ", "Φ"]
+  aspirated_velar:
+    canonical: "χ"
+    members: ["ch", "CH", "Ch", "kh", "KH", "Kh", "χ", "Χ"]
+  palatalized_sibilant:
+    canonical: "ś"
+    members: ["sh", "SH", "Sh", "ś", "Ś", "s2", "S2"]
+
+# =============================================================================
+# PHONOTACTICS
+# Constraints on valid Etruscan sound combinations.
+# Used by the validator to flag suspicious sequences.
+# =============================================================================
+phonotactics:
+  forbidden_word_final: ["m"]
+  forbidden_clusters: ["kt", "tθ", "pφ", "kχ"]
+  max_consonant_cluster: 3
+  vowels: ["a", "e", "i", "u"]
+  notes: "Etruscan has no /o/ vowel and no voiced stops /b/, /d/, /g/. Clusters of plain + aspirated same-PoA stops are not attested."
+
+# =============================================================================
+# ONOMASTICS
+# Naming formula patterns for automatic name parsing.
+# =============================================================================
+onomastics:
+  formula_order:
+    - praenomen
+    - patronymic      # optional, marked by genitive
+    - gentilicium
+    - metronymic      # optional, rarer
+
+  genitive_markers:
+    male: ["-al", "-s"]
+    female: ["-al", "-s", "-sa"]
+
+  gender_markers:
+    male_endings: []       # Male praenomina have no consistent ending
+    female_endings: ["-i", "-ia", "-a"]
+    female_gentilicium_suffix: ["-i", "-ia", "-ei"]
+
+  known_praenomina:
+    male:
+      - larθ
+      - arnθ
+      - vel
+      - velθur
+      - aule
+      - setre
+      - laris
+      - marce
+      - avle
+      - caile
+      - larce
+      - θefare
+      - vipie
+    female:
+      - ramθa
+      - θanχvil
+      - θana          # One of the most common female praenomina (CIE)
+      - larthi
+      - velia
+      - fasti
+      - ravnθu
+      - θania
+      - hastia
+      - arnthi
+
+  known_gentilicia:
+    - spurina
+    - lecne
+    - velcha
+    - tarchna
+    - cuclnie
+    - petru
+    - seθre
+    - matunas
+    - tlesna
+    - herini
+    - ceicna
+    - pulfna
+    - calisna
+    - aulina
+    - larecna
+    - pumpu
+    - rumate
+    - svenia
+    - ancarni
+    - cucrina

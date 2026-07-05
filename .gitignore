@@ -1,0 +1,143 @@
+# Project vision (internal, not shipped)
+goal.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+# Multi-root workspace files reference machine-specific sibling paths
+# (e.g. ../openEtruscan-frontend); keep them local.
+*.code-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Standard Build Artifacts
+**/target/
+**/node_modules/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Distribution
+*.tar.gz
+*.whl
+
+# SQLite databases (generated, not tracked)
+*.db
+
+# Linter caches
+.ruff_cache/
+
+# Environment / Secrets
+.env
+.env.local
+.env.production
+
+# Generated web assets (rebuild with: python scripts/build_web_languages.py)
+# NOTE: corpus_data.js and languages.js are tracked because
+# production deploys via git pull and needs them to serve the web UI.
+
+# Nginx dev override (the prod config nginx.conf IS tracked so changes go
+# through review; nginx.dev.conf is for local-only experiments).
+nginx.dev.conf
+
+# ML model artifacts (pickled estimators, anywhere in the tree)
+*.pkl
+*.joblib
+.vercel
+.env*.local
+
+# Local data artifacts — DVC-tracked (gs://openetruscan-data-dvc) or
+# regeneratable from the pipelines; never committed as blobs. Only the
+# directory README is tracked (it documents provenance + how to restore).
+/data/*
+!/data/README.md
+
+# Local security audit (contains grep patterns for secrets — keep local)
+scripts/security_check.sh
+
+# Ultralytics YOLO runs
+runs/
+
+# Internal operations documentation (project IDs, SA emails, rotation runbooks).
+# Kept local-only so a public clone never ships internal infra details.
+docs/internal/
+run_wif.sh
+slow_query_policy.json
+
+# Missing local artifacts. The /models/ tree holds local copies of
+# adapter weights pulled from gs://openetruscan-rosetta/adapters/ and
+# is heavy / regeneratable; default-ignore the whole tree, then
+# selectively re-include the HuggingFace Hub model cards we *do* want
+# tracked (so RG.7's push_etr_lora_v4.py has a source of truth).
+/models/*
+!/models/etr-lora-v4/
+/models/etr-lora-v4/*
+!/models/etr-lora-v4/README.md
+cloud-sql-proxy
+
+# Editor / agent local state
+.claude/
+
+# Large research datasets — published via Zenodo DOI.
+# Reproducible from the prod DB via scripts/data_pipeline/normalize_inscriptions.py
+# + scripts/data_pipeline/merge_larth_metadata.py. Small reference sets
+# (labels, held-out eval) remain tracked in research/data/.
+research/data/openetruscan_clean.csv
+research/data/openetruscan_normalized.csv
+
+# YOLO pretrained weights — pulled lazily by ultralytics when training
+# starts. They are not deterministic to the source tree (the upstream
+# model can update under the same filename) and at 5.4 MB each they
+# bloat git history. The training script downloads on first run.
+yolo11n.pt
+yolo*.pt
+
+# Bandit scan output — generated locally + by CI, never used as a
+# committed artefact. The Cloud Build security trigger writes its own
+# transient report at /workspace/bandit.json.
+bandit.json
+
+# Local SQLite scratch DB (created by tests when no Postgres is around).
+local_test.db
+
+# Paper drafts — kept private until the manuscript ships. The published
+# narrative on the same material lives in research/FINDINGS.md (which
+# IS tracked). Once a draft is submission-ready, copy it to
+# research/papers/<venue>-<year>/ and add a targeted negative pattern
+# below to whitelist it; never !-include the whole directory.
+/research/paper/
+
+# OpenTofu / Terraform
+terraform/.terraform/
+terraform/tofu_*.zip
+*.tfstate
+*.tfstate.backup
+
+# Private research staging — manuscript drafts, internal evaluation
+# logs, pre-publication artifacts. Anything under here stays local
+# until explicitly promoted to research/v2/ (which IS tracked).
+research/private/
+.env*

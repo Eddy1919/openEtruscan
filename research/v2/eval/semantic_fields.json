@@ -1,0 +1,31 @@
+{
+  "kinship": [
+    "uxor", "coniunx", "pater", "mater", "filius", "filia",
+    "frater", "soror", "nepos", "auus", "auia",
+    "γυνή", "μήτηρ", "πατήρ", "θυγάτηρ", "υἱός", "ἀδελφός", "ἀδελφή"
+  ],
+  "theonym": [
+    "Iuppiter", "Iovis", "Iuno", "Neptūnus", "Minerua", "Apollō",
+    "Mercurius", "Diana", "Venus", "Mars", "Vulcanus", "Vesta",
+    "Hercules", "Ceres", "Saturnus", "Bacchus", "Liber",
+    "Ζεύς", "Ἥρα", "Ποσειδῶν", "Ἀθηνᾶ", "Ἀπόλλων", "Ἑρμῆς",
+    "Ἄρτεμις", "Ἀφροδίτη", "Ἄρης", "Ἥφαιστος", "Ἑστία", "Ἡρακλῆς",
+    "Διόνυσος"
+  ],
+  "place": [
+    "Caere", "Tarquinii", "Vulci", "Volci", "Veii", "Volsinii",
+    "Clusium", "Perusia", "Arretium", "Saena", "Etruria",
+    "Καῖρε", "Τυρρηνία", "Τυρσηνία", "Ταρκύνια"
+  ],
+  "civic": [
+    "praetor", "lictor", "magistratus", "senatus", "populus",
+    "rex", "censor", "tribunus",
+    "ἄρχων", "βασιλεύς", "ἱερεύς"
+  ],
+  "funerary": [
+    "sepulcrum", "tumulus", "monumentum", "manes", "umbra",
+    "τύμβος", "μνῆμα", "νεκρός"
+  ],
+  "cognate": [],
+  "gloss_only": []
+}

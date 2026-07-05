@@ -1,0 +1,84 @@
+name: CI
+
+# Replaces Cloud Build triggers `openetruscan-ci-pr` (PR fast lane, py3.12)
+# and `openetruscan-ci-matrix` (push-to-main full matrix 3.10–3.13).
+#
+# The matrix here runs both on PR and on main, gated by the `python-version`
+# matrix list. PRs only run 3.12 for speed; pushes to main run the full set.
+#
+# Postgres + PostGIS service container with a per-Python-version database
+# so the four lanes don't race on `create_all` / `drop_all`.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    # Fast, dependency-light gate. ruff is pinned to the same version as
+    # .pre-commit-config.yaml and pyproject's [dev] extra so a green local
+    # pre-commit guarantees a green CI lint (no silent format drift).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff (pinned)
+        run: pip install --quiet ruff==0.4.10
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # On PRs only 3.12 runs; on push to main, the full matrix.
+        python-version: ${{ github.event_name == 'pull_request' && fromJson('["3.12"]') || fromJson('["3.10", "3.11", "3.12", "3.13"]') }}
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # One database per lane so create_all/drop_all don't race across matrix shards.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_py${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create per-lane Postgres database
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE \"test_py${{ matrix.python-version }}\""
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: pip install --quiet -e ".[dev]"
+
+      - name: Pytest
+        run: |
+          if [ "${{ matrix.python-version }}" = "3.12" ]; then
+            pytest tests/ -v --tb=short -m "not slow and not real_model" \
+              --cov=openetruscan --cov-report=term-missing
+          else
+            pytest tests/ -v --tb=short -m "not slow and not real_model"
+          fi

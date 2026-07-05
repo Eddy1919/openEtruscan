@@ -1,0 +1,205 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openetruscan"
+version = "1.0.0"
+description = "Open-source tools for ancient epigraphy — built for Etruscan, designed to be copied."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Edoardo Panichi"},
+]
+keywords = [
+    "etruscan",
+    "epigraphy",
+    "ancient-languages",
+    "digital-humanities",
+    "normalization",
+    "old-italic",
+    "tei",
+    "epidoc",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "psycopg2-binary>=2.9",
+    "asyncpg>=0.29.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "defusedxml>=0.7.1",
+    # Alembic ships with the runtime so the deploy workflow can run
+    # `alembic upgrade head` against prod from inside the api image.
+    "alembic>=1.13",
+]
+
+[project.optional-dependencies]
+epidoc = ["lxml>=4.9"]
+corpus = ["openetruscan[epidoc]"]
+prosopography = ["networkx>=3.0"]
+server = ["fastapi", "uvicorn", "pydantic", "pydantic-settings", "slowapi>=0.1.9"]
+stats = ["numpy>=1.24", "scipy>=1.11", "scikit-learn>=1.3", "joblib>=1.3"]
+lod = ["httpx>=0.25"]
+neural = ["torch>=2.0", "onnxscript>=0.2"]
+neural-inference = ["onnxruntime>=1.16"]
+sota = ["transformers>=4.30.0", "accelerate>=0.21.0"]
+# CPU cross-encoder reranker for /search/hybrid. Optional because it pulls in
+# torch + transformers (~700 MB resident) — the e2-small VM cannot host this
+# alongside the API + Fuseki without sizing up. Document this as the gate
+# before turning on prod-side rerank in ROADMAP.md.
+rerank = ["sentence-transformers>=3.0", "torch>=2.0"]
+# OpenTelemetry instrumentation. The api auto-wires FastAPI + asyncpg + httpx
+# spans when these are installed, with optional OTLP export to Cloud Trace via
+# OTEL_EXPORTER_OTLP_ENDPOINT.
+telemetry = [
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-asyncpg>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.27",
+]
+# Multilingual transformer stack for the Rosetta Vector Space (2026
+# architecture, see ROADMAP). XLM-R-base + a LoRA adapter fine-tuned
+# on Etruscan inscriptions; contextual embeddings get persisted in
+# pgvector. Heavy deps (torch, transformers) — opt-in only.
+transformers = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "peft>=0.10",
+    "datasets>=2.18",
+    "accelerate>=0.27",
+    "numpy>=1.24",
+]
+all = ["openetruscan[epidoc,prosopography,server,stats,lod,neural,sota,rerank,telemetry,transformers]"]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "pytest-cov>=4.0",
+    "aiosqlite>=0.19",
+    "httpx>=0.25",
+    # Lint/format/type tooling is pinned EXACTLY to the versions in
+    # .pre-commit-config.yaml so local runs, pre-commit, and CI agree
+    # byte-for-byte (a minor ruff bump silently reformats the tree).
+    # Keep these two in lockstep with that file.
+    "ruff==0.4.10",
+    "mypy==1.10.0",
+    "semgrep>=1.60",
+    "safety>=3.0",
+    # testcontainers spins a real Postgres + pgvector locally for tests that
+    # would otherwise silently pass against in-memory SQLite. CI uses its own
+    # `services:` block; both paths land in the same conftest.py fixture.
+    "testcontainers[postgres]>=4.0",
+    "openetruscan[all]",
+]
+
+[project.scripts]
+openetruscan = "openetruscan.core.cli:main"
+
+[project.urls]
+Homepage = "https://openetruscan.com"
+Documentation = "https://github.com/Eddy1919/openEtruscan#readme"
+Repository = "https://github.com/Eddy1919/openEtruscan"
+Issues = "https://github.com/Eddy1919/openEtruscan/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openetruscan"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+# Bind every async fixture and test to the same session-scoped event loop.
+# Required because conftest.py creates a session-scoped asyncpg engine, and
+# asyncpg connections cannot cross event loops.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "real_model: tests that load real transformer models (≈1 GB download, opt-in via 'pytest -m real_model')",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["F", "E", "B", "UP"]
+ignore = ["B904", "E501", "F821", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Training/eval entrypoints set env vars and sys.path before importing heavy
+# ML libs; their imports are intentionally not at the top of the file.
+"scripts/**" = ["E402"]
+"eval/**" = ["E402"]
+"tests/conftest.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_errors = false
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+show_error_codes = true
+show_column_numbers = true
+exclude = [
+    "tests/",
+    ".venv/",
+    "venv/",
+    ".git/",
+    "__pycache__/",
+    "build/",
+    "dist/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "lxml.*",
+    "psycopg2.*",
+    "networkx.*",
+    "fastapi.*",
+    "uvicorn.*",
+    "pydantic.*",
+    "slowapi.*",
+    "numpy.*",
+    "scipy.*",
+    "sklearn.*",
+    "joblib.*",
+    "httpx.*",
+    "torch.*",
+    "onnxscript.*",
+    "onnxruntime.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "openetruscan.api.server",
+    "openetruscan.ml.classifier",
+    "openetruscan.core.prosopography",
+    "openetruscan.core.artifacts",
+    "openetruscan.ml.neural",
+]
+ignore_errors = true
+
+[tool.pyright]
+typeCheckingMode = "basic"
+reportArgumentType = "error"
+reportGeneralTypeIssues = "error"
+reportOperatorIssue = "error"
+reportOptionalMemberAccess = "error"
