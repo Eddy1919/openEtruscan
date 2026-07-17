@@ -280,6 +280,8 @@ class TestEvaluate:
         assert "coverage_at_threshold" in report
         assert 0.5 in report["coverage_at_threshold"]
         assert report["coverage_at_threshold"][0.5] >= 0.0
+        # The vocab the ranking was computed against is recorded.
+        assert report["vocab_size"] == 4
 
 
 # ---------------------------------------------------------------------------
@@ -319,8 +321,9 @@ class TestRandomBaseline:
         # Sanity: field > strict (semantic field is broader)
         assert result["precision_at_k_semantic_field"][5] > result["precision_at_k"][5]
 
-    def test_random_baseline_via_evaluate(self):
+    def test_random_baseline_via_evaluate(self, monkeypatch):
         """--baseline=random through evaluate() produces correct report shape."""
+        monkeypatch.setattr(run_rosetta_eval, "_get_vocab", lambda *args, **kw: ["x"] * 1000)
         pairs = [
             EvalPair("clan", "filius", "son", "high", "test", "kinship"),
             EvalPair("avil", "annus", "year", "high", "test", "time"),
@@ -334,10 +337,27 @@ class TestRandomBaseline:
         assert report["n_evaluated"] == 2
         assert report["n_skipped"] == 0
         assert report["n_failed"] == 0
-        # strict@10 for vocab=100000 is 10/100000 = 0.0001
-        assert report["precision_at_k"][10] == pytest.approx(1e-4)
+        # The V the formulas ran against is recorded in the report.
+        assert report["vocab_size"] == 1000
+        # strict@10 for vocab=1000 is 10/1000 = 0.01
+        assert report["precision_at_k"][10] == pytest.approx(0.01)
         # field must be strictly greater than strict
         assert report["precision_at_k_semantic_field"][10] > report["precision_at_k"][10]
+
+    def test_random_baseline_refuses_to_run_without_vocab(self, monkeypatch):
+        """A failed vocab fetch must abort the random baseline, not silently
+        substitute a made-up V — a fabricated analytic number is
+        indistinguishable from a real one in the committed JSON."""
+
+        def broken_get_vocab(*args, **kw):
+            raise ConnectionError("vocab endpoint unreachable")
+
+        monkeypatch.setattr(run_rosetta_eval, "_get_vocab", broken_get_vocab)
+        pairs = [EvalPair("clan", "filius", "son", "high", "test", "kinship")]
+        with pytest.raises(RuntimeError, match="refusing to substitute"):
+            run_rosetta_eval.evaluate(
+                api_url="https://test", pairs=pairs, pace=False, baseline="random"
+            )
 
     def test_coverage_metric(self, monkeypatch):
         """Coverage tracks the fraction of eval pairs whose top-1 hit has a

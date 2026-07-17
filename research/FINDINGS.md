@@ -446,10 +446,13 @@ escalate via option B or pivot via option C.
 
 Acknowledging where we still fall short of publishable rigour:
 
-1. ~~**No held-out anchor split.**~~ **Addressed in T1.3.** The 62
-   anchors are now stratified 40/22 by `(category, confidence)` with a
-   reproducible deterministic seed. The default eval grades the
-   held-out 22-pair test split only.
+1. ~~**No held-out anchor split.**~~ **Addressed in T1.3.** The 61
+   anchors (earlier prose said 62; the module is the source of truth —
+   see the 2026-07-17 verification note in
+   [`notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md))
+   are stratified 39/22 by `(category, confidence)` with a reproducible
+   deterministic seed. The default eval grades the held-out 22-pair
+   test split only.
 
 2. ~~**No baseline comparison.**~~ **Addressed in T1.1, T1.2, T2.4.**
    The 4-column head-to-head table above includes random (analytical),

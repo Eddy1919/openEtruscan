@@ -12,6 +12,24 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > protocol version, which read as a package release — those headings now
 > carry the `evaluation protocol` label.
 
+## [Unreleased]
+
+### Fixed — rosetta-eval-v1 baseline integrity
+- **Random baseline no longer fabricates its vocab size.** A failed
+  `/neural/rosetta/vocab` fetch made `run_rosetta_eval.py --baseline random`
+  silently compute the "analytic" column from a hard-coded V=100,000,
+  indistinguishable from a real result in the JSON (a test asserted the
+  fabricated value). It now aborts with an error; both baseline columns
+  record the `vocab_size` they actually ran against.
+- **Committed benchmark numbers independently verified.** The random column
+  of `eval/rosetta-eval-v1-20260511T080032Z.json` replicates exactly from
+  the closed-form math (V=50,000); the Levenshtein column is consistent
+  with its own per-pair records; the FINDINGS.md table matches the JSON.
+  Anchor count corrected to 61 pairs / 39-22 split (prose said 62 / 40-22);
+  the benchmark definition is re-anchored in content hashes after the July
+  history squash killed the pinned commit ids. Details in
+  `research/notes/reproduce-rosetta-eval-v1.md`.
+
 ## [1.1.0] — 2026-07-17
 
 Integrity and reproducibility release, closing the gaps found by the

@@ -228,14 +228,23 @@ def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[s
     try:
         vocab_size = len(_get_vocab(api_url, "lat"))
     except Exception as exc:
-        print(f"  SKIP random baseline vocab fetch: {exc}", file=sys.stderr)
-        vocab_size = 100000
+        # No fallback here on purpose: an "analytic" baseline computed
+        # from an invented vocab size is indistinguishable from a real
+        # one in the report. Fail loudly instead.
+        raise RuntimeError(
+            f"random baseline: could not fetch the Latin vocab from {api_url!r} "
+            "to determine V; refusing to substitute a guess"
+        ) from exc
 
     if not eval_pairs or vocab_size <= 0:
         for k in DEFAULT_K_VALUES:
             p_at_k[k] = 0.0
             p_at_k_field[k] = 0.0
-        return {"precision_at_k": p_at_k, "precision_at_k_semantic_field": p_at_k_field}
+        return {
+            "vocab_size": vocab_size,
+            "precision_at_k": p_at_k,
+            "precision_at_k_semantic_field": p_at_k_field,
+        }
 
     for k in DEFAULT_K_VALUES:
         strict_sum = 0.0
@@ -259,6 +268,7 @@ def _random_baseline_metrics(api_url: str, eval_pairs: list[EvalPair]) -> dict[s
         p_at_k_field[k] = field_sum / len(eval_pairs)
 
     return {
+        "vocab_size": vocab_size,
         "precision_at_k": p_at_k,
         "precision_at_k_semantic_field": p_at_k_field,
     }
@@ -302,6 +312,10 @@ def evaluate(
             "n_evaluated": len(pairs),
             "n_skipped": 0,
             "n_failed": 0,
+            # The V the analytic formulas were computed from. Committed
+            # runs must be checkable against the vocab that produced them
+            # without consulting the hand-maintained run log.
+            "vocab_size": metrics["vocab_size"],
             "precision_at_k": metrics["precision_at_k"],
             "precision_at_k_semantic_field": metrics["precision_at_k_semantic_field"],
             "coverage_at_threshold": {0.5: 0.0, 0.7: 0.0, 0.85: 0.0},
@@ -525,7 +539,7 @@ def evaluate(
     by_category = _group_metrics(per_pair, "category")
     by_confidence = _group_metrics(per_pair, "confidence")
 
-    return {
+    report: dict[str, Any] = {
         "n_pairs": len(pairs),
         "n_evaluated": n_evaluated,
         "n_skipped": n_skipped,
@@ -547,6 +561,15 @@ def evaluate(
         "by_confidence": by_confidence,
         "per_pair": per_pair,
     }
+    if baseline == "levenshtein":
+        # Same reproducibility contract as the random column: the ranking
+        # was computed against this many Latin words. None means every
+        # vocab fetch failed (and n_failed == n_pairs shows it too).
+        try:
+            report["vocab_size"] = len(_get_vocab(api_url, "lat", embedder=embedder))
+        except Exception:
+            report["vocab_size"] = None
+    return report
 
 
 def _group_metrics(per_pair: list[dict[str, Any]], key: str) -> dict[str, Any]:
