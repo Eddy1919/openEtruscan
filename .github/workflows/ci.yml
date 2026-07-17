@@ -28,12 +28,17 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Install ruff (pinned)
-        run: pip install --quiet ruff==0.15.22
+      - name: Install ruff + mypy (pinned)
+        run: pip install --quiet ruff==0.15.22 mypy==2.3.0 types-PyYAML types-requests
       - name: Ruff lint
         run: ruff check .
       - name: Ruff format check
         run: ruff format --check .
+      - name: Mypy (src/openetruscan)
+        # Same pin + scope as .pre-commit-config.yaml. Runs dependency-light:
+        # pyproject sets ignore_missing_imports for third-party modules, so
+        # type errors in our own code still gate without installing torch etc.
+        run: mypy src/openetruscan/
 
   test:
     runs-on: ubuntu-latest
@@ -44,7 +49,14 @@ jobs:
         python-version: ${{ github.event_name == 'pull_request' && fromJson('["3.12"]') || fromJson('["3.10", "3.11", "3.12", "3.13"]') }}
     services:
       postgres:
-        image: postgis/postgis:15-3.4
+        # pgvector/pgvector replaces postgis/postgis: the old image had
+        # PostGIS but NOT pgvector, so conftest's CREATE EXTENSION vector
+        # silently failed and every embedding/multilingual test self-skipped
+        # — green CI with the vector search path untested. This image flips
+        # the trade: pgvector present (13 previously-skipped tests now run),
+        # PostGIS absent (its tests carry their own skip markers and were
+        # never running anywhere). A combined image can restore PostGIS later.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -61,10 +73,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Create per-lane Postgres database
+      - name: Create per-lane Postgres database and assert pgvector
+        # The CREATE EXTENSION here is a hard gate: if the service image ever
+        # loses pgvector again, this step fails the job loudly instead of
+        # letting the suite go green on silent skips.
         run: |
           sudo apt-get update && sudo apt-get install -y postgresql-client
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE \"test_py${{ matrix.python-version }}\""
+          PGPASSWORD=postgres psql -h localhost -U postgres -d "test_py${{ matrix.python-version }}" -c "CREATE EXTENSION IF NOT EXISTS vector"
 
       - uses: actions/setup-python@v6
         with:
@@ -75,10 +91,14 @@ jobs:
         run: pip install --quiet -e ".[dev]"
 
       - name: Pytest
+        # --cov-fail-under turns coverage from informational into a gate.
+        # Floor = 45: measured 49% against a pgvector-backed Postgres on
+        # 2026-07-17; the 4-point headroom absorbs lane/env variance. Raise
+        # it as coverage grows — never lower it to make a PR pass.
         run: |
           if [ "${{ matrix.python-version }}" = "3.12" ]; then
             pytest tests/ -v --tb=short -m "not slow and not real_model" \
-              --cov=openetruscan --cov-report=term-missing
+              --cov=openetruscan --cov-report=term-missing --cov-fail-under=45
           else
             pytest tests/ -v --tb=short -m "not slow and not real_model"
           fi

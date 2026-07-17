@@ -271,12 +271,20 @@ async def test_populate_then_query_via_mock(db_session):
         source="mock-test",
     )
 
+    # The query's partition filter defaults to the production LaBSE
+    # partition (DEFAULT_EMBEDDER); populate_language wrote into the
+    # MockEmbedder's own partition, so the filter must name it explicitly.
+    # (This test predates the T2.3 partitioning and silently skipped in CI
+    # for months because the service image lacked pgvector — the mismatch
+    # surfaced the day the skip was removed.)
     hits = await find_cross_language_neighbours(
         word="clan",
         source_lang="ett",
         target_lang="lat",
         session=db_session,
         k=3,
+        embedder="mock",
+        embedder_revision="mock-v1",
     )
     assert len(hits) == 3
     # 'clan' is in both Latin and Etruscan with identical mock vectors,

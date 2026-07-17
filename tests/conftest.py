@@ -37,6 +37,7 @@ os.environ.setdefault("ENABLE_DOCS", "1")
 
 import socket  # noqa: E402
 import time  # noqa: E402
+import warnings  # noqa: E402
 from collections.abc import AsyncGenerator, Generator  # noqa: E402
 from contextlib import suppress  # noqa: E402
 from typing import Any  # noqa: E402
@@ -142,20 +143,28 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
     eng = create_async_engine(database_url, future=True)
 
     if not database_url.startswith("sqlite"):
-        # Best-effort extension setup. CI's postgis image does not have
-        # pgvector; the testcontainer image does not have postgis. Both
-        # CREATE EXTENSION calls are wrapped in their own connection so
-        # one failure does not poison the other.
+        # Extension setup. Each CREATE EXTENSION runs on its own connection so
+        # one failure does not poison the other — but a failure is NEVER
+        # silent: a missing extension downgrades a whole family of tests to
+        # skips, and a green-but-hollow CI run is exactly how the pgvector
+        # search path went untested for months. CI uses pgvector/pgvector
+        # (which lacks postgis), local testcontainers likewise; postgis-only
+        # tests carry their own skip markers.
         for ext in ("vector", "postgis"):
             try:
                 async with eng.begin() as conn:
                     await conn.execute(text(f"CREATE EXTENSION IF NOT EXISTS {ext}"))
-            except Exception:  # noqa: BLE001 -- extension may not be available
-                pass
+            except Exception as exc:  # noqa: BLE001 -- extension may not be available
+                warnings.warn(
+                    f"extension {ext!r} unavailable on {database_url.split('@')[-1]}: "
+                    f"{exc} — dependent tests will SKIP, not fail. If this is CI, "
+                    f"the service image is wrong.",
+                    stacklevel=1,
+                )
 
     # Build the schema. We use ORM metadata.create_all (rather than alembic)
     # because the test container starts empty and we want a single, fast
-    # bootstrap. Migrations are exercised by a dedicated `test_migrations.py`.
+    # bootstrap. The Alembic chain itself is exercised by tests/test_migrations.py.
     from openetruscan.db.models import Base
 
     async with eng.begin() as conn:
@@ -190,8 +199,12 @@ async def engine(database_url: str) -> AsyncGenerator[Any, None]:
                         """
                     )
                 )
-        except Exception:  # noqa: BLE001 -- pgvector may not be available
-            pass
+        except Exception as exc:  # noqa: BLE001 -- pgvector may not be available
+            warnings.warn(
+                f"language_word_embeddings table not created ({exc}) — "
+                f"multilingual/embedding tests will SKIP.",
+                stacklevel=1,
+            )
 
     try:
         yield eng
