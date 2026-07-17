@@ -1055,17 +1055,31 @@ class Corpus:
         inscription_id: str,
         action: str = "verify",
     ) -> bool:
-        """Review a quarantined inscription. Actions: 'verify', 'reject', 'quarantine'."""
-        valid_actions = {"verify": "verified", "reject": "rejected", "quarantine": "quarantined"}
-        new_status = valid_actions.get(action, "quarantined")
-        with self._conn.cursor() as cur:
-            cur.execute(
-                "UPDATE inscriptions SET provenance_status = %s WHERE id = %s",
-                (new_status, inscription_id),
-            )
-            updated = cur.rowcount > 0
-        self._conn.commit()
-        return updated
+        """Deprecated; raises unconditionally. Will be removed in 2.0.
+
+        Every value this method wrote ('verified'/'rejected'/'quarantined')
+        is prohibited by the four-tier ``provenance_status`` CHECK
+        constraint (migration ``a1f2c3d4e5f6``), which disentangled
+        editorial review from archaeological provenance — so on a migrated
+        database the UPDATE could only raise ``IntegrityError``, and on an
+        unmigrated one it would corrupt provenance data. It has no in-repo
+        callers; raising a clear error beats either outcome.
+        """
+        import warnings
+
+        warnings.warn(
+            "Corpus.review_quarantine is deprecated and will be removed in "
+            "2.0; provenance_status no longer encodes editorial review.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        raise ValueError(
+            "review_quarantine cannot run: 'verified'/'rejected'/'quarantined' "
+            "are prohibited by the provenance_status CHECK constraint "
+            "(migration a1f2c3d4e5f6). Editorial review state is no longer "
+            f"stored in provenance_status (id={inscription_id!r}, "
+            f"action={action!r})."
+        )
 
     def search_radius(
         self,

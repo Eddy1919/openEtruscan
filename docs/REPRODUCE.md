@@ -96,12 +96,12 @@ DATABASE_URL=postgresql://openetruscan:openetruscan@localhost:5432/openetruscan 
 
 API on `http://localhost:8000`.
 
-Two caveats. If a local Postgres already holds port 5432, override the
-port mapping before `up` and adjust `DATABASE_URL` to match. And
-`openetruscan import` currently fails against this PostGIS-less stack —
-`_ensure_db()` silently skips the `geom` column, which inserts still
-reference (fix tracked in the Pod C queue); imports into a PostGIS-enabled
-Postgres are unaffected.
+One caveat: if a local Postgres already holds port 5432, override the
+port mapping before `up` and adjust `DATABASE_URL` to match.
+`openetruscan import` works on this PostGIS-less stack — the corpus
+probes for the `geom` column and omits it when absent, so rows import
+with plain lat/lon and no spatial geometry (`tests/test_corpus_geom.py`
+pins both paths).
 
 ## 6. rosetta-eval-v1
 

@@ -14,6 +14,36 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed — integrity repairs (S2)
+- **CIE pipeline emits four-tier provenance values.** The regeneration
+  chain hardcoded pre-migration `verified`/`rejected`, which the
+  `provenance_status` CHECK constraint prohibits; the findspot-based
+  mapping from migration `a1f2c3d4e5f6` now lives in one shared helper
+  used by every pipeline script, upserts refresh the value, and
+  `Corpus.review_quarantine` (no callers, prohibited values only) is
+  deprecated and raises with guidance. `export_rejected.py` moved to the
+  attic — its query matches nothing by construction post-migration.
+- **`docs/openapi.json` regenerated (0.5.0 → 1.1.0)** and drift-gated in
+  CI via the new `scripts/ops/generate_openapi.py`; the duplicate
+  `export_openapi.py` is deleted.
+- **byt5-restorer refuses to start without an explicit `MODEL_URI`** —
+  it previously defaulted to plain `google/byt5-small` while advertising
+  `byt5-lacunae-v1`. `/health` now reports the resolved model;
+  `deploy-byt5.sh` requires and passes `MODEL_URI`; the env-contract
+  tests run in CI.
+- **Lacuna-restoration reproducer restored** against the surviving
+  `CharMLM` API (its module died in the July history rewrite), with
+  special tokens masked out of top-k and the experiment README stating
+  exactly what is and is not reproducible today.
+- **`/health` no longer probes the retired Fuseki host**, whose
+  hostname only the deleted self-hosting compose ever defined.
+
+### Removed — self-hosting compose surface
+- Root `docker-compose.yml` retired (depended on absent `nginx.conf`
+  and retired infrastructure); `docker-compose.dev.yml` is the only
+  compose surface, and the docs no longer claim a self-hosted
+  production stack or SPARQL endpoint.
+
 ### Fixed — corpus import without PostGIS
 - **`openetruscan import` no longer fails on a PostGIS-less database.**
   `Corpus.add()`/`add_batch()` referenced the `geom` column unconditionally

@@ -169,6 +169,11 @@ def eval_char_mlm(samples: list[dict], model_dir: str | Path) -> tuple[float, fl
         ids = vocab.encode(tokens, max_len=max_length)
         with torch.no_grad():
             logits = model(torch.tensor([ids]))[0, pos]
+        # Special tokens can never be the restored character; unmasked they
+        # occupy top-k slots and silently deflate top-1/top-3. Whether the
+        # lost predict_at_mask filtered them is unknowable (see README).
+        for tok in (CharVocab.PAD_TOKEN, CharVocab.UNK_TOKEN, CharVocab.MASK_TOKEN):
+            logits[vocab.char_to_idx[tok]] = float("-inf")
         top_ids = torch.topk(logits, k=3).indices
         chars = [vocab.idx_to_char.get(int(i), "?") for i in top_ids]
         _record(metrics, target, chars, _classify_position(text, pos))

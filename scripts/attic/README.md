@@ -16,6 +16,7 @@ scratch space of the CIE Vol. I ingestion, not the live Postgres corpus.
 | File | What it did | ~When / why | Artifact |
 |---|---|---|---|
 | `compare_cie_db.py` | Substring-matched CIE review rows against live Postgres `canonical` texts to estimate overlap before ingestion. | CIE integration, diagnostic. | console report only |
+| `export_rejected.py` | Exported `provenance_status='rejected'` rows to CSV. | Retired 2026-07: the four-tier provenance migration (`a1f2c3d4e5f6`) removed editorial values from that column, so the query matches nothing by construction. | `data/rejected_inscriptions.csv` |
 | `enrich_cie_etruscan.py` | Added provenance columns to `cie_etruscan.db` and filled `canonical`/`phonetic`/`old_italic` via `core.normalizer`. | One-time CIE enrichment. | enriched `cie_etruscan.db` |
 | `enrich_cie_etruscan_safe.py` | Same enrichment, but stubs `numpy`/`scipy`/`sklearn` to dodge import-time failures. | Retry variant of the above when the stats stack wouldn't import. | enriched `cie_etruscan.db` |
 | `execute_range_split.py` | Expanded CIE id ranges (`486 et 487`, `489-491`, comma lists) from `cie_ranges.db` into `cie_rescued.db`. | One-time range decomposition. | rows in `cie_rescued.db` |

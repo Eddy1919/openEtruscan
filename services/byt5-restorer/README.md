@@ -31,10 +31,14 @@ what a deployed instance actually serves is observable from outside:
 
 ## Build and deploy
 
-The Dockerfile pre-downloads a checkpoint into the image's HF cache
-(`--build-arg PREBAKE_MODEL_URI=...`) so cold starts skip the download.
-That is cache warming only, and only helps when it matches the runtime
-`MODEL_URI`.
+The Dockerfile can pre-download a checkpoint into the image's HF cache
+(`PREBAKE_MODEL_URI` build arg) so cold starts skip the download — cache
+warming only, and only when it matches the runtime `MODEL_URI`. Note that
+`gcloud run deploy --source` (below, and `scripts/ops/deploy-byt5.sh`)
+has no build-arg passthrough: prebaking requires a manual image build
+(`docker build --build-arg PREBAKE_MODEL_URI=...` or a Cloud Build
+config); with `--source` deploys the first cold start downloads the
+model instead.
 
 ```sh
 gcloud run deploy openetruscan-byt5 \

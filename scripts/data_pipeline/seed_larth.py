@@ -28,6 +28,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from openetruscan.core.corpus import Corpus, Inscription
+from provenance_values import provenance_status_for_findspot
 from openetruscan.core.normalizer import normalize
 
 LARTH_URL = (
@@ -236,7 +237,8 @@ def seed_codex(db_path: str = "data/corpus.db") -> int:
     Import the 6 major Etruscan codex texts from codex_texts.yaml.
 
     Each text's sections are imported as individual inscriptions with
-    full scholarly metadata and provenance_status='verified'.
+    full scholarly metadata; provenance_status follows the findspot-based
+    four-tier mapping in provenance_values.py.
     """
     codex_path = Path(__file__).parent.parent / "data" / "codex_texts.yaml"
     if not codex_path.exists():
@@ -296,7 +298,7 @@ def seed_codex(db_path: str = "data/corpus.db") -> int:
                 classification=text_entry.get("classification", "unknown"),
                 script_system=text_entry.get("script_system", "old_italic"),
                 completeness=text_entry.get("completeness", "complete"),
-                provenance_status="verified",
+                provenance_status=provenance_status_for_findspot(text_entry.get("findspot", "")),
             )
             corpus.add(inscription)
             count += 1

@@ -50,7 +50,9 @@ takes ~5 minutes on CPU.
 python research/experiments/lacuna_restoration/eval.py
 ```
 
-Models will be downloaded from GCS to `data/models/` on first run.
+The checkpoints are currently unrecoverable (the GCS bucket returns 404 —
+see Reproducibility status below); if recovered, place them under
+`data/models/` in the layout the script documents.
 
 ## Reproducibility status (2026-07-17)
 
@@ -77,6 +79,10 @@ Still blocked, in order of severity:
   without BOS and validates vocabulary *size* against checkpoint metadata,
   but a same-size reordered id→char mapping, or the one-position shift a
   BOS-trained checkpoint would suffer, cannot be detected mechanically.
+* State-dict compatibility is unproven: `char_mlm_best.pt` was saved from
+  the lost `CharTransformerMLM` class; the surviving `CharMLM` loads
+  strictly and its feed-forward width is a guessed default, so a recovered
+  checkpoint may fail to load at all until keys/dims are reconciled.
 
 Until the checkpoints are recovered and spot-checked against these caveats,
 the table below is a historical record of the original run, not a

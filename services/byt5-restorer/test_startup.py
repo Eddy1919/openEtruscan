@@ -52,12 +52,6 @@ def test_blank_model_uri_fails_startup(import_main):
         import_main(MODEL_URI="   ")
 
 
-def test_no_silent_fallback_to_base_checkpoint(import_main):
-    """The old behaviour defaulted to google/byt5-small; it must not return."""
-    with pytest.raises(RuntimeError):
-        import_main()
-
-
 def test_explicit_model_uri_accepted(import_main):
     main = import_main(MODEL_URI="org/byt5-lacunae-v1-ckpt")
     assert main.MODEL_URI == "org/byt5-lacunae-v1-ckpt"

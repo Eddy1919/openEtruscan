@@ -97,6 +97,7 @@ def ingest_batch():
                     findspot_lon = EXCLUDED.findspot_lon,
                     findspot_uncertainty_m = EXCLUDED.findspot_uncertainty_m,
                     notes = EXCLUDED.notes,
+                    provenance_status = EXCLUDED.provenance_status,
                     updated_at = NOW()
             """
 

@@ -19,6 +19,15 @@ REGION="${REGION:-europe-west4}"
 SERVICE_NAME="${SERVICE_NAME:-openetruscan-byt5}"
 SOURCE_DIR="${SOURCE_DIR:-services/byt5-restorer}"
 
+# The service refuses to start without an explicit MODEL_URI (no silent
+# fallback to a base checkpoint) — so the deploy demands it up front
+# instead of shipping a revision that crashloops.
+if [[ -z "${MODEL_URI:-}" ]]; then
+  echo "error: MODEL_URI is required (the adapter the service advertises," >&2
+  echo "e.g. a byt5-lacunae checkpoint path). Set MODEL_URI and re-run." >&2
+  exit 1
+fi
+
 echo "==> Deploying ${SERVICE_NAME} to Cloud Run (${REGION})"
 gcloud run deploy "${SERVICE_NAME}" \
   --source "${SOURCE_DIR}" \
@@ -30,7 +39,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --memory 1Gi \
   --timeout 60s \
   --no-allow-unauthenticated \
-  --set-env-vars "MODEL_VERSION=byt5-lacunae-v1"
+  --set-env-vars "MODEL_VERSION=byt5-lacunae-v1,MODEL_URI=${MODEL_URI}"
 
 URL=$(gcloud run services describe "${SERVICE_NAME}" \
   --region "${REGION}" \
@@ -41,13 +50,12 @@ echo
 echo "==> Service deployed at:"
 echo "    ${URL}"
 echo
-echo "==> Next steps (run on the api VM):"
-echo "    1. Add to .env:    BYT5_SERVICE_URL=${URL}"
-echo "    2. Restart:        docker compose restart api"
-echo "    3. Verify:         curl -s -X POST https://api.openetruscan.com/neural/restore \\"
-echo "                            -H 'Authorization: Bearer \$ADMIN_TOKEN' \\"
-echo "                            -H 'Content-Type: application/json' \\"
-echo "                            -d '{\"text\":\"lar[---]al\",\"top_k\":3}'"
+echo "==> Next steps:"
+echo "    1. Point the API deployment at it: set BYT5_SERVICE_URL=${URL}"
+echo "       in the environment of wherever the FastAPI app runs."
+echo "    2. Verify provenance: curl -s ${URL}/health   # reports model_uri"
+echo "    (The old 'run on the api VM' wiring predates the self-hosted"
+echo "    stack's retirement — see docs/ARCHITECTURE.md for that history.)"
 echo
 echo "==> If the api uses Workload Identity, also bind it to the byt5 invoker role:"
 echo "    gcloud run services add-iam-policy-binding ${SERVICE_NAME} \\"

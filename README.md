@@ -160,7 +160,6 @@ OpenEtruscan exports Linked Open Data in formats interoperable with the wider an
 
 - **6,633 inscriptions** exported via the [Pelagios-compatible JSON-LD endpoint](/pelagios.jsonld) (Pelagios Network format spec; not a formal membership claim).
 - Findspots aligned to [Pleiades](https://pleiades.stoa.org) for the subset with documented provenance (see §Provenance disclosure above).
-- SPARQL endpoint: Apache Jena Fuseki (CC0 RDF dump, SPARQL 1.1).
 
 ## Classification & restoration models
 
@@ -243,7 +242,7 @@ npx vercel -y
 ```
 
 **Production**
-Push directly to the live production site and SPARQL endpoint:
+Push directly to the live production site:
 ```bash
 npx vercel --prod -y
 ```

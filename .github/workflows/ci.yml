@@ -126,3 +126,9 @@ jobs:
           else
             pytest tests/ -v --tb=short -m "not slow and not real_model"
           fi
+
+      - name: Service env-contract tests
+        # pyproject testpaths=["tests"] excludes services/; without this
+        # step the byt5-restorer no-silent-fallback guarantee never runs
+        # in CI.
+        run: pytest services/byt5-restorer/ -q --no-cov

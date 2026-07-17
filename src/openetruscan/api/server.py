@@ -414,8 +414,6 @@ async def health_check(request: Request, session: AsyncSession = Depends(get_ses
     surface actually needs is reachable. A 503 is preferable to a green check
     while the DB is gone.
     """
-    import asyncio
-
     uptime = (datetime.now(timezone.utc) - START_TIME).total_seconds()
 
     rss_mb = 0.0
@@ -436,25 +434,9 @@ async def health_check(request: Request, session: AsyncSession = Depends(get_ses
         except Exception as e:
             return {"ok": False, "error": type(e).__name__}
 
-    async def probe_fuseki():
-        # Side-channel: nginx routes /sparql -> http://fuseki:3030/openetruscan/sparql.
-        # We hit the internal hostname directly so a public outage does not affect this.
-        try:
-            client = request.app.state.http
-            t0 = datetime.now(timezone.utc)
-            resp = await client.get(
-                "http://fuseki:3030/openetruscan/sparql",
-                params={"query": "SELECT (COUNT(*) AS ?c) WHERE { ?s ?p ?o } LIMIT 1"},
-                timeout=2.0,
-            )
-            ms = (datetime.now(timezone.utc) - t0).total_seconds() * 1000
-            return {"ok": resp.status_code == 200, "latency_ms": round(ms, 1)}
-        except Exception as e:
-            return {"ok": False, "error": type(e).__name__}
+    db_result = await probe_db()
 
-    db_result, fuseki_result = await asyncio.gather(probe_db(), probe_fuseki())
-
-    deps_ok = db_result["ok"]  # fuseki failure is degraded, not down
+    deps_ok = db_result["ok"]
     status_code = 200 if deps_ok else 503
 
     body = {
@@ -464,7 +446,6 @@ async def health_check(request: Request, session: AsyncSession = Depends(get_ses
         "mem_rss_mb": rss_mb,
         "checks": {
             "db": db_result,
-            "fuseki": fuseki_result,
             "gemini_configured": bool(settings.gemini_api_key),
             "admin_token_configured": bool(settings.admin_token),
         },
