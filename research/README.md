@@ -6,10 +6,10 @@ word-vector retrieval among Etruscan, Latin, and Greek (the only
 populated languages); extension to other ancient Mediterranean
 languages is planned but not yet built.
 
-This is *separate* from the top-level [`/ROADMAP.md`](../ROADMAP.md),
-which covers OpenEtruscan engineering as a whole (corpus, search,
-infrastructure). Anything specific to the multilingual-encoder
-research strand lives here.
+This directory covers the research strands; engineering-wide topics
+(corpus, search, infrastructure) live in the top-level `docs/`. (An
+earlier top-level `ROADMAP.md` no longer exists — the research-side
+plans below are the live ones.)
 
 ## Navigation
 

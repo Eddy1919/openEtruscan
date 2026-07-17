@@ -65,7 +65,7 @@ Citations are alphabetized by author within each section.
 ### Computer vision (glyph detection) — exploratory scaffold, NOT shipped
 
 * **Jocher, G., Chaurasia, A. & Qiu, J.** (2024). "YOLO11 by Ultralytics." Ultralytics, GitHub: https://github.com/ultralytics/ultralytics.
-  *Referenced only by an exploratory `src/cv_pipeline/train_yolo.py` scaffold.
+  *Referenced only by an exploratory `research/parked/cv_pipeline/train_yolo.py` scaffold.
   **No trained glyph detector exists and OpenEtruscan has no computer-vision
   capability** — image→glyph detection is an unbuilt research direction, not a
   shipped model.*
