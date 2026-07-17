@@ -4,7 +4,7 @@
   "name": "OpenEtruscan",
   "description": "Open-source platform for Etruscan epigraphy. Unifies the inscriptions into one corpus of 6,633 records (the cleaned public dataset is a 6,567-row subset), publishes them as Linked Open Data, and ships a multilingual encoder (LaBSE + XLM-R with Etruscan-side LoRA) that embeds Etruscan and Latin in a shared vector space. Includes a frozen benchmark (rosetta-eval-v1) with random, Levenshtein, and model baselines, and instructions to reproduce it.",
   "identifier": "https://doi.org/10.5281/zenodo.20075836",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "dateCreated": "2025-04-09",
   "dateModified": "2026-05-24",
   "datePublished": "2026-05-24",

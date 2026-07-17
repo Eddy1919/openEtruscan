@@ -14,6 +14,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-07-18
+
+Integrity, security, and surface-honesty release: everything below was
+adversarially reviewed before merge (cross-model where available,
+independent same-model auditors flagged as such otherwise).
+
 ### Fixed — integrity repairs (S2)
 - **CIE pipeline emits four-tier provenance values.** The regeneration
   chain hardcoded pre-migration `verified`/`rejected`, which the

@@ -50,9 +50,11 @@ takes ~5 minutes on CPU.
 python research/experiments/lacuna_restoration/eval.py
 ```
 
-The checkpoints are currently unrecoverable (the GCS bucket returns 404 —
-see Reproducibility status below); if recovered, place them under
-`data/models/` in the layout the script documents.
+Both checkpoints survive in `gs://openetruscan-rosetta-vai/models/`
+(complete, with the metadata that pins their vocabularies — see
+`data/RECOVERED_BUCKETS.md`); download them to `data/models/` in the
+layout the script documents, then spot-check the alignment caveats below
+before trusting any new numbers.
 
 ## Reproducibility status (2026-07-17)
 
@@ -69,9 +71,12 @@ was recomputed.
 
 Still blocked, in order of severity:
 
-* `gs://openetruscan-rosetta` returns 404 — **both** checkpoints
-  (`char-mlm-v1`, `lora-char-head-v1`) are unavailable. No archived copy is
-  known.
+* ~~`gs://openetruscan-rosetta` returns 404 — both checkpoints
+  unavailable.~~ **Resolved 2026-07-18:** complete copies of
+  `char-mlm-v1` and `lora-char-head-v1` (with vocabulary metadata) were
+  found in `gs://openetruscan-rosetta-vai/models/` during the bucket
+  inventory (`data/RECOVERED_BUCKETS.md`). A re-run remains gated on the
+  alignment spot-checks below.
 * The 500-row eval sample requires prod-DB access (`DATABASE_URL`), which is
   no longer provisioned in this repo.
 * The original `char_mlm` tokenizer (BOS-prefixed — the historical code
