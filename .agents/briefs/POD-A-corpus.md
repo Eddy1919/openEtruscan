@@ -24,6 +24,14 @@ before its license is cleared by the lead.
 - [ ] **Data validation tests.** Add checks to `tests/test_corpus.py` that
   fail loudly on schema drift, row-count regressions, and geocodes outside
   plausible bounds for the corpus.
+- [ ] **Recovered GCS buckets.** `gs://openetruscan-data-dvc` (365 MB,
+  content-addressed DVC md5 store) and `gs://openetruscan-rosetta-vai`
+  (16.7 GB: corpus exports incl. a prod SQL dump, embeddings, byt5-lacunae
+  adapters, models, eval sets) survived in a live GCP project. Inventory
+  both, add provenance entries for everything worth keeping, correct
+  `data/README.md`'s retired-remote note, and propose which artifacts get
+  a citable Zenodo copy. The DVC store has no pointer files left in-tree —
+  treat it as salvage to identify by hash, not as a live remote.
 - [ ] **Source expansion survey.** Inventory candidate corpora beyond CIE
   Vol. I (Rix ET, ETP, EDR, …) with license status and estimated record
   counts. Report only — ingestion starts after the lead clears licensing.

@@ -106,8 +106,12 @@ Reproducible from the repo:
   `eval/harness/rosetta_eval_v1.sh`), which grades any model served behind
   `/neural/rosetta` via `--api-url`.
 
-**Not reproducible:** re-running the benchmark against the historical model
-column. That requires the retired embedding vectors from a GCS bucket in a
-deleted GCP project; no public copy exists. The historical manifest (pinned
-commits, schema state, run log) is in
+**Not yet publicly reproducible:** re-running the benchmark against the
+historical model column requires the original embedding vectors. These were
+believed lost with their GCS bucket, but survive in
+`gs://openetruscan-rosetta-vai/embeddings/` — `labse-v1.jsonl` and
+`etr-xlmr-lora-v4.jsonl` MD5-verified on 2026-07-17 against the historical
+manifest (pinned commits, schema state, run log) in
 [research/notes/reproduce-rosetta-eval-v1.md](../research/notes/reproduce-rosetta-eval-v1.md).
+Access is maintainer-only for now; publishing a citable public copy is
+tracked in the Pod A queue.

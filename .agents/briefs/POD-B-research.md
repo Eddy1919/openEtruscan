@@ -27,6 +27,13 @@ Celebrating any metric before it clears Milestone 1's bars.
 - [ ] **Harness-artifact audit.** Re-examine the eval harness for the
   failure class behind the retracted finding: seed leakage, eval-set
   contamination, metric definitions that reward surface-form matching.
+- [ ] **Historical column re-run (newly unblocked).** The embedding vectors
+  `docs/REPRODUCE.md` §6 declared lost survive in
+  `gs://openetruscan-rosetta-vai/embeddings/` (`labse-v1.jsonl` and
+  `etr-xlmr-lora-v4.jsonl` MD5-verified against the manifest in
+  `research/notes/reproduce-rosetta-eval-v1.md` on 2026-07-17). Re-run
+  rosetta-eval-v1 against the historical column and update that note's
+  recovery status.
 - [ ] **Restorer eval parity.** Give `services/byt5-restorer` the same
   discipline: a held-out eval, a trivial baseline, a runbook.
 
