@@ -39,7 +39,7 @@ The "184 archaeological sites" referenced in earlier copy is the count of distin
 
 The platform follows a decoupled, cloud-native architecture (as of 2026-05-24):
 
-- **Data Layer** — PostgreSQL (PostGIS + pgvector) on **Neon** serverless (was Cloud SQL, migrated). 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision similarity search.
+- **Data Layer** — PostgreSQL (PostGIS + pgvector) on **Neon** serverless (was Cloud SQL, migrated). 3,072-dimensional `text-embedding-004` embeddings for semantic similarity search.
 - **Public HTTP API** — **Vercel Functions** (TypeScript + Drizzle ORM + Neon serverless driver) co-located in the [`openetruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) repo under `app/api/*`. Single-origin, no cross-cloud hop. See `https://www.openetruscan.com/api/{search,inscription/[id],stats/summary,concordance,clan/[gens],radius,search/geo,names/network,anchors/…}`.
 - **Web app** — Next.js 16 on Vercel, with the mobile path shipping as RSC + `useSyncExternalStore`-gated dynamic-import islands (Lighthouse a11y 100, perf 92 mobile / 99 desktop).
 - **Python `openetruscan` package** (this repo) — **CLI + research-pipeline source of truth**. `pip install openetruscan` ships the 14-command CLI (`normalize`, `classify`, `train-neural`, `export-corpus`, `epidoc`, etc.) plus the `src/openetruscan/api/` FastAPI surface used for parity testing and local development. The live public HTTP API no longer runs from this codebase.
