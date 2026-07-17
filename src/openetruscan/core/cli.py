@@ -37,7 +37,7 @@ def main() -> None:
     """OpenEtruscan — Open-source tools for ancient epigraphy."""
 
 
-@main.command()
+@main.command(name="normalize")
 @click.argument("text")
 @click.option("--language", "-l", default="etruscan", help="Language adapter to use.")
 @click.option("--json-output", "-j", is_flag=True, help="Output as JSON.")
@@ -58,11 +58,7 @@ def normalize_cmd(text: str, language: str, json_output: bool) -> None:
             click.echo(f"  warnings:   {result.warnings}")
 
 
-# Register 'normalize' as the command name
-main.add_command(normalize_cmd, name="normalize")
-
-
-@main.command()
+@main.command(name="convert")
 @click.argument("text")
 @click.option(
     "--to",
@@ -75,9 +71,6 @@ def convert_cmd(text: str, target: str, language: str) -> None:
     """Convert text to a specific format."""
     result = convert(text, target=target, language=language)
     click.echo(result)
-
-
-main.add_command(convert_cmd, name="convert")
 
 
 @main.command()

@@ -49,6 +49,32 @@ class TestCLI:
         assert result.exit_code == 0
         assert __version__ in result.output
 
+    def test_exact_command_set(self):
+        """Each command is registered exactly once, under its documented name.
+
+        Regression: normalize/convert were registered twice — once as
+        `normalize-cmd`/`convert-cmd` by the bare @main.command() decorator
+        (click derives the name from the function name) and again as
+        `normalize`/`convert` via add_command() — exposing 16 commands
+        instead of 14.
+        """
+        assert sorted(main.commands) == [
+            "adapters",
+            "batch",
+            "classify",
+            "convert",
+            "epidoc",
+            "export",
+            "import",
+            "normalize",
+            "predict-neural",
+            "register",
+            "search",
+            "train-neural",
+            "upload-image",
+            "validate",
+        ]
+
 
 class _StubCorpus:
     """In-memory stand-in for Corpus, driving the DB-backed CLI commands."""
