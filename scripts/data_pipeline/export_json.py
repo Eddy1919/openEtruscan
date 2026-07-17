@@ -5,6 +5,7 @@ Exports PostgreSQL records into the static JSON file used by the Next.js fronten
 
 import json
 import os
+from pathlib import Path
 
 import psycopg2
 from dotenv import load_dotenv
@@ -12,7 +13,10 @@ from psycopg2.extras import RealDictCursor
 
 load_dotenv()
 DB_URL = os.environ.get("DATABASE_URL", "postgresql://USER:PASSWORD@127.0.0.1:5432/corpus")
-OUTPUT_PATH = "frontend/public/data/corpus.json"
+# Frontend is the sibling openEtruscan-frontend checkout since the repo split
+OUTPUT_PATH = (
+    Path(__file__).resolve().parents[2].parent / "openEtruscan-frontend/public/data/corpus.json"
+)
 
 
 def main():

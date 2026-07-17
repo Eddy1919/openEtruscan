@@ -1,9 +1,8 @@
-# OpenEtruscan Backend Stack
-# Frontend is deployed on Vercel (openetruscan.com)
-# API + PostGIS + Fuseki run here behind nginx TLS proxy (api.openetruscan.com)
-#
-# Production (COS): use raw docker commands (no docker compose on COS)
-# Local dev: docker compose up -d --build
+# OpenEtruscan Backend Stack — local/self-hosted only.
+# The frontend is deployed on Vercel (openetruscan.com); the hosted API
+# (api.openetruscan.com) is retired. This compose file runs the API +
+# PostGIS + Fuseki stack for local dev or self-hosting:
+#   docker compose up -d --build
 
 services:
   api:

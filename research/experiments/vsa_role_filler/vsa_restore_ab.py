@@ -10,6 +10,7 @@ restoration? Gemini via generativelanguage (GEMINI_API_KEY), thinkingBudget=0.
 import json
 import re
 import os
+from pathlib import Path
 import unicodedata
 import urllib.request
 import numpy as np
@@ -18,7 +19,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 rng = np.random.default_rng(5)
 D = 4096
-SP = "/private/tmp/claude-502/-Users-edoardo-panichi-openEtruscan/8532a981-6dc7-491f-a43f-95bd4351ef34/scratchpad"
+# corpus.json is checked in; drop blind_pool.jsonl + gold_map.json here (see the lacuna RAG README)
+SP = Path(__file__).resolve().parent
 POOL = [json.loads(line) for line in open(f"{SP}/blind_pool.jsonl")]
 GOLD = json.loads(open(f"{SP}/gold_map.json").read())
 corpus = json.load(open(f"{SP}/corpus.json"))

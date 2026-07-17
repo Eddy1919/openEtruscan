@@ -52,12 +52,13 @@ def sync_download():
         snapshot_download(repo_id=repo_id, local_dir=str(model_dir), repo_type="model")
         print(f"Download to {model_dir} Complete!")
 
+        # Frontend is the sibling openEtruscan-frontend checkout since the repo split
         frontend_model_dir = (
-            Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "models"
+            Path(__file__).resolve().parents[2].parent / "openEtruscan-frontend/public/models"
         )
         frontend_model_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(model_dir, frontend_model_dir, dirs_exist_ok=True)
-        print("Synced to frontend/public/models!")
+        print(f"Synced to {frontend_model_dir}!")
     except Exception as e:
         print(f"Failed to download models: {e}")
 
