@@ -14,12 +14,13 @@ Celebrating any metric before it clears Milestone 1's bars.
 
 ## Task queue
 
-- [ ] **Trivial baselines.** Levenshtein-only retrieval baseline and the
-  analytic random-baseline precision@k against the current eval set, as
-  ROADMAP Milestone 1 specifies. If the model does not beat edit distance,
-  that result is reported, not buried.
-- [ ] **Held-out split.** Record the split of the 62 anchor pairs in
-  `eval/harness/` so no future run can train on its own eval.
+- [x] **Trivial baselines.** Already implemented pre-brief; PR #82 did the
+  rule-7 verification instead — the committed random column replicates
+  exactly from independent math, and the fabricated-V fallback it found
+  is fixed.
+- [x] **Held-out split.** Recorded in the eval module and content-hash
+  pinned: 61 pairs, 39/22 (this queue earlier said 62 — the module is
+  the source of truth).
 - [ ] **Replication runbooks.** For each number currently in `FINDINGS.md`,
   a runbook with exact command, environment, and seed. This is what the
   Grok replication pass executes verbatim — a claim without a runbook is
@@ -34,11 +35,11 @@ Celebrating any metric before it clears Milestone 1's bars.
   `research/notes/reproduce-rosetta-eval-v1.md` on 2026-07-17). Re-run
   rosetta-eval-v1 against the historical column and update that note's
   recovery status.
-- [ ] **Split-count corrections (from Pod A escalations).** The frozen
-  split is 39/22 = 61 pairs (regeneration-verified); `FINDINGS.md:450`
-  still says 40/22. Confirm where the superseded 62nd pair went, correct
-  FINDINGS.md, and fix `compute_lacuna_v2.py`'s hardcoded "v2.0.2" stdout
-  banner (it mislabels v2.0.3 re-runs).
+- [x] **Split-count corrections (from Pod A escalations).** FINDINGS and
+  ROADMAP corrected to 61 / 39-22 in PR #82 (the pre-squash history that
+  would explain the 62nd pair is gone; the note says so). The
+  `compute_lacuna_v2.py` banner now prints the jury filename instead of
+  a hardcoded version.
 - [ ] **Restorer eval parity.** Give `services/byt5-restorer` the same
   discipline: a held-out eval, a trivial baseline, a runbook.
 

@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         "seed": args.seed,
     }
 
-    print(f"# v2.0.2 lacuna evaluation — total jury rows: {len(rows)}")
+    print(f"# lacuna evaluation of {args.jury.name} — total jury rows: {len(rows)}")
     print(f"# models: {sorted(by_model)}\n")
 
     for model, mrows in by_model.items():
