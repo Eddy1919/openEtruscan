@@ -33,27 +33,33 @@ doubt, escalate rather than edit.
    merges. Merges are squash merges; messages follow the existing
    `type(scope): summary` convention.
 
-## Operator runbook — starting a pod session
+## Operator runbook — pod sessions
+
+`scripts/ops/pod.sh` creates the session worktree and branch (with the
+next session number), prints the kickoff prompt, and copies it to the
+clipboard:
 
 ```sh
-cd ~/openEtruscan
-git worktree add .claude/worktrees/<slug> -b pod<letter>/s<n>-<slug>
-cd .claude/worktrees/<slug>
-# launch the pod's CLI here: kimi (Pod A), claude (Pods B–D), grok (reviews)
+scripts/ops/pod.sh start a <slug>    # new Pod A session
+scripts/ops/pod.sh review <branch>   # detached reviewer worktree + prompt
+scripts/ops/pod.sh status            # list sessions
+scripts/ops/pod.sh done <worktree>   # clean up a finished session
 ```
 
-First prompt to the agent:
+Launch the pod's CLI inside the printed worktree: `kimi` (Pod A), `claude`
+(Pods B–D), `grok` (reviews). For Pod C frontend work, run the script from
+`~/openEtruscan-frontend` — same branch naming, gates in that repo's
+`AGENTS.md`.
 
-> You are Pod <X>. Read `AGENTS.md`, then `.agents/briefs/POD-<X>-*.md`.
-> Work the first unchecked task in the queue. Stop at any escalation
-> trigger and record it in the brief.
+### Kickoff prompt
 
-If the CLI does not load `AGENTS.md` automatically, paste that first prompt
-anyway — reading the file is its first instruction. When the session ends:
-`git worktree remove .claude/worktrees/<slug>` (the branch survives).
+> You are Pod <X>. Read `AGENTS.md`, then your brief
+> `.agents/briefs/POD-<X>-*.md` (from the frontend repo:
+> `../openEtruscan/.agents/briefs/`). Work the first unchecked task in the
+> queue. Stop at any escalation trigger and record it in the brief.
 
-Frontend work (Pod C) happens directly in `~/openEtruscan-frontend`, same
-branch naming, gates listed in that repo's `AGENTS.md`.
+If the CLI does not load `AGENTS.md` automatically, the pasted prompt
+covers it — reading the file is its first instruction.
 
 ## Cross-model review prompt
 
