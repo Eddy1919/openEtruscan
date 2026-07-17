@@ -7,23 +7,26 @@ could ship silently. This module runs the full ``upgrade head`` chain on a
 scratch database and cross-checks the resulting tables against the ORM
 metadata.
 
-Postgres-only: several migrations use pgvector/PostGIS column types that
-SQLite cannot represent. The scratch database is created and dropped per
-test run so the chain always starts from an empty schema, independent of
-whatever state the shared test database is in.
+The chain tests are Postgres-only: several migrations use pgvector/PostGIS
+column types that SQLite cannot represent. The scratch database is created
+and dropped per test run so the chain always starts from an empty schema,
+independent of whatever state the shared test database is in. The
+misconfiguration test needs no database at all — env.py fails before
+connecting.
 """
 
 from __future__ import annotations
 
 import os
 import uuid
+from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-pytestmark = pytest.mark.skipif(
+requires_postgres = pytest.mark.skipif(
     not DATABASE_URL.startswith("postgresql"),
     reason="migration chain requires Postgres (pgvector column types)",
 )
@@ -74,6 +77,7 @@ def _upgrade_head(url: str) -> None:
             os.environ["DATABASE_URL"] = old
 
 
+@requires_postgres
 def test_upgrade_head_from_empty(scratch_db_url):
     """The full chain applies cleanly to an empty database."""
     _upgrade_head(scratch_db_url)
@@ -86,6 +90,7 @@ def test_upgrade_head_from_empty(scratch_db_url):
     assert "inscriptions" in tables
 
 
+@requires_postgres
 def test_migrations_cover_orm_tables(scratch_db_url):
     """Every ORM-mapped table must exist after `upgrade head`.
 
@@ -107,3 +112,20 @@ def test_migrations_cover_orm_tables(scratch_db_url):
         f"ORM tables missing from the migration chain: {sorted(missing)} — "
         f"add a migration or the next alembic-based deploy diverges from the ORM"
     )
+
+
+def test_online_migration_without_database_url_fails_clearly(monkeypatch):
+    """With neither DATABASE_URL nor sqlalchemy.url set, env.py must raise a
+    clear RuntimeError instead of handing None to create_async_engine (which
+    used to surface as an opaque SQLAlchemy error). No database is needed:
+    the check fires before any connection attempt."""
+    from alembic import command
+    from alembic.config import Config
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    cfg = Config()  # no ini file, so there is no sqlalchemy.url fallback
+    cfg.set_main_option(
+        "script_location", str(Path(__file__).resolve().parent.parent / "src/openetruscan/db")
+    )
+    with pytest.raises(RuntimeError, match="No database URL configured"):
+        command.upgrade(cfg, "head")

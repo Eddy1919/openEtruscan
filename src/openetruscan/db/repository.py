@@ -7,7 +7,7 @@ and prosopographical network analysis via AsyncSession.
 
 from collections.abc import Sequence
 from typing import Any
-from sqlalchemy import select, func, and_, or_, text
+from sqlalchemy import ColumnExpressionArgument, select, func, and_, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
@@ -83,7 +83,9 @@ class InscriptionRepository:
             PROVENANCE_KINDS_WITHOUT_PROVENANCE,
         )
 
-        conditions = []
+        # ColumnExpressionArgument[bool] is the public union `and_()` accepts;
+        # it covers both ORM comparisons and the FTS TextClause below.
+        conditions: list[ColumnExpressionArgument[bool]] = []
 
         if text_query:
             # PostgreSQL Full Text Search vs SQLite fallback
@@ -456,8 +458,11 @@ class InscriptionRepository:
                 if person and person.id not in nodes:
                     nodes[person.id] = {"id": person.id, "label": person.name, "type": "person"}
 
-            if rel.clan:
-                if rel.clan_id and rel.clan_id not in nodes:
+            # rel.clan is loaded via the clan_id FK, so a present clan implies a
+            # non-null clan_id; checking both narrows the type and keeps an edge
+            # with "to": None from ever being emitted.
+            if rel.clan and rel.clan_id:
+                if rel.clan_id not in nodes:
                     nodes[rel.clan_id] = {"id": rel.clan_id, "label": rel.clan.name, "type": "clan"}
 
                 if rel.person_id:

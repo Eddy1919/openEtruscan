@@ -59,7 +59,11 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
-    if url and url.startswith("postgresql://"):
+    if url is None:
+        raise RuntimeError(
+            "No database URL configured: set DATABASE_URL or sqlalchemy.url in alembic.ini"
+        )
+    if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+asyncpg://")
 
     connectable = create_async_engine(

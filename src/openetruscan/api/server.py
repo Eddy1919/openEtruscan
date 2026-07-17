@@ -14,7 +14,7 @@ import asyncio
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -188,8 +188,17 @@ app = FastAPI(
 
 # 1. Attach rate limiter to the application state
 app.state.limiter = limiter
-# Explicitly handle rate limit breaches with the custom handler (429 Too Many Requests)
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+# Explicitly handle rate limit breaches with the custom handler (429 Too Many Requests).
+# Starlette types every exception handler as taking a bare Exception, so slowapi's
+# handler (typed for RateLimitExceeded) needs this narrowing adapter.
+def _handle_rate_limit(request: Request, exc: Exception) -> Response:
+    assert isinstance(exc, RateLimitExceeded)  # the only type Starlette routes here
+    return _rate_limit_exceeded_handler(request, exc)
+
+
+app.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
 
 # 2. CORS (Cross-Origin Resource Sharing) Configuration
 # Essential for the Next.js frontend running on a different domain/port.

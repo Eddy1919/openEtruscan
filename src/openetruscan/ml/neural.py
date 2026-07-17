@@ -23,6 +23,7 @@ import math
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openetruscan.ml.classifier import _KEYWORD_VOCAB, ClassificationResult
 from openetruscan.core.normalizer import normalize
@@ -40,18 +41,22 @@ try:
 
     _TORCH_AVAILABLE = True
 except ImportError:
+    # Runtime-only fallback so the module imports without torch. Hidden from
+    # mypy (TYPE_CHECKING is True there) so the rest of the module is checked
+    # against the real torch types, not this shim.
+    if not TYPE_CHECKING:
 
-    class _DummyModule:
-        """Fallback for nn.Module when PyTorch is not installed."""
+        class _DummyModule:
+            """Fallback for nn.Module when PyTorch is not installed."""
 
-        pass
+            pass
 
-    class _DummyNN:
-        """Fallback for torch.nn when PyTorch is not installed."""
+        class _DummyNN:
+            """Fallback for torch.nn when PyTorch is not installed."""
 
-        Module = _DummyModule
+            Module = _DummyModule
 
-    nn = _DummyNN()
+        nn = _DummyNN()
 
 
 def _require_torch() -> None:
@@ -209,6 +214,8 @@ class CharCNN(nn.Module):
 
 class _PositionalEncoding(nn.Module):
     """Sinusoidal positional encoding."""
+
+    pe: torch.Tensor  # registered buffer; annotation keeps Module.__getattr__ out of the type
 
     def __init__(self, d_model: int, max_len: int = 256) -> None:
         """Initialize the sinusoidal positional encoding layer."""
@@ -866,7 +873,7 @@ class NeuralClassifier:
 
         torch.onnx.export(
             self.model,
-            dummy,
+            (dummy,),  # canonical 1-tuple form; a bare Tensor is normalized to this anyway
             str(onnx_path),
             input_names=["input"],
             output_names=["logits"],

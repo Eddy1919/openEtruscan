@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import warnings
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 warnings.warn(
     "openetruscan.ml.lacuna is deprecated and will be removed in 2.0",
@@ -31,16 +32,20 @@ try:
 
     _TORCH_AVAILABLE = True
 except ImportError:
+    # Runtime-only fallback so the module imports without torch. Hidden from
+    # mypy (TYPE_CHECKING is True there) so the rest of the module is checked
+    # against the real torch types, not this shim.
+    if not TYPE_CHECKING:
 
-    class _DummyModule:
-        """Fallback for nn.Module when PyTorch is not installed."""
+        class _DummyModule:
+            """Fallback for nn.Module when PyTorch is not installed."""
 
-    class _DummyNN:
-        """Fallback for torch.nn when PyTorch is not installed."""
+        class _DummyNN:
+            """Fallback for torch.nn when PyTorch is not installed."""
 
-        Module = _DummyModule
+            Module = _DummyModule
 
-    nn = _DummyNN()
+        nn = _DummyNN()
 
 
 def _require_ml_extras() -> None:
