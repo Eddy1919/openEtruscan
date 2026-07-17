@@ -51,6 +51,15 @@ def upgrade() -> None:
     op.execute(
         sa.text("ALTER TABLE inscriptions ADD COLUMN IF NOT EXISTS original_script_entry TEXT")
     )
+    # The ORM declares this index; without it a fresh alembic-based deploy
+    # diverges from create_all-based schemas. IF NOT EXISTS keeps the
+    # migration idempotent for databases that already have it.
+    op.execute(
+        sa.text(
+            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_code "
+            "ON inscriptions (source_code)"
+        )
+    )
 
 
 def downgrade() -> None:
