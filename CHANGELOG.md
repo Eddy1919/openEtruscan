@@ -48,15 +48,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Deprecated archaeogenetics HTTP surface deleted.** `GET /genetics/samples`
   and `GET /inscriptions/{id}/genetics` (both already `deprecated=True`, both
   reading an empty `genetic_samples` table) are gone, along with the repository
-  methods they alone used (`get_genetic_samples`, `get_genetic_matches`) and the
-  `Corpus.add_genetic_sample` writer (unconditional-`geom` bug; its only caller
-  was an ingest script that could not import). The ingest script
-  `scripts/data_pipeline/ingest_genetics.py` is deleted. The `GeneticSample` ORM
-  model, its table, and
+  methods they alone used (`get_genetic_samples`, `get_genetic_matches`), the
+  `Corpus.add_genetic_sample` writer (inserted into `geom` regardless of the
+  column's existence; its only caller was an ingest script that could not
+  import), and the orphaned `Corpus.find_genetic_matches` (zero callers).
+  The ingest script `scripts/data_pipeline/ingest_genetics.py` is deleted.
+  The `GeneticSample` ORM model, its table, and
   every migration are retained deliberately — deleting the model would make
-  `alembic revision --autogenerate` propose a `DROP TABLE genetic_samples`, and
-  the deprecation-fenced `core.spatial`/`core.lineage` modules still read the
-  table. `docs/openapi.json` regenerated: the two contracts are the only diff.
+  `alembic revision --autogenerate` propose a `DROP TABLE genetic_samples`,
+  and the table is still read by the deprecation-fenced
+  `core.spatial`/`core.lineage` modules and by `core.kinship` (not fenced,
+  test-covered). `docs/openapi.json` regenerated: the two contracts are the
+  only diff.
 - **Backend Linked-Data generators deleted as duplicates of the live frontend.**
   `api/void_gen.py`, `api/snap_exporter.py`, and the stale root `void.ttl` are
   removed — nothing imported them and no route served them. The live discovery

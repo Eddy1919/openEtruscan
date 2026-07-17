@@ -26,13 +26,13 @@ on:
 permissions:
   contents: read
 
-# One run per workflow+ref: a superseded push cancels the in-flight run.
-# GitHub-hosted runners are free for public repos, so the win is queue
-# latency and notification noise, not billing. The weekly cron shares the
-# main-branch group; overlap there scans the same tip, so a cancellation
-# loses nothing.
+# One run per workflow+event+ref: a superseded push cancels the in-flight
+# push run. GitHub-hosted runners are free for public repos, so the win is
+# queue latency and notification noise, not billing. event_name is in the
+# group so a push to main can never cancel the weekly cron's full-history
+# sweep (gitleaks-action scans differently on schedule vs push).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

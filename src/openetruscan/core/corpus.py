@@ -1247,49 +1247,6 @@ class Corpus:
                 start_pos = idx + 1
         return rows
 
-    def find_genetic_matches(
-        self,
-        inscription_id: str,
-        limit: int = 5,
-    ) -> list[dict]:
-        """Find best genetic matches using spatio-temporal weighting in PostGIS."""
-        import psycopg2.extras
-
-        query = """
-            WITH insc AS (
-                SELECT geom, date_approx
-                FROM inscriptions
-                WHERE id = %s AND geom IS NOT NULL
-            )
-            SELECT
-                g.*,
-                ST_Distance(g.geom::geography, insc.geom::geography) / 1000.0 AS distance_km,
-                ABS(COALESCE(g.date_approx, 0) - COALESCE(insc.date_approx, 0)) AS date_diff_years,
-                (ST_Distance(g.geom::geography, insc.geom::geography) / 1000.0) +
-                (ABS(COALESCE(g.date_approx, 0) - COALESCE(insc.date_approx, 0)) * 0.5)
-                AS match_score
-            FROM genetic_samples g, insc
-            WHERE g.geom IS NOT NULL
-            ORDER BY match_score ASC
-            LIMIT %s
-        """
-        with self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, (inscription_id, limit))
-            rows = cur.fetchall()
-
-            # PostGIS geometry objects are not JSON serializable, so remove them
-            results = []
-            for row in rows:
-                r = dict(row)
-                r.pop("geom", None)
-                # Convert datetime types from postgres automatically generated timestamps
-                if "created_at" in r and r["created_at"]:
-                    r["created_at"] = r["created_at"].isoformat()
-                if "updated_at" in r and r["updated_at"]:
-                    r["updated_at"] = r["updated_at"].isoformat()
-                results.append(r)
-            return results
-
     def count(self) -> int:
         """Return the total number of inscriptions in the database."""
         with self._conn.cursor() as cur:

@@ -26,7 +26,9 @@ from sqlalchemy import create_engine, inspect, text
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-requires_postgres = pytest.mark.skipif(
+# Named distinctly from the conftest-registered `requires_postgres` marker,
+# which has different semantics (this is a module-local env-var skipif).
+needs_postgres_dsn = pytest.mark.skipif(
     not DATABASE_URL.startswith("postgresql"),
     reason="migration chain requires Postgres (pgvector column types)",
 )
@@ -77,7 +79,7 @@ def _upgrade_head(url: str) -> None:
             os.environ["DATABASE_URL"] = old
 
 
-@requires_postgres
+@needs_postgres_dsn
 def test_upgrade_head_from_empty(scratch_db_url):
     """The full chain applies cleanly to an empty database."""
     _upgrade_head(scratch_db_url)
@@ -90,7 +92,7 @@ def test_upgrade_head_from_empty(scratch_db_url):
     assert "inscriptions" in tables
 
 
-@requires_postgres
+@needs_postgres_dsn
 def test_migrations_cover_orm_tables(scratch_db_url):
     """Every ORM-mapped table must exist after `upgrade head`.
 

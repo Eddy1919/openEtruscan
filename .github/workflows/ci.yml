@@ -21,11 +21,12 @@ on:
 permissions:
   contents: read
 
-# One run per workflow+ref: a superseded push cancels the in-flight run.
-# GitHub-hosted runners are free for public repos, so the win is queue
-# latency and notification noise, not billing.
+# One run per workflow+event+ref: a superseded push cancels the in-flight
+# push run (older main commits lose their per-commit status — acceptable;
+# the tip is what gates). GitHub-hosted runners are free for public repos,
+# so the win is queue latency and notification noise, not billing.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -59,7 +60,11 @@ jobs:
     # Baseline measured 2026-07-17 with jscpd 5.0.12: 2.16% duplicated lines
     # (2.18% tokens, 53 clones across 161 files). The threshold in
     # .jscpd.json is 2.3 and gates on the duplicated-lines figure — lower it
-    # as duplication drops; never raise it to make a PR pass.
+    # as duplication drops; never raise it to make a PR pass. One legitimate
+    # exception: the gate is a percentage, so deleting large non-duplicated
+    # code can push the ratio over the line with zero new duplication —
+    # re-baselining after such deletions is honest, raising to smuggle new
+    # clones in is not (compare the clone list, not just the number).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

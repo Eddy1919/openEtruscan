@@ -35,7 +35,7 @@ run log in
 | `adapters/etr-lora-{v1,v2,v3,v4}/` | XLM-R-base LoRA adapters — the Etruscan encoder iterations | `research/EXECUTION_WBS.md` (T2.x), `research/FINDINGS.md`; v4 is the warm start for `lora-char-head-v1` ([lacuna experiment](../research/experiments/lacuna_restoration/README.md)) | Identified by `training_metadata.json` (v4: base `xlm-roberta-base`, 5,827 inscriptions, seed 42, corpus `etruscan-prod-rawtext-v3.jsonl`). No independent hash exists. |
 | `adapters/labse-attested-v1/` | `metrics.json` **only** — no adapter weights | [`research/results/labse_hardneg_t43_FINDINGS.md`](../research/results/labse_hardneg_t43_FINDINGS.md) | Weights lost — see *Gaps and anomalies*. |
 | `anchors/` | `attested.jsonl`, `hard_negatives.jsonl` | committed at [`research/anchors/`](../research/anchors/) | MD5 and size match the committed copies (checked 2026-07-17, this inventory). |
-| `code/` | 13 Vertex-side training / embedding / eval scripts | `research/EXECUTION_WBS.md` (embedding and adapter jobs); `train_char_mlm.py` and `train_lora_char_head.py` are the training code for the `char_mlm` module lost in the 2026-07 history rewrite | Not in git; no independent hash. See *Notable items*. |
+| `code/` | 12 Vertex-side training / embedding / eval scripts | `research/EXECUTION_WBS.md` (embedding and adapter jobs); `train_char_mlm.py` and `train_lora_char_head.py` are the training code for the `char_mlm` module lost in the 2026-07 history rewrite | Not in git; no independent hash. See *Notable items*. |
 | `corpus/` | Prod-DB exports: CIE extraction JSONL, `etruscan-prod-rawtext-v{1,2,3}.jsonl`, `etruscan-prod-v2.jsonl`, and a full `prod-inscriptions.sql` dump | `research/v2/README.md` (corpus staging convention); the adapters' `training_metadata.json` name rawtext-v2/v3 as their training corpora | No independent hashes. See *Gaps and anomalies* (v2 ≡ v3; SQL-dump caution). |
 | `embeddings/` | Vocabulary-embedding JSONLs behind Rosetta retrieval | [`research/notes/reproduce-rosetta-eval-v1.md`](../research/notes/reproduce-rosetta-eval-v1.md) (pinned manifest), [`docs/REPRODUCE.md`](../docs/REPRODUCE.md) §6, `research/FINDINGS.md` | `labse-v1` and `etr-xlmr-lora-v4` MD5-verified against the historical manifest; `lat-xlmr-lora-v4`'s hash was first recorded *from this copy* (both facts recorded in the note above, 2026-07-17). The `lat-grc-xlmr*` files have no recorded hash anywhere — unverified. |
 | `eval/` | `byt5_eval_100.jsonl` (100-row masked eval set) + `byt5_v4_v5_results.json` | [`research/experiments/byt5_v4_vs_v5/`](../research/experiments/byt5_v4_vs_v5/README.md) (whose Results table is still "TBD") | No independent hash. |
@@ -325,10 +325,10 @@ CC-BY-4.0 is the default unless the lead decides otherwise.
    a deposit unblocks the historical-column re-run for anyone.
 2. **Lacuna-reproducer checkpoints** — `models/char-mlm-v1/`,
    `models/lora-char-head-v1/`, plus their dependency
-   `adapters/etr-lora-v4/` (~29 MB): makes
+   `adapters/etr-lora-v4/` (~38 MB): makes
    `research/experiments/lacuna_restoration/` re-runnable.
 3. **ByT5 v4-vs-v5 kit** — `adapters/byt5-lacunae-v4/`, `-v5/`,
-   `eval/byt5_eval_100.jsonl`, `eval/byt5_v4_v5_results.json` (~10 MB):
+   `eval/byt5_eval_100.jsonl`, `eval/byt5_v4_v5_results.json` (~34 MB):
    completes the documented negative-result experiment.
 4. **Training-corpus exports** — `corpus/etruscan-cie-v1.jsonl`,
    `etruscan-prod-rawtext-v{1,2,3}.jsonl`, `etruscan-prod-v2.jsonl`
@@ -344,7 +344,7 @@ Not proposed:
   terms for its scans were never recorded and the files are re-downloadable
   from the source; no redistribution until licensing is cleared
   (AGENTS.md rule 6).
-- `embeddings/lat-grc-xlmr*` (~10.6 GB) — no committed result depends on
+- `embeddings/lat-grc-xlmr*` (~10.7 GB) — no committed result depends on
   them and they carry no recorded hashes; archive only if the full
   iteration history is wanted.
 - `code/*.py` — belongs in git, not Zenodo (see *Notable items*).

@@ -159,7 +159,7 @@ requires the file. Revert and route differently if this oversteps.
 errors in 5 files (`db/repository.py`, `db/env.py`, `ml/neural.py`,
 `ml/lacuna.py`, `api/server.py`) — unrelated to this markdown-only session
 (likely fallout of the mypy 1.10→2.3 bump). Ruff and pytest
-(406 passed / 5 skipped) are green.
+(the CI-filtered selection; docker-dependent modules skip in this environment) are green.
 
 No CHANGELOG entry: the dispatching task explicitly excluded
 `CHANGELOG.md`; lead to decide whether these docs count as user-visible.
