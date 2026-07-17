@@ -67,10 +67,11 @@ nginx.dev.conf
 
 # Local data artifacts — fetched from the Zenodo DOI via
 # scripts/ops/fetch_data.py or regeneratable from the pipelines; never
-# committed as blobs. Only the directory README is tracked (it documents
-# provenance + how to restore).
+# committed as blobs. Only the directory docs are tracked (provenance
+# manifest, restore instructions, recovered-bucket inventory).
 /data/*
 !/data/README.md
+!/data/RECOVERED_BUCKETS.md
 
 # Local security audit (contains grep patterns for secrets — keep local)
 scripts/security_check.sh

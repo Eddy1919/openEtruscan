@@ -109,3 +109,57 @@ was); the stack was verified with a temporary port override
 (15432/18000, removed afterwards) — worth a sentence in REPRODUCE.md §5.
 All containers/volumes from the check were torn down. Worktree left
 clean except this brief edit; nothing committed per escalation stop.
+
+### 2026-07-17 — Provenance manifest (task 2) + recovered buckets (task 4) — DONE
+
+On `poda/s3-provenance-manifest`: provenance manifest added to
+`data/README.md` (all four layout-table artifacts + the Zenodo deposit;
+unknowns recorded as unknown — notably the studietruschi.org scan terms
+and the original CIE download date); full read-only `gcloud storage ls -L`
+inventory of both buckets in the new `data/RECOVERED_BUCKETS.md` (sizes,
+GCS MD5s, salvage map, Zenodo-copy proposal); retired-remote note in
+`data/README.md` corrected. Key findings: the DVC store is fully
+identifiable (its own `.dir` manifest accounts for every blob — a complete
+2026-04-04 snapshot of pre-squash `data/`, including the seven CIE PDFs
+and `download_cie.sh` with the source URLs); `char-mlm-v1` and
+`lora-char-head-v1` survive complete in `gs://openetruscan-rosetta-vai`
+(with the metadata that pins their vocabularies); anchors files match the
+committed copies by MD5.
+
+**Escalation 1 (Pod C/lead, `scripts/ops/`):**
+`scripts/ops/fetch_data.py`'s docstring says the DVC remote "lived in a
+GCP project that no longer exists" — false since the recovery; should
+point at `data/RECOVERED_BUCKETS.md`.
+
+**Escalation 2 (Pod B, `research/experiments/lacuna_restoration/`):** the
+README's "gs://openetruscan-rosetta returns 404 — both checkpoints
+unavailable. No archived copy is known." is now stale: both checkpoints
+survive in `gs://openetruscan-rosetta-vai/models/` (details + remaining
+caveats in `data/RECOVERED_BUCKETS.md`).
+
+**Escalation 3 (Pod B, `research/results/labse_hardneg_t43_FINDINGS.md`):**
+the doc says adapter `labse-attested-v1` is "on GCS as audit" — only its
+`metrics.json` survives in the recovered copy; the weights are lost with
+the original bucket.
+
+**Escalation 4 (lead, data hygiene):**
+`gs://openetruscan-rosetta-vai/corpus/prod-inscriptions.sql` is a full
+prod dump; needs a credentials/PII audit (AGENTS.md rule 9) before any
+reuse. Also flagged for Pod B: the recovered `etr-xlmr-lora-v3.jsonl` is a
+mislabeled copy of the v4 file (identical MD5), so no uncentered v3
+vectors survive.
+
+**Boundary note (lead to confirm):** `.gitignore` is a root file outside
+Pod A paths, but `/data/*` ignored the new inventory doc; a one-line
+`!/data/RECOVERED_BUCKETS.md` exception (plus its comment) was added next
+to the existing README exception because the dispatched task explicitly
+requires the file. Revert and route differently if this oversteps.
+
+**Gate note:** `mypy src/openetruscan/` fails on main with 14 pre-existing
+errors in 5 files (`db/repository.py`, `db/env.py`, `ml/neural.py`,
+`ml/lacuna.py`, `api/server.py`) — unrelated to this markdown-only session
+(likely fallout of the mypy 1.10→2.3 bump). Ruff and pytest
+(406 passed / 5 skipped) are green.
+
+No CHANGELOG entry: the dispatching task explicitly excluded
+`CHANGELOG.md`; lead to decide whether these docs count as user-visible.
