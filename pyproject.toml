@@ -96,8 +96,10 @@ dev = [
     # Keep these two in lockstep with that file.
     "ruff==0.15.22",
     "mypy==2.3.0",
-    "semgrep>=1.60",
-    "safety>=3.0",
+    # semgrep/safety removed 2026-07-17: semgrep was already dropped from
+    # CI (see security.yml) but its click<8.2 cap held the shipped CLI's
+    # click at a CVE-affected version; safety is superseded by the
+    # pip-audit job in security.yml.
     # testcontainers spins a real Postgres + pgvector locally for tests that
     # would otherwise silently pass against in-memory SQLite. CI uses its own
     # `services:` block; both paths land in the same conftest.py fixture.

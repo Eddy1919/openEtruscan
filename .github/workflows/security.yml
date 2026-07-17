@@ -1,12 +1,19 @@
 name: Security
 
 # Replaces the `openetruscan-security` Cloud Build trigger.
-# Same scope as before: Gitleaks only (Bandit + Semgrep + pip-audit dropped
-# earlier for chronic false-positive rate; that decision is in the
-# .gitleaks.toml header and stays).
+# Scope: Gitleaks (secrets) + pip-audit (known CVEs in the locked
+# dependency graph). Bandit + Semgrep stay dropped for chronic
+# false-positive rate — that decision is in the .gitleaks.toml header.
+# pip-audit was reinstated 2026-07-17: auditing pinned versions in
+# uv.lock has a different (near-zero) false-positive profile from
+# static-analysis heuristics, and detection-after-merge is not a gate.
 
 on:
   push:
+    branches: [main]
+  # On PRs so a leaked secret or vulnerable pin is caught BEFORE it
+  # lands on the public main, not by the weekly cron afterwards.
+  pull_request:
     branches: [main]
   schedule:
     # Weekly Monday 03:00 UTC catch-all, same as the old Cloud Build cron.
@@ -29,3 +36,18 @@ jobs:
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
           GITLEAKS_VERSION: latest
+
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Export the locked dependency graph
+        run: uv export --frozen --no-emit-project -o /tmp/requirements.txt
+
+      - name: Audit pinned versions for known CVEs
+        # --disable-pip audits the pins as written instead of re-resolving;
+        # the export is fully pinned so nothing is skipped.
+        run: uvx pip-audit -r /tmp/requirements.txt --disable-pip
