@@ -152,23 +152,26 @@ git commit -m "WIP" --no-verify
 Before submitting a PR, confirm:
 
 - [ ] All tests pass: `pytest`
-- [ ] Linter is clean: `ruff check src/ tests/`
-- [ ] Security scan passes: `bandit -r src/openetruscan/`
-- [ ] Advanced security check: `semgrep scan --config auto`
-- [ ] OpenAPI schema is in sync: `python scripts/export_openapi.py` (check for changes in `docs/openapi.json`)
+- [ ] Linter and formatter are clean: `ruff check . && ruff format --check .`
+- [ ] Types check: `mypy src/openetruscan/`
+- [ ] OpenAPI schema is in sync if you touched the API: `python scripts/data_pipeline/export_openapi.py` (check for changes in `docs/openapi.json`)
 - [ ] New features include test cases
 - [ ] Documentation is updated if applicable
 
+Optional local security scans (`bandit -r src/openetruscan/`,
+`semgrep scan --config auto`) are welcome but are **not** CI gates — they
+were removed from CI for chronic false-positive rates.
+
 ### CI Pipeline
 
-Every PR triggers:
-1. **SAST** — Bandit & Semgrep security scans
-2. **Secret Scanning** — Gitleaks check for exposed tokens
-3. **Dependency Audit** — pip-audit & Dependabot verification
-4. **OpenAPI Sync** — Verification that `docs/openapi.json` matches the code
-5. **Lint** — Ruff checks across all Python files
-6. **Test** — pytest on Python 3.10, 3.11, 3.12, and 3.13
-7. **Coverage** — pytest-cov on Python 3.12
+What actually gates a PR (see `.github/workflows/`):
+1. **Lint** — ruff check + ruff format, pinned to the pre-commit version
+2. **Types** — mypy on `src/openetruscan/` (dependency-light, same pin as pre-commit)
+3. **Test** — pytest on 3.12 against Postgres + pgvector (full 3.10–3.13 matrix on push to main), including the Alembic migration-chain tests
+4. **Coverage** — enforced floor (`--cov-fail-under`) on the 3.12 lane
+
+Separately, **Gitleaks** secret scanning runs on every push to main and
+weekly, and **Dependabot** watches dependencies.
 
 ## Data Licensing
 

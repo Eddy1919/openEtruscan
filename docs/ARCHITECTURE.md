@@ -1,79 +1,80 @@
 # OpenEtruscan Platform Architecture
 
-OpenEtruscan is a decoupled, multi-tier digital humanities platform designed for high-performance epigraphic analysis.
+Two repositories, one platform (as of 2026-05-24; updated 2026-07-17):
 
-## Core Stack Overview
+- **This repo (`openEtruscan`)** — the research platform: the `openetruscan`
+  Python package (normalizer + Leiden parser, corpus tooling, EpiDoc export,
+  prosopography, ML heads), the `research/v2/` annotation/benchmark protocol,
+  the Alembic schema, and a **local FastAPI server kept as a parity reference
+  and dev convenience** (`uvicorn openetruscan.api.server:app`). It is *not*
+  the production HTTP surface.
+- **[`openEtruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend)** —
+  the production website and API: Next.js 16 on Vercel, with the public
+  `www.openetruscan.com/api/*` implemented as TypeScript route handlers
+  (Drizzle ORM + Neon serverless Postgres). Single origin, no cross-cloud hop.
 
 ```mermaid
 graph TD
-    subgraph Frontend [Next.js 15 Client]
-        A[App Router] --> B[React Components]
-        B --> C[Leaflet Maps]
-        B --> D[Chart.js Stats]
-        B --> E[ONNX Runtime Web]
+    subgraph Production [openEtruscan-frontend · Vercel]
+        A[Next.js 16 App Router] --> B[TS API route handlers]
+        B --> C[(Neon Postgres<br/>PostGIS + pgvector)]
     end
 
-    subgraph Backend [FastAPI Python Server]
-        F[FastAPI Router] --> G[Limiter/Middleware]
-        F --> H[InscriptionRepository]
-        H --> I[SQLAlchemy Async]
-        F --> J[Normalizer Engine]
-        F --> K[ML/Classifier Inference]
+    subgraph Research [openEtruscan · this repo]
+        D[openetruscan package<br/>CLI + library] --> E[Normalizer + Leiden parser]
+        D --> F[research/v2 protocol<br/>jury + frozen benchmarks]
+        D --> G[FastAPI parity reference<br/>local dev only]
+        G --> H[(Local Postgres via<br/>docker-compose.dev.yml)]
     end
 
-    subgraph Data [PostgreSQL + PostGIS + pgvector]
-        L[(Consolidated Database)]
-        I --> L
-        L --> M[PostGIS ST_AsMVT]
-        L --> N[pgvector HNSW]
-    end
-
-    Frontend -- REST API --> Backend
-    Backend -- Vector Tiles (PBF) --> Frontend
+    Research -. corpus exports, ONNX models,<br/>normalizer golden fixtures .-> Production
 ```
 
-## Component Breakdown
+## The Normalizer Engine (`core/normalizer.py` + `core/leiden.py`)
 
-### 1. The Normalizer Engine (`core/normalizer.py`)
-The "heart" of the system. It handles the transformation of varied epigraphic transcription systems into a canonical phonological representation.
+The heart of the system. Input passes through, in order:
 
-```mermaid
-sequenceDiagram
-    participant U as User Input
-    participant D as Detector
-    participant P as Preprocessor (LaTeX/Unicode)
-    participant F as Folder (Variants -> Canonical)
-    participant V as Validator (Phonotactics)
-    participant O as Output (IPA/Unicode)
+1. **Leiden parse** (`core/leiden.py`) — editorial markup is lifted into a
+   structured apparatus *before* anything else sees the text: `[abc]`
+   (restoration) → `supplied` span, `(abc)` (abbreviation expansion) → `ex`
+   span, `[..]` / `---` → `gap` (with width), underdot / half brackets →
+   `unclear`. Canonical text, phonetics, Old Italic, tokens, and the FTS
+   index therefore never contain editorial brackets.
+2. **Source-system detection** — CIE uppercase, philological, Old Italic
+   Unicode, or web-safe.
+3. **Folding** — variant → canonical via the per-language YAML adapter
+   (`core/adapters/*.yaml`), longest-match digraph resolution, with span
+   offsets remapped through every length-changing transform.
+4. **Validation** — phonotactic checks emit warnings, never hard failures.
+5. **Output** — canonical, IPA, Old Italic, tokens, `apparatus`, warnings,
+   confidence.
 
-    U->>D: Raw String
-    D->>P: Identification
-    P->>F: Clean Transliteration
-    F->>V: Canonical Mapping
-    V->>O: Result Object
-```
+EpiDoc export (`core/epidoc.py`) serializes the apparatus as real
+`<supplied>`, `<ex>`, `<gap>`, `<unclear>` elements.
 
-### 2. Database Layer (`db/repository.py`)
-A repository pattern using `SQLAlchemy 2.0` and `pgvector`.
-- **Spatial**: PostGIS-backed proximity queries against findspot geometries. The `genetic_samples` join table exists in the schema as a placeholder for future archaeogenetic data integration; it is not currently populated (see ROADMAP).
-- **Semantic**: `halfvec(3072)` embeddings from `text-embedding-004` over the 6,633-inscription corpus. See the §Provenance disclosure section in [`README.md`](../README.md) for the breakdown into documented- and undocumented-provenance tiers.
-- **Tiles**: Direct `ST_AsMVT` generation for vector-tile mapping.
+## Database layer (`db/`)
 
-### 3. API Middleware (`api/server.py`)
-- **Rate Limiting**: Per-endpoint windowed limiting using `slowapi`.
-- **Content Negotiation**: Support for JSON, CSV, and GeoJSON exports.
-- **Documentation**: Automatic OpenAPI 3.1 generation with Pydantic v2 schemas.
+SQLAlchemy 2.0 async ORM + Alembic migrations (`db/versions/`, exercised by
+`tests/test_migrations.py` — the chain bootstraps an empty database). The
+schema carries the four-tier `provenance_status` vocabulary and a
+`data_sources` table for bibliographic provenance.
 
-## Data Flow: Search Request
+> **Known debt:** `core/corpus.py` still contains an older synchronous
+> psycopg2 data-access path with its own DDL, used by the CLI. The ORM stack
+> is the source of truth; retiring the corpus.py stack is tracked work, not
+> an accident.
 
-```mermaid
-flowchart LR
-    A[Client UI] --> B{Search Type?}
-    B -- Full Text --> C[PG FTS tsvector]
-    B -- Semantic --> D[Gemini Embedding + pgvector]
-    B -- Spatial --> E[PostGIS ST_DWithin]
-    C --> F[Repository Aggregation]
-    D --> F
-    E --> F
-    F --> G[JSON Response]
-```
+## Research pipelines (`research/v2/`)
+
+LLM-jury annotation (3 raters, distinct lineages), frozen stratified splits
+(committed with SHA256 manifests), bootstrap-CI'd metrics, pre-registration
+with a public deviations log. Evidence artifacts live under
+`research/v2/results/` and `research/v2/data/`; reproduction steps in
+[`docs/REPRODUCE.md`](REPRODUCE.md).
+
+## Historical note
+
+Earlier revisions of this document described a FastAPI + Cloud SQL + GCE
+production stack. That stack was retired on 2026-05-24 (Cloud SQL stopped,
+VM terminated); the FastAPI app remains in-tree only in the parity/dev role
+described above.

@@ -1,80 +1,88 @@
 # OpenEtruscan Development Guide
 
-This guide details how to set up, maintain, and expand the OpenEtruscan ecosystem.
+How to set up, test, and extend the `openetruscan` Python package. The web
+app is a separate repository
+([`openEtruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend));
+see its README for frontend development.
 
-## Environment Setup
-
-### 1. Backend (FastAPI)
-The backend requires Python 3.10+ and a PostgreSQL 15+ database with `PostGIS` and `pgvector` extensions.
+## Environment setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/Eddy1919/openEtruscan.git
 cd openEtruscan
 
-# Install dependencies (use [all] for ML support)
-pip install -e "."
-pip install -r requirements-dev.txt
+# Locked environment (uv.lock is committed):
+uv sync --extra dev
+
+# Or plain pip:
+pip install -e ".[dev]"
+
+pre-commit install
+pytest
 ```
 
-### 2. Frontend (Next.js)
+The suite runs against three backends, best available first: an explicit
+`DATABASE_URL` (Postgres), a `testcontainers` pgvector container (needs
+Docker), or in-memory SQLite as the fallback. Postgres-only tests (pgvector
+search, the Alembic migration chain) skip on SQLite — run them locally with:
+
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose -f docker-compose.dev.yml up -d db
+DATABASE_URL=postgresql://openetruscan:openetruscan@localhost:5432/openetruscan pytest
 ```
 
-## Database Migrations
+## Data
 
-OpenEtruscan uses **Alembic** for SQLAlchemy schema versioning.
+Corpus data is not in git. `scripts/ops/fetch_data.py` downloads it from the
+Zenodo deposit and verifies checksums; [`docs/REPRODUCE.md`](REPRODUCE.md) is
+the end-to-end guide (data → frozen splits → metrics → local API).
 
-```mermaid
-graph LR
-    A[models.py] -- autogenerate --> B[Revision Script]
-    B -- upgrade --> C[PostgreSQL Schema]
-```
+## Database migrations
 
-To create a new migration:
+Alembic owns the schema (`src/openetruscan/db/versions/`).
+
 ```bash
-# Point alembic to the core database
 export DATABASE_URL="postgresql://user:password@localhost:5432/openetruscan"
 alembic revision --autogenerate -m "Add new column"
 alembic upgrade head
 ```
 
-## Classification Training
+Two rules, both enforced by `tests/test_migrations.py`:
 
-The CharCNN and Transformer models are trained on the `src/openetruscan/ml` modules.
+1. The chain must apply cleanly to an **empty** database (`upgrade head`
+   from nothing).
+2. Every ORM-mapped table must exist after the chain runs — a model change
+   without a migration fails the test.
 
-```mermaid
-flowchart TD
-    A[Raw Corpus] --> B[Normalizer]
-    B --> C[Canonical Text]
-    C --> D[Synthetic Augmentation]
-    D --> E[Neural Trainer]
-    E --> F[ONNX Export]
-    F --> G[Frontend public/models]
-```
+## Classification training
 
-To re-export models for the frontend:
+The neural heads (CharCNN / MicroTransformer / EmbeddingMLP) train through
+the CLI under the v2 protocol:
+
 ```bash
-# Training a specific language model
-python -m openetruscan.ml.trainer --language etruscan --export true
+openetruscan train-neural --arch charcnn --output data/models/
+openetruscan predict-neural --arch charcnn "mi aviles"
 ```
 
-## Deployment
+Evaluation methodology, frozen splits, and bootstrap-CI metrics live in
+[`research/v2/`](../research/v2/); read
+[`research/v2/PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md)
+before changing any evaluation code — its invariants are pinned by
+`tests/test_v2_harness.py`.
 
-Deploying the stack to Vercel and Google Cloud:
+## Local API (parity reference)
 
-```mermaid
-graph TD
-    A[Local Push] --> B{GHA CI}
-    B -- Build --> C[Next.js App]
-    B -- Test --> D[FastAPI Server]
-    C --> E[Vercel]
-    D --> F[Cloud Run]
+```bash
+uvicorn openetruscan.api.server:app --reload
 ```
 
-- **Frontend**: Vercel (CLI)
-- **Backend**: Google Cloud Run (Dockerized)
-- **Database**: Cloud SQL with PostGIS
+This FastAPI app is a development convenience and parity reference; the
+production API is TypeScript in the frontend repo (see
+[`ARCHITECTURE.md`](ARCHITECTURE.md)).
+
+## CI
+
+Every PR runs: ruff lint + format check, mypy (dependency-light, pinned to
+the pre-commit version), and pytest on 3.12 with coverage floor 45% against
+a pgvector-backed Postgres service. Pushes to main run the full 3.10–3.13
+matrix. Gitleaks runs on push and weekly.

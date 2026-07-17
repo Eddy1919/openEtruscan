@@ -81,26 +81,36 @@ The corrected set is width-1-dominated, and accuracy still falls off with width 
 
 ## 4. Reproducibility
 
-Everything in this document is reproducible from a single Cloud Build invocation:
+**What is reproducible from this repository today** (each step verified —
+full guide in [`docs/REPRODUCE.md`](REPRODUCE.md)):
 
 ```bash
-# Re-derive the frozen split + jury + adjudicated outputs:
-gcloud builds submit . \
-  --project=your-gcp-project-id \
-  --config=cloudbuild/v2-classify-jury.yaml
+# Fetch the corpus from the Zenodo DOI (SHA256-verified):
+python scripts/ops/fetch_data.py
 
-# Retrain the classifier and re-derive the metrics in this document:
-gcloud builds submit . \
-  --project=your-gcp-project-id \
-  --config=cloudbuild/v2-train-classifier.yaml
+# Re-derive the frozen split byte-identically (hashes in research/v2/data/SHA256SUMS):
+python -m research.v2.pipelines.classify_split \
+    --corpus research/data/openetruscan_clean.csv \
+    --silver research/data/openetruscan_labels.csv \
+    --out-train research/v2/data/classify_train_pool.jsonl \
+    --out-test  research/v2/data/classify_test_v2.jsonl \
+    --n-test 400 --seed 42
 
-# Same for lacunae:
-gcloud builds submit . \
-  --project=your-gcp-project-id \
-  --config=cloudbuild/v2-lacuna-jury.yaml
+# Recompute the v2.0.3 lacuna metrics from the committed raw jury output:
+python research/v2/eval/compute_lacuna_v2.py \
+    --jury research/v2/results/lacuna/lacuna_jury_raw_v2_0_3_rerun.jsonl \
+    --out /tmp/recheck.json   # diff-identical to research/v2/results/lacuna/lacuna_v2_0_3.json
 ```
 
-Outputs land at `gs://your-gcp-project-id_cloudbuild/openetruscan-v2/...` with UTC timestamp prefixes; the latest run's prefix is recorded in the README's "What's new" section. Seeds, codebook version, model ids, and rater set are recorded inside each output JSON.
+**What is NOT re-runnable**: the jury API calls themselves. The Cloud Build
+orchestration configs (`cloudbuild/v2-*.yaml`) were removed along with the
+GCP project that hosted them — an earlier revision of this section presented
+those as a working one-command reproduction path, which had been false since
+the project's deletion. Re-running the jury requires a live Vertex project
+and re-authoring the orchestration; the committed raw outputs + metrics under
+[`research/v2/results/`](../research/v2/results/) are the audit trail. Seeds,
+codebook version, model ids, and rater set are recorded inside each output
+JSON.
 
 ## 5. Things that are NOT in this document
 

@@ -18,7 +18,7 @@
 
 ## Overview
 
-OpenEtruscan is an open-source platform for working with the Etruscan epigraphic record. It normalises transcriptions across notation systems, classifies inscriptions into epigraphic types (best macro F1 ≈ 0.31 on a held-out set — the top model is TF-IDF + Naïve Bayes, not a neural net), and publishes the full corpus as Linked Open Data.
+OpenEtruscan is an open-source platform for working with the Etruscan epigraphic record. It normalises transcriptions across notation systems (including structured Leiden-convention parsing of restorations, gaps, and unclear readings), classifies inscriptions into epigraphic types (macro F1 in the 0.31–0.37 band on a held-out set, with overlapping CIs across architectures from ~3K to 274K parameters — no model separates from the field; TF-IDF + Naïve Bayes is the production reference), and publishes the full corpus as Linked Open Data.
 
 The corpus holds **6,633 unified inscriptions**, drawn mostly from the *Larth Dataset* (Vico & Spanakis, 2023; ~71%) and the *Corpus Inscriptionum Etruscarum* (Vol. I extractions; ~29%), with links to Trismegistos, EAGLE, and Pleiades. The cleaned, ML-ready dataset published on Zenodo is a 6,567-row subset (66 rows dropped during cleaning).
 
@@ -41,7 +41,7 @@ The platform follows a decoupled, cloud-native architecture (as of 2026-05-24):
 
 - **Data Layer** — PostgreSQL (PostGIS + pgvector) on **Neon** serverless (was Cloud SQL, migrated). 3,072-dimensional `text-embedding-004` semantic embeddings for high-precision similarity search.
 - **Public HTTP API** — **Vercel Functions** (TypeScript + Drizzle ORM + Neon serverless driver) co-located in the [`openetruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) repo under `app/api/*`. Single-origin, no cross-cloud hop. See `https://www.openetruscan.com/api/{search,inscription/[id],stats/summary,concordance,clan/[gens],radius,search/geo,names/network,anchors/…}`.
-- **Web app** — Next.js 15 on Vercel, with the mobile path shipping as RSC + `useSyncExternalStore`-gated dynamic-import islands (Lighthouse a11y 100, perf 92 mobile / 99 desktop).
+- **Web app** — Next.js 16 on Vercel, with the mobile path shipping as RSC + `useSyncExternalStore`-gated dynamic-import islands (Lighthouse a11y 100, perf 92 mobile / 99 desktop).
 - **Python `openetruscan` package** (this repo) — **CLI + research-pipeline source of truth**. `pip install openetruscan` ships the 14-command CLI (`normalize`, `classify`, `train-neural`, `export-corpus`, `epidoc`, etc.) plus the `src/openetruscan/api/` FastAPI surface used for parity testing and local development. The live public HTTP API no longer runs from this codebase.
 - **Research pipelines** — Cloud Build orchestrators (`cloudbuild/v2-classify-jury.yaml`, `v2-lacuna-jury.yaml`) drove the v2.0.x LLM-jury annotation work. The former Vertex AI billing project is now **deleted**; re-running these requires pointing them at a live project.
 
@@ -136,18 +136,23 @@ evaluation protocol.
 
 ```
 openEtruscan/
-  frontend/          Next.js 15 web application (TypeScript, CSS Modules)
-    app/             App Router pages and API routes
-    components/      Shared UI components (Nav, Footer, CitationExport)
-    lib/             Corpus loader, normalizer engine, ONNX classifier
-    public/
-      data/          languages.json
-      models/        cnn.onnx, transformer.onnx + metadata
-  src/               Python package source (FastAPI backend + Core library)
-  data/              Corpus data, RDF exports, CIE fascicles
-  web/               Legacy static site (deprecated)
-  .github/           CI/CD workflows
+  src/openetruscan/  Python package: core library (normalizer, Leiden parser,
+                     EpiDoc, corpus, prosopography), ml/, db/ (Alembic), api/
+                     (local FastAPI parity reference)
+  research/          Research narrative: v2 annotation protocol + frozen
+                     benchmarks, findings, experiments, parked strands
+  eval/              Frozen eval outputs + the rosetta/search harnesses
+  scripts/           Data pipeline, ML, ops, training scripts (see scripts/README.md;
+                     spent one-offs live in scripts/attic/)
+  services/          Cloud Run inference services (ByT5 restorer, reranker)
+  tests/             Pytest suite (incl. migration-chain and science-harness
+                     invariant tests)
+  data/              Local data artifacts (git-ignored; fetch via
+                     scripts/ops/fetch_data.py — see data/README.md)
 ```
+
+The web application (Next.js 16) and the production TypeScript API live in the
+separate [`openEtruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) repository.
 
 ## Linked Open Data & Pelagios Network
 
@@ -163,7 +168,7 @@ This project ships two small models alongside an LLM-jury annotation pipeline. T
 
 ### Classifier (7-class inscription type) — v2.0.2 head-to-head
 
-Four architectures spanning two orders of magnitude in parameter count were evaluated on the v2.0.2 candidate-gold (n=143, 3-rater LLM-jury unanimous: Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, Krippendorff α=0.7649). Train pool: 282 silver-labelled rows.
+Four architectures spanning two orders of magnitude in parameter count were evaluated on the v2.0.2 candidate-gold (n=143, 3-rater LLM-jury unanimous: Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, Krippendorff α=0.7649). Train pool: 282 silver-labelled rows. **"Candidate-gold" is LLM-consensus silver, not gold**: the two-philologist ratification step (target human α ≥ 0.80, [`research/v2/handoff/`](research/v2/handoff/)) has not yet been performed, and these numbers measure agreement with a frontier-model consensus, not with expert epigraphic judgment. Cite them with that caveat.
 
 | Architecture | Params | **Macro F1** (95% bootstrap CI) | Accuracy |
 |---|---|---|---|
@@ -204,20 +209,30 @@ Hallucination = the model emits at least one character outside the marked lacuna
 
 ### Methodology
 
-Full annotation codebook, frozen stratified splits, LLM-jury runners, and bootstrap-CI eval harness live in [`research/v2/`](research/v2/). The dataset cards and pre-registration are the citation-grade artifacts; this README is a summary.
+Full annotation codebook, frozen stratified splits (SHA256-pinned, text-bearing — see [`research/v2/data/`](research/v2/data/)), LLM-jury runners, raw jury evidence + computed metrics ([`research/v2/results/lacuna/`](research/v2/results/lacuna/)), and the bootstrap-CI eval harness live in [`research/v2/`](research/v2/). The dataset cards and pre-registration are the citation-grade artifacts; this README is a summary. Reproduction steps: [`docs/REPRODUCE.md`](docs/REPRODUCE.md).
 
 ## Development
 
+Python package (this repo):
+
 ```bash
 git clone https://github.com/Eddy1919/openEtruscan.git
-cd openEtruscan/frontend
-npm install
-npm run dev
+cd openEtruscan
+pip install -e ".[dev]"      # or: uv sync --extra dev (uv.lock is committed)
+pytest
 ```
+
+Local corpus + API: see [`docs/REPRODUCE.md`](docs/REPRODUCE.md)
+(`scripts/ops/fetch_data.py` fetches the corpus from the Zenodo DOI;
+`docker-compose.dev.yml` stands up Postgres+pgvector and the API).
+
+Web app: clone the separate
+[`openEtruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend)
+repo, then `npm install && npm run dev`.
 
 ### Deployment
 
-**Development & Preview**
+**Development & Preview** (from the frontend repo)
 Push local dev environment variables and deploy a Preview build:
 ```bash
 # Pull Vercel preview/dev environment variables
@@ -255,7 +270,7 @@ A minimal BibTeX entry:
 }
 ```
 
-`10.5281/zenodo.20075836` is the **concept DOI** (resolves to the latest version). Each tagged release also mints its own version-specific DOI; cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot.
+Per the Zenodo record metadata, `10.5281/zenodo.20075835` is the **concept DOI** (resolves to the latest version) and `10.5281/zenodo.20075836` is the **version DOI** for the v1.0.0 deposit. Cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot. (An earlier revision of this section had the two swapped.)
 
 The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md). The research-grade roadmap is in [`research/SOTA_ROADMAP.md`](research/SOTA_ROADMAP.md).
 
@@ -283,6 +298,21 @@ The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructi
 
 ## What's new
 
+### v1.1.0 (2026-07-17) — integrity & reproducibility release
+
+The frozen classification split was found corrupt (99 text-less rows vs the
+pre-registered 400) and has been regenerated and verified against the jury's
+own adjudication-queue IDs; the lacuna evidence (raw jury outputs + metrics)
+moved from local-only staging into the tracked tree at
+[`research/v2/results/lacuna/`](research/v2/results/lacuna/) with SHA256
+manifests; the normalizer now parses Leiden editorial markup into a
+structured apparatus (and EpiDoc export emits real
+`<supplied>/<ex>/<gap>/<unclear>`); the Alembic chain bootstraps an empty
+database (it previously could not); CI gained mypy, a coverage floor, and a
+pgvector-backed test service. Full detail in
+[`CHANGELOG.md`](CHANGELOG.md) §1.1.0 and
+[`PRE_REGISTRATION.md` Deviation §C](research/v2/PRE_REGISTRATION.md).
+
 ### Architecture shift (2026-05-24) — research-first repo
 
 The public HTTP API moved out of this repo. The live `www.openetruscan.com/api/*` surface is now **TypeScript route handlers in the [`openetruscan-frontend`](https://github.com/Eddy1919/openEtruscan-frontend) Vercel project**, talking to **Neon serverless Postgres** via Drizzle ORM + `@neondatabase/serverless`. Cloud SQL stopped, GCE VM terminated.
@@ -305,5 +335,5 @@ What stays here (and gets first billing in this README):
 
 ### v0.5.0 infrastructure
 - **Cloud Run neural restoration**: ByT5 lacunae restoration is served from a dedicated Cloud Run inference service (`services/byt5-restorer/`).
-- **CI/CD eval gates**: hybrid-search NDCG@10 gates seeded with real DB queries (`eval/harness/search_eval_queries.jsonl`).
+- **Search-eval harness with gate flags**: hybrid-search NDCG@10 computed by `eval/harness/run_search_eval.py --gate …` against real DB queries (`eval/harness/search_eval_queries.jsonl`). Run manually against a populated database — it is **not** wired into CI (an earlier version of this line claimed a "CI/CD eval gate"; no workflow invokes it, and CI has no populated corpus to run it against).
 - **Admin curatorial UI**: provenance promotion workflow in the Inscription viewer (`ProvenancePromoteModal.tsx`).

@@ -4,7 +4,80 @@ All notable changes to OpenEtruscan are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.3] — 2026-07-04
+> **Version namespaces.** Two version streams appear below and they are not
+> the same thing: plain `x.y.z` entries are **package/software releases**
+> (PyPI `openetruscan`, `pyproject.toml`), while `v2.0.x` entries are
+> **evaluation-protocol versions** of the `research/v2/` annotation and
+> benchmark work. Earlier revisions of this file used bare `[2.0.3]` for a
+> protocol version, which read as a package release — those headings now
+> carry the `evaluation protocol` label.
+
+## [1.1.0] — 2026-07-17
+
+Integrity and reproducibility release, closing the gaps found by the
+2026-07-17 audit.
+
+### Fixed — evidence chain
+- **Frozen classification split repaired.** The committed
+  `research/v2/data/classify_test_v2.jsonl` (99 rows) and train pool (613
+  rows) had empty text on every row and contradicted the pre-registered
+  n=400. Regenerated deterministically from the Zenodo corpus deposit
+  (seed=42, n-test=400); verified that all 79 jury adjudication-queue IDs are
+  contained in the regenerated pool with byte-identical text, and that the
+  corrupt file's 99 IDs are a strict subset. `classify_split.py` now
+  hard-fails on empty-text rows (`--allow-empty-text` for smoke runs). See
+  `research/v2/data/README.md`, incl. one open delta (312 regenerated
+  train-pool rows vs the historically reported 282).
+- **Lacuna evidence promoted.** v2.0.2/v2.0.3 raw jury JSONL + metrics moved
+  from untracked `research/private/` to `research/v2/results/lacuna/` with a
+  SHA256 manifest; recomputation reproduces the published tables exactly.
+- **Pre-registration re-anchored** (Deviation §C): the July 2026 history
+  squash destroyed freeze commit `c281ed9`; integrity is now anchored in
+  content hashes, not commit ids.
+- **`initial_schema` migration was an empty stamp** — `alembic upgrade head`
+  could not bootstrap an empty database (failed at the second migration).
+  Reconstructed the 2026-04-04 base DDL; the full 17-migration chain now
+  applies cleanly from empty and is exercised by `tests/test_migrations.py`.
+- **Jury harness**: API failures are recorded as `label="api_error"` (missing
+  data) instead of `"unsure"` (abstention), and any api_error blocks
+  candidate-gold promotion — the same bug class as the retracted lacuna
+  Finding C, closed in the classification stream before it produced one.
+- **Label provenance rename**: `gold:claude_hand_label` →
+  `silver:claude_hand_label` (184 rows) — those labels are LLM-derived, not
+  philologist-validated. Split regenerated; membership unchanged.
+
+### Added
+- **Leiden-convention parsing** (`core/leiden.py`): `[abc]` restorations,
+  `(abc)` expansions, `[..]`/`---` gaps, underdot-unclear, and half brackets
+  are parsed into a structured `apparatus` on `normalize()` results instead
+  of leaking literal brackets into canonical text, phonetics, Old Italic,
+  tokens, and the FTS index. EpiDoc export now emits real
+  `<supplied>/<ex>/<gap>/<unclear>` markup.
+- **Science-harness invariant tests** (`tests/test_v2_harness.py`): no_parse
+  ≠ hallucination, api_error dispositions, split-generator empty-text
+  refusal, bootstrap seed stability, Krippendorff α implementation agreement,
+  and pins on the committed evidence files.
+- **Reproducibility kit**: `scripts/ops/fetch_data.py` (Zenodo fetch +
+  SHA256 verify), `docker-compose.dev.yml` (Postgres+pgvector dev stack),
+  `uv.lock`, digest-pinned Docker base image, `docs/REPRODUCE.md`.
+- **CI**: mypy gate, coverage floor (45%), pgvector-capable Postgres service
+  with a hard extension assertion (previously the vector-search tests
+  self-skipped silently and CI stayed green).
+
+### Changed
+- One-off corpus-surgery scripts moved to `scripts/attic/` with an
+  audit-trail README; `scripts/` and `scripts/data_pipeline/` gained
+  live-script indexes; machine-specific hardcoded paths removed.
+- CV/YOLO pipeline, neurosymbolic WBS, and Oscan/Faliscan/Rhaetic protocol
+  stubs parked under `research/parked/` until the Etruscan gold chain closes.
+- Dead DVC remote configuration removed (data flows through the Zenodo DOI);
+  `dashboard.json` (retired Cloud Run monitoring) and `.semgrepignore`
+  (semgrep no longer runs anywhere) deleted.
+- Concept vs version DOI corrected in the citation docs: concept is
+  `10.5281/zenodo.20075835`, the v1.0.0 deposit is `…20075836` (previously
+  stated backwards).
+
+## [v2.0.3 — evaluation protocol] — 2026-07-04
 
 ### Retracted — v2.0.2 lacuna "Finding C" (harness artifact)
 
@@ -49,7 +122,8 @@ available Vertex projects, only Haiku 4.5) + **Gemini 3.1 Pro** + **Gemini
   far more than with Opus (0.18–0.24); a Krippendorff α over this 2×Google
   panel is inflated by shared lineage. Opus's 0.000 hallucination is by
   construction (`restored_full` assembled mechanically) and not comparable.
-- Data: `research/private/evaluation/lacuna_jury_raw_v2_0_3_rerun.jsonl`,
+- Data: `research/v2/results/lacuna/lacuna_jury_raw_v2_0_3_rerun.jsonl`
+  (promoted from local-only staging to the tracked tree on 2026-07-17),
   `lacuna_v2_0_3.json`. The classifier stream (short outputs) is unaffected by
   the empty-completion bug; α = 0.7649 stands (GCS raw spot-check pending).
 

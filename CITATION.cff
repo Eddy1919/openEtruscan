@@ -37,7 +37,7 @@ abstract: >-
   LoRA) that embeds Etruscan and Latin in a shared vector space. It also
   includes a frozen benchmark, rosetta-eval-v1, with random, Levenshtein,
   and model baselines, and instructions to reproduce it.
-version: "1.0.0"
+version: "1.1.0"
 date-released: "2026-05-24"
 # Zenodo concept-DOI (resolves to the latest version). Each tagged release
 # also mints its own version-specific DOI; this all-versions identifier is
