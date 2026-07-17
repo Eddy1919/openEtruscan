@@ -39,6 +39,6 @@ regexes = [
 paths = [
   '''research/v2/configs/.*\.yaml''',
   '''research/v2/pipelines/_secrets\.py''',
-  '''scripts/ops/migrate_to_tembo\.py''',
+  '''scripts/attic/migrate_to_tembo\.py''',
   '''docs/HUGGINGFACE\.md''',
 ]

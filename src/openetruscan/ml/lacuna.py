@@ -8,7 +8,14 @@ embeddings and a lightweight classification head to predict missing characters.
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
+
+warnings.warn(
+    "openetruscan.ml.lacuna is deprecated and will be removed in 2.0",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 # ---------------------------------------------------------------------------
 # Lazy torch import — same pattern as neural.py/embeddings.py, so importing

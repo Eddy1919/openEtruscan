@@ -3,10 +3,17 @@ Spatial Correlation Engine — Links archaeogenetic samples with epigraphic reco
 """
 
 import logging
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
 from openetruscan.core.corpus import Corpus
+
+warnings.warn(
+    "openetruscan.core.spatial is deprecated and will be removed in 2.0",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 logger = logging.getLogger("spatial_correlation")
 

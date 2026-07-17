@@ -58,6 +58,39 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `tests/test_corpus_geom.py`). The dev-compose header now states the actual
   limitation instead of claiming everything but the spatial endpoints works.
 
+### Fixed
+- **CLI no longer lists duplicate commands.** `normalize` and `convert` were
+  each registered twice (once as `normalize-cmd`/`convert-cmd` from the bare
+  decorator, once under the documented name via `add_command`), so `--help`
+  showed 16 commands instead of the documented 14. Each is now registered
+  once; a test pins the exact 14-name command set.
+
+### Removed — dead-code prune (S2 audit)
+Every item was verified before removal (no importers/callers repo-wide,
+or an import that no longer resolves).
+- 11 dead files deleted: 6 scripts with broken imports or superseded
+  behaviour (`classify_all`, `build_web_languages`, `populate_zotero`,
+  `align_pleiades`, `migrate_db`, `add_docs`), the stale
+  `scripts/docs/openapi.json` snapshot (API 0.4.0), `.vercelignore`
+  (this repo does not deploy to Vercel), and 3 duplicate/empty texture
+  images in `research/parked/cv_pipeline`.
+- 3 declared-but-never-imported dependencies dropped: `lxml` (EpiDoc uses
+  stdlib ElementTree + defusedxml) and `networkx` (prosopography is pure
+  Python) from the extras — the `epidoc`/`prosopography` extras remain as
+  no-ops so existing installs keep resolving — and `google-cloud-storage`
+  from the byt5-restorer service.
+- 13 spent one-off scripts moved from `scripts/{ml,data_pipeline,ops}` to
+  `scripts/attic/` (enrichment backfills, superseded trainers, the
+  Cloud SQL→Tembo migration and its Secret Manager sidecar); indexed in
+  `scripts/attic/README.md`.
+
+### Deprecated
+- `core/lineage`, `core/spatial`, `ml/lacuna`, `ml/entity_linker_v2`, and
+  `ml/embedding_classifier` now emit a `DeprecationWarning` on import and
+  will be removed in 2.0. Nothing inside the repo imports them, but they
+  ship in the wheel, so external imports cannot be ruled out — hence a
+  deprecation cycle instead of deletion.
+
 ### Fixed — rosetta-eval-v1 baseline integrity
 - **Random baseline no longer fabricates its vocab size.** A failed
   `/neural/rosetta/vocab` fetch made `run_rosetta_eval.py --baseline random`

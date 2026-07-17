@@ -66,5 +66,5 @@ python -c "..."  # see scripts/data_pipeline/update_db_from_clean.py
 python scripts/ml/train_neural.py --output data/models/v3 --epochs 30 --arch both
 
 # Evaluate against held-out
-# (custom evaluation harness — see scripts/ml/benchmark_pipelines.py for the protocol)
+# (custom evaluation harness — see scripts/attic/benchmark_pipelines.py for the protocol)
 ```

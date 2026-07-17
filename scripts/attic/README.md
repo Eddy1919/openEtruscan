@@ -36,3 +36,27 @@ scratch space of the CIE Vol. I ingestion, not the live Postgres corpus.
 | `sieve_ranges.py` | Split Latin rows out of `cie_ranges.db` into `cie_range_latin.db`. | One-time language separation. | `cie_range_latin.db` |
 | `split_ranges.py` | Moved range-form CIE ids (`1339-1341`, `486 et 487`) out of `cie_etruscan.db` into `cie_ranges.db`. | One-time. | `cie_ranges.db` |
 | `unpack_ranges.py` | Expanded range-form ids in `cie_ranges.db` into individual entries. | One-time. | `data/cie/range_decomposition_report.md` |
+
+## Spent one-offs from `ml/`, `data_pipeline/`, and `ops/` (S2 prune)
+
+Moved here 2026-07: enrichment, training, and migration one-offs whose
+runs are complete and whose outputs are already in the corpus, the
+models, or the retired infrastructure. Same caveats as above — not
+maintained, several assume schemas or infrastructure that no longer
+exist.
+
+| File | What it did | ~When / why | Artifact |
+|---|---|---|---|
+| `align_gazetteers.py` | Added and populated `pleiades_id`/`geonames_id` on the SQLite corpus from a curated findspot map + API fallback. | One-time gazetteer alignment; superseded by the Pleiades link queue in `data_pipeline/`. | columns in `data/corpus.db` |
+| `augment_minority_labels.py` | Backfilled `classification` for minority classes in Postgres using `InscriptionClassifier`. | One-time label augmentation. | `inscriptions.classification` updates |
+| `benchmark_pipelines.py` | Comparative benchmark of the classification and lacuna-restoration pipelines (legacy CharCNN vs embedding MLP). | One-time pipeline comparison; protocol referenced by `research/experiments/classifier_data_bottleneck/`. | console report only |
+| `enrich_findspots.py` | Backfilled missing findspots via canonical-text match, CIE-prefix and ETP-range inference, and coordinate propagation. | One-time findspot enrichment. | frontend `corpus.json`, regenerated RDF |
+| `fetch-env-from-sm.sh` | Pulled the API container's runtime secrets from Google Secret Manager into the on-VM `.env`. | Deploy sidecar for the retired GCE/COS VM. | `.env` on the VM |
+| `find_duplicates.py` | difflib near-duplicate scan of the SQLite corpus (CIE vs Larth rows). | One-time dedup analysis. | `data/cie_larth_duplicates.md` |
+| `generate_neural_embeddings.py` | Computed XLM-R embeddings for all inscriptions and stored them in Postgres/pgvector. | One-time embedding backfill; superseded by the Vertex jobs in `training/`. | pgvector rows |
+| `grade_rescued_inscriptions.py` | LLM-graded the quality of rescued CIE rows in `cie_rescued.db`. | One-time review pass. | `data/cie/rescued_grading_report.md` |
+| `migrate_graph.py` | Built the `FamilyGraph` from the corpus and loaded prosopography nodes/edges into Postgres. | One-time graph load. | prosopography tables |
+| `migrate_to_tembo.py` | pg_dump/restore migration of the corpus from Cloud SQL to Tembo Cloud, with pgvector/PostGIS verification. | One-shot infra migration off GCP. | migrated database |
+| `train_byt5_v2.py` | Fine-tuned the ByT5 lacuna-restoration model (v2) on corpus pairs from Postgres. | Superseded by v3 (`ml/lacuna.py` head + etr-lora-v4 encoder). | v2 model weights |
+| `train_embedding_classifier.py` | Trained a logistic-regression head on pgvector embeddings and exported it to ONNX. | One-time head training. | `embedding_head.onnx` + meta JSON |
+| `update_geotags.py` | Backfilled coordinates, Pleiades IDs, and PostGIS `geom` for all inscriptions in live Postgres. | One-time geotag enrichment. | `inscriptions` geo columns |

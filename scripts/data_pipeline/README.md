@@ -2,7 +2,7 @@
 
 Reusable pipeline steps for building and maintaining the OpenEtruscan
 corpus: CIE Vol. I ingestion, findspot geocoding, corpus seeding and
-metadata joins, Pleiades linking, schema migrations, and exports. Each
+metadata joins, Pleiades linking, and exports. Each
 script is a standalone entrypoint; most read `DATABASE_URL` and API keys
 from `.env` at the repo root.
 
@@ -62,11 +62,10 @@ steps and are kept in `../attic/` for reference only.
 | `propose_pleiades_links.py` | Fuzzy-match findspots to the gazetteer → review queue | gazetteer, findspots (db or file) | `data/pleiades_link_queue.jsonl` |
 | `review_pleiades_links.py` | HITL review of the link queue | `pleiades_link_queue.jsonl` | `data/pleiades_mapping.yaml` |
 
-### Migrations, review & exports
+### Review & exports
 
 | Script | Purpose | Inputs | Outputs |
 |---|---|---|---|
-| `migrate_graph.py` | Build `FamilyGraph` and load nodes/edges into Postgres | corpus, `DATABASE_URL` | prosopography tables |
 | `human_review.py` | HITL structural review of curated CIE items into the corpus | `data/cie/curated_pending.json` | corpus rows |
 | `export_json.py` | Export `inscriptions` to frontend static JSON | `DATABASE_URL` | `frontend/public/data/corpus.json` |
 | `export_rdf.py` | Export corpus as RDF/Turtle (Linked Open Data) | corpus db | `data/rdf/corpus.ttl` |

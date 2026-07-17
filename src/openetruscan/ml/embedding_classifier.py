@@ -12,6 +12,7 @@ Usage:
 """
 
 import time
+import warnings
 from typing import Any
 
 from sklearn.neural_network import MLPClassifier
@@ -20,6 +21,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import psycopg2
+
+warnings.warn(
+    "openetruscan.ml.embedding_classifier is deprecated and will be removed in 2.0",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class EmbeddingMLPClassifier:

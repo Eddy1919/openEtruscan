@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Any
 
 import psycopg2
@@ -6,6 +7,12 @@ from psycopg2.extras import DictCursor
 from scipy.spatial.distance import cosine
 
 from openetruscan.core.prosopography import Person, FamilyGraph
+
+warnings.warn(
+    "openetruscan.ml.entity_linker_v2 is deprecated and will be removed in 2.0",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
