@@ -23,6 +23,17 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
   the compose header's "everything else works" claim, and add a
   regression test that imports against a PostGIS-less Postgres. Full
   reproduction in POD-A-corpus.md, escalation 1.
+- [ ] **Same geom bug class in `add_genetic_sample()`.** The
+  podc/s1-geom-degrade fix covers inscriptions only; genetic-sample
+  ingestion still inserts into `geom` unconditionally and fails on a
+  PostGIS-less database. Apply the same schema-aware treatment.
+- [ ] **`_PG_SCHEMA` cannot bootstrap an empty database.** Its
+  `CREATE TABLE inscriptions` references `source_detail` in the
+  `fts_canonical` generated column without defining it, so
+  `_ensure_db()`'s base-schema block raises on a truly empty DB —
+  bootstrap only works via alembic. Either fix the inline schema or
+  delete it and make alembic the only bootstrap path (honest error
+  message included).
 - [ ] **Contract enforcement.** Regenerate `docs/openapi.json` from the
   FastAPI app and add a CI check that fails when the committed spec drifts
   from the code. The spec is the Pod B/C ↔ frontend boundary; a stale spec

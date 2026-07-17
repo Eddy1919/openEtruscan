@@ -16,6 +16,12 @@ test *infrastructure* only.
 - [ ] **Coverage ratchet.** CI already gates at `--cov-fail-under=45`.
   Raise the floor whenever merged tests lift real coverage above it —
   never lower it to make a PR pass.
+- [ ] **Local mypy gate is dead.** With dev extras installed, mypy 2.3.0
+  under `python_version = "3.10"` aborts on numpy's `type`-statement
+  stubs before checking a single project file — locally it gates
+  nothing (CI is unaffected only because its lint job installs no
+  numpy). Fix the config (bump `python_version` or exclude the stub)
+  so local and CI runs check the same thing.
 - [ ] **Security workflow audit.** Verify `security.yml` (gitleaks,
   semgrep) actually blocks merges rather than reporting into the void; add
   dependency auditing (`pip-audit`) to CI.
