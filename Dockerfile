@@ -1,6 +1,7 @@
 # ── Stage 1: Builder ────────────────────────────────────────────────────────
 # Install build-only dependencies (gcc, libpq-dev) here. They never ship.
-FROM python:3.11-slim AS builder
+# Digest pinned for reproducible builds; bump deliberately (docker buildx imagetools inspect python:3.11-slim).
+FROM python:3.11-slim@sha256:db3ff2e1800a8581e2c48a27c3995339d47bdf046da21c7627accd3d51053a93 AS builder
 
 WORKDIR /build
 
@@ -21,7 +22,8 @@ RUN pip install --no-cache-dir --prefix=/install \
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────
 # Clean image: no gcc, no libpq-dev, no pip cache, no source tree.
-FROM python:3.11-slim
+# Same digest-pinned base as the builder stage (see comment there).
+FROM python:3.11-slim@sha256:db3ff2e1800a8581e2c48a27c3995339d47bdf046da21c7627accd3d51053a93
 
 WORKDIR /app
 

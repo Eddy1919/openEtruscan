@@ -1,0 +1,47 @@
+# OpenEtruscan — local development stack.
+#
+# The root docker-compose.yml is the production-VM file (nginx TLS proxy,
+# Fuseki, Cloud SQL over private IP) and has no local database. This file is
+# the dev counterpart: a throwaway Postgres with pgvector plus the API built
+# from the local Dockerfile.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+#   docker compose -f docker-compose.dev.yml exec api alembic upgrade head
+#   python scripts/ops/fetch_data.py
+#   DATABASE_URL=postgresql://openetruscan:openetruscan@localhost:5432/openetruscan \
+#       openetruscan import research/data/openetruscan_clean.csv
+#
+# Honest limitation: pgvector/pgvector:pg16 ships pgvector but NOT PostGIS,
+# so the spatial endpoints are inert in this dev stack. Everything else
+# (search, pgvector similarity, CRUD, migrations) works.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: openetruscan
+      POSTGRES_PASSWORD: openetruscan
+      POSTGRES_DB: openetruscan
+    ports:
+      - "5432:5432"
+    volumes:
+      - dev_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openetruscan -d openetruscan"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://openetruscan:openetruscan@db:5432/openetruscan
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dev_pgdata:
