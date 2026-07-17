@@ -222,7 +222,7 @@ def run(row, which):
     par = parallels_char(row) if which == "char" else parallels_vsa(row)
     if which == "vsa" and not par:
         return ("nostruct", None)
-    plist = "\n".join(f"{i+1}. {p}" for i, p in enumerate(par)) or "(none)"
+    plist = "\n".join(f"{i + 1}. {p}" for i, p in enumerate(par)) or "(none)"
     pred = gemini(USER.format(w=row["width"], m=row["masked"], par=plist))
     return ("ok", pred)
 
@@ -258,10 +258,10 @@ def acc(keys, M):
 
 allk = [r["key"] for r in tasks]
 print(f"\nspan-exact, ALL {len(allk)} tasks:")
-print(f"  char-3gram RAG : {acc(allk,A):.3f}")
+print(f"  char-3gram RAG : {acc(allk, A):.3f}")
 print(
-    f"  VSA-structural : {acc([k for k in allk if B[k][0]=='ok']+[k for k in allk if B[k][0]!='ok'],{**B, **{k:A[k] for k in allk if B[k][0]!='ok'}}):.3f}  (falls back to char where no structure)"
+    f"  VSA-structural : {acc([k for k in allk if B[k][0] == 'ok'] + [k for k in allk if B[k][0] != 'ok'], {**B, **{k: A[k] for k in allk if B[k][0] != 'ok'}}):.3f}  (falls back to char where no structure)"
 )
 print(f"\nspan-exact, STRUCTURED subset ({len(vsa_keys)} tasks where VSA applies):")
-print(f"  char-3gram RAG : {acc(vsa_keys,A):.3f}")
-print(f"  VSA-structural : {acc(vsa_keys,B):.3f}")
+print(f"  char-3gram RAG : {acc(vsa_keys, A):.3f}")
+print(f"  VSA-structural : {acc(vsa_keys, B):.3f}")

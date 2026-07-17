@@ -36,9 +36,9 @@ class TestLanguageRegistry:
         XLM-R-base. The registry's expected_dim has to track that."""
         assert EMBEDDING_DIM == 768
         for code, rec in LANGUAGE_TIERS.items():
-            assert (
-                rec.expected_dim == 768
-            ), f"language {code} has unexpected expected_dim={rec.expected_dim}"
+            assert rec.expected_dim == 768, (
+                f"language {code} has unexpected expected_dim={rec.expected_dim}"
+            )
 
     def test_tier_1_languages_are_alignable(self):
         for code, rec in LANGUAGE_TIERS.items():

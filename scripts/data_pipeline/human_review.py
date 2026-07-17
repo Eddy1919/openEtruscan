@@ -44,7 +44,7 @@ def human_review():
         lon = item.get("auto_lon")
 
         print("\n" + "-" * 60)
-        print(f"📄 RECORD {idx+1}/{len(data)} | ID: \033[96m{cie_id}\033[0m")
+        print(f"📄 RECORD {idx + 1}/{len(data)} | ID: \033[96m{cie_id}\033[0m")
         print(f"📜 TEXT:      \033[93m{text_t}\033[0m")
         print(f"📍 FINDSPOT:  {fs} (Autopath: {lat}, {lon})")
         print(f"📝 NOTES:     {notes[:150]}...")

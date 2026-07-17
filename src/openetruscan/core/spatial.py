@@ -102,6 +102,8 @@ class SpatialCorrelationEngine:
                     )
                 )
 
+        return correlations
+
     def find_samples_near_inscription(
         self, inscription_id: str, radius_m: float = 500.0
     ) -> list[dict[str, Any]]:

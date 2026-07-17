@@ -466,8 +466,10 @@ def report(rows: Iterable[NormalizedRow]) -> None:
         pct = 100.0 * c / n if n else 0.0
         print(f"  {q:14s} {c:>6,d}  ({pct:5.1f}%)")
     print()
-    print(f"rows with canonical_clean != canonical: {n_changed:,} ({100*n_changed/n:.1f}%)")
-    print(f"rows where old_italic_v2 was regenerated: {n_oi_emitted:,} ({100*n_oi_emitted/n:.1f}%)")
+    print(f"rows with canonical_clean != canonical: {n_changed:,} ({100 * n_changed / n:.1f}%)")
+    print(
+        f"rows where old_italic_v2 was regenerated: {n_oi_emitted:,} ({100 * n_oi_emitted / n:.1f}%)"
+    )
     print()
     if residual_chars:
         print("residual chars still failing the contract after mapping:")

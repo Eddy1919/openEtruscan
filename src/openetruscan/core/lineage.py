@@ -64,7 +64,7 @@ class LineageBridge:
             ORDER BY region, c DESC
         """
 
-        stats = {"Northern": {}, "Southern": {}}
+        stats: dict[str, dict[str, int]] = {"Northern": {}, "Southern": {}}
         with self.corpus._conn.cursor() as cur:
             cur.execute(query, (lat_threshold,))
             for row in cur.fetchall():
@@ -102,7 +102,7 @@ class LineageBridge:
             ORDER BY location_type, c DESC
         """
 
-        stats = {"Coastal": {}, "Inland": {}}
+        stats: dict[str, dict[str, int]] = {"Coastal": {}, "Inland": {}}
         # Convert tuple to PostgreSQL array-like list for ILIKE ANY
         patterns = [f"%{s}%" for s in coastal_sites]
 

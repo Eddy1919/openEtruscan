@@ -1032,7 +1032,7 @@ async def restore_lacunae(
         import asyncio
 
         registry = getattr(request.app.state, "lacunae_registry", {})
-        restorer = registry.get(body.model_uri)
+        restorer: LacunaeRestorer | None = registry.get(body.model_uri)
         if restorer is None:
             # First-time model load is also CPU-bound and >5 s; offload it.
             restorer = await asyncio.to_thread(LacunaeRestorer, model_uri=body.model_uri)
@@ -1135,8 +1135,7 @@ def _resolve_embedder(alias: str | None, language: str) -> tuple[str, str]:
     if "*" in per_lang:
         return per_lang["*"]
     raise ValueError(
-        f"Embedder alias {alias!r} has no partition for language {language!r} "
-        f"and no '*' default"
+        f"Embedder alias {alias!r} has no partition for language {language!r} and no '*' default"
     )
 
 

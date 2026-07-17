@@ -40,7 +40,7 @@ class ByT5V2Trainer:
             start = random.randint(1, len(text) - 5)
             length = random.randint(2, 4)
             corrupted = text[:start] + "<extra_id_0>" + text[start + length :]
-            target = f"<extra_id_0> {text[start:start+length]} <extra_id_1>"
+            target = f"<extra_id_0> {text[start : start + length]} <extra_id_1>"
             return {"input": corrupted, "target": target}
 
         # Real-world scholarly lacunae pattern [...], [---], [abc]

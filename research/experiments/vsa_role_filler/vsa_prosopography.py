@@ -100,7 +100,7 @@ for d in recs:
             gens[g].append(d)
 big = sorted(((g, m) for g, m in gens.items() if len(m) >= 3), key=lambda x: -len(x[1]))
 print("=== prosopography ===")
-print(f"distinct gentilicia (>=3 chars): {len([g for g in gens if len(g)>=3])}")
+print(f"distinct gentilicia (>=3 chars): {len([g for g in gens if len(g) >= 3])}")
 print(f"gentes with >=3 attested members: {len(big)}")
 print("top gentes:", [(g, len(m)) for g, m in big[:8]])
 
@@ -153,7 +153,7 @@ for child, parent, g, s in links[:8]:
         continue
     seen.add(key)
     cp = "·".join(child.get("PRAENOMEN", ["?"]))
-    print(f"  {cp} {g} ({'/'.join(child.get('STATUS',[]))}) —child-of→ {s} {g}")
+    print(f"  {cp} {g} ({'/'.join(child.get('STATUS', []))}) —child-of→ {s} {g}")
     print(f"    child : [{child['id']}] {child['canon']!r}")
     print(f"    parent: [{parent['id']}] {parent['canon']!r}")
 
@@ -193,9 +193,9 @@ if len(pairs) >= 20:
     for cp, pp in pairs[k:]:
         pred = fillers[int(np.argmax(fmat @ (fv[cp] * T)))]  # analogy: parent ≈ child ⊗ T
         ok += int(pred == pp)
-    print(f"\n=== VSA relational analogy (child⊗T→parent), held-out {len(pairs)-k} ===")
+    print(f"\n=== VSA relational analogy (child⊗T→parent), held-out {len(pairs) - k} ===")
     print(
-        f"  parent recovered: {ok}/{len(pairs)-k} = {100*ok/(len(pairs)-k):.0f}%  (random ~ {100/len(fillers):.2f}%)"
+        f"  parent recovered: {ok}/{len(pairs) - k} = {100 * ok / (len(pairs) - k):.0f}%  (random ~ {100 / len(fillers):.2f}%)"
     )
 else:
     print(f"\n(only {len(pairs)} clean child-parent name pairs; analogy test skipped)")

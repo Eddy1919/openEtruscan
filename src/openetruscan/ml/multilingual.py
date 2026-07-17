@@ -459,7 +459,7 @@ async def find_cross_language_neighbours(
     tgt = LANGUAGE_TIERS.get(target_lang)
     if src is None or tgt is None:
         raise ValueError(
-            f"Unknown language code(s): " f"source={source_lang!r}, target={target_lang!r}"
+            f"Unknown language code(s): source={source_lang!r}, target={target_lang!r}"
         )
     if not src.alignable or not tgt.alignable:
         unaligned = [f"{lr.code} ({lr.notes})" for lr in (src, tgt) if not lr.alignable]

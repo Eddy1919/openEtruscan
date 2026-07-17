@@ -118,9 +118,9 @@ anc2 = [p for p in parsed if p["anc"] and p["nrole"] >= 2]
 anc3 = [p for p in parsed if p["anc"] and p["nrole"] >= 3]
 print("=== NS1.1-widen coverage ===")
 print(f"corpus 5932 | multi-token {len(multi)}")
-print(f"anchored >=2 roles: {len(anc2)}  ({100*len(anc2)/5932:.1f}% of corpus)   [was ~ n/a]")
+print(f"anchored >=2 roles: {len(anc2)}  ({100 * len(anc2) / 5932:.1f}% of corpus)   [was ~ n/a]")
 print(
-    f"anchored >=3 roles: {len(anc3)}  ({100*len(anc3)/5932:.1f}% of corpus)   [prev parser: 611 = 10.3%]"
+    f"anchored >=3 roles: {len(anc3)}  ({100 * len(anc3) / 5932:.1f}% of corpus)   [prev parser: 611 = 10.3%]"
 )
 
 # --- silver eval set: anchored >=3 (richer templates) ---

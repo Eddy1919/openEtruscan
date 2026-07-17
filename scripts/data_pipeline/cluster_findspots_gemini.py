@@ -95,7 +95,7 @@ Do not return anything else. Output pure JSON. Make sure you return an object fo
 
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i : i + BATCH_SIZE]
-        print(f"Processing batch {i} to {i+len(batch)} / {len(rows)}...")
+        print(f"Processing batch {i} to {i + len(batch)} / {len(rows)}...")
 
         result = call_gemini(api_key, SYSTEM_PROMPT, batch)
         if result:

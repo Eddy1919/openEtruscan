@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     )
 
     # Zotero
-    zotero_group_id: str | None = Field(
+    zotero_group_id: str = Field(
         default="5441857",
         description="Default Zotero group ID for bibliographical references",
     )

@@ -7,6 +7,7 @@ from __future__ import annotations
 import csv
 import json
 from collections.abc import Iterator
+from typing import Any
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1047,7 +1048,7 @@ class Corpus:
         from_parts = ["FROM inscriptions"]
         where_parts = []
         order_parts = []
-        params = []
+        params: list[Any] = []
 
         if query_embedding:
             # Semantic search component
@@ -1194,7 +1195,7 @@ class Corpus:
                 geom = EXCLUDED.geom,
                 updated_at = NOW()
         """
-        vals = (
+        vals: tuple[Any, ...] = (
             sample.id,
             sample.findspot,
             sample.findspot_lat,
@@ -1388,8 +1389,8 @@ class Corpus:
 
             return [row[0] for row in cur.fetchall()]
 
-    def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, dict[str, int]]]:
-        """Compute the network of co-occurring names across toutes les inscriptions."""
+    def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, int]]:
+        """Compute the network of co-occurring names across all inscriptions."""
         from collections import defaultdict
 
         # We process canonical strings and run _extract_names logic directly here
@@ -1398,7 +1399,7 @@ class Corpus:
             rows = cur.fetchall()
 
         name_inscriptions = defaultdict(list)
-        co_occurrences = defaultdict(int)
+        co_occurrences: defaultdict[str, int] = defaultdict(int)
 
         for row in rows:
             insc_id = row[0]
@@ -1491,43 +1492,6 @@ class Corpus:
 # ---------------------------------------------------------------------------
 
 
-def _row_to_inscription(row: sqlite3.Row) -> Inscription:
-    """Convert a SQLite Row to Inscription."""
-    keys = row.keys()
-    return Inscription(
-        id=row["id"],
-        raw_text=row["raw_text"],
-        canonical=row["canonical"],
-        phonetic=row["phonetic"],
-        old_italic=row["old_italic"],
-        findspot=row["findspot"],
-        findspot_lat=row["findspot_lat"],
-        findspot_lon=row["findspot_lon"],
-        date_approx=row["date_approx"],
-        date_uncertainty=row["date_uncertainty"],
-        medium=row["medium"],
-        object_type=row["object_type"],
-        source=row["source"],
-        bibliography=row["bibliography"],
-        notes=row["notes"],
-        language=row["language"] if "language" in keys else "etruscan",
-        classification=(row["classification"] if "classification" in keys else "unknown"),
-        script_system=(row["script_system"] if "script_system" in keys else None),
-        completeness=(row["completeness"] if "completeness" in keys else None),
-        provenance_status=(row["provenance_status"] if "provenance_status" in keys else "verified"),
-        provenance_flags=(
-            []
-            if not ("provenance_flags" in keys and row["provenance_flags"])
-            else row["provenance_flags"].split(",")
-        ),
-        trismegistos_id=(row["trismegistos_id"] if "trismegistos_id" in keys else None),
-        eagle_id=(row["eagle_id"] if "eagle_id" in keys else None),
-        pleiades_id=(row["pleiades_id"] if "pleiades_id" in keys else None),
-        geonames_id=(row["geonames_id"] if "geonames_id" in keys else None),
-        is_codex=(row["is_codex"] if "is_codex" in keys else False),
-    )
-
-
 def _dict_to_inscription(row: dict) -> Inscription:
     """Convert a PostgreSQL dict row to Inscription."""
     return Inscription(
@@ -1548,8 +1512,8 @@ def _dict_to_inscription(row: dict) -> Inscription:
         notes=row.get("notes", ""),
         language=row.get("language", "etruscan"),
         classification=row.get("classification", "unknown"),
-        script_system=row.get("script_system"),
-        completeness=row.get("completeness"),
+        script_system=row.get("script_system") or "old_italic",
+        completeness=row.get("completeness") or "complete",
         provenance_status=row.get("provenance_status", "verified"),
         provenance_flags=(
             [] if not row.get("provenance_flags") else row["provenance_flags"].split(",")
@@ -1585,7 +1549,7 @@ def _safe_int(val: str | None) -> int | None:
 def auto_flag_inscription(
     inscription: Inscription,
     language: str = "etruscan",
-    corpus: BaseCorpus | None = None,
+    corpus: Corpus | None = None,
     similarity_threshold: float = 0.9,
 ) -> list[str]:
     """
@@ -1648,7 +1612,7 @@ def auto_flag_inscription(
 
 def _check_near_duplicates(
     inscription: Inscription,
-    corpus: BaseCorpus,
+    corpus: Corpus,
     threshold: float = 0.9,
 ) -> list[str]:
     """

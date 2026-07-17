@@ -94,7 +94,7 @@ def generate_report():
             # Just print first 20
             f.write(", ".join([f"`{u}`" for u in unparseable[:20]]))
             if len(unparseable) > 20:
-                f.write(f" ... and {len(unparseable)-20} more.")
+                f.write(f" ... and {len(unparseable) - 20} more.")
 
     print(
         f"Report generated at {report_path} with {len(parsed_ranges)} parsable ranges yielding {total_children} records."

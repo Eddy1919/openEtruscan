@@ -121,9 +121,7 @@ def upgrade() -> None:
         )
     )
     op.execute(
-        sa.text(
-            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_id " "ON inscriptions(source_id)"
-        )
+        sa.text("CREATE INDEX IF NOT EXISTS ix_inscriptions_source_id ON inscriptions(source_id)")
     )
 
     # Backfill source_id from the textual `source` field.

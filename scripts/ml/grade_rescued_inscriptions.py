@@ -71,7 +71,7 @@ def call_gemini(prompt, retries=3):
                 return json.loads(text_resp)
         except Exception as e:
             wait_time = (attempt + 1) * 5
-            print(f"\nAPI Attempt {attempt+1} failed: {e}. Retrying in {wait_time}s...")
+            print(f"\nAPI Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...")
             time.sleep(wait_time)
 
     print(f"\nFinal API failure after {retries} retries.")

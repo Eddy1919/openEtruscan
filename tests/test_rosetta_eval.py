@@ -36,9 +36,9 @@ class TestEvalPairs:
         from rosetta_eval_pairs import EVAL_PAIRS, VALID_CATEGORIES
 
         for p in EVAL_PAIRS:
-            assert (
-                p.category in VALID_CATEGORIES
-            ), f"{p.etr}→{p.lat} category={p.category!r} not in {VALID_CATEGORIES}"
+            assert p.category in VALID_CATEGORIES, (
+                f"{p.etr}→{p.lat} category={p.category!r} not in {VALID_CATEGORIES}"
+            )
 
     def test_eval_pairs_filter_by_confidence(self):
         from rosetta_eval_pairs import eval_pairs
@@ -497,9 +497,9 @@ class TestBenchmarkPreset:
         m = re.search(r"Split: test \((\d+) pairs\)", err)
         assert m is not None, f"split line not found in stderr: {err!r}"
         n_pairs = int(m.group(1))
-        assert (
-            20 <= n_pairs <= 24
-        ), f"benchmark used wrong split: got {n_pairs} pairs, expected 20-24 (test)"
+        assert 20 <= n_pairs <= 24, (
+            f"benchmark used wrong split: got {n_pairs} pairs, expected 20-24 (test)"
+        )
 
     def test_benchmark_does_not_warn_when_defaults_match(self, monkeypatch, capsys):
         """No override warning if the user didn't pass conflicting flags."""

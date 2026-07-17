@@ -25,7 +25,7 @@ def process_salvaged():
 
     # Check if we have the targeted rows
     u_cur.execute(
-        f"SELECT * FROM cie_review WHERE cie_id IN ({','.join(['?']*4)})", list(GEO_MAP.keys())
+        f"SELECT * FROM cie_review WHERE cie_id IN ({','.join(['?'] * 4)})", list(GEO_MAP.keys())
     )
     col_names = [description[0] for description in u_cur.description]
     rows = u_cur.fetchall()

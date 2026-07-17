@@ -192,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     matched = sum(1 for sid in silver if sid in corpus)
     print(
-        f"Silver-corpus join: {matched}/{len(silver)} silver ids " f"resolved to corpus text",
+        f"Silver-corpus join: {matched}/{len(silver)} silver ids resolved to corpus text",
         file=sys.stderr,
     )
 

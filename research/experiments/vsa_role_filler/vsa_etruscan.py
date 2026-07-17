@@ -24,7 +24,7 @@ PRAENOMINA = set(
     "θanχvil culni aules velus arnt lart".split()
 )
 STATUS = set(
-    "lautni lautniθa lautn clan sec seχ śeχ puia etera papals nefts " "cliniiaras cliniar".split()
+    "lautni lautniθa lautn clan sec seχ śeχ puia etera papals nefts cliniiaras cliniar".split()
 )
 THEONYM = set(
     "tin tinia uni menrva turan fufluns aritimi hercle herecele nethuns "
@@ -98,7 +98,7 @@ multi = [p for p in parsed if len(p["toks"]) >= 2]
 ge2roles = [p for p in parsed if len(p["roles"]) >= 2]
 print(
     f"corpus: {len(corpus)} | multi-token: {len(multi)} | parsed into >=2 roles: {len(ge2roles)}"
-    f" ({100*len(ge2roles)/len(multi):.0f}% of multi-token)"
+    f" ({100 * len(ge2roles) / len(multi):.0f}% of multi-token)"
 )
 role_counts = Counter(role for p in parsed for role, _ in p["roles"])
 print("role distribution:", dict(role_counts.most_common()))
@@ -157,7 +157,7 @@ def roundtrip(role):
 for role in ["GENTILICIUM", "PATRONYMIC", "STATUS"]:
     ok, tot = roundtrip(role)
     if tot:
-        print(f"round-trip unbind {role:12}: {ok}/{tot} = {100*ok/tot:.1f}%")
+        print(f"round-trip unbind {role:12}: {ok}/{tot} = {100 * ok / tot:.1f}%")
 
 
 # ---------- NS1.3: structural retrieval vs char-3-gram ----------
@@ -215,7 +215,7 @@ for qi in rs:
     ng_struct += [jacc(set(roleseq(q)), set(roleseq(pool[j]))) for j in topn]
     ng_lex += [jacc(tokset(q), tokset(pool[j])) for j in topn]
 
-print("\n=== NS1.3 structural retrieval (top-5, n=%d queries) ===" % len(rs))
+print(f"\n=== NS1.3 structural retrieval (top-5, n={len(rs)} queries) ===")
 print("                     role-structure sim   lexical(word) overlap")
 print(f"VSA structure vec  :      {np.mean(vsa_struct):.3f}                {np.mean(vsa_lex):.3f}")
 print(f"char-3-gram baseline:      {np.mean(ng_struct):.3f}                {np.mean(ng_lex):.3f}")

@@ -58,7 +58,7 @@ class NeuralEntityLinker:
         context_map = self._fetch_embedding_context(all_ins_ids)
 
         # 2. Block by Gentilicium to reduce complexity
-        blocks = {}
+        blocks: dict[str, list[Person]] = {}
         for p in persons:
             gens = p.gentilicium or "Unknown"
             if gens not in blocks:

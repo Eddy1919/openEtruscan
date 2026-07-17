@@ -143,7 +143,7 @@ class EmbeddingMLPClassifier:
             str(cls): round(float(p), 4)
             for cls, p in zip(self.label_encoder.classes_, probs, strict=False)
         }
-        best_label = max(probabilities, key=probabilities.get)
+        best_label = max(probabilities, key=lambda k: probabilities[k])
 
         return {
             "label": best_label,

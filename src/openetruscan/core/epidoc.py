@@ -14,7 +14,12 @@ from __future__ import annotations
 
 import contextlib
 import xml.etree.ElementTree as ET  # nosec B405
+from typing import TYPE_CHECKING
+
 from collections.abc import Iterator
+
+if TYPE_CHECKING:
+    from openetruscan.core.corpus import SearchResults
 
 # Register the TEI namespace to avoid ns0: prefix in output
 ET.register_namespace("", "http://www.tei-c.org/ns/1.0")
@@ -133,7 +138,7 @@ def inscription_to_epidoc(inscription, language: str = "xet") -> str:
 
 
 def results_to_epidoc(
-    results: Iterator | list,
+    results: Iterator | list | SearchResults,
     language: str = "xet",
 ) -> str:
     """

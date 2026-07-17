@@ -365,9 +365,9 @@ async def test_neural_restore_proxies_when_byt5_url_set(
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["predictions"][0]["restored"] == "larθal"
-    assert calls == [
-        "https://byt5.example/restore"
-    ], "expected exactly one upstream call to the proxied service"
+    assert calls == ["https://byt5.example/restore"], (
+        "expected exactly one upstream call to the proxied service"
+    )
 
 
 async def test_admin_endpoint_returns_503_when_token_unconfigured(
