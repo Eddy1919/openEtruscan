@@ -156,13 +156,16 @@ the committed run-log rows.
 |---|---|---|---|---|
 | `gs://openetruscan-rosetta/embeddings/labse-v1.jsonl` | `("sentence-transformers/LaBSE", "v1")` | ett + grc + lat | `Smh4Hgl5+YLKeMR2mPeqhA==` | Default partition; the LaBSE column queries this. |
 | `gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v4.jsonl` | `("xlmr-lora", "v4")` | ett only | `8m44dg5cU7k6T8q4fUNlaA==` | T2.3 v4 ingest; Etruscan half of the v4 column. |
-| `gs://openetruscan-rosetta/embeddings/lat-xlmr-lora-v4.jsonl` | `("xlmr-lora", "v4")` | lat only | *pending — Vertex job `lat-xlmr-v4-20260511-072257`, custom-job id `2423313989711691776`* | Latin half of the v4 column. Re-embeds the `lat` subset of `labse-v1.jsonl` through XLM-R-base (no LoRA — Latin doesn't get one). |
+| `gs://openetruscan-rosetta/embeddings/lat-xlmr-lora-v4.jsonl` | `("xlmr-lora", "v4")` | lat only | `ntYyMujjEQFz41nRzqhzrg==` (recorded 2026-07-17 from the recovered copy — the original bucket died before a hash was logged; Vertex job `lat-xlmr-v4-20260511-072257`, custom-job id `2423313989711691776`) | Latin half of the v4 column. Re-embeds the `lat` subset of `labse-v1.jsonl` through XLM-R-base (no LoRA — Latin doesn't get one). |
 | `gs://openetruscan-rosetta/embeddings/etr-xlmr-lora-v3.jsonl` | `("xlm-roberta-base+etr-lora-v3", "v3")` | ett only | *historical; superseded by v4* | Pre-v4 Etruscan vectors; still resident in the DB for rollback. |
 
-Verify the hash of a freshly-downloaded copy with:
+The table's URIs are the historical provenance; the bucket is gone
+(see the recovery note above). Byte-identical copies live under the
+same filenames in `gs://openetruscan-rosetta-vai/embeddings/`, so
+verify a fresh download against the surviving bucket:
 
 ```bash
-gsutil hash -c gs://openetruscan-rosetta/embeddings/<file>
+gsutil hash -c gs://openetruscan-rosetta-vai/embeddings/<file>
 # Compare the "Hash (md5)" line to the table above.
 ```
 

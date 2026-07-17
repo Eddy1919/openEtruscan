@@ -111,7 +111,8 @@ run_column() {
         > "$out"
 }
 
-# random is purely analytical — no API traffic, runs in <1s
+# random fetches /neural/rosetta/vocab once for |V|, then computes
+# analytically (aborts rather than guess V if the fetch fails)
 run_column "random      " random       "$RANDOM_JSON"
 # levenshtein pulls /neural/rosetta/vocab once, then computes locally
 run_column "levenshtein " levenshtein  "$LEV_JSON"

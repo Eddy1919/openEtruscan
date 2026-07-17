@@ -563,12 +563,18 @@ def evaluate(
     }
     if baseline == "levenshtein":
         # Same reproducibility contract as the random column: the ranking
-        # was computed against this many Latin words. None means every
-        # vocab fetch failed (and n_failed == n_pairs shows it too).
-        try:
-            report["vocab_size"] = len(_get_vocab(api_url, "lat", embedder=embedder))
-        except Exception:
-            report["vocab_size"] = None
+        # was computed against this many Latin words. Prefer the cache the
+        # ranking pass populated; fetch only if the ranking never got a
+        # vocab at all. None means every fetch failed (and then
+        # n_failed == n_pairs shows it too).
+        cached = _VOCAB_CACHE.get(("lat", embedder))
+        if cached is not None:
+            report["vocab_size"] = len(cached)
+        else:
+            try:
+                report["vocab_size"] = len(_get_vocab(api_url, "lat", embedder=embedder))
+            except Exception:
+                report["vocab_size"] = None
     return report
 
 
