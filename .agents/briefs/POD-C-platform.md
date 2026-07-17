@@ -31,7 +31,12 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
   buttons or restore Tab semantics; (2) the dossier "Copy permanent link"
   button gives no copied feedback. (The PR #11 normalizer-hydration nit
   was retracted — React ignores input `value` mismatches at hydration,
-  and the eslint `set-state-in-effect` rule rejects the "fix".)
+  and the eslint `set-state-in-effect` rule rejects the "fix".) Known
+  limitation, not queued: missing inscription ids return HTTP 200 +
+  `noindex` + 404 UI, not a 404 status — Next ≥15.2 streams metadata, so
+  `notFound()` cannot reach the status line on this route; a real 404
+  needs per-route streaming off or a global `htmlLimitedBots` widening,
+  both worse trades than the `noindex` Next already emits.
 - [ ] **Same geom bug class in `add_genetic_sample()`.** The
   podc/s1-geom-degrade fix covers inscriptions only; genetic-sample
   ingestion still inserts into `geom` unconditionally and fails on a
