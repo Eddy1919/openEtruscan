@@ -84,14 +84,10 @@ def upgrade() -> None:
     # 1. embedder_revision: NULLABLE → NOT NULL. Phase-1 audit confirmed
     #    zero existing nulls, so this is a definitional change with no
     #    data motion.
-    op.execute(
-        "ALTER TABLE language_word_embeddings " "ALTER COLUMN embedder_revision SET NOT NULL"
-    )
+    op.execute("ALTER TABLE language_word_embeddings ALTER COLUMN embedder_revision SET NOT NULL")
 
     # 2. Drop the existing 2-column PK.
-    op.execute(
-        "ALTER TABLE language_word_embeddings " "DROP CONSTRAINT language_word_embeddings_pkey"
-    )
+    op.execute("ALTER TABLE language_word_embeddings DROP CONSTRAINT language_word_embeddings_pkey")
 
     # 3. Add the 4-column PK. PostgreSQL builds the supporting UNIQUE
     #    index in-line; no separate CREATE INDEX needed for the PK itself.
@@ -119,9 +115,7 @@ def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS ix_lwe_lang_embedder_revision")
 
     # Drop new PK first so the next ADD PRIMARY KEY can claim the name.
-    op.execute(
-        "ALTER TABLE language_word_embeddings " "DROP CONSTRAINT language_word_embeddings_pkey"
-    )
+    op.execute("ALTER TABLE language_word_embeddings DROP CONSTRAINT language_word_embeddings_pkey")
 
     # Without this DELETE, ADD PRIMARY KEY (language, word) fails on
     # duplicate keys whenever multiple embedders have a row for the same
@@ -139,6 +133,4 @@ def downgrade() -> None:
         "PRIMARY KEY (language, word)"
     )
 
-    op.execute(
-        "ALTER TABLE language_word_embeddings " "ALTER COLUMN embedder_revision DROP NOT NULL"
-    )
+    op.execute("ALTER TABLE language_word_embeddings ALTER COLUMN embedder_revision DROP NOT NULL")

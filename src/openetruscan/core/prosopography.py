@@ -79,7 +79,7 @@ class NameFormula:
 def parse_name(
     text: str,
     language: str = "etruscan",
-    adapter: openetruscan.adapter.LanguageAdapter | None = None,
+    adapter: LanguageAdapter | None = None,
 ) -> NameFormula:
     """
     Parse a name string into a structured NameFormula.
@@ -661,11 +661,11 @@ class FamilyGraph:
                         f"father.gender = 'male'"
                     )
                     if person.gentilicium:
-                        clan = person.gentilicium.replace("'", "").replace('"', "")
+                        clan_name = person.gentilicium.replace("'", "").replace('"', "")
                         queries.append(
                             f"MATCH (father:Person "
                             f"{{id: '{parent_id}'}}), "
-                            f"(c:Clan {{name: '{clan}'}}) "
+                            f"(c:Clan {{name: '{clan_name}'}}) "
                             f"MERGE (father)-[:BELONGS_TO]->(c)"
                         )
                     queries.append(

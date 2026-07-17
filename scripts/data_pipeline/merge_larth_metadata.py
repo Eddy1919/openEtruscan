@@ -31,7 +31,7 @@ import urllib.request
 from pathlib import Path
 
 LARTH_URL = (
-    "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/" "main/Data/Etruscan.csv"
+    "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/main/Data/Etruscan.csv"
 )
 
 OUTPUT_COLS = [
@@ -109,12 +109,12 @@ def main() -> int:
     p.add_argument(
         "--normalized",
         type=Path,
-        default=Path("/home/edoardo/Documents/openEtruscan/" "openetruscan_normalized.csv"),
+        default=Path("/home/edoardo/Documents/openEtruscan/openetruscan_normalized.csv"),
     )
     p.add_argument(
         "--output",
         type=Path,
-        default=Path("/home/edoardo/Documents/openEtruscan/" "openetruscan_clean.csv"),
+        default=Path("/home/edoardo/Documents/openEtruscan/openetruscan_clean.csv"),
     )
     args = p.parse_args()
 
@@ -127,19 +127,19 @@ def main() -> int:
     t = c["total"]
     print(f"wrote {t:,} rows to {args.output}", file=sys.stderr)
     print(
-        f"  ID found in Larth        : {c['id_in_larth']:,}  ({100*c['id_in_larth']/t:.1f}%)",
+        f"  ID found in Larth        : {c['id_in_larth']:,}  ({100 * c['id_in_larth'] / t:.1f}%)",
         file=sys.stderr,
     )
     print(
-        f"  CIE-only (no Larth row)  : {c['cie_only']:,}  ({100*c['cie_only']/t:.1f}%)",
+        f"  CIE-only (no Larth row)  : {c['cie_only']:,}  ({100 * c['cie_only'] / t:.1f}%)",
         file=sys.stderr,
     )
     print(
-        f"  got translation column   : {c['got_translation']:,}  ({100*c['got_translation']/t:.1f}%)",
+        f"  got translation column   : {c['got_translation']:,}  ({100 * c['got_translation'] / t:.1f}%)",
         file=sys.stderr,
     )
     print(
-        f"  got year_from / year_to  : {c['got_year']:,}  ({100*c['got_year']/t:.1f}%)",
+        f"  got year_from / year_to  : {c['got_year']:,}  ({100 * c['got_year'] / t:.1f}%)",
         file=sys.stderr,
     )
     return 0

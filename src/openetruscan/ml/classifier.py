@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from openetruscan.core.normalizer import normalize
 
@@ -230,8 +231,8 @@ class InscriptionClassifier:
 
     def __init__(self) -> None:
         """Initialize the classifier with optional scikit-learn models."""
-        self._vectorizer = None
-        self._model = None
+        self._vectorizer: Any = None
+        self._model: Any = None
         self._classes: list[str] = []
         self._trained = False
 

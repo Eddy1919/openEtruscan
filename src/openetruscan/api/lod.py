@@ -12,6 +12,7 @@ See: https://pelagios.org, https://pleiades.stoa.org,
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -142,7 +143,7 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
     eagle_uri = get_eagle_uri(inscription.id)
     period = period_for_year(getattr(inscription, "date_approx", None))
 
-    annotation = {
+    annotation: dict[str, Any] = {
         "@context": [
             WEB_ANNO_CONTEXT,
             {"dcterms": DCTERMS_CONTEXT, "void": VOID_CONTEXT},
@@ -554,7 +555,7 @@ def reconcile_and_cache(
     # Save Wikidata results alongside Pleiades
     if wd_new > 0:
         wikidata_path = Path(__file__).parent.parent.parent / "data" / "wikidata_mapping.yaml"
-        existing_wd = {}
+        existing_wd: dict[str, Any] = {}
         if wikidata_path.exists():
             with open(wikidata_path, encoding="utf-8") as f:
                 existing_wd = yaml.safe_load(f) or {}

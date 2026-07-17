@@ -51,7 +51,7 @@ except ImportError:
 
         Module = _DummyModule
 
-    nn = _DummyNN()  # type: ignore
+    nn = _DummyNN()
 
 
 def _require_torch() -> None:
@@ -590,13 +590,14 @@ class NeuralClassifier:
         if verbose:
             print(f"  Training samples: {len(x_train)}")
             print(f"  Validation samples: {len(x_val)}")
-            label_counts = {}
+            label_counts: dict[str, int] = {}
             for lbl in labels:
                 label_counts[lbl] = label_counts.get(lbl, 0) + 1
             print(f"  Label distribution: {label_counts}")
 
         # Build vocabulary
-        self.vocab = CharVocab.build(texts)
+        vocab = CharVocab.build(texts)
+        self.vocab = vocab
 
         # Build label→index mapping
         present_labels = sorted(set(labels))
@@ -607,7 +608,7 @@ class NeuralClassifier:
         def _encode_batch(txts: list[str], lbls: list[str], ctxs: list[list[float]]):
             """Encode a batch of texts, labels, and context into torch Tensors."""
             x = torch.tensor(
-                [self.vocab.encode(t, self.max_len) for t in txts],
+                [vocab.encode(t, self.max_len) for t in txts],
                 dtype=torch.long,
             )
             y = torch.tensor(
@@ -927,7 +928,7 @@ class LacunaeRestorer:
 
         if model_uri not in _LACUNA_MODEL_PATHS:
             raise ValueError(
-                f"Unknown lacunae model_uri {model_uri!r}. " f"Known: {list(_LACUNA_MODEL_PATHS)}"
+                f"Unknown lacunae model_uri {model_uri!r}. Known: {list(_LACUNA_MODEL_PATHS)}"
             )
         head_dir, adapter_dir = _LACUNA_MODEL_PATHS[model_uri]
 

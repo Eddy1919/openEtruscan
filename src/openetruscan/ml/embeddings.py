@@ -181,8 +181,7 @@ class XLMREmbedder(Embedder):
             from transformers import AutoModel, AutoTokenizer
         except ImportError as e:
             raise ImportError(
-                "XLMREmbedder requires the [transformers] extra: "
-                "pip install -e '.[transformers]'"
+                "XLMREmbedder requires the [transformers] extra: pip install -e '.[transformers]'"
             ) from e
 
         self._torch = torch
@@ -210,7 +209,7 @@ class XLMREmbedder(Embedder):
             from peft import PeftModel
         except ImportError as e:
             raise ImportError(
-                "LoRA adapters require `peft`. Install with: " "pip install -e '.[transformers]'"
+                "LoRA adapters require `peft`. Install with: pip install -e '.[transformers]'"
             ) from e
         logger.info("Attaching LoRA adapter from %s", adapter_path)
         self._model = PeftModel.from_pretrained(self._model, adapter_path)

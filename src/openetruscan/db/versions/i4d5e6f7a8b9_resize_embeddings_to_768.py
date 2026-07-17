@@ -58,8 +58,7 @@ def upgrade() -> None:
         """
     )
     op.execute(
-        "CREATE INDEX ix_language_word_embeddings_language "
-        "ON language_word_embeddings (language)"
+        "CREATE INDEX ix_language_word_embeddings_language ON language_word_embeddings (language)"
     )
     op.execute(
         "CREATE INDEX ix_language_word_embeddings_vector_hnsw "
@@ -88,8 +87,7 @@ def downgrade() -> None:
         """
     )
     op.execute(
-        "CREATE INDEX ix_language_word_embeddings_language "
-        "ON language_word_embeddings (language)"
+        "CREATE INDEX ix_language_word_embeddings_language ON language_word_embeddings (language)"
     )
     op.execute(
         "CREATE INDEX ix_language_word_embeddings_vector_hnsw "

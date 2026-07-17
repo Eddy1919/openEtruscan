@@ -170,7 +170,7 @@ def call(mid, up, temp):
 def run_rag(mid, temp, tag):
     def one(row):
         pars = retrieve(row, k=8)
-        parallels = "\n".join(f"{i+1}. {p}" for i, p in enumerate(pars)) or "(none found)"
+        parallels = "\n".join(f"{i + 1}. {p}" for i, p in enumerate(pars)) or "(none found)"
         up = USER_TEMPLATE.format(
             width=row["width"],
             masked_text=row["masked"],

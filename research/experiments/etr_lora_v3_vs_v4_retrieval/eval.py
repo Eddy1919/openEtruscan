@@ -81,7 +81,7 @@ def main():
     print("=" * 80)
 
     for i, q in enumerate(queries):
-        print(f"\n[Query {i+1}] ID: {q['id']} | Text: {q['canonical_clean']}")
+        print(f"\n[Query {i + 1}] ID: {q['id']} | Text: {q['canonical_clean']}")
 
         # v3 NN
         v3_dists = cdist([v3_query_vecs[i]], v3_corpus_vecs, metric="cosine")[0]

@@ -33,7 +33,7 @@ def retrieve_noleak(row, k=8):
 def run(mid):
     def one(row):
         pars, _ = retrieve_noleak(row, k=8)
-        parallels = "\n".join(f"{i+1}. {p}" for i, p in enumerate(pars)) or "(none found)"
+        parallels = "\n".join(f"{i + 1}. {p}" for i, p in enumerate(pars)) or "(none found)"
         up = R.USER_TEMPLATE.format(
             width=row["width"],
             masked_text=row["masked"],

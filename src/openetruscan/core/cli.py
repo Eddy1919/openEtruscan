@@ -501,7 +501,7 @@ def train_neural(
 
         clf = NeuralClassifier(arch=a)
         metrics = clf.train_from_corpus(
-            db_path=db,
+            db_url=db,
             epochs=epochs,
             batch_size=batch_size,
             lr=lr,

@@ -86,7 +86,7 @@ class KinshipReconciler:
 
         return bio_links
 
-    def audit_kinship(self, tomb_id: str) -> list[dict[str, Any]]:
+    def audit_kinship(self, tomb_id: str) -> dict[str, Any]:
         """
         Kinship Auditor: Flags discrepancies between biological data and epigraphic claims.
         Detects potential adoptions, social kinship, or maternal lineage focus.

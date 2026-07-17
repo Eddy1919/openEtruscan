@@ -115,7 +115,7 @@ def _print_metrics(name: str, metrics: dict) -> tuple[float, float]:
     print("\nAccuracy by Position:")
     for cat, m in metrics["by_pos"].items():
         if m["total"]:
-            print(f"  {cat:6s}: {m['top1']/m['total']:.1%} ({m['total']} samples)")
+            print(f"  {cat:6s}: {m['top1'] / m['total']:.1%} ({m['total']} samples)")
     print("\nTop Errors (Target -> Predicted):")
     for (t, p), count in metrics["confusion"].most_common(10):
         print(f"  {t} -> {p}: {count}")

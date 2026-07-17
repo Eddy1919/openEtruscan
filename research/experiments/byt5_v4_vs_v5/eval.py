@@ -104,9 +104,9 @@ def main():
         ("v4", "data/models/byt5-v4"),
         ("v5", "data/models/byt5-v5"),
     ]:
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Loading ByT5 {version} — merge_and_unload from {adapter_path}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         model = load_merged_model(adapter_path)
 
         exact_matches = 0
@@ -147,9 +147,9 @@ def main():
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
 
     # Summary delta
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("DELTA (v5 − v4)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     delta_em = all_results["v5"]["em"] - all_results["v4"]["em"]
     delta_cer = all_results["v5"]["cer"] - all_results["v4"]["cer"]
     print(f"  ΔEM  = {delta_em:+.1%}")

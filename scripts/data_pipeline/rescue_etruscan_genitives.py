@@ -64,7 +64,7 @@ if to_rescue:
     conn_et.commit()
 
     cur_lat.execute(
-        f"DELETE FROM cie_review WHERE rowid IN ({','.join('?'*len(to_delete_rowids))})",
+        f"DELETE FROM cie_review WHERE rowid IN ({','.join('?' * len(to_delete_rowids))})",
         to_delete_rowids,
     )
     conn_lat.commit()
