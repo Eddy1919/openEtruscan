@@ -263,19 +263,28 @@ async def restore(req: RestoreRequest):
             output_scores=True,
         )
 
+    # Real per-beam confidences. `sequences_scores` holds the length-normalised
+    # log-probability of each returned beam (populated because num_beams > 1
+    # and return_dict_in_generate=True). exp() maps them to probabilities,
+    # then we normalise across the returned beams so the scores sum to 1 —
+    # matching the probabilistic contract in the module docstring instead of
+    # the old fabricated 1/(i+1) ranking.
+    beam_probs = torch.exp(outputs.sequences_scores)
+    beam_probs = (beam_probs / beam_probs.sum()).tolist()
+
     predictions = []
-    for i, seq in enumerate(outputs.sequences):
-        decoded = _tokenizer.decode(seq, skip_special_tokens=True)
+    for seq, prob in zip(outputs.sequences, beam_probs, strict=False):
+        decoded = _tokenizer.decode(seq, skip_special_tokens=True).strip()
         # Reconstruct the full text
         # Match the SAME regex used to mask the input so Leiden dotted-bracket
         # markers ([.], [..], [...]) are substituted on the way out, not just
         # [---]. The previous .replace("[---]", ...) silently no-op'd on the
         # variable-dot notation the frontend actually sends, so users got
         # back their original text with the lacuna markers intact.
-        restored = re.sub(r"\[(\.+|\-+)\]", decoded.strip(), req.text)
-        # Use sequence score as confidence proxy
-        score = 1.0 / (i + 1)  # fallback ranking score
-        predictions.append({"restored": restored, "score": round(score, 4)})
+        # A callable replacement keeps backslashes in the decoded text literal;
+        # as a string replacement, re.sub would interpret them as group refs.
+        restored = re.sub(r"\[(\.+|\-+)\]", lambda _m, d=decoded: d, req.text)
+        predictions.append({"restored": restored, "score": round(prob, 4)})
 
     inference_ms = (time.time() - t0) * 1000
 

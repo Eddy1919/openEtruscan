@@ -5,6 +5,9 @@ import pytest
 from openetruscan.core.corpus import Corpus, Inscription
 from openetruscan.core.prosopography import (
     FamilyGraph,
+    NameComponent,
+    NameFormula,
+    Person,
     fuzzy_match,
     levenshtein_distance,
     parse_name,
@@ -269,3 +272,46 @@ class TestFamilyGraph:
         # Both spurinas and lecnes have 2 members each
         assert clans[0].member_count() >= clans[-1].member_count()
         corpus.close()
+
+
+def _person_with_clan(person_id: str, canonical: str, clan: str) -> Person:
+    """Build a Person carrying an arbitrary (possibly hostile) clan name."""
+    formula = NameFormula(
+        raw=canonical,
+        canonical=canonical,
+        components=[NameComponent(form=clan, type="gentilicium")],
+    )
+    return Person(id=person_id, name_formula=formula)
+
+
+class TestGraphExportEscaping:
+    """Names come from raw inscriptions; exports must escape them, not trust them."""
+
+    def test_graphml_with_ampersand_and_angle_bracket_parses(self):
+        import xml.etree.ElementTree as ET
+
+        graph = FamilyGraph()
+        graph.add_person(_person_with_clan("P00001", 'larθ "A & <B>"', "velcha & <sons>"))
+
+        graphml = graph.export("graphml")
+        root = ET.fromstring(graphml)  # raises ParseError on unescaped markup
+
+        ns = "{http://graphml.graphdrawing.org/xmlns}"
+        labels = [d.text for d in root.iter(f"{ns}data")]
+        assert 'larθ "A & <B>"' in labels
+        assert "velcha & <sons>" in labels
+
+        # The person→clan edge must reference the escaped clan node id.
+        node_ids = {n.get("id") for n in root.iter(f"{ns}node")}
+        edges = list(root.iter(f"{ns}edge"))
+        assert len(edges) == 1
+        assert edges[0].get("target") in node_ids
+
+    def test_cypher_escapes_backslashes_and_quotes(self):
+        graph = FamilyGraph()
+        graph.add_person(_person_with_clan("P00001", "lar'θ \\ spurinas", "spu'ri\\nas"))
+
+        cypher = graph.export("neo4j")
+        # Backslash escaped first, then the quote: ' → \' and \ → \\
+        assert "MERGE (c:Clan {name: 'spu\\'ri\\\\nas'})" in cypher
+        assert "p.name = 'lar\\'θ \\\\ spurinas'" in cypher

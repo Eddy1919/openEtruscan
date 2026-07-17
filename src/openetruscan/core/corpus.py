@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from collections.abc import Iterator
-from typing import Any
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 DB_PATH = Path(__file__).parent / "data" / "corpus.db"
 
@@ -342,7 +344,7 @@ CREATE TABLE IF NOT EXISTS inscriptions (
     classification TEXT NOT NULL DEFAULT 'unknown',
     script_system TEXT NOT NULL DEFAULT 'old_italic',
     completeness TEXT NOT NULL DEFAULT 'complete',
-    provenance_status TEXT NOT NULL DEFAULT 'verified',
+    provenance_status TEXT NOT NULL DEFAULT 'unknown',
     provenance_flags TEXT NOT NULL DEFAULT '',
     trismegistos_id TEXT,
     eagle_id TEXT,
@@ -603,12 +605,21 @@ class Corpus:
         return inscription
 
     def _inscription_values(self, inscription: Inscription):
-        """Map an Inscription object's fields to a tuple for database insertion/updates."""
-        return (
-            tuple(getattr(inscription, col) for col in _COLUMNS if col != "id") + (inscription.id,)
-            if "id" not in _COLUMNS
-            else tuple(getattr(inscription, col) for col in _COLUMNS)
-        )
+        """Map an Inscription object's fields to a tuple for database insertion/updates.
+
+        ``provenance_flags`` is a ``list[str]`` on the dataclass but a TEXT
+        column in the DDL; it is serialized comma-joined here to mirror the
+        ``.split(",")`` in ``_dict_to_inscription``. (Passing the raw list let
+        psycopg2 adapt an empty list to the literal string ``'{}'`` and made
+        non-empty lists fail outright as array-into-text.)
+        """
+        values = []
+        for col in _COLUMNS:
+            val = getattr(inscription, col)
+            if col == "provenance_flags" and isinstance(val, list):
+                val = ",".join(val)
+            values.append(val)
+        return tuple(values)
 
     @classmethod
     def load(cls, db_path=None) -> Corpus:
@@ -770,6 +781,7 @@ class Corpus:
         inscriptions: list[Inscription],
         language: str = "etruscan",
         batch_size: int = 500,
+        flag_near_duplicates: bool = False,
     ) -> int:
         """
         Bulk-insert inscriptions using psycopg2.extras.execute_values.
@@ -777,6 +789,12 @@ class Corpus:
         This is 10-50x faster than calling add() in a loop because it:
         1. Sends all rows in a single SQL statement per batch
         2. Only commits once at the end (one network round-trip)
+
+        With ``flag_near_duplicates=True`` the TF-IDF near-duplicate scan runs
+        ONCE for the whole batch (single vectorizer fit against the existing
+        corpus) rather than per row, and any hits are appended to each row's
+        ``provenance_flags`` before insert. The scan respects the corpus-size
+        gate documented on ``_check_near_duplicates``.
         """
         import psycopg2.extras
 
@@ -797,12 +815,22 @@ class Corpus:
             f"geom = EXCLUDED.geom, updated_at = NOW()"
         )
 
+        # Normalization must run before the near-duplicate scan so `canonical`
+        # is populated for every row.
+        prepared = [self._prepare_inscription(insc, language) for insc in inscriptions]
+
+        if flag_near_duplicates:
+            flags_by_id = _check_near_duplicates_batch(prepared, self)
+            for insc in prepared:
+                extra = flags_by_id.get(insc.id)
+                if extra:
+                    insc.provenance_flags = list(insc.provenance_flags) + extra
+
         total = 0
-        for start in range(0, len(inscriptions), batch_size):
-            chunk = inscriptions[start : start + batch_size]
+        for start in range(0, len(prepared), batch_size):
+            chunk = prepared[start : start + batch_size]
             rows = []
             for insc in chunk:
-                insc = self._prepare_inscription(insc, language)
                 vals = list(self._inscription_values(insc))
                 # Append lon, lat four times for the CASE WHEN template
                 lon = insc.findspot_lon
@@ -1048,6 +1076,7 @@ class Corpus:
         from_parts = ["FROM inscriptions"]
         where_parts = []
         order_parts = []
+        # Holds str placeholders plus the trailing int LIMIT.
         params: list[Any] = []
 
         if query_embedding:
@@ -1195,7 +1224,7 @@ class Corpus:
                 geom = EXCLUDED.geom,
                 updated_at = NOW()
         """
-        vals: tuple[Any, ...] = (
+        vals_list: list[Any] = [
             sample.id,
             sample.findspot,
             sample.findspot_lat,
@@ -1211,17 +1240,16 @@ class Corpus:
             sample.ancestry_components,
             sample.source,
             sample.notes,
-            # for MakePoint: lon, lat
-            sample.findspot_lon if sample.findspot_lon is not None else 0.0,
-            sample.findspot_lat if sample.findspot_lat is not None else 0.0,
-        )
+        ]
 
         if sample.findspot_lon is None or sample.findspot_lat is None:
             sql = sql.replace("ST_SetSRID(ST_MakePoint(%s, %s), 4326)", "NULL")
-            vals = vals[:-2]
+        else:
+            # for MakePoint: lon, lat
+            vals_list.extend([sample.findspot_lon, sample.findspot_lat])
 
         with self._conn.cursor() as cur:
-            cur.execute(sql, vals)
+            cur.execute(sql, tuple(vals_list))
         self._conn.commit()
 
     def find_genetic_matches(
@@ -1273,14 +1301,53 @@ class Corpus:
             cur.execute("SELECT COUNT(*) FROM inscriptions")
             return cur.fetchone()[0]
 
+    def add_image(
+        self,
+        image_id: str,
+        inscription_id: str,
+        filename: str,
+        mime_type: str = "image/jpeg",
+        description: str = "",
+        file_hash: str = "",
+    ) -> None:
+        """Link a stored image file to an inscription in the images table.
+
+        The referenced inscription must already exist (FK constraint). The
+        idempotent IMAGES_PG_SCHEMA DDL is re-issued first because callers
+        may connect with ``init_schema=False`` against a database
+        bootstrapped before the images table existed.
+        """
+        from openetruscan.core.artifacts import IMAGES_PG_SCHEMA
+
+        with self._conn.cursor() as cur:
+            cur.execute(IMAGES_PG_SCHEMA)
+            cur.execute(
+                """
+                INSERT INTO images (id, inscription_id, filename, mime_type, description, file_hash)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE SET
+                    filename = EXCLUDED.filename,
+                    mime_type = EXCLUDED.mime_type,
+                    description = EXCLUDED.description,
+                    file_hash = EXCLUDED.file_hash
+                """,
+                (image_id, inscription_id, filename, mime_type, description, file_hash),
+            )
+        self._conn.commit()
+
     def import_csv(
         self,
         csv_path: str | Path,
         language: str = "etruscan",
     ) -> int:
-        """Bulk import from CSV."""
+        """Bulk import from CSV.
+
+        Rows are collected and inserted through ``add_batch`` — one
+        execute_values statement per 500 rows and a single commit — instead of
+        one ``add()`` round-trip (and commit) per row.
+        """
         path = Path(csv_path)
-        imported = 0
+        inscriptions: list[Inscription] = []
         with path.open(encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -1290,26 +1357,28 @@ class Corpus:
                 ).strip()
                 if not text:
                     continue
-                inscription = Inscription(
-                    id=row.get("id", f"import_{imported}"),
-                    raw_text=text,
-                    findspot=row.get("findspot", ""),
-                    findspot_lat=_safe_float(row.get("findspot_lat")),
-                    findspot_lon=_safe_float(row.get("findspot_lon")),
-                    date_approx=_safe_int(row.get("date_approx")),
-                    findspot_uncertainty_m=_safe_int(row.get("findspot_uncertainty_m")),
-                    date_uncertainty=_safe_int(row.get("date_uncertainty")),
-                    medium=row.get("medium", ""),
-                    object_type=row.get("object_type", ""),
-                    source=row.get("source", ""),
-                    bibliography=row.get("bibliography", ""),
-                    notes=row.get("notes", ""),
-                    language=row.get("language", language),
-                    classification=row.get("classification", "unknown"),
+                inscriptions.append(
+                    Inscription(
+                        id=row.get("id", f"import_{len(inscriptions)}"),
+                        raw_text=text,
+                        findspot=row.get("findspot", ""),
+                        findspot_lat=_safe_float(row.get("findspot_lat")),
+                        findspot_lon=_safe_float(row.get("findspot_lon")),
+                        date_approx=_safe_int(row.get("date_approx")),
+                        findspot_uncertainty_m=_safe_int(row.get("findspot_uncertainty_m")),
+                        date_uncertainty=_safe_int(row.get("date_uncertainty")),
+                        medium=row.get("medium", ""),
+                        object_type=row.get("object_type", ""),
+                        source=row.get("source", ""),
+                        bibliography=row.get("bibliography", ""),
+                        notes=row.get("notes", ""),
+                        language=row.get("language", language),
+                        classification=row.get("classification", "unknown"),
+                    )
                 )
-                self.add(inscription, language=language)
-                imported += 1
-        return imported
+        if not inscriptions:
+            return 0
+        return self.add_batch(inscriptions, language=language)
 
     def create_readonly_user(self, password: str) -> None:
         """
@@ -1391,14 +1460,13 @@ class Corpus:
 
     def get_names_network(self) -> tuple[dict[str, list[str]], dict[str, int]]:
         """Compute the network of co-occurring names across all inscriptions."""
-        from collections import defaultdict
-
         # We process canonical strings and run _extract_names logic directly here
         with self._conn.cursor() as cur:
             cur.execute("SELECT id, canonical FROM inscriptions WHERE canonical IS NOT NULL")
             rows = cur.fetchall()
 
-        name_inscriptions = defaultdict(list)
+        name_inscriptions: defaultdict[str, list[str]] = defaultdict(list)
+        # Keyed by the sorted name pair "a|b" so (a, b) and (b, a) share a count.
         co_occurrences: defaultdict[str, int] = defaultdict(int)
 
         for row in rows:
@@ -1512,6 +1580,10 @@ def _dict_to_inscription(row: dict) -> Inscription:
         notes=row.get("notes", ""),
         language=row.get("language", "etruscan"),
         classification=row.get("classification", "unknown"),
+        # NULL-safe: the DDL declares both NOT NULL, but rows read through
+        # views or partial SELECTs may omit them. Fall back to the
+        # Inscription dataclass defaults rather than passing None into a
+        # str-typed field.
         script_system=row.get("script_system") or "old_italic",
         completeness=row.get("completeness") or "complete",
         provenance_status=row.get("provenance_status", "verified"),
@@ -1610,10 +1682,28 @@ def auto_flag_inscription(
     return flags
 
 
+# Above this many stored inscriptions the near-duplicate check is skipped:
+# every call fetches the whole corpus and refits a TF-IDF vectorizer, so
+# flagging n inserts against an m-row corpus costs O(n·m) — quadratic during
+# a bulk import. Overridable via the OPENETRUSCAN_NEAR_DUP_MAX_CORPUS env var
+# or the max_corpus_size parameter.
+_NEAR_DUP_MAX_CORPUS_DEFAULT = 5000
+
+
+def _near_dup_corpus_limit() -> int:
+    """Resolve the near-duplicate corpus-size gate from the environment."""
+    raw = os.environ.get("OPENETRUSCAN_NEAR_DUP_MAX_CORPUS", "")
+    try:
+        return int(raw)
+    except ValueError:
+        return _NEAR_DUP_MAX_CORPUS_DEFAULT
+
+
 def _check_near_duplicates(
     inscription: Inscription,
     corpus: Corpus,
     threshold: float = 0.9,
+    max_corpus_size: int | None = None,
 ) -> list[str]:
     """
     Check for near-duplicate texts using TF-IDF cosine similarity.
@@ -1621,25 +1711,61 @@ def _check_near_duplicates(
     Uses character n-gram TF-IDF (2-4 grams) to detect texts that are
     suspiciously similar, which may indicate OCR duplicates or transcription
     errors from the same source.
+
+    The check is skipped when the corpus exceeds ``max_corpus_size`` rows
+    (default from OPENETRUSCAN_NEAR_DUP_MAX_CORPUS, falling back to
+    ``_NEAR_DUP_MAX_CORPUS_DEFAULT``): it refits a corpus-wide vectorizer per
+    call, which is O(n²) across a bulk import.
     """
-    flags: list[str] = []
+    by_id = _check_near_duplicates_batch(
+        [inscription], corpus, threshold=threshold, max_corpus_size=max_corpus_size
+    )
+    return by_id.get(inscription.id, [])
+
+
+def _check_near_duplicates_batch(
+    inscriptions: list[Inscription],
+    corpus: Corpus,
+    threshold: float = 0.9,
+    max_corpus_size: int | None = None,
+) -> dict[str, list[str]]:
+    """
+    Near-duplicate scan for a whole batch with a single TF-IDF fit.
+
+    Fetches the existing corpus once, fits the vectorizer once, and transforms
+    every batch text against it — instead of refitting per inserted row.
+
+    Returns a mapping of inscription id → flag strings (ids without
+    near-duplicates are omitted).
+    """
+    empty: dict[str, list[str]] = {}
+    if not inscriptions:
+        return empty
 
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
     except ImportError:
-        return flags  # sklearn not installed — skip check
+        return empty  # sklearn not installed — skip check
 
-    # Fetch existing canonical texts
+    # Size gate: see _check_near_duplicates docstring for the O(n²) rationale.
+    limit = max_corpus_size if max_corpus_size is not None else _near_dup_corpus_limit()
+    if corpus.count() > limit:
+        return empty
+
+    batch_ids = {insc.id for insc in inscriptions}
+    candidates = [insc for insc in inscriptions if insc.canonical]
+    if not candidates:
+        return empty
+
+    # Fetch existing canonical texts once for the whole batch
     results = corpus.search(limit=999999)
     existing = [
-        (insc.id, insc.canonical)
-        for insc in results
-        if insc.canonical and insc.id != inscription.id
+        (insc.id, insc.canonical) for insc in results if insc.canonical and insc.id not in batch_ids
     ]
 
     if not existing:
-        return flags
+        return empty
 
     existing_ids, existing_texts = zip(*existing, strict=True)
 
@@ -1652,14 +1778,18 @@ def _check_near_duplicates(
 
     try:
         corpus_matrix = vectorizer.fit_transform(list(existing_texts))
-        new_vector = vectorizer.transform([inscription.canonical])
-        similarities = cosine_similarity(new_vector, corpus_matrix)[0]
+        new_vectors = vectorizer.transform([insc.canonical for insc in candidates])
+        similarities = cosine_similarity(new_vectors, corpus_matrix)
     except ValueError:
-        return flags  # Empty vocabulary or other vectorizer issue
+        return empty  # Empty vocabulary or other vectorizer issue
 
-    # Flag high-similarity matches
-    for i, sim in enumerate(similarities):
-        if sim >= threshold:
-            flags.append(f"near_duplicate: {existing_ids[i]} (similarity={sim:.3f})")
+    # Flag high-similarity matches per batch member
+    flags_by_id: dict[str, list[str]] = {}
+    for row_idx, insc in enumerate(candidates):
+        for col_idx, sim in enumerate(similarities[row_idx]):
+            if sim >= threshold:
+                flags_by_id.setdefault(insc.id, []).append(
+                    f"near_duplicate: {existing_ids[col_idx]} (similarity={sim:.3f})"
+                )
 
-    return flags
+    return flags_by_id

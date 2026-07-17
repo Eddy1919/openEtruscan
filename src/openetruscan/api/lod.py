@@ -555,7 +555,7 @@ def reconcile_and_cache(
     # Save Wikidata results alongside Pleiades
     if wd_new > 0:
         wikidata_path = Path(__file__).parent.parent.parent / "data" / "wikidata_mapping.yaml"
-        existing_wd: dict[str, Any] = {}
+        existing_wd: dict[str, str] = {}
         if wikidata_path.exists():
             with open(wikidata_path, encoding="utf-8") as f:
                 existing_wd = yaml.safe_load(f) or {}

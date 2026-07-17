@@ -90,12 +90,9 @@ def parse_name(
     if adapter is None:
         adapter = load_adapter(language)
 
-    # We still need to pass adapter to normalize if it takes it, but currently normalize
-    # also loads adapter. For now we use the existing normalize (which is cached) or
-    # we can just use the provided adapter. normalize itself uses load_adapter which is fine
-    # if load_adapter is fast, but normalize isn't modifying the disk I/O if load_adapter is
-    # slow. Wait, normalize uses load_adapter. I will update load_adapter to be memoized
-    # in adapter.py if it isn't, but here I'll pass adapter to the rest of the logic.
+    # normalize() resolves its own adapter via load_adapter (memoized in
+    # adapter.py); the adapter passed here is only used for the token
+    # classification below.
     result = normalize(text, language=language)
     tokens = result.tokens
 
@@ -448,6 +445,15 @@ class ClanInfo:
         }
 
 
+def _cypher_escape(value: str) -> str:
+    """Escape a value for interpolation inside a single-quoted Cypher string.
+
+    Backslash first — it is Cypher's escape character, so escaping the quote
+    alone still lets a trailing ``\\`` neutralize the closing quote.
+    """
+    return value.replace("\\", "\\\\").replace("'", "\\'")
+
+
 class FamilyGraph:
     """
     Prosopographical graph of named individuals and their relationships.
@@ -592,6 +598,11 @@ class FamilyGraph:
         """
         Export the graph as a Neo4j Cypher script (.cypher).
         Uses MERGE statements heavily so the script is idempotent and safe.
+
+        Every interpolated value goes through ``_cypher_escape`` — backslash
+        is Cypher's escape character, so it must be escaped along with the
+        quote or a name containing ``\\`` breaks (or worse, re-opens) the
+        string literal.
         """
         queries = []
 
@@ -605,19 +616,18 @@ class FamilyGraph:
 
         # 2. Create Clan nodes
         for clan in self._clans.values():
-            sanitized_clan = clan.name.replace("'", "").replace('"', "")
-            queries.append(f"MERGE (c:Clan {{name: '{sanitized_clan}'}})")
+            queries.append(f"MERGE (c:Clan {{name: '{_cypher_escape(clan.name)}'}})")
 
         queries.append("")  # newline
 
         # 3. Create Person nodes
         for person in self._persons.values():
-            praenomen = person.praenomen or "Unknown"
-            gentilicium = person.gentilicium or "Unknown"
+            praenomen = _cypher_escape(person.praenomen or "Unknown")
+            gentilicium = _cypher_escape(person.gentilicium or "Unknown")
             spot = person.findspots[0] if person.findspots else "Unknown"
 
-            safe_name = person.name_formula.canonical.replace(chr(39), chr(39) + chr(39))
-            safe_spot = spot.replace(chr(39), chr(39) + chr(39))
+            safe_name = _cypher_escape(person.name_formula.canonical)
+            safe_spot = _cypher_escape(spot)
             queries.append(
                 f"MERGE (p:Person {{id: '{person.id}'}}) "
                 f"SET p.name = '{safe_name}', "
@@ -632,10 +642,9 @@ class FamilyGraph:
         # 4. Create BELONGS_TO edges
         for person in self._persons.values():
             if person.gentilicium:
-                sanitized_clan = person.gentilicium.replace("'", "").replace('"', "")
                 queries.append(
                     f"MATCH (p:Person {{id: '{person.id}'}}), "
-                    f"(c:Clan {{name: '{sanitized_clan}'}}) "
+                    f"(c:Clan {{name: '{_cypher_escape(person.gentilicium)}'}}) "
                     f"MERGE (p)-[:BELONGS_TO]->(c)"
                 )
 
@@ -646,22 +655,22 @@ class FamilyGraph:
             for comp in person.name_formula.components:
                 if comp.type == "patronymic":
                     # Reconstruct the father as a virtual node
-                    parent_id = f"father_{person.id}_{comp.base_form}"
+                    parent_id = _cypher_escape(f"father_{person.id}_{comp.base_form}")
                     parent_name = (
                         f"{comp.base_form} {person.gentilicium}"
                         if person.gentilicium
                         else comp.base_form
                     )
-                    safe_name = parent_name.replace(chr(39), chr(39) + chr(39))
+                    safe_name = _cypher_escape(parent_name)
                     queries.append(
                         f"MERGE (father:Person {{id: '{parent_id}'}}) "
                         f"SET father.name = '{safe_name}', "
-                        f"father.praenomen = '{comp.base_form}', "
+                        f"father.praenomen = '{_cypher_escape(comp.base_form)}', "
                         f"father.type = 'Reconstructed_Patronymic', "
                         f"father.gender = 'male'"
                     )
                     if person.gentilicium:
-                        clan_name = person.gentilicium.replace("'", "").replace('"', "")
+                        clan_name = _cypher_escape(person.gentilicium)
                         queries.append(
                             f"MATCH (father:Person "
                             f"{{id: '{parent_id}'}}), "
@@ -676,12 +685,12 @@ class FamilyGraph:
                     )
                 elif comp.type == "metronymic":
                     # Reconstruct the mother as a virtual node
-                    mother_id = f"mother_{person.id}_{comp.base_form}"
+                    mother_id = _cypher_escape(f"mother_{person.id}_{comp.base_form}")
                     queries.append(
                         f"MERGE (mother:Person "
                         f"{{id: '{mother_id}'}}) "
-                        f"SET mother.name = '{comp.base_form}', "
-                        f"mother.praenomen = '{comp.base_form}', "
+                        f"SET mother.name = '{_cypher_escape(comp.base_form)}', "
+                        f"mother.praenomen = '{_cypher_escape(comp.base_form)}', "
                         f"mother.type = 'Reconstructed_Metronymic', "
                         f"mother.gender = 'female'"
                     )
@@ -718,7 +727,15 @@ class FamilyGraph:
         return json.dumps(data, ensure_ascii=False, indent=2)
 
     def _to_graphml(self) -> str:
-        """Export as GraphML for Gephi/yEd."""
+        """Export as GraphML for Gephi/yEd.
+
+        Names come from raw inscriptions, so every interpolated value is
+        XML-escaped: quoteattr for attribute positions (node/edge ids),
+        escape for text content — a clan called "A & B" must not produce
+        invalid markup.
+        """
+        from xml.sax.saxutils import escape, quoteattr
+
         lines = [
             '<?xml version="1.0" encoding="UTF-8"?>',
             '<graphml xmlns="http://graphml.graphdrawing.org/xmlns">',
@@ -731,22 +748,25 @@ class FamilyGraph:
 
         # Add clan nodes
         for clan in self._clans.values():
-            lines.append(f'    <node id="clan_{clan.name}">')
-            lines.append(f'      <data key="label">{clan.name}</data>')
+            lines.append(f"    <node id={quoteattr(f'clan_{clan.name}')}>")
+            lines.append(f'      <data key="label">{escape(clan.name)}</data>')
             lines.append('      <data key="type">clan</data>')
             lines.append("    </node>")
 
         # Add person nodes
         for person in self._persons.values():
-            lines.append(f'    <node id="{person.id}">')
-            lines.append(f'      <data key="label">{person.name_formula.canonical}</data>')
-            lines.append(f'      <data key="gender">{person.gender}</data>')
+            lines.append(f"    <node id={quoteattr(person.id)}>")
+            lines.append(f'      <data key="label">{escape(person.name_formula.canonical)}</data>')
+            lines.append(f'      <data key="gender">{escape(person.gender)}</data>')
             lines.append('      <data key="type">person</data>')
             lines.append("    </node>")
 
             # Edge: person → clan
             if person.gentilicium:
-                lines.append(f'    <edge source="{person.id}" target="clan_{person.gentilicium}">')
+                lines.append(
+                    f"    <edge source={quoteattr(person.id)} "
+                    f"target={quoteattr(f'clan_{person.gentilicium}')}>"
+                )
                 lines.append('      <data key="weight">1</data>')
                 lines.append("    </edge>")
 

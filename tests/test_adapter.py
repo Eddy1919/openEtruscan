@@ -73,3 +73,19 @@ class TestGentilicia:
         adapter = load_adapter("etruscan")
         assert len(adapter.onomastics.known_praenomina["male"]) > 10
         assert len(adapter.onomastics.known_praenomina["female"]) > 5
+
+
+class TestAdapterMemoization:
+    """load_adapter memoizes parsing but must hand out isolated copies."""
+
+    def test_repeated_loads_are_distinct_objects(self):
+        first = load_adapter("etruscan")
+        second = load_adapter("etruscan")
+        assert first is not second
+        assert first.alphabet is not second.alphabet
+
+    def test_mutating_a_returned_adapter_does_not_poison_the_cache(self):
+        mutated = load_adapter("etruscan")
+        mutated.alphabet.clear()
+        fresh = load_adapter("etruscan")
+        assert len(fresh.alphabet) > 0

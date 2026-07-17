@@ -8,6 +8,8 @@ all language-specific knowledge lives in these YAML files.
 
 from __future__ import annotations
 
+import copy
+import functools
 import importlib.resources  # nosemgrep
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -164,10 +166,22 @@ def load_adapter(language_id: str) -> LanguageAdapter:
 
     Looks for `{language_id}.yaml` in the adapters directory.
 
+    Parsed adapters are memoized per language_id (see ``_load_adapter_cached``)
+    because ``normalize()`` calls this on every invocation and the YAML
+    read + directory scan dominated its runtime. ``LanguageAdapter`` is a
+    mutable dataclass, so a deep copy of the cached instance is returned —
+    callers may mutate their copy without corrupting subsequent loads.
+
     Raises:
         ValueError: If language_id contains invalid characters.
         FileNotFoundError: If no adapter exists for the given ID.
     """
+    return copy.deepcopy(_load_adapter_cached(language_id))
+
+
+@functools.cache
+def _load_adapter_cached(language_id: str) -> LanguageAdapter:
+    """Parse an adapter YAML once per language_id; load_adapter copies from here."""
     # Validate language_id format to prevent path traversal
     import re
 

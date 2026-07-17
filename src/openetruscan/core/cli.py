@@ -372,15 +372,14 @@ def register(
         from openetruscan.core.artifacts import store_image
 
         img = store_image(image, inscription_id)
-        if hasattr(corpus, "add_image"):
-            corpus.add_image(
-                img.id,
-                img.inscription_id,
-                img.filename,
-                img.mime_type,
-                img.description,
-                img.file_hash,
-            )
+        corpus.add_image(
+            img.id,
+            img.inscription_id,
+            img.filename,
+            img.mime_type,
+            img.description,
+            img.file_hash,
+        )
         click.echo(f"   image:          {img.filename}")
 
     click.echo(f"   corpus total:   {corpus.count()}")
@@ -402,16 +401,22 @@ def upload_image(
     from openetruscan.core.artifacts import store_image
 
     corpus = _get_corpus(db)
+    # The images row has a FK on inscriptions(id); check up front so the user
+    # gets a clean error instead of an IntegrityError traceback.
+    if not corpus.get_by_ids([inscription_id]).total:
+        click.echo(f"❌ Inscription not found: {inscription_id}", err=True)
+        corpus.close()
+        sys.exit(1)
+
     img = store_image(file, inscription_id, description=description)
-    if hasattr(corpus, "add_image"):
-        corpus.add_image(
-            img.id,
-            img.inscription_id,
-            img.filename,
-            img.mime_type,
-            img.description,
-            img.file_hash,
-        )
+    corpus.add_image(
+        img.id,
+        img.inscription_id,
+        img.filename,
+        img.mime_type,
+        img.description,
+        img.file_hash,
+    )
     click.echo(f"✅ Uploaded image for {inscription_id}")
     click.echo(f"   file:  {img.filename}")
     click.echo(f"   hash:  {img.file_hash[:16]}...")
@@ -439,7 +444,16 @@ def classify(
         sys.exit(1)
 
     corpus = _get_corpus(db)
-    results = corpus.search(text=inscription_id, limit=1)
+    # Exact-ID lookup first — FTS over canonical text can resolve an ID
+    # argument to a completely unrelated row.
+    results = corpus.get_by_ids([inscription_id])
+    if not results.total:
+        results = corpus.search(text=inscription_id, limit=1)
+        if results.total:
+            click.echo(
+                f"⚠️  No inscription with id '{inscription_id}'; "
+                f"using full-text match '{results.inscriptions[0].id}' instead."
+            )
     if not results.total:
         click.echo(f"❌ Inscription not found: {inscription_id}", err=True)
         corpus.close()
@@ -475,7 +489,7 @@ def classify(
     help="Architecture to train.",
 )
 def train_neural(
-    db: str,
+    db: str | None,
     output: str,
     epochs: int,
     batch_size: int,
@@ -490,6 +504,15 @@ def train_neural(
         click.echo(f"❌ {exc}", err=True)
         sys.exit(1)
 
+    # train_from_corpus connects with psycopg2 itself, so it needs a DSN, not
+    # a Corpus handle. Resolve the same default the corpus commands use.
+    import os
+
+    db_url = db or os.environ.get("DATABASE_URL")
+    if not db_url:
+        click.echo("❌ No database URL: pass --db or set DATABASE_URL.", err=True)
+        sys.exit(1)
+
     out = Path(output)
     out.mkdir(parents=True, exist_ok=True)
     archs = ["cnn", "transformer"] if arch == "both" else [arch]
@@ -499,9 +522,15 @@ def train_neural(
         click.echo(f"  Training {a.upper()}")
         click.echo(f"{'=' * 50}\n")
 
-        clf = NeuralClassifier(arch=a)
+        try:
+            clf = NeuralClassifier(arch=a)
+        except ImportError as exc:
+            # NeuralClassifier.__init__ re-checks for torch; surface the same
+            # friendly message instead of a traceback.
+            click.echo(f"❌ {exc}", err=True)
+            sys.exit(1)
         metrics = clf.train_from_corpus(
-            db_url=db,
+            db_url=db_url,
             epochs=epochs,
             batch_size=batch_size,
             lr=lr,

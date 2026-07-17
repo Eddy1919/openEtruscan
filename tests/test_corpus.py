@@ -97,3 +97,91 @@ def test_date_display():
     # For now, we assume InscriptionData has similar reach or we test the raw values.
     assert insc.date_approx == -350
     assert insc.date_uncertainty == 25
+
+
+# ---------------------------------------------------------------------------
+# Near-duplicate flagging (sync Corpus helpers, no DB needed)
+# ---------------------------------------------------------------------------
+
+
+class _StubFlagCorpus:
+    """Just enough Corpus surface for the near-duplicate helpers."""
+
+    def __init__(self, existing):
+        self._existing = existing
+
+    def count(self):
+        return len(self._existing)
+
+    def search(self, limit=100, **kwargs):
+        from openetruscan.core.corpus import SearchResults
+
+        return SearchResults(inscriptions=self._existing, total=len(self._existing))
+
+
+def _make_inscription(insc_id: str, canonical: str):
+    from openetruscan.core.corpus import Inscription
+
+    return Inscription(id=insc_id, raw_text=canonical, canonical=canonical)
+
+
+def test_near_duplicate_flagged_for_identical_text():
+    pytest.importorskip("sklearn")
+    from openetruscan.core.corpus import _check_near_duplicates
+
+    existing = [_make_inscription("A", "mi larθa muranas śianś")]
+    new = _make_inscription("B", "mi larθa muranas śianś")
+
+    flags = _check_near_duplicates(new, _StubFlagCorpus(existing))
+    assert flags and "near_duplicate: A" in flags[0]
+
+
+def test_near_duplicate_skipped_above_corpus_size_gate():
+    pytest.importorskip("sklearn")
+    from openetruscan.core.corpus import _check_near_duplicates
+
+    existing = [_make_inscription("A", "mi larθa muranas śianś")]
+    new = _make_inscription("B", "mi larθa muranas śianś")
+
+    # Gate of 0 → any non-empty corpus is "too large", so the scan is skipped.
+    flags = _check_near_duplicates(new, _StubFlagCorpus(existing), max_corpus_size=0)
+    assert flags == []
+
+
+def test_near_duplicate_gate_reads_env_var(monkeypatch):
+    pytest.importorskip("sklearn")
+    from openetruscan.core.corpus import _check_near_duplicates
+
+    monkeypatch.setenv("OPENETRUSCAN_NEAR_DUP_MAX_CORPUS", "0")
+    existing = [_make_inscription("A", "mi larθa muranas śianś")]
+    new = _make_inscription("B", "mi larθa muranas śianś")
+
+    assert _check_near_duplicates(new, _StubFlagCorpus(existing)) == []
+
+
+def test_near_duplicate_batch_scan_flags_only_duplicates():
+    pytest.importorskip("sklearn")
+    from openetruscan.core.corpus import _check_near_duplicates_batch
+
+    existing = [_make_inscription("A", "mi larθa muranas śianś")]
+    dup = _make_inscription("B", "mi larθa muranas śianś")
+    fresh = _make_inscription("C", "zilaθ meχl rasnal tarχnalθi")
+
+    flags_by_id = _check_near_duplicates_batch([dup, fresh], _StubFlagCorpus(existing))
+    assert "B" in flags_by_id
+    assert "near_duplicate: A" in flags_by_id["B"][0]
+    assert "C" not in flags_by_id
+
+
+def test_inscription_values_serializes_provenance_flags():
+    """provenance_flags is list[str] on the dataclass but TEXT in the DDL."""
+    from openetruscan.core.corpus import _COLUMNS, Corpus, Inscription
+
+    insc = Inscription(id="X", raw_text="t", provenance_flags=["a", "b"])
+    # __new__ skips the psycopg2 connection; _inscription_values reads no state.
+    vals = Corpus._inscription_values(Corpus.__new__(Corpus), insc)
+    assert vals[_COLUMNS.index("provenance_flags")] == "a,b"
+
+    empty = Inscription(id="Y", raw_text="t")
+    vals = Corpus._inscription_values(Corpus.__new__(Corpus), empty)
+    assert vals[_COLUMNS.index("provenance_flags")] == ""

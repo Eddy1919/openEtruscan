@@ -88,8 +88,18 @@ class KinshipReconciler:
 
     def audit_kinship(self, tomb_id: str) -> dict[str, Any]:
         """
-        Kinship Auditor: Flags discrepancies between biological data and epigraphic claims.
-        Detects potential adoptions, social kinship, or maternal lineage focus.
+        Kinship Auditor: Cross-references biological data and epigraphic claims
+        for one tomb context.
+
+        Genetic sample ids and epigraphic person ids live in different
+        namespaces with no linking table, so bio-vs-epi contradictions cannot
+        be detected yet. ``potential_conflicts`` therefore flags what the
+        available tables *can* support: the same ordered person pair recorded
+        with two or more different epigraphic relationship types (e.g. both
+        CHILD_OF and PUIA_OF), which indicates contradictory readings.
+
+        Returns a report dict with keys ``tomb_id``, ``biological_links``,
+        ``epigraphic_links``, and ``potential_conflicts``.
         """
         # 1. Get biological links
         bio_links = self.build_biological_tree(tomb_id)
@@ -109,11 +119,37 @@ class KinshipReconciler:
             cur.execute(query_epi, (f"%{tomb_id}%",))
             epi_links = cur.fetchall()
 
-        audit_report = {
+        return {
             "tomb_id": tomb_id,
             "biological_links": bio_links,
             "epigraphic_links": epi_links,
-            "potential_conflicts": [],
+            "potential_conflicts": _epigraphic_conflicts(epi_links),
         }
 
-        return audit_report
+
+def _epigraphic_conflicts(
+    epi_links: list[tuple[str, str | None, str]],
+) -> list[dict[str, Any]]:
+    """
+    Flag person pairs that carry more than one distinct relationship type.
+
+    ``epi_links`` rows are (person_id, related_person_id, relationship_type).
+    Clan-membership rows (related_person_id IS NULL) are skipped — a person
+    legitimately belongs to a clan and has person-to-person links.
+    """
+    types_by_pair: dict[tuple[str, str], set[str]] = {}
+    for person_id, related_id, rel_type in epi_links:
+        if related_id is None:
+            continue
+        types_by_pair.setdefault((person_id, related_id), set()).add(rel_type)
+
+    return [
+        {
+            "person_a": pair[0],
+            "person_b": pair[1],
+            "relationship_types": sorted(types),
+            "reason": "same person pair recorded with conflicting relationship types",
+        }
+        for pair, types in sorted(types_by_pair.items())
+        if len(types) > 1
+    ]

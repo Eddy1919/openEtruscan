@@ -10,10 +10,40 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-from transformers import AutoTokenizer, AutoModel
-from peft import PeftModel
+# ---------------------------------------------------------------------------
+# Lazy torch import — same pattern as neural.py/embeddings.py, so importing
+# this module (e.g. via the CLI) does not hard-fail without the ML extras.
+# transformers/peft are imported inside LacunaRestorer.__init__.
+# ---------------------------------------------------------------------------
+
+_TORCH_AVAILABLE = False
+
+try:
+    import torch
+    import torch.nn as nn
+
+    _TORCH_AVAILABLE = True
+except ImportError:
+
+    class _DummyModule:
+        """Fallback for nn.Module when PyTorch is not installed."""
+
+    class _DummyNN:
+        """Fallback for torch.nn when PyTorch is not installed."""
+
+        Module = _DummyModule
+
+    nn = _DummyNN()
+
+
+def _require_ml_extras() -> None:
+    """Raise a clear error when torch is missing instead of a bare ImportError."""
+    if not _TORCH_AVAILABLE:
+        raise ImportError(
+            "Lacuna restoration requires PyTorch, transformers, and peft. "
+            "Install with: pip install openetruscan[transformers]"
+        )
+
 
 # Character set matching the lora-char-head-v1 model
 ETRUSCAN_CHARS = (
@@ -53,6 +83,16 @@ class LacunaRestorer:
     def __init__(
         self, model_dir: str | Path, base_model: str = "xlm-roberta-base", device: str = "cpu"
     ):
+        _require_ml_extras()
+        try:
+            from peft import PeftModel
+            from transformers import AutoModel, AutoTokenizer
+        except ImportError as exc:
+            raise ImportError(
+                "Lacuna restoration requires transformers and peft. "
+                "Install with: pip install openetruscan[transformers]"
+            ) from exc
+
         self.model_dir = Path(model_dir)
         self.device = device
 
@@ -69,11 +109,14 @@ class LacunaRestorer:
         # Load encoder (Base + LoRA)
         base = AutoModel.from_pretrained(base_model)
         adapter_path = self.meta.get("adapter")
-        # Handle cases where adapter path in metadata is absolute/different
-        if not Path(adapter_path).exists():
-            # Fallback or logic to find adapter relative to model_dir?
-            # For now assume the user provides a valid path or we use a standard location
-            pass
+        if not adapter_path or not Path(adapter_path).exists():
+            raise FileNotFoundError(
+                f"LoRA adapter not found at {adapter_path!r} "
+                f"(declared in {self.model_dir / 'metadata.json'}). "
+                "Fix the 'adapter' entry to point at the etr-lora-v4 adapter "
+                "directory; the ML runtime itself installs via "
+                "pip install openetruscan[transformers]."
+            )
 
         self.encoder = PeftModel.from_pretrained(base, adapter_path)
         self.encoder = self.encoder.merge_and_unload()
