@@ -177,6 +177,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Target test-pool size (rounded up to satisfy class-2 floor).",
     )
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument(
+        "--allow-empty-text",
+        action="store_true",
+        help="Permit emitting rows whose text fields are empty (smoke-test "
+        "mode only). Without this flag the generator hard-fails if any "
+        "silver id does not resolve to corpus text — the committed "
+        "frozen split of 2026-05 was corrupted exactly this way (id-only "
+        "rows emitted because the corpus file was missing).",
+    )
     args = ap.parse_args(argv)
 
     silver = _load_silver(args.silver)
@@ -190,11 +199,30 @@ def main(argv: list[str] | None = None) -> int:
     if not silver:
         print(f"ERROR: no silver labels loaded from {args.silver}", file=sys.stderr)
         return 1
-    matched = sum(1 for sid in silver if sid in corpus)
+
+    def _has_text(sid: str) -> bool:
+        row = corpus.get(sid, {})
+        return bool(
+            (row.get("raw_text") or "").strip()
+            or (row.get("canonical_transliterated") or "").strip()
+        )
+
+    matched = sum(1 for sid in silver if _has_text(sid))
     print(
         f"Silver-corpus join: {matched}/{len(silver)} silver ids resolved to corpus text",
         file=sys.stderr,
     )
+    if matched < len(silver) and not args.allow_empty_text:
+        missing = sorted(sid for sid in silver if not _has_text(sid))
+        print(
+            f"ERROR: {len(missing)} silver ids have no corpus text "
+            f"(first few: {missing[:5]}). A frozen split must carry the text "
+            f"the jury reads — refusing to emit id-only rows. Fetch the "
+            f"corpus (see research/v2/data/README.md) or pass "
+            f"--allow-empty-text for a smoke test.",
+            file=sys.stderr,
+        )
+        return 1
 
     # Group ids by stratum
     strata: dict[str, list[str]] = defaultdict(list)

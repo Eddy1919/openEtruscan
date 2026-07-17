@@ -68,6 +68,23 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
         disposition in {"candidate_gold", "queue", "all_unsure"}
         summary contains per-model labels, the consensus label, etc.
     """
+    # Rows written on an API failure carry label="api_error" (see
+    # classify_jury.py): that is missing data, not a rating, and must not
+    # enter consensus/unanimity math. Unanimity over an incomplete panel is
+    # not unanimity — any api_error therefore blocks candidate_gold and
+    # routes the row to the queue.
+    n_api_error = sum(1 for r in jury_rows if r["label"] == "api_error")
+    jury_rows = [r for r in jury_rows if r["label"] != "api_error"]
+    if not jury_rows:
+        return "queue", {
+            "consensus_label": None,
+            "n_agree": 0,
+            "n_raters": 0,
+            "n_api_error": n_api_error,
+            "per_model": [],
+            "note": "all raters failed with api_error",
+        }
+
     labels = [r["label"] for r in jury_rows]
     confidences = [r["confidence"] for r in jury_rows]
     label_counts = Counter(labels)
@@ -77,7 +94,8 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
     if all(label == "unsure" for label in labels):
         disposition = "all_unsure"
     elif (
-        n_top == n_raters
+        n_api_error == 0
+        and n_top == n_raters
         and consensus != "unsure"
         and all(c in UNANIMITY_CONF_FLOOR for c in confidences)
     ):
@@ -89,6 +107,7 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
         "consensus_label": consensus,
         "n_agree": n_top,
         "n_raters": n_raters,
+        "n_api_error": n_api_error,
         "per_model": [
             {
                 "model": r["model"],

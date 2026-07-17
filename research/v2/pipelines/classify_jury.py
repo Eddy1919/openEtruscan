@@ -425,12 +425,19 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception as e:  # noqa: BLE001 — log and skip
                     errors += 1
                     print(f"  [{provider_name} {row['id']}] api_error: {e}", file=sys.stderr)
+                    # An API failure is missing data, NOT a model abstention.
+                    # label="api_error" keeps it out of every agreement /
+                    # disposition computation downstream (classify_adjudicate
+                    # drops these rows); the previous label="unsure" made an
+                    # infrastructure failure indistinguishable from a genuine
+                    # abstention — the same bug class as the retracted lacuna
+                    # Finding C (PRE_REGISTRATION.md §B).
                     sink.write(
                         json.dumps(
                             {
                                 "model": provider_name,
                                 "id": row["id"],
-                                "label": "unsure",
+                                "label": "api_error",
                                 "confidence": "low",
                                 "rationale": "",
                                 "features": [],
