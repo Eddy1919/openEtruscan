@@ -1,0 +1,9 @@
+{
+  "threshold": 2.3,
+  "gitignore": true,
+  "ignore": [
+    "scripts/attic/**",
+    "docs/openapi.json",
+    "**/node_modules/**"
+  ]
+}

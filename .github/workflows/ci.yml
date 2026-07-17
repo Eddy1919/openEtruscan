@@ -9,6 +9,10 @@ name: CI
 # Postgres + PostGIS service container with a per-Python-version database
 # so the four lanes don't race on `create_all` / `drop_all`.
 
+# No paths/paths-ignore filters on these triggers: jobs here are candidates
+# for required checks under the operator's upcoming ruleset, and a required
+# check whose workflow is filtered out of a PR never reports a status — the
+# PR blocks forever. Skip work inside a job instead, if it ever comes to that.
 on:
   push:
     branches: [main]
@@ -16,6 +20,13 @@ on:
 
 permissions:
   contents: read
+
+# One run per workflow+ref: a superseded push cancels the in-flight run.
+# GitHub-hosted runners are free for public repos, so the win is queue
+# latency and notification noise, not billing.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -39,6 +50,22 @@ jobs:
         # pyproject sets ignore_missing_imports for third-party modules, so
         # type errors in our own code still gate without installing torch etc.
         run: mypy src/openetruscan/
+
+  duplication:
+    # Copy-paste ratchet over the maintained code roots. research/ and other
+    # parked trees stay out by not being scanned: jscpd ignore globs match
+    # path segments at any depth, so a `research/**` ignore in .jscpd.json
+    # would also swallow scripts/research/ (verified against jscpd 5.0.12).
+    # Baseline measured 2026-07-17 with jscpd 5.0.12: 2.16% duplicated lines
+    # (2.18% tokens, 53 clones across 161 files). The threshold in
+    # .jscpd.json is 2.3 and gates on the duplicated-lines figure — lower it
+    # as duplication drops; never raise it to make a PR pass.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: jscpd duplication gate
+        # Pinned version; threshold and ignores live in .jscpd.json.
+        run: npx --yes jscpd@5.0.12 src scripts services tests
 
   openapi-drift:
     # docs/openapi.json is a build artifact of openetruscan.api.server:app.

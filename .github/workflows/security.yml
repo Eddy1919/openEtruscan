@@ -8,6 +8,10 @@ name: Security
 # uv.lock has a different (near-zero) false-positive profile from
 # static-analysis heuristics, and detection-after-merge is not a gate.
 
+# No paths/paths-ignore filters on these triggers: gitleaks and pip-audit
+# are candidates for required checks under the operator's upcoming ruleset,
+# and a required check whose workflow is filtered out of a PR never reports
+# a status — the PR blocks forever.
 on:
   push:
     branches: [main]
@@ -21,6 +25,15 @@ on:
 
 permissions:
   contents: read
+
+# One run per workflow+ref: a superseded push cancels the in-flight run.
+# GitHub-hosted runners are free for public repos, so the win is queue
+# latency and notification noise, not billing. The weekly cron shares the
+# main-branch group; overlap there scans the same tip, so a cancellation
+# loses nothing.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   gitleaks:
