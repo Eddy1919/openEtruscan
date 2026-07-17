@@ -83,6 +83,60 @@ class TestNormalize:
                 assert ord(char) >= 0x10300 or not char.isalpha()
 
 
+class TestLeidenApparatus:
+    """Leiden editorial markup is parsed out, never folded into the text."""
+
+    def test_supplied_brackets_stripped(self):
+        result = normalize("[larθ]al")
+        assert result.canonical == "larθal"
+        assert len(result.apparatus) == 1
+        span = result.apparatus[0]
+        assert span.kind == "supplied"
+        assert (span.start, span.end) == (0, 4)
+        assert result.canonical[span.start : span.end] == "larθ"
+        assert span.source == "[larθ]"
+
+    def test_digraph_inside_supplied_span_remaps(self):
+        """CIE 'TH' collapses to one θ; the span must shrink with it."""
+        result = normalize("[TH]ANCVIL")
+        assert result.canonical.startswith("θ")
+        span = result.apparatus[0]
+        assert span.kind == "supplied"
+        assert (span.start, span.end) == (0, 1)
+        assert result.canonical[span.start : span.end] == "θ"
+
+    def test_span_boundary_mid_digraph_widens_with_warning(self):
+        """A bracket splitting 'TH' cannot split the folded θ: snap outward."""
+        result = normalize("[T]HANCVIL")
+        span = result.apparatus[0]
+        assert (span.start, span.end) == (0, 1)
+        assert result.canonical[span.start : span.end] == "θ"
+        assert any("widened" in w for w in result.warnings)
+
+    def test_no_markup_leaks_into_any_representation(self):
+        result = normalize("mi [lar]θ̣al (clan) [...] śuθi")
+        markup = set("[]()̣")
+        for text in (result.canonical, result.phonetic, result.old_italic, *result.tokens):
+            assert not markup & set(text), f"markup leaked into {text!r}"
+        kinds = [s.kind for s in result.apparatus]
+        assert kinds == ["supplied", "unclear", "expansion", "gap"]
+
+    def test_gap_recorded_with_warning(self):
+        result = normalize("mi [...] lar")
+        gap = next(s for s in result.apparatus if s.kind == "gap")
+        assert gap.start == gap.end
+        assert any("unrestorable gap of width 3" in w for w in result.warnings)
+
+    def test_clean_input_has_empty_apparatus(self):
+        result = normalize("Larθal")
+        assert result.apparatus == ()
+
+    def test_apparatus_serialized_in_to_dict(self):
+        result = normalize("[larθ]al")
+        d = result.to_dict()
+        assert d["apparatus"] == [{"kind": "supplied", "start": 0, "end": 4, "source": "[larθ]"}]
+
+
 class TestRoundTrip:
     """Test that normalizing different inputs gives consistent output."""
 

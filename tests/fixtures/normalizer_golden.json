@@ -1,0 +1,197 @@
+[
+  {
+    "input": "MI AVILES",
+    "expected": {
+      "canonical": "mi aviles",
+      "phonetic": "/mi.aviles/",
+      "old_italic": "𐌌𐌉 𐌀𐌅𐌉𐌋𐌄𐌔",
+      "source_system": "cie",
+      "tokens": [
+        "mi",
+        "aviles"
+      ]
+    }
+  },
+  {
+    "input": "LARTHAL",
+    "expected": {
+      "canonical": "larθal",
+      "phonetic": "/lartʰal/",
+      "old_italic": "𐌋𐌀𐌓𐌈𐌀𐌋",
+      "source_system": "cie",
+      "tokens": [
+        "larθal"
+      ]
+    }
+  },
+  {
+    "input": "mi aviles",
+    "expected": {
+      "canonical": "mi aviles",
+      "phonetic": "/mi.aviles/",
+      "old_italic": "𐌌𐌉 𐌀𐌅𐌉𐌋𐌄𐌔",
+      "source_system": "web_safe",
+      "tokens": [
+        "mi",
+        "aviles"
+      ]
+    }
+  },
+  {
+    "input": "larθal",
+    "expected": {
+      "canonical": "larθal",
+      "phonetic": "/lartʰal/",
+      "old_italic": "𐌋𐌀𐌓𐌈𐌀𐌋",
+      "source_system": "philological",
+      "tokens": [
+        "larθal"
+      ]
+    }
+  },
+  {
+    "input": "TULAR SPURAL",
+    "expected": {
+      "canonical": "tular spural",
+      "phonetic": "/tular.spural/",
+      "old_italic": "𐌕𐌖𐌋𐌀𐌓 𐌔𐌐𐌖𐌓𐌀𐌋",
+      "source_system": "cie",
+      "tokens": [
+        "tular",
+        "spural"
+      ]
+    }
+  },
+  {
+    "input": "THANCVIL",
+    "expected": {
+      "canonical": "θancvil",
+      "phonetic": "/tʰankvil/",
+      "old_italic": "𐌈𐌀𐌍𐌂𐌅𐌉𐌋",
+      "source_system": "cie",
+      "tokens": [
+        "θancvil"
+      ]
+    }
+  },
+  {
+    "input": "ARNTH VELCHA",
+    "expected": {
+      "canonical": "arnθ velχa",
+      "phonetic": "/arntʰ.velkʰa/",
+      "old_italic": "𐌀𐌓𐌍𐌈 𐌅𐌄𐌋𐌗𐌀",
+      "source_system": "cie",
+      "tokens": [
+        "arnθ",
+        "velχa"
+      ]
+    }
+  },
+  {
+    "input": "mi mulu larisale velχainasi",
+    "expected": {
+      "canonical": "mi mulu larisale velχainasi",
+      "phonetic": "/mi.mulu.larisale.velkʰainasi/",
+      "old_italic": "𐌌𐌉 𐌌𐌖𐌋𐌖 𐌋𐌀𐌓𐌉𐌔𐌀𐌋𐌄 𐌅𐌄𐌋𐌗𐌀𐌉𐌍𐌀𐌔𐌉",
+      "source_system": "philological",
+      "tokens": [
+        "mi",
+        "mulu",
+        "larisale",
+        "velχainasi"
+      ]
+    }
+  },
+  {
+    "input": "𐌀𐌅𐌉𐌋",
+    "expected": {
+      "canonical": "avil",
+      "phonetic": "/avil/",
+      "old_italic": "𐌀𐌅𐌉𐌋",
+      "source_system": "unicode",
+      "tokens": [
+        "avil"
+      ]
+    }
+  },
+  {
+    "input": "avile vipiiennas",
+    "expected": {
+      "canonical": "avile vipiiennas",
+      "phonetic": "/avile.vipiiennas/",
+      "old_italic": "𐌀𐌅𐌉𐌋𐌄 𐌅𐌉𐌐𐌉𐌉𐌄𐌍𐌍𐌀𐌔",
+      "source_system": "web_safe",
+      "tokens": [
+        "avile",
+        "vipiiennas"
+      ]
+    }
+  },
+  {
+    "input": "CEHEN SUTHI",
+    "expected": {
+      "canonical": "cehen suθi",
+      "phonetic": "/kehen.sutʰi/",
+      "old_italic": "𐌂𐌄𐌇𐌄𐌍 𐌔𐌖𐌈𐌉",
+      "source_system": "cie",
+      "tokens": [
+        "cehen",
+        "suθi"
+      ]
+    }
+  },
+  {
+    "input": "śuθi",
+    "expected": {
+      "canonical": "śuθi",
+      "phonetic": "/ʃutʰi/",
+      "old_italic": "𐌑𐌖𐌈𐌉",
+      "source_system": "philological",
+      "tokens": [
+        "śuθi"
+      ]
+    }
+  },
+  {
+    "input": "MI LARTHIA",
+    "expected": {
+      "canonical": "mi larθia",
+      "phonetic": "/mi.lartʰia/",
+      "old_italic": "𐌌𐌉 𐌋𐌀𐌓𐌈𐌉𐌀",
+      "source_system": "cie",
+      "tokens": [
+        "mi",
+        "larθia"
+      ]
+    }
+  },
+  {
+    "input": "ita tmia icac heramašva",
+    "expected": {
+      "canonical": "ita tmia icac heramašva",
+      "phonetic": "/ita.tmia.ikak.heramašva/",
+      "old_italic": "𐌉𐌕𐌀 𐌕𐌌𐌉𐌀 𐌉𐌂𐌀𐌂 𐌇𐌄𐌓𐌀𐌌𐌀š𐌅𐌀",
+      "source_system": "web_safe",
+      "tokens": [
+        "ita",
+        "tmia",
+        "icac",
+        "heramašva"
+      ]
+    }
+  },
+  {
+    "input": "vel matunas larisalisa",
+    "expected": {
+      "canonical": "vel matunas larisalisa",
+      "phonetic": "/vel.matunas.larisalisa/",
+      "old_italic": "𐌅𐌄𐌋 𐌌𐌀𐌕𐌖𐌍𐌀𐌔 𐌋𐌀𐌓𐌉𐌔𐌀𐌋𐌉𐌔𐌀",
+      "source_system": "web_safe",
+      "tokens": [
+        "vel",
+        "matunas",
+        "larisalisa"
+      ]
+    }
+  }
+]
