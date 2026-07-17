@@ -53,26 +53,73 @@ omitted, the JSON goes to stdout.
 - **The Latin vocab.** Levenshtein and the random analytical baseline
   both depend on `|V|`, which the API's `/neural/rosetta/vocab`
   endpoint reflects at query time. Ingest changes between runs ⇒ the
-  baselines will move slightly. Acceptable; log the vocab size with each
-  run.
+  baselines will move slightly. Acceptable; since 2026-07-17 the harness
+  records `vocab_size` inside each baseline column's JSON (the run-log
+  column below is the cross-check, no longer the only record). A failed
+  vocab fetch now aborts the random baseline instead of silently
+  substituting a placeholder V.
 - **API rate-limit pacing.** Default 2.05 s between requests; total
   wall-clock ~70 s for the 22-pair test split. `--no-pace` only for
   local APIs.
 
-## Pinned commit hashes (last touched)
+## Pinned benchmark definition (content hashes)
 
-These are the commits to roll back to if you need to reproduce a
-historical run bit-for-bit.
+The July 2026 history squash destroyed the commit ids this section
+originally pinned (`287f740`, `5e960b2`), so — as with the
+pre-registration re-anchoring in the 1.1.0 release — the benchmark
+definition is anchored in content hashes, not commit ids. The two files
+below fully determine the eval set, split, and semantic fields:
 
-| File | Pinned hash (at v1 freeze) |
+| File | sha256 (2026-07-17) |
 |---|---|
-| `eval/harness/rosetta_eval_pairs.py` | `287f740` ([T1.3] Held-out 40/22 anchor split) |
-| `eval/harness/latin_semantic_fields.py` | `5e960b2` (chore: fix linting errors — semantic-field vocab) |
-| `eval/harness/run_rosetta_eval.py` | bumped per task; see `git log -- eval/harness/run_rosetta_eval.py` |
-| `eval/harness/rosetta_eval_v1.sh` | bumped per task; see `git log -- eval/harness/rosetta_eval_v1.sh` |
+| `eval/harness/rosetta_eval_pairs.py` | `92e2abe1434df1b7d32f27bb161c763d64ad89ac9c99937f021f188d340ec610` |
+| `eval/harness/latin_semantic_fields.py` | `f0a12f45bf3cc5c2188333d0c7e3add26e42946d99d6254209c7c7cc141283cc` |
 
-When you update the benchmark in a way that *changes the numbers*, bump
-the label (`rosetta-eval-v2`) — never re-purpose an existing label.
+`run_rosetta_eval.py` and `rosetta_eval_v1.sh` carry the metric
+definitions; changes to them are only admissible under this label when
+they leave every committed number unchanged (the 2026-07-17 changes are
+additive: `vocab_size` recording and the hard-fail on vocab-fetch
+errors). When you update the benchmark in a way that *changes the
+numbers*, bump the label (`rosetta-eval-v2`) — never re-purpose an
+existing label.
+
+## Independent verification — 2026-07-17
+
+What a from-scratch check of the committed
+`eval/rosetta-eval-v1-20260511T080032Z.json` could and could not
+confirm without a live API (`api.openetruscan.com` is retired):
+
+- **Random column: fully replicated.** An independent implementation of
+  the closed-form math (`k/V` strict; `1 − C(V−F,k)/C(V,k)` field) over
+  the 22 test-split pairs with V=50,000 reproduces all eight committed
+  values to full float precision.
+- **Levenshtein column: internally consistent.** Recomputing strict and
+  field hits from the column's own recorded `per_pair.top_predictions`
+  confirms every metric value. The *ranking itself* (that these are
+  truly the 10 edit-closest words in the 50,000-word vocab) is not
+  re-checkable without the vocab endpoint; the DP implementation is
+  unit-tested instead.
+- **FINDINGS.md table: matches the JSON** in all four columns.
+- **Not verified here:** the LaBSE and v4 model columns need a live API
+  with the embedding partitions loaded (a re-run is unblocked — see
+  below — but out of this session's scope).
+- **Embeddings recovered.** `gs://openetruscan-rosetta` (the bucket the
+  table above cites) is gone, but the operator verified on 2026-07-17
+  that byte-identical copies of `labse-v1.jsonl` and
+  `etr-xlmr-lora-v4.jsonl` (MD5s matching this manifest) survive in
+  `gs://openetruscan-rosetta-vai`. See `docs/REPRODUCE.md` for the
+  corrected availability statement. A historical-column re-run against
+  the recovered vectors is queued as a Pod B task.
+- **Pair-count correction.** The anchor module contains **61** unique
+  pairs, split **39/22** — prose elsewhere said "62" and "40/22". The
+  pre-squash history that would explain the difference (a pair removed
+  after the split was cut?) is gone; 61/39/22 is the source of truth.
+
+Known analytic simplification, unchanged for label stability: the
+random field baseline uses F = |field vocabulary|, not
+|field ∩ Latin vocab|. If some field words are absent from the vocab
+this *inflates* the random baseline — conservative for any
+"model beats random" claim.
 
 ## Pinned schema state
 

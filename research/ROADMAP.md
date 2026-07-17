@@ -47,7 +47,7 @@ ensure the metrics we report can survive peer review.
   distance to the Etruscan source) computed against the same eval set.
   This tells us whether our model beats trivial surface-form matching.
 - Random-baseline expected precision@k computed analytically.
-- A held-out split of the 62 anchor pairs (e.g. 40/22) recorded in
+- A held-out split of the 61 anchor pairs (39/22) recorded in
   the eval module so any future training data never leaks to test.
 - A coverage-at-cosine-threshold metric that actually uses cosines
   (currently a stub).
