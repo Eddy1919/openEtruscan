@@ -24,8 +24,8 @@ jobs:
     # pre-commit guarantees a green CI lint (no silent format drift).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Install ruff (pinned)
@@ -59,14 +59,14 @@ jobs:
       # One database per lane so create_all/drop_all don't race across matrix shards.
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_py${{ matrix.python-version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Create per-lane Postgres database
         run: |
           sudo apt-get update && sudo apt-get install -y postgresql-client
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE \"test_py${{ matrix.python-version }}\""
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
