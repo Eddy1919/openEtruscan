@@ -28,13 +28,11 @@ from psycopg2.extras import DictCursor
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.append(str(REPO_ROOT / "src"))
 
-from openetruscan.ml.char_mlm import (  # noqa: E402
-    ETRUSCAN_CHARS,
-    MASK_TOKEN,
-    CharMLMConfig,
-    CharTokenizer,
-    CharTransformerMLM,
-)
+# The original ``openetruscan.ml.char_mlm`` module predates the 2026-07
+# history rewrite and no longer exists. The model class survives as
+# ``openetruscan.ml.neural.CharMLM``; tokenization goes through ``CharVocab``.
+from openetruscan.ml.lacuna import ETRUSCAN_CHARS  # noqa: E402
+from openetruscan.ml.neural import CharMLM, CharVocab  # noqa: E402
 
 
 def load_test_data(limit: int = 500, seed: int = 42) -> list[dict]:
@@ -124,34 +122,55 @@ def _print_metrics(name: str, metrics: dict) -> tuple[float, float]:
 
 
 def eval_char_mlm(samples: list[dict], model_dir: str | Path) -> tuple[float, float]:
-    """Approach A — character transformer MLM trained from scratch."""
+    """Approach A — character transformer MLM trained from scratch.
+
+    Adapted to the current ``CharMLM``/``CharVocab`` API: ``CharVocab.encode``
+    prepends no BOS token, so the mask index is the raw character position
+    (the original ``char_mlm`` tokenizer used ``pos + 1``). The id→char
+    mapping is taken from the checkpoint's metadata when present, otherwise
+    reconstructed from ``ETRUSCAN_CHARS``; a size mismatch aborts rather than
+    scoring against a misaligned vocabulary.
+    """
     model_dir = Path(model_dir)
     meta = json.loads((model_dir / "metadata.json").read_text())
 
-    config = CharMLMConfig(
+    if "char_to_idx" in meta:
+        vocab = CharVocab.from_dict({"char_to_idx": meta["char_to_idx"]})
+    else:
+        vocab = CharVocab.build([ETRUSCAN_CHARS])
+    if len(vocab) != meta["vocab_size"]:
+        raise RuntimeError(
+            f"Reconstructed vocabulary has {len(vocab)} ids but the checkpoint "
+            f"was trained with {meta['vocab_size']}; recover the original "
+            "id→char mapping from the checkpoint metadata before evaluating."
+        )
+
+    max_length = meta["max_length"]
+    model = CharMLM(
         vocab_size=meta["vocab_size"],
         d_model=meta["d_model"],
-        n_layers=meta["n_layers"],
-        n_heads=meta["n_heads"],
-        max_length=meta["max_length"],
+        nhead=meta["n_heads"],
+        num_layers=meta["n_layers"],
+        dim_feedforward=meta.get("dim_feedforward", 256),
+        max_len=max_length,
     )
-    model = CharTransformerMLM(config)
     model.load_state_dict(
         torch.load(model_dir / "char_mlm_best.pt", map_location="cpu", weights_only=True)
     )
     model.eval()
-    tokenizer = CharTokenizer()
 
     metrics = _empty_metrics()
     for s in samples:
         text, pos, target = s["original"], s["mask_pos"], s["target"]
-        masked = text[:pos] + MASK_TOKEN + text[pos + 1 :]
-        ids = tokenizer.encode(masked, max_length=config.max_length)
-        mask_idx = pos + 1  # +1 for BOS
-        if mask_idx >= config.max_length:
+        if pos >= max_length:
             continue
-        preds = model.predict_at_mask(torch.tensor([ids]), torch.tensor([mask_idx]), top_k=3)[0]
-        chars = [tokenizer.id_to_char.get(cid, "?") for cid, _ in preds]
+        tokens = list(text)
+        tokens[pos] = CharVocab.MASK_TOKEN
+        ids = vocab.encode(tokens, max_len=max_length)
+        with torch.no_grad():
+            logits = model(torch.tensor([ids]))[0, pos]
+        top_ids = torch.topk(logits, k=3).indices
+        chars = [vocab.idx_to_char.get(int(i), "?") for i in top_ids]
         _record(metrics, target, chars, _classify_position(text, pos))
 
     return _print_metrics("Approach A — Char-MLM from scratch", metrics)

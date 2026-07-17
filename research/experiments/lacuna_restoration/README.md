@@ -52,6 +52,36 @@ python research/experiments/lacuna_restoration/eval.py
 
 Models will be downloaded from GCS to `data/models/` on first run.
 
+## Reproducibility status (2026-07-17)
+
+`eval.py` originally imported `openetruscan.ml.char_mlm`, a module lost in
+the 2026-07 history rewrite. The script now targets the surviving API:
+`openetruscan.ml.neural.CharMLM` / `CharVocab` and
+`openetruscan.ml.lacuna.ETRUSCAN_CHARS`.
+
+Re-verified today: the script imports; `CharMLM` and `CharVocab` construct
+from a `metadata.json` in the documented checkpoint layout; the Approach A
+eval loop runs end-to-end against a synthetic random-weight checkpoint,
+including the max-length guard and the vocabulary-mismatch abort. No metric
+was recomputed.
+
+Still blocked, in order of severity:
+
+* `gs://openetruscan-rosetta` returns 404 — **both** checkpoints
+  (`char-mlm-v1`, `lora-char-head-v1`) are unavailable. No archived copy is
+  known.
+* The 500-row eval sample requires prod-DB access (`DATABASE_URL`), which is
+  no longer provisioned in this repo.
+* The original `char_mlm` tokenizer (BOS-prefixed — the historical code
+  offset the mask index by `pos + 1`) is lost. The adapted script encodes
+  without BOS and validates vocabulary *size* against checkpoint metadata,
+  but a same-size reordered id→char mapping, or the one-position shift a
+  BOS-trained checkpoint would suffer, cannot be detected mechanically.
+
+Until the checkpoints are recovered and spot-checked against these caveats,
+the table below is a historical record of the original run, not a
+reproduced result.
+
 ## Results
 
 | Model | Top-1 | Top-3 | Top-1 (start) | Top-1 (mid) | Top-1 (end) |
