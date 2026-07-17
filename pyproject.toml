@@ -178,13 +178,24 @@ module = [
     "fastapi.*",
     "pydantic.*",
     "slowapi.*",
-    "numpy.*",
     "scipy.*",
     "sklearn.*",
     "joblib.*",
     "httpx.*",
     "torch.*",
 ]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# numpy ≥2.5 ships PEP 695 `type` statements its stubs, which mypy refuses
+# to parse under python_version = "3.10" — with numpy installed (any dev
+# env) that aborted the whole run before a single project file was checked,
+# so the local gate silently checked nothing. Skipping numpy's stubs keeps
+# the 3.10 target honest for our own code; CI never had numpy in its lint
+# env, so this aligns local runs with what CI actually checks.
+module = ["numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
 ignore_missing_imports = true
 
 [tool.pyright]

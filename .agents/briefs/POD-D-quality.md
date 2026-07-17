@@ -16,7 +16,13 @@ test *infrastructure* only.
 - [ ] **Coverage ratchet.** CI already gates at `--cov-fail-under=45`.
   Raise the floor whenever merged tests lift real coverage above it —
   never lower it to make a PR pass.
-- [ ] **Local mypy gate is dead.** With dev extras installed, mypy 2.3.0
+- [ ] **Zero out the 14 real mypy errors the revived gate surfaced.**
+  With the numpy-stub skip in place, `mypy src/openetruscan/` checks all
+  57 files against real installed types and reports 14 pre-existing
+  errors: `db/repository.py` (8), `ml/neural.py` (3), `ml/lacuna.py`,
+  `db/env.py`, `api/server.py` (1 each). CI's bare lint env can't see
+  these (no deps installed), so local is now the stricter, truthful run.
+- [x] **Local mypy gate is dead.** With dev extras installed, mypy 2.3.0
   under `python_version = "3.10"` aborts on numpy's `type`-statement
   stubs before checking a single project file — locally it gates
   nothing (CI is unaffected only because its lint job installs no
