@@ -23,7 +23,8 @@ metric, here's the honest read:
   `lautn→familia`). Nothing in the encoder's training set told it
   these are equivalent, and no amount of pooling or normalisation
   recovers signal that was never there.
-* **Headline numbers (LaBSE, against the 62 curated Bonfante anchors):**
+* **Headline numbers (LaBSE, against the curated Bonfante anchors —
+  61 pairs; prose long said 62, the module is the source of truth):**
   * Strict-lexical precision@10: **0.071** (3/42 evaluated pairs)
   * Semantic-field precision@10: **0.119** (5/42)
   * For comparison, XLM-R baseline was 0.000 on both — LaBSE is a
@@ -238,9 +239,9 @@ transfer to ancient-language IR" is a useful contribution.
 
 ## Why the strict-lexical metric was wrong
 
-The original eval gate was `precision_at_5 ≥ 0.40` against the 62
-curated Etruscan↔Latin pairs from Bonfante 2002, Wallace 2008,
-Pallottino 1968. The metric was: *did the exact expected Latin lemma
+The original eval gate was `precision_at_5 ≥ 0.40` against the curated
+Etruscan↔Latin pairs from Bonfante 2002, Wallace 2008, Pallottino 1968
+(written as 62 at the time; the surviving module holds 61). The metric was: *did the exact expected Latin lemma
 appear in the top-5 nearest Latin neighbours?*
 
 Three problems with this framing:
@@ -260,7 +261,7 @@ Three problems with this framing:
    `[papa, daddy, pater]` — kinship terms clustering correctly. The
    system understood the question; the metric refused partial credit.
 
-3. **No held-out split.** All 62 pairs were train-test ambiguous in
+3. **No held-out split.** All pairs (then counted as 62) were train-test ambiguous in
    the philological space. There is no clean way to use any of them
    for training and any of them for honest evaluation simultaneously.
 
