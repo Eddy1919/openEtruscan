@@ -80,9 +80,11 @@ a harness artifact; v2.0.3 is the corrected re-run.
 
 ## 5. Local API
 
-`docker-compose.yml` is the production-VM stack; local dev uses
-`docker-compose.dev.yml` (Postgres 16 + pgvector; no PostGIS, so spatial
-endpoints are inert):
+`docker-compose.dev.yml` is the repo's only compose file: Postgres 16 +
+pgvector plus the API built from the local Dockerfile (no PostGIS, so
+spatial endpoints are inert). The production-VM compose stack it once
+complemented was retired with the rest of the self-hosted infrastructure
+(historical note in [ARCHITECTURE.md](ARCHITECTURE.md)).
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build -d
@@ -98,8 +100,8 @@ Two caveats. If a local Postgres already holds port 5432, override the
 port mapping before `up` and adjust `DATABASE_URL` to match. And
 `openetruscan import` currently fails against this PostGIS-less stack —
 `_ensure_db()` silently skips the `geom` column, which inserts still
-reference (fix tracked in the Pod C queue); the PostGIS-backed production
-stack is unaffected.
+reference (fix tracked in the Pod C queue); imports into a PostGIS-enabled
+Postgres are unaffected.
 
 ## 6. rosetta-eval-v1
 

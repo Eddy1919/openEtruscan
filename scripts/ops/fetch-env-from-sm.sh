@@ -1,6 +1,8 @@
 #!/bin/bash
 # Pull the OpenEtruscan API container's runtime secrets from Google Secret
-# Manager into the on-disk .env that docker-compose's `env_file:` consumes.
+# Manager into the on-disk .env that the API VM's compose `env_file:`
+# consumed. Kept from the retired self-hosted deployment (historical note in
+# docs/ARCHITECTURE.md); no compose file in this repo reads a .env today.
 #
 # Designed to run on a Google Compute Engine VM that has a service account
 # attached with roles/secretmanager.secretAccessor on the chosen project.
@@ -12,14 +14,14 @@
 #   OE_PROJECT     GCP project that holds the secrets. Required if not the
 #                  same project as the VM (default: read from metadata).
 #   OE_ENV_PATH    Where to write the .env file
-#                  (default: $PWD/.env, i.e. the docker-compose working dir).
+#                  (default: $PWD/.env, i.e. the compose working dir).
 #   OE_ENV_OWNER   chown target for the file (default: current user).
 #   OE_SECRETS     space-separated list of "ENV_NAME=secret-name" pairs
 #                  (default: the three OpenEtruscan production secrets).
 #
-# Intended hooks:
-#   - Run before `docker compose up -d` in the deploy workflow.
-#   - Run on boot via cloud-init or a systemd oneshot pointing at this path.
+# Hooks in the retired deploy workflow:
+#   - Ran before `docker compose up -d`.
+#   - Ran on boot via cloud-init or a systemd oneshot pointing at this path.
 #
 # The script never reads the existing .env, so it is the only writer.
 # Secret Manager is the source of truth.

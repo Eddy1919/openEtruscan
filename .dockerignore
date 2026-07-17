@@ -36,7 +36,7 @@ htmlcov/
 # No data/ here anymore!
 
 # ── Docker (avoid recursive context) ───────────────────────────────
-docker-compose.yml
+docker-compose*.yml
 Dockerfile
 .dockerignore
 

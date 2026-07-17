@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Deploy the ByT5 lacuna restorer to Cloud Run and wire the api to it.
 #
+# NOTE: the "run on the api VM" wiring steps printed at the end predate the
+# retirement of the self-hosted API stack (historical note in
+# docs/ARCHITECTURE.md) and are kept as a record of that deployment.
+#
 # Cost: ~€0–3/mo. min-instances=0 means cold-start on first call (~10 s on CPU)
 # but zero idle cost. The API container's RAM drops by ~700 MB once we stop
 # loading torch in-process, which leaves headroom for the rerank model.

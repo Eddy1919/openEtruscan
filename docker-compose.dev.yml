@@ -1,9 +1,6 @@
-# OpenEtruscan — local development stack.
-#
-# The root docker-compose.yml is the production-VM file (nginx TLS proxy,
-# Fuseki, Cloud SQL over private IP) and has no local database. This file is
-# the dev counterpart: a throwaway Postgres with pgvector plus the API built
-# from the local Dockerfile.
+# OpenEtruscan — local development stack, and the repo's only compose file:
+# a throwaway Postgres with pgvector plus the API built from the local
+# Dockerfile.
 #
 # Usage:
 #   docker compose -f docker-compose.dev.yml up --build
