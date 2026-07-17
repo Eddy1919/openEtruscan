@@ -94,12 +94,19 @@ DATABASE_URL=postgresql://openetruscan:openetruscan@localhost:5432/openetruscan 
 
 API on `http://localhost:8000`.
 
+Two caveats. If a local Postgres already holds port 5432, override the
+port mapping before `up` and adjust `DATABASE_URL` to match. And
+`openetruscan import` currently fails against this PostGIS-less stack —
+`_ensure_db()` silently skips the `geom` column, which inserts still
+reference (fix tracked in the Pod C queue); the PostGIS-backed production
+stack is unaffected.
+
 ## 6. rosetta-eval-v1
 
 Reproducible from the repo:
 
 - the committed eval result JSONs (`eval/rosetta-eval-v1-*.json`);
-- the frozen 40/22 anchor split — regenerate with
+- the frozen 39/22 anchor split (61 pairs) — regenerate with
   `eval/harness/_generate_eval_split.py` (`SEED = 20260510`, stratified by
   category × confidence);
 - the eval protocol itself (`eval/harness/run_rosetta_eval.py`,

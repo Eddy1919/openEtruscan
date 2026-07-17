@@ -11,7 +11,7 @@ before its license is cleared by the lead.
 
 ## Task queue
 
-- [ ] **Fresh-clone reproducibility check.** Execute `docs/REPRODUCE.md`
+- [x] **Fresh-clone reproducibility check.** Execute `docs/REPRODUCE.md`
   from a clean checkout end to end (`scripts/ops/fetch_data.py`, checksum
   verification, eval re-derivation). It claims to be verified — verify the
   claim independently and fix or report anything that fails. Good first

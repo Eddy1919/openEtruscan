@@ -13,6 +13,16 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
 
 ## Task queue
 
+- [ ] **BLOCKING — import fails on PostGIS-less databases.** `_ensure_db()`
+  silently rolls back the PostGIS step when the extension is unavailable
+  (`corpus.py:659-676`), but `add()`/`add_batch()` reference `geom`
+  unconditionally (`corpus.py:753-761`) → `UndefinedColumn`, 100% import
+  failure in the dev stack (`docker-compose.dev.yml` ships pgvector
+  without PostGIS — deliberately). Fix in code: make the insert degrade
+  with the actual schema (omit `geom` when the column is absent), correct
+  the compose header's "everything else works" claim, and add a
+  regression test that imports against a PostGIS-less Postgres. Full
+  reproduction in POD-A-corpus.md, escalation 1.
 - [ ] **Contract enforcement.** Regenerate `docs/openapi.json` from the
   FastAPI app and add a CI check that fails when the committed spec drifts
   from the code. The spec is the Pod B/C ↔ frontend boundary; a stale spec

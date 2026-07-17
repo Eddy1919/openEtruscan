@@ -34,6 +34,11 @@ Celebrating any metric before it clears Milestone 1's bars.
   `research/notes/reproduce-rosetta-eval-v1.md` on 2026-07-17). Re-run
   rosetta-eval-v1 against the historical column and update that note's
   recovery status.
+- [ ] **Split-count corrections (from Pod A escalations).** The frozen
+  split is 39/22 = 61 pairs (regeneration-verified); `FINDINGS.md:450`
+  still says 40/22. Confirm where the superseded 62nd pair went, correct
+  FINDINGS.md, and fix `compute_lacuna_v2.py`'s hardcoded "v2.0.2" stdout
+  banner (it mislabels v2.0.3 re-runs).
 - [ ] **Restorer eval parity.** Give `services/byt5-restorer` the same
   discipline: a held-out eval, a trivial baseline, a runbook.
 
