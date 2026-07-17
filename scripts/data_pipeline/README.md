@@ -66,7 +66,6 @@ steps and are kept in `../attic/` for reference only.
 
 | Script | Purpose | Inputs | Outputs |
 |---|---|---|---|
-| `migrate_db.py` | Add `fts_canonical` tsvector column + GIN index (idempotent) | `DATABASE_URL` | schema change |
 | `migrate_graph.py` | Build `FamilyGraph` and load nodes/edges into Postgres | corpus, `DATABASE_URL` | prosopography tables |
 | `human_review.py` | HITL structural review of curated CIE items into the corpus | `data/cie/curated_pending.json` | corpus rows |
 | `export_json.py` | Export `inscriptions` to frontend static JSON | `DATABASE_URL` | `frontend/public/data/corpus.json` |

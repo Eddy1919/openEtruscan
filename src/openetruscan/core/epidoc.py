@@ -7,7 +7,8 @@ EpiDoc is the standard for encoding ancient texts in XML, used by:
 This module generates valid EpiDoc XML from our Inscription objects,
 enabling interoperability with the entire digital classics ecosystem.
 
-Requires: lxml (optional dependency, install with `pip install openetruscan[epidoc]`)
+Uses the stdlib ElementTree for generation and defusedxml (a core
+dependency) for parsing untrusted input; no third-party XML library needed.
 """
 
 from __future__ import annotations

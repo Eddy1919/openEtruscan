@@ -12,6 +12,3 @@ its own README where the contents warrant one.
 | [`training/`](training/vertex/README.md) | Vertex AI training and embedding job entrypoints plus their submission shells. |
 | `hub/` | Hugging Face Hub push scripts for trained adapters. |
 | [`attic/`](attic/README.md) | One-off corpus-surgery scripts that already ran; retained as the build audit trail, not maintained. |
-
-`docs/` holds a generated OpenAPI snapshot; `add_docs.py` is a loose
-top-level helper.
