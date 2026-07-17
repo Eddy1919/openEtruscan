@@ -23,23 +23,15 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
   the compose header's "everything else works" claim, and add a
   regression test that imports against a PostGIS-less Postgres. Full
   reproduction in POD-A-corpus.md, escalation 1.
-- [ ] **Frontend PR #10 review follow-ups.** The dossier-restore PR merged
-  with four should-fix findings (full verdict in the PR description,
-  `openEtruscan-frontend#10`): (1) `MobileFooter` in the root layout now
-  queries the DB during static generation of every page and a hanging
-  connection fails the whole build — add a ~3s timeout race inside
-  `getLiveCorpusSize` and `revalidate = 3600` on `/` and `/downloads`,
-  which also unfreezes the build-frozen "live" corpus totals; (2) extract
-  the duplicated `/api/stats/summary` `useEffect` in `Footer.tsx` /
-  `_DesktopHome.tsx` into a shared client hook; (3) `fetchAttestedAnchors`
-  in `lib/corpus.ts` has no callers — wire the inscription page to it or
-  delete the dead server path; (4) the space-encoding assertion in
-  `e2e/smoke.spec.ts:53` is vacuous and can never fail — assert
-  unconditionally; (5, found post-merge in production) missing inscription
-  ids soft-404 — HTTP 200 with the not-found UI — because the async layout
-  flushes before the page's `notFound()`; call `notFound()` from
-  `generateMetadata` on a miss so the status is set pre-stream. Nits in
-  the verdict are fair game in the same branch.
+- [ ] **Frontend craft nits (residual from PR #10/#11 verdicts).** The
+  should-fix findings all shipped in `openEtruscan-frontend#12`; what
+  remains is small: (1) filter/match chips in `ClientSearch` are
+  non-focusable NextUI `Chip`s with `role="tab"` + `onClick` — keyboard
+  users cannot operate the classification or match-mode filters; use real
+  buttons or restore Tab semantics; (2) the dossier "Copy permanent link"
+  button gives no copied feedback. (The PR #11 normalizer-hydration nit
+  was retracted — React ignores input `value` mismatches at hydration,
+  and the eslint `set-state-in-effect` rule rejects the "fix".)
 - [ ] **Same geom bug class in `add_genetic_sample()`.** The
   podc/s1-geom-degrade fix covers inscriptions only; genetic-sample
   ingestion still inserts into `geom` unconditionally and fails on a
