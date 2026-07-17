@@ -61,9 +61,10 @@ def main():
     print(f"Training Macro F1: {train_f1:.4f}")
 
     # 3. Evaluate on held-out set
-    csv_path = Path(
-        "/home/edoardo/.gemini/antigravity/brain/7ea9c352-8bd4-4ac2-829f-a3132d56a091/scratch/held_out_labels.csv"
+    default_heldout = (
+        Path(__file__).resolve().parent.parent.parent / "research" / "data" / "eval_heldout_29.csv"
     )
+    csv_path = Path(os.environ.get("OE_HELDOUT_CSV", default_heldout))
     held_out_ids = []
     held_out_labels = {}
     with open(csv_path, encoding="utf-8") as f:

@@ -23,12 +23,15 @@ Output: openetruscan_labels.csv with columns:
 from __future__ import annotations
 
 import csv
+import os
 import re
 from pathlib import Path
 
-CLEAN_CSV = Path("/home/edoardo/Documents/openEtruscan/openetruscan_clean.csv")
-GOLD_CSV = Path("/home/edoardo/Documents/openEtruscan/inscription_labels.csv")
-OUT_CSV = Path("/home/edoardo/Documents/openEtruscan/openetruscan_labels.csv")
+# Repo-relative defaults; override per-file with the OE_*_CSV env vars.
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "research" / "data"
+CLEAN_CSV = Path(os.environ.get("OE_CLEAN_CSV", DATA_DIR / "openetruscan_clean.csv"))
+GOLD_CSV = Path(os.environ.get("OE_GOLD_CSV", DATA_DIR / "inscription_labels.csv"))
+OUT_CSV = Path(os.environ.get("OE_LABELS_CSV", DATA_DIR / "openetruscan_labels.csv"))
 
 
 # -----------------------------------------------------------------------
@@ -368,7 +371,7 @@ def main() -> None:
                     "id": rid,
                     "label": label,
                     "confidence": conf,
-                    "signal_source": "gold:claude_hand_label",
+                    "signal_source": "silver:claude_hand_label",
                 }
             )
             continue

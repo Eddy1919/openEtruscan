@@ -34,6 +34,8 @@ LARTH_URL = (
     "https://raw.githubusercontent.com/GianlucaVico/Larth-Etruscan-NLP/main/Data/Etruscan.csv"
 )
 
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "research" / "data"
+
 OUTPUT_COLS = [
     "id",
     "raw_text",
@@ -109,12 +111,12 @@ def main() -> int:
     p.add_argument(
         "--normalized",
         type=Path,
-        default=Path("/home/edoardo/Documents/openEtruscan/openetruscan_normalized.csv"),
+        default=DATA_DIR / "openetruscan_normalized.csv",
     )
     p.add_argument(
         "--output",
         type=Path,
-        default=Path("/home/edoardo/Documents/openEtruscan/openetruscan_clean.csv"),
+        default=DATA_DIR / "openetruscan_clean.csv",
     )
     args = p.parse_args()
 
