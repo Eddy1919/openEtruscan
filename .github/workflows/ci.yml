@@ -40,6 +40,30 @@ jobs:
         # type errors in our own code still gate without installing torch etc.
         run: mypy src/openetruscan/
 
+  openapi-drift:
+    # docs/openapi.json is a build artifact of openetruscan.api.server:app.
+    # Regenerate into a temp path and diff, so an API change that forgets to
+    # re-run the generator fails here instead of shipping a stale spec.
+    # Installs from uv.lock (server extras only, no torch) so the diff can't
+    # fail on a floating fastapi/pydantic resolution.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install package (locked, server extras only)
+        run: |
+          pip install --quiet uv
+          uv sync --locked --extra server --extra lod
+      - name: Regenerate OpenAPI spec and diff against committed file
+        run: |
+          .venv/bin/python scripts/ops/generate_openapi.py --out "$RUNNER_TEMP/openapi.json"
+          if ! diff -u docs/openapi.json "$RUNNER_TEMP/openapi.json"; then
+            echo "::error file=docs/openapi.json::docs/openapi.json is stale; regenerate with 'python scripts/ops/generate_openapi.py' and commit the result"
+            exit 1
+          fi
+
   test:
     runs-on: ubuntu-latest
     strategy:

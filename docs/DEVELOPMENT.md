@@ -78,7 +78,9 @@ uvicorn openetruscan.api.server:app --reload
 
 This FastAPI app is a development convenience and parity reference; the
 production API is TypeScript in the frontend repo (see
-[`ARCHITECTURE.md`](ARCHITECTURE.md)).
+[`ARCHITECTURE.md`](ARCHITECTURE.md)). After changing the API surface,
+regenerate the committed spec with `python scripts/ops/generate_openapi.py`
+— CI diffs `docs/openapi.json` against a fresh regeneration.
 
 ## CI
 
