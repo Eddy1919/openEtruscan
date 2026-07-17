@@ -93,7 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         n_dirty = len(mrows) - len(clean_all)
         if not clean:
             summary["per_model"][model] = {
-                "n": 0, "n_dirty_dropped": n_dirty, "n_no_parse": n_no_parse,
+                "n": 0,
+                "n_dirty_dropped": n_dirty,
+                "n_no_parse": n_no_parse,
             }
             continue
         span_ci = bootstrap_ci(

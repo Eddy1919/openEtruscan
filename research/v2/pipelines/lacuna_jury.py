@@ -124,9 +124,7 @@ def parse_response(insc_id: str, raw: str, width: int, masked: str) -> dict:
     no_parse = (payload == {}) or (not restored_full)
     if not no_parse and len(restored) != width:
         err = err or f"wrong_width: got {len(restored)}, expected {width}"
-    hallucinated = (
-        check_hallucination(masked, restored_full, width) if not no_parse else False
-    )
+    hallucinated = check_hallucination(masked, restored_full, width) if not no_parse else False
     return {
         "id": insc_id,
         "restored_lacuna": restored,

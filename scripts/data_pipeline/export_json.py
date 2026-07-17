@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 
 load_dotenv()
-DB_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://USER:PASSWORD@127.0.0.1:5432/corpus"
-)
+DB_URL = os.environ.get("DATABASE_URL", "postgresql://USER:PASSWORD@127.0.0.1:5432/corpus")
 OUTPUT_PATH = "frontend/public/data/corpus.json"
 
 

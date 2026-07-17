@@ -27,9 +27,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train neural inscription classifiers.")
     parser.add_argument(
         "--db-url",
-        default=os.environ.get(
-            "DATABASE_URL", "postgresql://USER:PASSWORD@HOST/corpus"
-        ),
+        default=os.environ.get("DATABASE_URL", "postgresql://USER:PASSWORD@HOST/corpus"),
         help="Path to PostgreSQL database.",
     )
     parser.add_argument(
