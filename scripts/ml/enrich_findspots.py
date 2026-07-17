@@ -17,9 +17,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-CORPUS_PATH = REPO_ROOT / "frontend/public/data/corpus.json"
-TTL_PATH = REPO_ROOT / "data/rdf/corpus.ttl"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+# Frontend is the sibling openEtruscan-frontend checkout since the repo split
+CORPUS_PATH = REPO_ROOT.parent / "openEtruscan-frontend/public/data/corpus.json"
 
 # ── CIE prefix → findspot (100% reliable from data analysis) ──
 CIE_PREFIX_MAP = {

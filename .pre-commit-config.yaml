@@ -8,9 +8,9 @@ repos:
     rev: v4.6.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^(data/|frontend/)
+        exclude: ^data/
       - id: end-of-file-fixer
-        exclude: ^(data/|frontend/)
+        exclude: ^data/
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=500']

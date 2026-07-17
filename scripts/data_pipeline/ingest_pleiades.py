@@ -3,9 +3,14 @@ import gzip
 import json
 import urllib.request
 import os
+from pathlib import Path
 
 URL = "http://atlantides.org/downloads/pleiades/dumps/pleiades-places-latest.csv.gz"
-OUTPUT_FILE = "../../openEtruscan-frontend/public/data/pleiades-network.geojson"
+# Frontend is the sibling openEtruscan-frontend checkout since the repo split
+OUTPUT_FILE = str(
+    Path(__file__).resolve().parents[2].parent
+    / "openEtruscan-frontend/public/data/pleiades-network.geojson"
+)
 
 
 def download_and_process():
