@@ -18,7 +18,7 @@ Work is organized into pods: the pod map and operator runbook are in
 3. **Stage explicit paths only.** `git add <path>...` — never `git add -A`,
    `git add .`, or `--all`.
 4. **Run the gates locally before opening a PR:**
-   `ruff check . && ruff format --check . && mypy && pytest`.
+   `ruff check . && ruff format --check . && mypy src/openetruscan/ && pytest`.
    A CI failure on a pushed PR is a process defect, not a discovery.
 5. **Cross-model review.** No PR merges reviewed only by the model that
    wrote it. State your model and harness in the PR description so the
