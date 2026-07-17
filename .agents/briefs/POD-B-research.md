@@ -6,8 +6,8 @@ Milestone 1 is the current focus; `research/FINDINGS.md` is the honest state
 and must stay that way.
 
 **Owned paths.** `research/`, `eval/`, `models/`, `services/`,
-`scripts/ml/`, `scripts/training/`, `scripts/research/`, `src/cv_pipeline/`,
-and the ML test files in `tests/`.
+`scripts/ml/`, `scripts/training/`, `scripts/research/`, and the ML test
+files in `tests/`.
 
 **Non-goals.** Data ingestion (Pod A). API or frontend changes (Pod C).
 Celebrating any metric before it clears Milestone 1's bars.

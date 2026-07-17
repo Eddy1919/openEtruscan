@@ -13,9 +13,9 @@ test *infrastructure* only.
 
 ## Task queue
 
-- [ ] **Coverage ratchet.** Measure current pytest coverage, set the CI
-  floor at that number, and raise it only when real tests raise it. No
-  aspirational thresholds.
+- [ ] **Coverage ratchet.** CI already gates at `--cov-fail-under=45`.
+  Raise the floor whenever merged tests lift real coverage above it —
+  never lower it to make a PR pass.
 - [ ] **Security workflow audit.** Verify `security.yml` (gitleaks,
   semgrep) actually blocks merges rather than reporting into the void; add
   dependency auditing (`pip-audit`) to CI.

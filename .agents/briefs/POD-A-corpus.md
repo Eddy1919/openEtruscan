@@ -11,19 +11,16 @@ before its license is cleared by the lead.
 
 ## Task queue
 
+- [ ] **Fresh-clone reproducibility check.** Execute `docs/REPRODUCE.md`
+  from a clean checkout end to end (`scripts/ops/fetch_data.py`, checksum
+  verification, eval re-derivation). It claims to be verified — verify the
+  claim independently and fix or report anything that fails. Good first
+  task: it teaches the data layer.
 - [ ] **Provenance manifest.** Define a manifest (extend `data/README.md` or
   add `data/provenance.jsonl`) recording source, license, retrieval date,
-  and transform chain for every artifact in the `data/` layout table. Every
-  existing artifact gets an entry; unknown provenance is recorded as
-  unknown, not guessed.
-- [ ] **Dead DVC remote.** `.dvc/config` points at a GCS bucket in a retired
-  project. Propose to the lead: reconfigure a live remote, or retire DVC in
-  favor of Zenodo archives. Do not pick unilaterally — this is an
-  infrastructure decision (escalation trigger).
-- [ ] **Fresh-clone reproducibility.** Run the CIE pipeline
-  (`ingest_cie_rescued.py` → `fix_rescued.py` → `geocode_rescued_batch.py`)
-  from a clean checkout; document every manual prerequisite it actually
-  needs and fix anything that fails silently.
+  and transform chain for every artifact in the `data/` layout table and
+  the Zenodo deposit. Every existing artifact gets an entry; unknown
+  provenance is recorded as unknown, not guessed.
 - [ ] **Data validation tests.** Add checks to `tests/test_corpus.py` that
   fail loudly on schema drift, row-count regressions, and geocodes outside
   plausible bounds for the corpus.

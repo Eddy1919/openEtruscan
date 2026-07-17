@@ -13,7 +13,7 @@ the map and the runbook.
 | Pod | Domain | Owned paths | Author | Adversarial reviewer |
 |-----|--------|-------------|--------|----------------------|
 | A — Corpus | data ingestion, provenance, validation | `data/`, `scripts/data_pipeline/`, `tests/test_corpus.py` | Kimi | Claude |
-| B — Research | models, eval, findings | `research/`, `eval/`, `models/`, `services/`, `scripts/ml/`, `scripts/training/`, `scripts/research/`, `src/cv_pipeline/`, ML tests | Claude | Grok (replication) |
+| B — Research | models, eval, findings | `research/`, `eval/`, `models/`, `services/`, `scripts/ml/`, `scripts/training/`, `scripts/research/`, ML tests | Claude | Grok (replication) |
 | C — Platform | API + frontend product surface | `src/openetruscan/`, API tests, the `openEtruscan-frontend` repo | Claude | Kimi or Grok |
 | D — Quality | CI, security, test infra, docs freshness | `.github/`, `tests/conftest.py`, `tests/fixtures/`, `scripts/ops/`, `docs/`, top-level configs | Claude (lead) | Kimi or Grok |
 
