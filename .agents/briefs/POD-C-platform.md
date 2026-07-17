@@ -23,6 +23,20 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
   the compose header's "everything else works" claim, and add a
   regression test that imports against a PostGIS-less Postgres. Full
   reproduction in POD-A-corpus.md, escalation 1.
+- [ ] **Frontend PR #10 review follow-ups.** The dossier-restore PR merged
+  with four should-fix findings (full verdict in the PR description,
+  `openEtruscan-frontend#10`): (1) `MobileFooter` in the root layout now
+  queries the DB during static generation of every page and a hanging
+  connection fails the whole build — add a ~3s timeout race inside
+  `getLiveCorpusSize` and `revalidate = 3600` on `/` and `/downloads`,
+  which also unfreezes the build-frozen "live" corpus totals; (2) extract
+  the duplicated `/api/stats/summary` `useEffect` in `Footer.tsx` /
+  `_DesktopHome.tsx` into a shared client hook; (3) `fetchAttestedAnchors`
+  in `lib/corpus.ts` has no callers — wire the inscription page to it or
+  delete the dead server path; (4) the space-encoding assertion in
+  `e2e/smoke.spec.ts:53` is vacuous and can never fail — assert
+  unconditionally. Nits 5–9 in the verdict are fair game in the same
+  branch.
 - [ ] **Same geom bug class in `add_genetic_sample()`.** The
   podc/s1-geom-degrade fix covers inscriptions only; genetic-sample
   ingestion still inserts into `geom` unconditionally and fails on a
