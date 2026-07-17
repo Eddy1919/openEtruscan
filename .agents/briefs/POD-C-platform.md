@@ -35,8 +35,11 @@ without a lead-approved plan. Visual redesigns not driven by a task here.
   in `lib/corpus.ts` has no callers — wire the inscription page to it or
   delete the dead server path; (4) the space-encoding assertion in
   `e2e/smoke.spec.ts:53` is vacuous and can never fail — assert
-  unconditionally. Nits 5–9 in the verdict are fair game in the same
-  branch.
+  unconditionally; (5, found post-merge in production) missing inscription
+  ids soft-404 — HTTP 200 with the not-found UI — because the async layout
+  flushes before the page's `notFound()`; call `notFound()` from
+  `generateMetadata` on a miss so the status is set pre-stream. Nits in
+  the verdict are fair game in the same branch.
 - [ ] **Same geom bug class in `add_genetic_sample()`.** The
   podc/s1-geom-degrade fix covers inscriptions only; genetic-sample
   ingestion still inserts into `geom` unconditionally and fails on a
