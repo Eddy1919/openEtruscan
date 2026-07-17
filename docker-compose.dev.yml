@@ -13,8 +13,10 @@
 #       openetruscan import research/data/openetruscan_clean.csv
 #
 # Honest limitation: pgvector/pgvector:pg16 ships pgvector but NOT PostGIS,
-# so the spatial endpoints are inert in this dev stack. Everything else
-# (search, pgvector similarity, CRUD, migrations) works.
+# so the `geom` column is never created and the spatial endpoints are inert
+# in this dev stack. Import degrades gracefully — rows land without spatial
+# geometry, plain findspot_lat/findspot_lon are still stored — and search,
+# pgvector similarity, CRUD, and migrations work as in production.
 
 services:
   db:

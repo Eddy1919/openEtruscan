@@ -14,6 +14,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed — corpus import without PostGIS
+- **`openetruscan import` no longer fails on a PostGIS-less database.**
+  `Corpus.add()`/`add_batch()` referenced the `geom` column unconditionally
+  (even the no-coordinates branch wrote NULL into it), but `_ensure_db()`
+  only creates that column where the PostGIS extension installs — on the
+  `docker-compose.dev.yml` stack (pgvector image, no PostGIS) every insert
+  died with `UndefinedColumn` and imports failed 100%. The corpus now probes
+  once per connection whether `inscriptions.geom` exists and omits the
+  column from its INSERTs when absent: rows import with plain
+  `findspot_lat`/`findspot_lon` and no spatial geometry; statements on
+  PostGIS-enabled databases are byte-for-byte unchanged (pinned by
+  `tests/test_corpus_geom.py`). The dev-compose header now states the actual
+  limitation instead of claiming everything but the spatial endpoints works.
+
 ### Fixed — rosetta-eval-v1 baseline integrity
 - **Random baseline no longer fabricates its vocab size.** A failed
   `/neural/rosetta/vocab` fetch made `run_rosetta_eval.py --baseline random`

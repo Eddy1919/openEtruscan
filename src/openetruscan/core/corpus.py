@@ -479,6 +479,80 @@ _COLUMNS = [
 ]
 
 
+def _single_insert_sql(has_geom: bool, has_coords: bool) -> str:
+    """Build the INSERT statement used by :meth:`Corpus.add`.
+
+    ``has_geom`` says whether the ``inscriptions.geom`` column exists on the
+    connected database (it only does where PostGIS is installed; the dev
+    stack in ``docker-compose.dev.yml`` ships pgvector without PostGIS).
+    When it is absent the statement must not mention ``geom`` at all —
+    writing NULL to a missing column is still ``UndefinedColumn``.
+    ``has_coords`` only matters when ``has_geom`` is true: it switches the
+    geom value between ``ST_MakePoint`` over two extra parameters and NULL.
+
+    Dynamic construction is safe: every fragment derives from the hardcoded
+    ``_COLUMNS`` list.
+    """
+    cols = ", ".join(_COLUMNS)
+    placeholders = ", ".join(["%s"] * len(_COLUMNS))
+    conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
+
+    if has_geom:
+        geom_insert = "ST_SetSRID(ST_MakePoint(%s, %s), 4326)" if has_coords else "NULL"
+        insert_cols = f"({cols}, geom)"
+        insert_placeholders = f"({placeholders}, {geom_insert})"
+        geom_update = ["geom = EXCLUDED.geom,"]
+    else:
+        insert_cols = f"({cols})"
+        insert_placeholders = f"({placeholders})"
+        geom_update = []
+
+    query_parts = [
+        "INSERT INTO inscriptions",
+        insert_cols,
+        "VALUES",
+        insert_placeholders,
+        "ON CONFLICT (id) DO UPDATE SET",
+        conflict_updates + ",",
+        *geom_update,
+        "updated_at = NOW()",
+    ]
+    return "\n".join(query_parts)
+
+
+def _batch_insert_sql(has_geom: bool) -> tuple[str, str]:
+    """Build the ``(query, row template)`` pair used by :meth:`Corpus.add_batch`.
+
+    Same ``has_geom`` contract as :func:`_single_insert_sql`. With the column
+    present, each row carries lon/lat twice over (guard + value) for the
+    CASE WHEN template; without it, a row is exactly the ``_COLUMNS`` tuple.
+    """
+    cols = ", ".join(_COLUMNS)
+    conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
+    col_placeholders = ", ".join(["%s"] * len(_COLUMNS))
+
+    if has_geom:
+        template = (
+            f"({col_placeholders}, "
+            f"CASE WHEN %s IS NOT NULL AND %s IS NOT NULL "
+            f"THEN ST_SetSRID(ST_MakePoint(%s, %s), 4326) "
+            f"ELSE NULL END)"
+        )
+        query = (
+            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "  # nosec B608 # nosemgrep
+            f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}, "
+            f"geom = EXCLUDED.geom, updated_at = NOW()"
+        )
+    else:
+        template = f"({col_placeholders})"
+        query = (
+            f"INSERT INTO inscriptions ({cols}) VALUES %s "  # nosec B608 # nosemgrep
+            f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}, "
+            f"updated_at = NOW()"
+        )
+    return query, template
+
+
 # ---------------------------------------------------------------------------
 # Abstract Base and Name Extraction
 # ---------------------------------------------------------------------------
@@ -569,6 +643,8 @@ class Corpus:
         self._dsn = dsn
         self._conn = psycopg2.connect(dsn)
         self._conn.autocommit = False
+        # None = not probed yet; see _geom_available.
+        self._has_geom: bool | None = None
 
     @classmethod
     def connect(cls, url: str, init_schema: bool = False) -> Corpus:
@@ -585,6 +661,37 @@ class Corpus:
         if init_schema:
             corpus._ensure_db()
         return corpus
+
+    def _detect_geom_column(self) -> bool:
+        """Whether the PostGIS ``geom`` column exists on ``inscriptions``.
+
+        ``_ensure_db`` creates the column only where the PostGIS extension
+        installs; on a PostGIS-less server (the ``docker-compose.dev.yml``
+        stack) its spatial block rolls back and the column never appears.
+        ``to_regclass`` resolves ``inscriptions`` through the same
+        search_path the INSERTs use, so the probe matches the table they hit.
+        Returns False when the table itself is missing.
+        """
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT count(*) FROM pg_attribute "
+                "WHERE attrelid = to_regclass('inscriptions') "
+                "AND attname = 'geom' AND NOT attisdropped"
+            )
+            row = cur.fetchone()
+        return bool(row and row[0])
+
+    @property
+    def _geom_available(self) -> bool:
+        """Cached per-connection ``geom`` detection.
+
+        Probed lazily on first use and refreshed by ``_ensure_db`` (which may
+        have just created the column). ``add``/``add_batch`` consult this to
+        decide whether their INSERTs may reference ``geom``.
+        """
+        if self._has_geom is None:
+            self._has_geom = self._detect_geom_column()
+        return self._has_geom
 
     def _prepare_inscription(self, inscription: Inscription, language: str) -> Inscription:
         """
@@ -736,41 +843,31 @@ class Corpus:
 
             self._conn.commit()
 
+        # The spatial block above either created `geom` or rolled back
+        # (PostGIS absent); refresh the cached detection so inserts match
+        # whichever happened.
+        self._has_geom = self._detect_geom_column()
+
     def add(
         self,
         inscription: Inscription,
         language: str = "etruscan",
     ) -> None:
-        """Add an inscription."""
-        inscription = self._prepare_inscription(inscription, language)
-        cols = ", ".join(_COLUMNS)
-        placeholders = ", ".join(["%s"] * len(_COLUMNS))
-        conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
+        """Add an inscription.
 
+        On a database without the ``geom`` column (no PostGIS — e.g. the
+        ``docker-compose.dev.yml`` stack) the row is stored without spatial
+        geometry; ``findspot_lat``/``findspot_lon`` are plain columns and
+        persist regardless.
+        """
+        inscription = self._prepare_inscription(inscription, language)
         vals = list(self._inscription_values(inscription))
 
-        if inscription.findspot_lon is not None and inscription.findspot_lat is not None:
-            geom_insert = "ST_SetSRID(ST_MakePoint(%s, %s), 4326)"
+        has_geom = self._geom_available
+        has_coords = inscription.findspot_lon is not None and inscription.findspot_lat is not None
+        if has_geom and has_coords:
             vals.extend([inscription.findspot_lon, inscription.findspot_lat])
-            insert_cols = f"({cols}, geom)"
-            insert_placeholders = f"({placeholders}, {geom_insert})"
-        else:
-            geom_insert = "NULL"
-            insert_cols = f"({cols}, geom)"
-            insert_placeholders = f"({placeholders}, {geom_insert})"
-
-        # Dynamic construction is safe (strictly hardcoded internal lists)
-        query_parts = [
-            "INSERT INTO inscriptions",
-            insert_cols,
-            "VALUES",
-            insert_placeholders,
-            "ON CONFLICT (id) DO UPDATE SET",
-            conflict_updates + ",",
-            "geom = EXCLUDED.geom,",
-            "updated_at = NOW()",
-        ]
-        query = "\n".join(query_parts)
+        query = _single_insert_sql(has_geom, has_coords)
 
         with self._conn.cursor() as cur:
             cur.execute(query, tuple(vals))
@@ -798,22 +895,11 @@ class Corpus:
         """
         import psycopg2.extras
 
-        cols = ", ".join(_COLUMNS)
-        conflict_updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in _COLUMNS if c != "id")
-
-        # Build template with geom handling via CASE expression
-        col_placeholders = ", ".join(["%s"] * len(_COLUMNS))
-        template = (
-            f"({col_placeholders}, "
-            f"CASE WHEN %s IS NOT NULL AND %s IS NOT NULL "
-            f"THEN ST_SetSRID(ST_MakePoint(%s, %s), 4326) "
-            f"ELSE NULL END)"
-        )
-        query = (
-            f"INSERT INTO inscriptions ({cols}, geom) VALUES %s "  # nosec B608 # nosemgrep
-            f"ON CONFLICT (id) DO UPDATE SET {conflict_updates}, "
-            f"geom = EXCLUDED.geom, updated_at = NOW()"
-        )
+        # Geom handling (CASE expression per row) only where the column
+        # exists; on a PostGIS-less database the statement must not mention
+        # it. See _geom_available.
+        has_geom = self._geom_available
+        query, template = _batch_insert_sql(has_geom)
 
         # Normalization must run before the near-duplicate scan so `canonical`
         # is populated for every row.
@@ -832,10 +918,12 @@ class Corpus:
             rows = []
             for insc in chunk:
                 vals = list(self._inscription_values(insc))
-                # Append lon, lat four times for the CASE WHEN template
-                lon = insc.findspot_lon
-                lat = insc.findspot_lat
-                vals.extend([lon, lat, lon, lat])
+                if has_geom:
+                    # Two (lon, lat) pairs: the CASE WHEN guard slots and
+                    # the ST_MakePoint value slots
+                    lon = insc.findspot_lon
+                    lat = insc.findspot_lat
+                    vals.extend([lon, lat, lon, lat])
                 rows.append(tuple(vals))
 
             with self._conn.cursor() as cur:
