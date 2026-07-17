@@ -89,7 +89,7 @@ Still blocked, in order of severity:
   strictly and its feed-forward width is a guessed default, so a recovered
   checkpoint may fail to load at all until keys/dims are reconciled.
 
-Until the checkpoints are recovered and spot-checked against these caveats,
+Until the recovered checkpoints are spot-checked against these caveats,
 the table below is a historical record of the original run, not a
 reproduced result.
 

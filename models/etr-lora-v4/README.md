@@ -297,7 +297,7 @@ instructions live in
 ## License
 
 **Apache 2.0** — matches the model-artifact licensing scheme of the
-OpenEtruscan repository (code: MIT, data: CC0 1.0, models:
+OpenEtruscan repository (code: MIT, data: CC BY 4.0, models:
 Apache 2.0).
 
 ## Acknowledgements

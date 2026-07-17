@@ -90,7 +90,7 @@ pure museum provenance) that should be filtered before matching.
 ## Time axis — PeriodO (done)
 
 Every dated inscription now links to a [PeriodO](https://perio.do) period
-definition, completing place + time + people. The mapping lives in
+definition, completing the time axis. The mapping lives in
 [`openetruscan.core.periodo`](../src/openetruscan/core/periodo.py) (pure,
 unit-tested in [`tests/test_periodo.py`](../tests/test_periodo.py)) and is wired
 into `inscription_to_jsonld`.

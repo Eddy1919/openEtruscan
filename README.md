@@ -6,7 +6,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20075836.svg)](https://doi.org/10.5281/zenodo.20075836)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Data: CC0](https://img.shields.io/badge/data-CC0-green.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
+[![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![PyPI](https://img.shields.io/pypi/v/openetruscan.svg)](https://pypi.org/project/openetruscan/)
 
@@ -158,7 +158,7 @@ separate [`openEtruscan-frontend`](https://github.com/Eddy1919/openEtruscan-fron
 
 OpenEtruscan exports Linked Open Data in formats interoperable with the wider ancient-world DH graph:
 
-- **6,633 inscriptions** exported via the [Pelagios-compatible JSON-LD endpoint](/pelagios.jsonld) (Pelagios Network format spec; not a formal membership claim).
+- The [Pelagios-compatible JSON-LD endpoint](/pelagios.jsonld) serves the corpus as a Web Annotation collection — **5,932 inscriptions** by the feed's own `total` count (Pelagios Network format spec; not a formal membership claim).
 - Findspots aligned to [Pleiades](https://pleiades.stoa.org) for the subset with documented provenance (see §Provenance disclosure above).
 
 ## Classification & restoration models
@@ -276,7 +276,7 @@ The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructi
 ## Licence
 
 - **Code:** MIT
-- **Data:** CC0 1.0 (Public Domain)
+- **Data:** CC BY 4.0 (the licence declared by the Zenodo deposit and the live [`void.ttl`](https://www.openetruscan.com/void.ttl); the Larth-derived fields are CC-BY-4.0 upstream, so attribution cannot be waived)
 - **Models:** Apache 2.0
 
 ## Acknowledgements

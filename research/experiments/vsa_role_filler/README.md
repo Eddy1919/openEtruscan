@@ -184,7 +184,7 @@ vectors into WP3 (Hopfield restoration).
 ## Reproduction
 
 ```bash
-python vsa_etruscan.py     # numpy only; corpus.json is the public /search dump (CC0)
+python vsa_etruscan.py     # numpy only; corpus.json is the public /search dump (CC BY 4.0)
 ```
 `corpus.json` = `{id, canonical}` for the 5,932 public inscriptions, pulled from
 `www.openetruscan.com/api/search` (regenerable).
