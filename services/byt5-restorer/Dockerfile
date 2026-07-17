@@ -5,18 +5,10 @@
 # Build:
 #   docker build -t byt5-restorer .
 #
-# Deploy (see also services/byt5-restorer README + comment in terraform/main.tf):
-#   gcloud run deploy openetruscan-byt5 \
-#     --source services/byt5-restorer \
-#     --region europe-west4 \
-#     --project your-gcp-project-id \
-#     --allow-unauthenticated \
-#     --min-instances 0 \
-#     --max-instances 2 \
-#     --cpu 1 \
-#     --memory 2Gi \
-#     --timeout 120s \
-#     --build-service-account=projects/.../serviceAccounts/cb-trigger-runner@...
+# The container refuses to start without MODEL_URI in its environment —
+# there is no default checkpoint, because the service labels every response
+# with the fine-tuned adapter's name and must not silently serve other
+# weights. Env contract and deploy command: README.md alongside this file.
 
 FROM python:3.11-slim
 
@@ -34,13 +26,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download the model into the image so cold starts don't have to
-# hit HuggingFace. byt5-small is ~300 MB; bakes deterministically.
-ARG MODEL_URI=google/byt5-small
+# Pre-download a checkpoint into the image's HF cache so cold starts don't
+# have to hit HuggingFace (~300 MB for byt5-small-sized weights; bakes
+# deterministically). Build-time cache warming ONLY — it does not choose
+# what the service serves. That is the runtime MODEL_URI env var, and the
+# prebake saves the startup download only when the two match, so pass
+#   --build-arg PREBAKE_MODEL_URI=<same value you deploy as MODEL_URI>
+ARG PREBAKE_MODEL_URI=google/byt5-small
 RUN mkdir -p ${HF_HOME} && \
     python -c "from transformers import AutoTokenizer, AutoModelForSeq2SeqLM; \
-        AutoTokenizer.from_pretrained('${MODEL_URI}'); \
-        AutoModelForSeq2SeqLM.from_pretrained('${MODEL_URI}')"
+        AutoTokenizer.from_pretrained('${PREBAKE_MODEL_URI}'); \
+        AutoModelForSeq2SeqLM.from_pretrained('${PREBAKE_MODEL_URI}')"
 
 COPY main.py .
 

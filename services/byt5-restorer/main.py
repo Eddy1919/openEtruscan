@@ -5,6 +5,10 @@ Exposes a single POST /restore endpoint that accepts damaged epigraphic text
 and returns probabilistic character-level restorations.
 
 Architecture notes:
+  - MODEL_URI is required and has no default. The service advertises the
+    fine-tuned adapter named by MODEL_VERSION in every response, so guessing
+    a base checkpoint (e.g. google/byt5-small) would mislabel its output.
+    A deployment that doesn't set MODEL_URI fails at startup.
   - Model is loaded lazily on first request (cold start ~10s on CPU).
   - Predictions are cached in a SQLite sidecar keyed on
     (text_with_lacunae, top_k, model_version) so repeated queries skip
@@ -54,9 +58,33 @@ logging.basicConfig(level=logging.INFO)
 # Configuration
 # ---------------------------------------------------------------------------
 
-MODEL_URI = os.environ.get("MODEL_URI", "google/byt5-small")
 MODEL_VERSION = os.environ.get("MODEL_VERSION", "byt5-lacunae-v1")
 CACHE_DB = Path(os.environ.get("CACHE_PATH", "/tmp/byt5_cache.db"))
+
+
+def _resolve_model_uri() -> str:
+    """Read MODEL_URI from the environment, refusing to guess.
+
+    Every response from this service is labelled with MODEL_VERSION
+    (`byt5-lacunae-v1`), so a fallback to a base checkpoint such as
+    `google/byt5-small` would serve weights that were never fine-tuned on
+    lacunae while still claiming the adapter's name — a silent provenance
+    lie. There is deliberately no default: a deployment must state which
+    weights it serves, and a missing value kills the container at startup
+    instead of letting the wrong model answer requests.
+    """
+    uri = os.environ.get("MODEL_URI", "").strip()
+    if not uri:
+        raise RuntimeError(
+            f"MODEL_URI is not set. This service advertises the '{MODEL_VERSION}' "
+            "adapter and will not silently fall back to a base checkpoint. "
+            "Set MODEL_URI to the HuggingFace repo id or local path of the "
+            f"checkpoint that implements '{MODEL_VERSION}', then redeploy."
+        )
+    return uri
+
+
+MODEL_URI = _resolve_model_uri()
 
 # ---------------------------------------------------------------------------
 # Global state (populated at startup)
@@ -198,6 +226,9 @@ async def health():
         "status": "ok",
         "model_loaded": _model is not None,
         "model_version": MODEL_VERSION,
+        # Deployed provenance: the checkpoint actually being served, so a
+        # mismatch with the advertised adapter is observable from outside.
+        "model_uri": MODEL_URI,
     }
 
 
