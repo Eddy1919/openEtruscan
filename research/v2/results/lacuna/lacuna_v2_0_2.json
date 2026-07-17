@@ -1,0 +1,229 @@
+{
+  "models": [
+    "claude-sonnet-4-6",
+    "gemini-2.5-pro",
+    "llama-4-maverick"
+  ],
+  "n_resamples": 10000,
+  "n_total_rows": 375,
+  "pairs": {
+    "claude-sonnet-4-6__vs__gemini-2.5-pro__span_exact": {
+      "delta_ci_high": -0.09230769230769231,
+      "delta_ci_low": -0.26153846153846155,
+      "delta_point": -0.16923076923076924,
+      "n_resamples": 10000,
+      "n_shared": 65,
+      "p_value": 1.0,
+      "seed": 42
+    },
+    "claude-sonnet-4-6__vs__llama-4-maverick__span_exact": {
+      "delta_ci_high": -0.03076923076923077,
+      "delta_ci_low": -0.2153846153846154,
+      "delta_point": -0.12307692307692308,
+      "n_resamples": 10000,
+      "n_shared": 65,
+      "p_value": 0.9991,
+      "seed": 42
+    },
+    "gemini-2.5-pro__vs__llama-4-maverick__span_exact": {
+      "delta_ci_high": 0.18461538461538463,
+      "delta_ci_low": -0.07692307692307693,
+      "delta_point": 0.046153846153846156,
+      "n_resamples": 10000,
+      "n_shared": 65,
+      "p_value": 0.2827,
+      "seed": 42
+    }
+  },
+  "per_bucket": {
+    "claude-sonnet-4-6": {
+      "w1": {
+        "char_acc_top1": 0.08,
+        "char_acc_top3": 0.09333333333333334,
+        "hallucination_rate": 0.9333333333333333,
+        "n": 75.0,
+        "span_exact": 0.08
+      },
+      "w2_3": {
+        "char_acc_top1": 0.014285714285714285,
+        "char_acc_top3": 0.02142857142857143,
+        "hallucination_rate": 0.9714285714285714,
+        "n": 35.0,
+        "span_exact": 0.0
+      },
+      "w4_6": {
+        "char_acc_top1": 0.0,
+        "char_acc_top3": 0.0,
+        "hallucination_rate": 1.0,
+        "n": 8.0,
+        "span_exact": 0.0
+      },
+      "w7_plus": {
+        "char_acc_top1": 0.0,
+        "char_acc_top3": 0.0,
+        "hallucination_rate": 0.0,
+        "n": 0.0,
+        "span_exact": 0.0
+      }
+    },
+    "gemini-2.5-pro": {
+      "w1": {
+        "char_acc_top1": 0.29333333333333333,
+        "char_acc_top3": 0.4533333333333333,
+        "hallucination_rate": 0.29333333333333333,
+        "n": 75.0,
+        "span_exact": 0.29333333333333333
+      },
+      "w2_3": {
+        "char_acc_top1": 0.1904761904761905,
+        "char_acc_top3": 0.3857142857142858,
+        "hallucination_rate": 0.2857142857142857,
+        "n": 35.0,
+        "span_exact": 0.11428571428571428
+      },
+      "w4_6": {
+        "char_acc_top1": 0.03125,
+        "char_acc_top3": 0.17708333333333334,
+        "hallucination_rate": 0.0,
+        "n": 8.0,
+        "span_exact": 0.0
+      },
+      "w7_plus": {
+        "char_acc_top1": 0.0,
+        "char_acc_top3": 0.0,
+        "hallucination_rate": 0.0,
+        "n": 0.0,
+        "span_exact": 0.0
+      }
+    },
+    "llama-4-maverick": {
+      "w1": {
+        "char_acc_top1": 0.2,
+        "char_acc_top3": 0.30666666666666664,
+        "hallucination_rate": 0.7066666666666667,
+        "n": 75.0,
+        "span_exact": 0.2
+      },
+      "w2_3": {
+        "char_acc_top1": 0.20952380952380953,
+        "char_acc_top3": 0.3095238095238095,
+        "hallucination_rate": 0.4857142857142857,
+        "n": 35.0,
+        "span_exact": 0.14285714285714285
+      },
+      "w4_6": {
+        "char_acc_top1": 0.0,
+        "char_acc_top3": 0.25,
+        "hallucination_rate": 0.5,
+        "n": 8.0,
+        "span_exact": 0.0
+      },
+      "w7_plus": {
+        "char_acc_top1": 0.0,
+        "char_acc_top3": 0.0,
+        "hallucination_rate": 0.0,
+        "n": 0.0,
+        "span_exact": 0.0
+      }
+    }
+  },
+  "per_model": {
+    "claude-sonnet-4-6": {
+      "char_acc_top1": {
+        "ci_high": 0.09745762711864407,
+        "ci_low": 0.01694915254237288,
+        "n_resamples": 10000,
+        "point": 0.05508474576271186,
+        "seed": 42
+      },
+      "char_acc_top3": {
+        "ci_high": 0.11228813559322035,
+        "ci_low": 0.025423728813559324,
+        "n_resamples": 10000,
+        "point": 0.06567796610169492,
+        "seed": 42
+      },
+      "hallucination_rate": {
+        "ci_high": 0.9830508474576272,
+        "ci_low": 0.9067796610169492,
+        "n_resamples": 10000,
+        "point": 0.9491525423728814,
+        "seed": 42
+      },
+      "n": 118,
+      "n_dirty_dropped": 7,
+      "span_exact_match": {
+        "ci_high": 0.09322033898305085,
+        "ci_low": 0.01694915254237288,
+        "n_resamples": 10000,
+        "point": 0.05084745762711865,
+        "seed": 42
+      }
+    },
+    "gemini-2.5-pro": {
+      "char_acc_top1": {
+        "ci_high": 0.3206214689265537,
+        "ci_low": 0.1716101694915254,
+        "n_resamples": 10000,
+        "point": 0.24505649717514125,
+        "seed": 42
+      },
+      "char_acc_top3": {
+        "ci_high": 0.5007062146892656,
+        "ci_low": 0.3298022598870056,
+        "n_resamples": 10000,
+        "point": 0.41454802259887,
+        "seed": 42
+      },
+      "hallucination_rate": {
+        "ci_high": 0.3559322033898305,
+        "ci_low": 0.19491525423728814,
+        "n_resamples": 10000,
+        "point": 0.2711864406779661,
+        "seed": 42
+      },
+      "n": 118,
+      "n_dirty_dropped": 7,
+      "span_exact_match": {
+        "ci_high": 0.2966101694915254,
+        "ci_low": 0.1440677966101695,
+        "n_resamples": 10000,
+        "point": 0.22033898305084745,
+        "seed": 42
+      }
+    },
+    "llama-4-maverick": {
+      "char_acc_top1": {
+        "ci_high": 0.2584745762711864,
+        "ci_low": 0.1228813559322034,
+        "n_resamples": 10000,
+        "point": 0.18926553672316382,
+        "seed": 42
+      },
+      "char_acc_top3": {
+        "ci_high": 0.3813559322033898,
+        "ci_low": 0.2274011299435028,
+        "n_resamples": 10000,
+        "point": 0.30367231638418074,
+        "seed": 42
+      },
+      "hallucination_rate": {
+        "ci_high": 0.711864406779661,
+        "ci_low": 0.5423728813559322,
+        "n_resamples": 10000,
+        "point": 0.6271186440677966,
+        "seed": 42
+      },
+      "n": 118,
+      "n_dirty_dropped": 7,
+      "span_exact_match": {
+        "ci_high": 0.23728813559322035,
+        "ci_low": 0.1016949152542373,
+        "n_resamples": 10000,
+        "point": 0.1694915254237288,
+        "seed": 42
+      }
+    }
+  },
+  "seed": 42
+}

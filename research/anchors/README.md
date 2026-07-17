@@ -1,5 +1,12 @@
 # Primary-source anchor mining (WBS P4)
 
+> **⚠️ UNVERIFIED — do not train on or evaluate against these files.**
+> Every gloss in this directory is raw LLM extraction (~48% raw precision).
+> The T4.2 human review that would promote rows to attested status has
+> **not been performed**; `attested.jsonl` is a *candidate* keep-list, not a
+> philologist-confirmed one. Until T4.2 lands, cite these files only as
+> pipeline output, never as primary-source evidence.
+
 This directory holds the output of the LLM-as-parser pipeline that
 mines bilingual gloss equivalences from classical Greek and Latin
 passages mentioning the Etruscans.

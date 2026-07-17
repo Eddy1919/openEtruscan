@@ -1,108 +1,108 @@
 id,label,confidence,signal_source
-TCa 8,dedicatory,high,gold:claude_hand_label
-Vs 1.178,funerary,high,gold:claude_hand_label
-Ta 1.35,funerary,high,gold:claude_hand_label
-Ve 6.2,ownership,high,gold:claude_hand_label
-Vs 2.40,ownership,low,gold:claude_hand_label
-Pe 5.2,funerary,high,gold:claude_hand_label
-Cl 1.147,funerary,high,gold:claude_hand_label
-Cr 1.6,funerary,high,gold:claude_hand_label
-Cr 3.18,ownership,high,gold:claude_hand_label
-Pe 8.4,legal,medium,gold:claude_hand_label
-Fa 3.1,ownership,medium,gold:claude_hand_label
-Ta 1.96,funerary,high,gold:claude_hand_label
-Cl 1.1006,funerary,high,gold:claude_hand_label
-Cr 1.5,funerary,high,gold:claude_hand_label
-Ta 1.13,funerary,high,gold:claude_hand_label
-Vt S.2,dedicatory,medium,gold:claude_hand_label
-ETP 43,funerary,high,gold:claude_hand_label
-Li 1.1,funerary,high,gold:claude_hand_label
-Ta 1.66,funerary,high,gold:claude_hand_label
-Ta 1.59,funerary,high,gold:claude_hand_label
-Cl 1.1134,funerary,high,gold:claude_hand_label
-Cl 1.2513,funerary,high,gold:claude_hand_label
-Pe 1.219,funerary,high,gold:claude_hand_label
-Ta 1.147,funerary,high,gold:claude_hand_label
-Vc 1.84,funerary,high,gold:claude_hand_label
-Vs 1.120,funerary,high,gold:claude_hand_label
-Vs 1.28,funerary,high,gold:claude_hand_label
-Vn 1.1,funerary,high,gold:claude_hand_label
+TCa 8,dedicatory,high,silver:claude_hand_label
+Vs 1.178,funerary,high,silver:claude_hand_label
+Ta 1.35,funerary,high,silver:claude_hand_label
+Ve 6.2,ownership,high,silver:claude_hand_label
+Vs 2.40,ownership,low,silver:claude_hand_label
+Pe 5.2,funerary,high,silver:claude_hand_label
+Cl 1.147,funerary,high,silver:claude_hand_label
+Cr 1.6,funerary,high,silver:claude_hand_label
+Cr 3.18,ownership,high,silver:claude_hand_label
+Pe 8.4,legal,medium,silver:claude_hand_label
+Fa 3.1,ownership,medium,silver:claude_hand_label
+Ta 1.96,funerary,high,silver:claude_hand_label
+Cl 1.1006,funerary,high,silver:claude_hand_label
+Cr 1.5,funerary,high,silver:claude_hand_label
+Ta 1.13,funerary,high,silver:claude_hand_label
+Vt S.2,dedicatory,medium,silver:claude_hand_label
+ETP 43,funerary,high,silver:claude_hand_label
+Li 1.1,funerary,high,silver:claude_hand_label
+Ta 1.66,funerary,high,silver:claude_hand_label
+Ta 1.59,funerary,high,silver:claude_hand_label
+Cl 1.1134,funerary,high,silver:claude_hand_label
+Cl 1.2513,funerary,high,silver:claude_hand_label
+Pe 1.219,funerary,high,silver:claude_hand_label
+Ta 1.147,funerary,high,silver:claude_hand_label
+Vc 1.84,funerary,high,silver:claude_hand_label
+Vs 1.120,funerary,high,silver:claude_hand_label
+Vs 1.28,funerary,high,silver:claude_hand_label
+Vn 1.1,funerary,high,silver:claude_hand_label
 Pe 1.211,funerary,high,etr_keyword:funerary
-Cr 1.10,funerary,high,gold:claude_hand_label
-Cr 3.20,ownership,high,gold:claude_hand_label
-Sp 2.36,ownership,medium,gold:claude_hand_label
-Ta 3.2,dedicatory,high,gold:claude_hand_label
-LL 11,dedicatory,high,gold:claude_hand_label
-Vt 3.1,ownership,high,gold:claude_hand_label
+Cr 1.10,funerary,high,silver:claude_hand_label
+Cr 3.20,ownership,high,silver:claude_hand_label
+Sp 2.36,ownership,medium,silver:claude_hand_label
+Ta 3.2,dedicatory,high,silver:claude_hand_label
+LL 11,dedicatory,high,silver:claude_hand_label
+Vt 3.1,ownership,high,silver:claude_hand_label
 CIE 2611,funerary,high,etr_keyword:funerary
-Pe 1.948,funerary,high,gold:claude_hand_label
-Ta 1.107,funerary,high,gold:claude_hand_label
-OA 2.2,ownership,high,gold:claude_hand_label
-Cr 3.10,ownership,high,gold:claude_hand_label
-Fa 6.3,ownership,high,gold:claude_hand_label
-LL 2,dedicatory,high,gold:claude_hand_label
-Pe 3.1,dedicatory,high,gold:claude_hand_label
-AV 6.9,ownership,high,gold:claude_hand_label
-Vc 6.6,ownership,high,gold:claude_hand_label
-Vc 1.59,funerary,high,gold:claude_hand_label
-Vc 1.64,funerary,high,gold:claude_hand_label
+Pe 1.948,funerary,high,silver:claude_hand_label
+Ta 1.107,funerary,high,silver:claude_hand_label
+OA 2.2,ownership,high,silver:claude_hand_label
+Cr 3.10,ownership,high,silver:claude_hand_label
+Fa 6.3,ownership,high,silver:claude_hand_label
+LL 2,dedicatory,high,silver:claude_hand_label
+Pe 3.1,dedicatory,high,silver:claude_hand_label
+AV 6.9,ownership,high,silver:claude_hand_label
+Vc 6.6,ownership,high,silver:claude_hand_label
+Vc 1.59,funerary,high,silver:claude_hand_label
+Vc 1.64,funerary,high,silver:claude_hand_label
 ETP 96,funerary,high,etr_keyword:funerary
 ETP 97,ownership,medium,etr_formula:mi+name
 ETP 98,ownership,medium,etr_formula:mi+name
-Cr 1.141,funerary,high,gold:claude_hand_label
-ETP 128,ownership,high,gold:claude_hand_label
-Ta 1.31,funerary,high,gold:claude_hand_label
-Ta 1.62,funerary,high,gold:claude_hand_label
-Vt 4.5,dedicatory,high,gold:claude_hand_label
-Cr 2.15,ownership,high,gold:claude_hand_label
-Cr 2.33,ownership,high,gold:claude_hand_label
-Cr 3.12,ownership,high,gold:claude_hand_label
-LL 5,dedicatory,high,gold:claude_hand_label
-Ta 1.182,funerary,high,gold:claude_hand_label
-Ta 1.89,funerary,high,gold:claude_hand_label
-Vs 1.86,funerary,high,gold:claude_hand_label
-Vc 7.38,funerary,medium,gold:claude_hand_label
-Ve 3.2,ownership,high,gold:claude_hand_label
-Vt 1.58,funerary,high,gold:claude_hand_label
-Ta 1.81,funerary,high,gold:claude_hand_label
-Um 1.7,funerary,medium,gold:claude_hand_label
-ETP 15,ownership,high,gold:claude_hand_label
-ETP 28,ownership,high,gold:claude_hand_label
-OA 2.20,ownership,high,gold:claude_hand_label
-Ru 5.1,funerary,high,gold:claude_hand_label
-Ve 3.13,ownership,high,gold:claude_hand_label
-Ve 3.29,dedicatory,high,gold:claude_hand_label
-ETP 29,dedicatory,medium,gold:claude_hand_label
-La 2.3,ownership,medium,gold:claude_hand_label
-AV 6.1,ownership,high,gold:claude_hand_label
+Cr 1.141,funerary,high,silver:claude_hand_label
+ETP 128,ownership,high,silver:claude_hand_label
+Ta 1.31,funerary,high,silver:claude_hand_label
+Ta 1.62,funerary,high,silver:claude_hand_label
+Vt 4.5,dedicatory,high,silver:claude_hand_label
+Cr 2.15,ownership,high,silver:claude_hand_label
+Cr 2.33,ownership,high,silver:claude_hand_label
+Cr 3.12,ownership,high,silver:claude_hand_label
+LL 5,dedicatory,high,silver:claude_hand_label
+Ta 1.182,funerary,high,silver:claude_hand_label
+Ta 1.89,funerary,high,silver:claude_hand_label
+Vs 1.86,funerary,high,silver:claude_hand_label
+Vc 7.38,funerary,medium,silver:claude_hand_label
+Ve 3.2,ownership,high,silver:claude_hand_label
+Vt 1.58,funerary,high,silver:claude_hand_label
+Ta 1.81,funerary,high,silver:claude_hand_label
+Um 1.7,funerary,medium,silver:claude_hand_label
+ETP 15,ownership,high,silver:claude_hand_label
+ETP 28,ownership,high,silver:claude_hand_label
+OA 2.20,ownership,high,silver:claude_hand_label
+Ru 5.1,funerary,high,silver:claude_hand_label
+Ve 3.13,ownership,high,silver:claude_hand_label
+Ve 3.29,dedicatory,high,silver:claude_hand_label
+ETP 29,dedicatory,medium,silver:claude_hand_label
+La 2.3,ownership,medium,silver:claude_hand_label
+AV 6.1,ownership,high,silver:claude_hand_label
 Ta S.8,dedicatory,high,etr_keyword:dedicatory_deity
-Vs 7.25,funerary,medium,gold:claude_hand_label
-Vt 4.2,dedicatory,high,gold:claude_hand_label
+Vs 7.25,funerary,medium,silver:claude_hand_label
+Vt 4.2,dedicatory,high,silver:claude_hand_label
 ETP 79,ownership,medium,etr_formula:mi+name
 ETP 81,ownership,medium,etr_formula:mi+name
 ETP 164,ownership,medium,etr_formula:mi+name
 ETP 165,ownership,medium,etr_formula:mi+name
 ETP 166,ownership,medium,etr_formula:mi+name
-ETP 181,funerary,high,gold:claude_hand_label
+ETP 181,funerary,high,silver:claude_hand_label
 ETP 201,ownership,medium,etr_formula:mi+name
 ETP 221,ownership,medium,etr_formula:mi+name
-ETP 240,funerary,high,gold:claude_hand_label
+ETP 240,funerary,high,silver:claude_hand_label
 7435,dedicatory,high,etr_keyword:dedicatory_deity
 ETP 261,ownership,medium,etr_formula:mi+name
 277,funerary,medium,junk_translation:kinship_list
 318,funerary,medium,junk_translation:kinship_list
-ETP 279,dedicatory,high,gold:claude_hand_label
+ETP 279,dedicatory,high,silver:claude_hand_label
 371,dedicatory,medium,junk_translation:deity_ref
-ETP 304,ownership,high,gold:claude_hand_label
+ETP 304,ownership,high,silver:claude_hand_label
 438,dedicatory,high,etr_keyword:dedicatory_deity
 757,funerary,high,etr_keyword:funerary
 ETP 338,ownership,medium,etr_formula:mi+name
-ETP 339,dedicatory,high,gold:claude_hand_label
-ETP 340,votive,high,gold:claude_hand_label
+ETP 339,dedicatory,high,silver:claude_hand_label
+ETP 340,votive,high,silver:claude_hand_label
 ETP 341,ownership,medium,etr_formula:mi+name
 ETP 358,ownership,medium,etr_formula:mi+name
 ETP 359,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 323,ownership,high,gold:claude_hand_label
+ETP 323,ownership,high,silver:claude_hand_label
 208,funerary,medium,junk_translation:kinship_list
 1056,funerary,medium,junk_translation:kinship_list
 1154,funerary,medium,junk_translation:kinship_list
@@ -137,7 +137,7 @@ ETP 323,ownership,high,gold:claude_hand_label
 7666,dedicatory,high,etr_keyword:dedicatory_deity
 7868,dedicatory,medium,junk_translation:deity_ref
 7877,dedicatory,medium,junk_translation:deity_ref
-ETP 325,ownership,high,gold:claude_hand_label
+ETP 325,ownership,high,silver:claude_hand_label
 9257,funerary,high,etr_keyword:funerary
 CIE 2691,funerary,high,etr_keyword:funerary
 2219,funerary,medium,junk_translation:kinship_list
@@ -197,7 +197,7 @@ CIE 2691,funerary,high,etr_keyword:funerary
 428,funerary,medium,junk_translation:kinship_list
 579,funerary,medium,junk_translation:kinship_list
 633,funerary,medium,junk_translation:kinship_list
-Af 3.1,ownership,medium,gold:claude_hand_label
+Af 3.1,ownership,medium,silver:claude_hand_label
 726,funerary,medium,junk_translation:kinship_list
 742,funerary,medium,junk_translation:kinship_list
 745,funerary,medium,junk_translation:kinship_list
@@ -215,7 +215,7 @@ Af 3.1,ownership,medium,gold:claude_hand_label
 3830,funerary,medium,junk_translation:kinship_list
 3833,funerary,medium,junk_translation:kinship_list
 3908,funerary,medium,junk_translation:kinship_list
-ETP 329,dedicatory,high,gold:claude_hand_label
+ETP 329,dedicatory,high,silver:claude_hand_label
 1305,funerary,medium,junk_translation:kinship_list
 1438,funerary,medium,junk_translation:kinship_list
 1357,funerary,medium,junk_translation:kinship_list
@@ -241,24 +241,24 @@ ETP 329,dedicatory,high,gold:claude_hand_label
 2068,funerary,medium,junk_translation:kinship_list
 2074,funerary,medium,junk_translation:kinship_list
 2078,funerary,medium,junk_translation:kinship_list
-AH 3.4,votive,high,gold:claude_hand_label
-Ar 1.3,funerary,medium,gold:claude_hand_label
-Ar 4.3,dedicatory,high,gold:claude_hand_label
-AS 1.40,funerary,high,gold:claude_hand_label
-AS 2.1,ownership,medium,gold:claude_hand_label
-AS 5.1,funerary,medium,gold:claude_hand_label
+AH 3.4,votive,high,silver:claude_hand_label
+Ar 1.3,funerary,medium,silver:claude_hand_label
+Ar 4.3,dedicatory,high,silver:claude_hand_label
+AS 1.40,funerary,high,silver:claude_hand_label
+AS 2.1,ownership,medium,silver:claude_hand_label
+AS 5.1,funerary,medium,silver:claude_hand_label
 2171,funerary,medium,junk_translation:kinship_list
-At 1.100,funerary,high,gold:claude_hand_label
-AT 1.105,funerary,high,gold:claude_hand_label
-AT 1.108,funerary,high,gold:claude_hand_label
-At 1.111,funerary,high,gold:claude_hand_label
-AT 1.15,funerary,high,gold:claude_hand_label
-AT 1.171,funerary,high,gold:claude_hand_label
-At 1.172,funerary,high,gold:claude_hand_label
-AT 1.34,funerary,high,gold:claude_hand_label
+At 1.100,funerary,high,silver:claude_hand_label
+AT 1.105,funerary,high,silver:claude_hand_label
+AT 1.108,funerary,high,silver:claude_hand_label
+At 1.111,funerary,high,silver:claude_hand_label
+AT 1.15,funerary,high,silver:claude_hand_label
+AT 1.171,funerary,high,silver:claude_hand_label
+At 1.172,funerary,high,silver:claude_hand_label
+AT 1.34,funerary,high,silver:claude_hand_label
 2340,dedicatory,high,etr_keyword:dedicatory_deity
-AT 1.46,funerary,high,gold:claude_hand_label
-AT 1.47,funerary,high,gold:claude_hand_label
+AT 1.46,funerary,high,silver:claude_hand_label
+AT 1.47,funerary,high,silver:claude_hand_label
 2445,funerary,medium,junk_translation:kinship_list
 2489,funerary,medium,junk_translation:kinship_list
 2530,funerary,medium,junk_translation:kinship_list
@@ -319,7 +319,7 @@ CIE 1873,funerary,high,etr_keyword:funerary
 7222,funerary,medium,junk_translation:kinship_list
 7254,ownership,medium,etr_formula:mi+name
 7296,funerary,medium,junk_translation:kinship_list
-ETP 331,ownership,high,gold:claude_hand_label
+ETP 331,ownership,high,silver:claude_hand_label
 7417,funerary,medium,junk_translation:kinship_list
 7469,votive,high,etr_keyword:votive_deity
 7551,funerary,medium,junk_translation:kinship_list
@@ -480,7 +480,7 @@ CIE 312,ownership,medium,etr_formula:mi+name
 CIE 3121,dedicatory,high,etr_keyword:dedicatory_deity
 ETP 68,ownership,medium,etr_formula:mi+name
 CIE 319,funerary,high,etr_keyword:funerary
-ETP 332,dedicatory,high,gold:claude_hand_label
+ETP 332,dedicatory,high,silver:claude_hand_label
 CIE 3283a,funerary,high,etr_keyword:funerary
 CIE 3284,funerary,high,etr_keyword:funerary
 CIE 2209,funerary,high,etr_keyword:funerary
@@ -488,40 +488,40 @@ CIE 437,votive,high,etr_keyword:votive_deity
 CIE 438,votive,high,etr_keyword:votive_deity
 CIE 439,boundary,high,etr_keyword:boundary
 CIE 441,funerary,high,etr_keyword:funerary
-ETP 333,funerary,medium,gold:claude_hand_label
+ETP 333,funerary,medium,silver:claude_hand_label
 CIE 48,legal,high,etr_keyword:legal
 CIE 50,ownership,low,etr_formula:mi_present
 CIE 51,ownership,medium,etr_formula:mi+name
 CIE 2333,funerary,high,etr_keyword:funerary
-Cl 1.1502,funerary,high,gold:claude_hand_label
-Cl 1.1645,funerary,high,gold:claude_hand_label
-Cl 1.1807,funerary,high,gold:claude_hand_label
-Cl 1.1885,funerary,high,gold:claude_hand_label
-Cl 1.2050,funerary,high,gold:claude_hand_label
-Cl 1.2261,funerary,high,gold:claude_hand_label
-Cl 1.314,funerary,high,gold:claude_hand_label
+Cl 1.1502,funerary,high,silver:claude_hand_label
+Cl 1.1645,funerary,high,silver:claude_hand_label
+Cl 1.1807,funerary,high,silver:claude_hand_label
+Cl 1.1885,funerary,high,silver:claude_hand_label
+Cl 1.2050,funerary,high,silver:claude_hand_label
+Cl 1.2261,funerary,high,silver:claude_hand_label
+Cl 1.314,funerary,high,silver:claude_hand_label
 ETP 334,funerary,high,etr_keyword:funerary
 4787,funerary,medium,junk_translation:kinship_list
-Cl 1.324,funerary,high,gold:claude_hand_label
-Cm 2.13,ownership,high,gold:claude_hand_label
-Cm 2.32,ownership,high,gold:claude_hand_label
-Cm 2.46,ownership,high,gold:claude_hand_label
-Cm 2.65,ownership,high,gold:claude_hand_label
-Co 1.3,funerary,high,gold:claude_hand_label
-Co 3.6,votive,high,gold:claude_hand_label
-Co 3.7,dedicatory,high,gold:claude_hand_label
-Co 4.1,dedicatory,high,gold:claude_hand_label
+Cl 1.324,funerary,high,silver:claude_hand_label
+Cm 2.13,ownership,high,silver:claude_hand_label
+Cm 2.32,ownership,high,silver:claude_hand_label
+Cm 2.46,ownership,high,silver:claude_hand_label
+Cm 2.65,ownership,high,silver:claude_hand_label
+Co 1.3,funerary,high,silver:claude_hand_label
+Co 3.6,votive,high,silver:claude_hand_label
+Co 3.7,dedicatory,high,silver:claude_hand_label
+Co 4.1,dedicatory,high,silver:claude_hand_label
 CODEX_CP_A,legal,high,etr_keyword:legal
 CODEX_CP_B,funerary,high,etr_keyword:funerary
 CODEX_LL_IX,dedicatory,high,etr_keyword:dedicatory_deity
 CODEX_LL_VI,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 335,ownership,high,gold:claude_hand_label
+ETP 335,ownership,high,silver:claude_hand_label
 ETP 336,dedicatory,high,etr_keyword:dedicatory_deity
 CODEX_LL_VIII,dedicatory,high,etr_keyword:dedicatory_deity
 CODEX_PL_INNER,dedicatory,high,etr_keyword:dedicatory_deity
 CODEX_PL_OUTER,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 343,ownership,high,gold:claude_hand_label
-ETP 344,ownership,high,gold:claude_hand_label
+ETP 343,ownership,high,silver:claude_hand_label
+ETP 344,ownership,high,silver:claude_hand_label
 4925,ownership,medium,etr_formula:mi+name
 5819,funerary,medium,junk_translation:kinship_list
 9179,ownership,medium,etr_formula:mi+name
@@ -539,68 +539,68 @@ ETP 345,ownership,medium,etr_formula:mi+name
 ETP 346,commercial,medium,etr_keyword:commercial
 CODEX_TCo_A,boundary,high,etr_keyword:boundary
 CODEX_TCo_B,legal,high,etr_keyword:legal
-Cr 2.27,ownership,high,gold:claude_hand_label
-Cr 2.42,ownership,high,gold:claude_hand_label
-Cr 2.9,ownership,high,gold:claude_hand_label
-Cr 3.11,ownership,high,gold:claude_hand_label
-Cr 3.14,ownership,high,gold:claude_hand_label
-Cr 3.17,dedicatory,medium,gold:claude_hand_label
-Cr 3.7,ownership,high,gold:claude_hand_label
-Cr 3.9,ownership,high,gold:claude_hand_label
-Cr 5.2,funerary,high,gold:claude_hand_label
-Cr 5.3,funerary,high,gold:claude_hand_label
-Cr 5.4,funerary,high,gold:claude_hand_label
+Cr 2.27,ownership,high,silver:claude_hand_label
+Cr 2.42,ownership,high,silver:claude_hand_label
+Cr 2.9,ownership,high,silver:claude_hand_label
+Cr 3.11,ownership,high,silver:claude_hand_label
+Cr 3.14,ownership,high,silver:claude_hand_label
+Cr 3.17,dedicatory,medium,silver:claude_hand_label
+Cr 3.7,ownership,high,silver:claude_hand_label
+Cr 3.9,ownership,high,silver:claude_hand_label
+Cr 5.2,funerary,high,silver:claude_hand_label
+Cr 5.3,funerary,high,silver:claude_hand_label
+Cr 5.4,funerary,high,silver:claude_hand_label
 ETP 102,ownership,medium,etr_formula:mi+name
 ETP 105,ownership,medium,etr_formula:mi+name
-ETP 106,ownership,high,gold:claude_hand_label
+ETP 106,ownership,high,silver:claude_hand_label
 ETP 108,ownership,medium,etr_formula:mi+name
-ETP 110,ownership,high,gold:claude_hand_label
-ETP 112,ownership,high,gold:claude_hand_label
+ETP 110,ownership,high,silver:claude_hand_label
+ETP 112,ownership,high,silver:claude_hand_label
 ETP 113,ownership,medium,etr_formula:mi+name
 ETP 117,ownership,medium,etr_formula:mi+name
 CIE 3029,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 118,ownership,high,gold:claude_hand_label
+ETP 118,ownership,high,silver:claude_hand_label
 ETP 120,ownership,medium,etr_formula:mi+name
 ETP 130,ownership,medium,etr_formula:mi+name
 ETP 133,ownership,medium,etr_formula:mi+name
 ETP 158,ownership,medium,etr_formula:mi+name
 ETP 173,ownership,medium,etr_formula:mi+name
-ETP 186,ownership,high,gold:claude_hand_label
-ETP 189,dedicatory,high,gold:claude_hand_label
+ETP 186,ownership,high,silver:claude_hand_label
+ETP 189,dedicatory,high,silver:claude_hand_label
 ETP 190,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 192,funerary,high,gold:claude_hand_label
-ETP 196,ownership,high,gold:claude_hand_label
+ETP 192,funerary,high,silver:claude_hand_label
+ETP 196,ownership,high,silver:claude_hand_label
 ETP 197,ownership,medium,etr_formula:mi+name
 ETP 198,ownership,medium,etr_formula:mi+name
 ETP 206,ownership,medium,etr_formula:mi+name
 ETP 208,ownership,medium,etr_formula:mi+name
-ETP 209,ownership,high,gold:claude_hand_label
-ETP 213,funerary,high,gold:claude_hand_label
-ETP 214,funerary,high,gold:claude_hand_label
+ETP 209,ownership,high,silver:claude_hand_label
+ETP 213,funerary,high,silver:claude_hand_label
+ETP 214,funerary,high,silver:claude_hand_label
 ETP 215,ownership,medium,etr_formula:mi+name
 ETP 216,ownership,medium,etr_formula:mi+name
 ETP 217,ownership,medium,etr_formula:mi+name
 ETP 219,ownership,medium,etr_formula:mi+name
 ETP 224,ownership,medium,etr_formula:mi+name
-ETP 230,funerary,high,gold:claude_hand_label
-ETP 238,dedicatory,high,gold:claude_hand_label
-ETP 239,votive,high,gold:claude_hand_label
+ETP 230,funerary,high,silver:claude_hand_label
+ETP 238,dedicatory,high,silver:claude_hand_label
+ETP 239,votive,high,silver:claude_hand_label
 ETP 247,ownership,medium,etr_formula:mi+name
-ETP 251,dedicatory,high,gold:claude_hand_label
-ETP 253,dedicatory,high,gold:claude_hand_label
+ETP 251,dedicatory,high,silver:claude_hand_label
+ETP 253,dedicatory,high,silver:claude_hand_label
 ETP 257,ownership,medium,etr_formula:mi+name
-ETP 269,ownership,medium,gold:claude_hand_label
+ETP 269,ownership,medium,silver:claude_hand_label
 ETP 270,ownership,medium,etr_formula:mi+name
 ETP 271,ownership,medium,etr_formula:mi+name
 ETP 273,ownership,medium,etr_formula:mi+name
-ETP 284,ownership,high,gold:claude_hand_label
-ETP 286,boundary,high,gold:claude_hand_label
-ETP 287,funerary,high,gold:claude_hand_label
-ETP 289,ownership,high,gold:claude_hand_label
+ETP 284,ownership,high,silver:claude_hand_label
+ETP 286,boundary,high,silver:claude_hand_label
+ETP 287,funerary,high,silver:claude_hand_label
+ETP 289,ownership,high,silver:claude_hand_label
 ETP 290,ownership,medium,etr_formula:mi+name
 ETP 292,ownership,medium,etr_formula:mi+name
 ETP 295,ownership,medium,etr_formula:mi+name
-ETP 303,ownership,high,gold:claude_hand_label
+ETP 303,ownership,high,silver:claude_hand_label
 ETP 306,ownership,medium,etr_formula:mi+name
 CIE 2635,funerary,high,etr_keyword:funerary
 CIE 2694,funerary,high,etr_keyword:funerary
@@ -676,38 +676,38 @@ CIE 2527,funerary,high,etr_keyword:funerary
 CIE 2533,funerary,high,etr_keyword:funerary
 CIE 2534,funerary,high,etr_keyword:funerary
 CIE 2550,funerary,high,etr_keyword:funerary
-ETP 352,dedicatory,high,gold:claude_hand_label
-ETP 353,ownership,high,gold:claude_hand_label
+ETP 352,dedicatory,high,silver:claude_hand_label
+ETP 353,ownership,high,silver:claude_hand_label
 ETP 354,dedicatory,high,etr_keyword:dedicatory_deity
-ETP 362,ownership,high,gold:claude_hand_label
+ETP 362,ownership,high,silver:claude_hand_label
 ETP 76,funerary,high,etr_keyword:funerary
-ETP 83,ownership,medium,gold:claude_hand_label
+ETP 83,ownership,medium,silver:claude_hand_label
 ETP 86,ownership,medium,etr_formula:mi+name
-Fs 8.3,boundary,high,gold:claude_hand_label
-LL 4,dedicatory,high,gold:claude_hand_label
-LL 6,dedicatory,high,gold:claude_hand_label
-LL 8,dedicatory,high,gold:claude_hand_label
-LL 9,dedicatory,high,gold:claude_hand_label
-OA 3.9,dedicatory,high,gold:claude_hand_label
+Fs 8.3,boundary,high,silver:claude_hand_label
+LL 4,dedicatory,high,silver:claude_hand_label
+LL 6,dedicatory,high,silver:claude_hand_label
+LL 8,dedicatory,high,silver:claude_hand_label
+LL 9,dedicatory,high,silver:claude_hand_label
+OA 3.9,dedicatory,high,silver:claude_hand_label
 Pa 4.1,dedicatory,high,etr_keyword:dedicatory_deity
-Ta 1.108,funerary,high,gold:claude_hand_label
-Ta 1.15,funerary,high,gold:claude_hand_label
-Ta 1.168,funerary,high,gold:claude_hand_label
-Ta 1.18,funerary,high,gold:claude_hand_label
-Ta 1.183,funerary,high,gold:claude_hand_label
-Ta 1.191,funerary,high,gold:claude_hand_label
-Ta 1.82,funerary,high,gold:claude_hand_label
-Ta 1.9,funerary,high,gold:claude_hand_label
-Ta 3.6,votive,high,gold:claude_hand_label
-Ta 5.5,funerary,medium,gold:claude_hand_label
-Vc 1.87,funerary,high,gold:claude_hand_label
+Ta 1.108,funerary,high,silver:claude_hand_label
+Ta 1.15,funerary,high,silver:claude_hand_label
+Ta 1.168,funerary,high,silver:claude_hand_label
+Ta 1.18,funerary,high,silver:claude_hand_label
+Ta 1.183,funerary,high,silver:claude_hand_label
+Ta 1.191,funerary,high,silver:claude_hand_label
+Ta 1.82,funerary,high,silver:claude_hand_label
+Ta 1.9,funerary,high,silver:claude_hand_label
+Ta 3.6,votive,high,silver:claude_hand_label
+Ta 5.5,funerary,medium,silver:claude_hand_label
+Vc 1.87,funerary,high,silver:claude_hand_label
 Ve 3.30,dedicatory,high,en_phrase:dedicatory
-Vs 1.45,funerary,high,gold:claude_hand_label
-Vs 1.55,funerary,high,gold:claude_hand_label
-Vs 1.85,funerary,high,gold:claude_hand_label
-Cr 2.20,ownership,high,gold:claude_hand_label
-Cr 2.2,ownership,high,gold:claude_hand_label
-Cr 2.18,ownership,high,gold:claude_hand_label
-Pe 3.3,dedicatory,high,gold:claude_hand_label
-Vs 4.8,votive,high,gold:claude_hand_label
-Cl 1.373,funerary,high,gold:claude_hand_label
+Vs 1.45,funerary,high,silver:claude_hand_label
+Vs 1.55,funerary,high,silver:claude_hand_label
+Vs 1.85,funerary,high,silver:claude_hand_label
+Cr 2.20,ownership,high,silver:claude_hand_label
+Cr 2.2,ownership,high,silver:claude_hand_label
+Cr 2.18,ownership,high,silver:claude_hand_label
+Pe 3.3,dedicatory,high,silver:claude_hand_label
+Vs 4.8,votive,high,silver:claude_hand_label
+Cl 1.373,funerary,high,silver:claude_hand_label

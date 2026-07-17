@@ -393,7 +393,7 @@ label carries the source signal that triggered it:
 
 | Signal | n | Confidence | Rule |
 |---|---|---|---|
-| `gold:claude_hand_label` | 184 | high | Reasoned from real English Larth translation by Claude (note: "gold" here = LLM-consensus, not philologist-validated) |
+| `silver:claude_hand_label` | 184 | high | Reasoned from real English Larth translation by Claude. (Renamed from `gold:claude_hand_label` on 2026-07-17: these are LLM-derived, not philologist-validated, and "gold" invited miscitation.) |
 | `etr_keyword:funerary` | 93 | high | `suθi` / `avils` / `puia` / `clan` / etc. in canonical |
 | `etr_formula:mi+name` | 92 | medium | Object self-id formula `mi <name>` in short canonical |
 | `junk_translation:kinship_list` | 231 | medium | Larth MT-junk regex `mr-X mrs-Y son/daughter` |
