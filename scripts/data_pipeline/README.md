@@ -51,7 +51,6 @@ steps and are kept in `../attic/` for reference only.
 | `update_db_from_clean.py` | Emit idempotent ALTER/UPDATE SQL applying the clean CSV | `openetruscan_clean.csv` | SQL on stdout |
 | `claude_label_corpus.py` | Rule-cascade classifier producing category labels | `research/data/openetruscan_clean.csv`, `inscription_labels.csv` | `research/data/openetruscan_labels.csv` |
 | `integrate_burman.py` | Merge Burman concordance (TM/CIE cross-refs) | corpus db, `burman_concordance.csv` | enriched corpus, `trismegistos_mapping.yaml` |
-| `ingest_genetics.py` | Ingest AADR/Posth archaeogenetic samples | AADR `.tsv`/`.csv` | `genetic_samples` rows |
 
 ### Pleiades linking & gazetteer
 

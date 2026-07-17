@@ -2,16 +2,21 @@
 
 OpenEtruscan participates in the [Pelagios](https://pelagios.org) model of
 *linking the past through places*: inscriptions are published as Web Annotation
-JSON-LD whose targets are gazetteer URIs (Pleiades for places, Trismegistos and
-EAGLE for cross-corpus identity), described by a [`void.ttl`](../void.ttl)
-dataset record. The LOD emission lives in
+JSON-LD whose bodies carry gazetteer URIs (Pleiades for places, Trismegistos and
+EAGLE for cross-corpus identity) plus PeriodO period URIs for time. The corpus
+is described by a live VoID record at
+<https://www.openetruscan.com/void.ttl>, whose `void:dataDump` names the
+annotation feed at <https://www.openetruscan.com/pelagios.jsonld> — both served
+by the frontend. The JSON-LD builder lives in
 [`src/openetruscan/api/lod.py`](../src/openetruscan/api/lod.py).
 
-This page documents the workflows that *grow* that linked data. The triad
-Pelagios cares about is **place + time + people**; we already emit people
-(SNAP prosopography, [`snap_exporter.py`](../src/openetruscan/api/snap_exporter.py)).
-To actually join the Pelagios graph, see the prerequisites and submission steps
-in [`PELAGIOS_REGISTRATION.md`](PELAGIOS_REGISTRATION.md).
+This page documents the workflows that *grow* that linked data. Of the triad
+Pelagios cares about — **place + time + people** — the live feed emits place
+(Pleiades bodies) and time (PeriodO, below). The prosopography ("people") is
+modeled in the corpus but is **not** currently emitted as Pelagios/SNAP Linked
+Data: the standalone SNAP exporter was removed in the 2.0 surface cleanup as an
+unwired backend duplicate. To join the Pelagios graph, see the runbook in
+[`PELAGIOS_REGISTRATION.md`](PELAGIOS_REGISTRATION.md).
 
 ## Raising Pleiades coverage (place axis)
 

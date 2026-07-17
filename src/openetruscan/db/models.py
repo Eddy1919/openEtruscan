@@ -148,6 +148,15 @@ class GeneticSample(Base):
     """
     Represents a biological sample from an archaeological context.
     Linked to inscriptions via geographic proximity (PostGIS).
+
+    The archaeogenetics *runtime* (the ``/genetics/*`` endpoints, the
+    ``Corpus.add_genetic_sample`` writer, and the ingest script) was retired
+    in the 2.0 surface cleanup. This ORM model is retained deliberately: the
+    ``genetic_samples`` table still exists in every migrated database and is
+    still read by the deprecation-fenced ``core.spatial``/``core.lineage``
+    modules. Deleting this class would make ``alembic revision --autogenerate``
+    propose a ``DROP TABLE genetic_samples`` against live databases. Do not
+    remove it without an explicit, reviewed migration that drops the table.
     """
 
     __tablename__ = "genetic_samples"

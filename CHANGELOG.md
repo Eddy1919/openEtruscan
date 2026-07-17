@@ -44,6 +44,27 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   compose surface, and the docs no longer claim a self-hosted
   production stack or SPARQL endpoint.
 
+### Removed — archaeogenetics runtime & backend Linked-Data duplicates (S3)
+- **Deprecated archaeogenetics HTTP surface deleted.** `GET /genetics/samples`
+  and `GET /inscriptions/{id}/genetics` (both already `deprecated=True`, both
+  reading an empty `genetic_samples` table) are gone, along with the repository
+  methods they alone used (`get_genetic_samples`, `get_genetic_matches`) and the
+  `Corpus.add_genetic_sample` writer (unconditional-`geom` bug; its only caller
+  was an ingest script that could not import). The ingest script
+  `scripts/data_pipeline/ingest_genetics.py` is deleted. The `GeneticSample` ORM
+  model, its table, and
+  every migration are retained deliberately — deleting the model would make
+  `alembic revision --autogenerate` propose a `DROP TABLE genetic_samples`, and
+  the deprecation-fenced `core.spatial`/`core.lineage` modules still read the
+  table. `docs/openapi.json` regenerated: the two contracts are the only diff.
+- **Backend Linked-Data generators deleted as duplicates of the live frontend.**
+  `api/void_gen.py`, `api/snap_exporter.py`, and the stale root `void.ttl` are
+  removed — nothing imported them and no route served them. The live discovery
+  artifacts are the frontend's `void.ttl` and `pelagios.jsonld` routes;
+  `docs/PELAGIOS_REGISTRATION.md` is rewritten as a submission runbook against
+  the verified live URLs (`/void.ttl`, `/pelagios.jsonld`; 5,932 entities), and
+  `docs/PELAGIOS.md` no longer claims a SNAP people-feed that is not served.
+
 ### Fixed — corpus import without PostGIS
 - **`openetruscan import` no longer fails on a PostGIS-less database.**
   `Corpus.add()`/`add_batch()` referenced the `geom` column unconditionally

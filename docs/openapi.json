@@ -1014,34 +1014,6 @@
         ]
       }
     },
-    "/genetics/samples": {
-      "get": {
-        "deprecated": true,
-        "description": "EXPERIMENTAL placeholder. Returns the contents of the `genetic_samples`\ntable, which is currently empty in production. The table exists as\nschema scaffolding for a planned (not yet implemented) integration with\npublished archaeogenetic datasets (e.g. AADR, the Allen Ancient DNA\nResource). Until that integration is built, callers will receive an\nempty list — do NOT treat this endpoint as a substantive data source.\n\nThe endpoint is marked `deprecated=True` so it shows that status in the\nOpenAPI / Swagger surface; it is kept live only for backward\ncompatibility with code that already pings it.",
-        "operationId": "get_all_genetic_samples_genetics_samples_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
-                  "title": "Response Get All Genetic Samples Genetics Samples Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Get All Genetic Samples",
-        "tags": [
-          "Experimental"
-        ]
-      }
-    },
     "/health": {
       "get": {
         "description": "Deep health check.\n\nReturns 200 with `status: healthy` only when every dependency the public\nsurface actually needs is reachable. A 503 is preferable to a green check\nwhile the DB is gone.",
@@ -1330,64 +1302,6 @@
         "summary": "Import Inscription",
         "tags": [
           "Corpus"
-        ]
-      }
-    },
-    "/inscriptions/{id}/genetics": {
-      "get": {
-        "deprecated": true,
-        "description": "EXPERIMENTAL placeholder for spatio-temporal matching between\ninscriptions and archaeogenetic samples. See `/genetics/samples` for the\nfull caveat: the `genetic_samples` table is empty, so this endpoint\ncurrently returns `{\"total\": 0, \"matches\": []}` for every input. The\nendpoint is preserved as a hook for a future integration; treat any\n\"match\" returned here as an artefact of incomplete data rather than\nevidence of an archaeogenetic association.",
-        "operationId": "get_genetic_matches_inscriptions__id__genetics_get",
-        "parameters": [
-          {
-            "description": "ID of the inscription to find genetic matches for",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "ID of the inscription to find genetic matches for",
-              "title": "Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 5,
-              "maximum": 20,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Get Genetic Matches Inscriptions  Id  Genetics Get"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Genetic Matches",
-        "tags": [
-          "Experimental"
         ]
       }
     },

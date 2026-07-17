@@ -183,49 +183,6 @@ class Inscription:
 
 
 @dataclass
-class GeneticSample:
-    """A single archaeogenetic sample record."""
-
-    id: str
-    findspot: str = ""
-    findspot_lat: float | None = None
-    findspot_lon: float | None = None
-    findspot_uncertainty_m: int | None = None
-    date_approx: int | None = None
-    date_uncertainty: int | None = None
-    y_haplogroup: str | None = None
-    mt_haplogroup: str | None = None
-    biological_sex: str | None = None
-    c14_date_range: str | None = None
-    tomb_id: str | None = None
-    context_detail: str | None = None
-    ancestry_components: str | None = None
-    source: str = ""
-    notes: str = ""
-
-    def to_dict(self) -> dict:
-        """Serialize the genetic sample to a dictionary for research aggregations."""
-        return {
-            "id": self.id,
-            "findspot": self.findspot,
-            "findspot_lat": self.findspot_lat,
-            "findspot_lon": self.findspot_lon,
-            "findspot_uncertainty_m": self.findspot_uncertainty_m,
-            "date_approx": self.date_approx,
-            "date_uncertainty": self.date_uncertainty,
-            "y_haplogroup": self.y_haplogroup,
-            "mt_haplogroup": self.mt_haplogroup,
-            "biological_sex": self.biological_sex,
-            "c14_date_range": self.c14_date_range,
-            "tomb_id": self.tomb_id,
-            "context_detail": self.context_detail,
-            "ancestry_components": self.ancestry_components,
-            "source": self.source,
-            "notes": self.notes,
-        }
-
-
-@dataclass
 class SearchResults:
     """Container for corpus search results."""
 
@@ -1289,70 +1246,6 @@ class Corpus:
                 )
                 start_pos = idx + 1
         return rows
-
-    def add_genetic_sample(
-        self,
-        sample: GeneticSample,
-    ) -> None:
-        """Add a genetic sample to the Postgres DB with PostGIS."""
-        sql = """
-            INSERT INTO genetic_samples (
-                id, findspot, findspot_lat, findspot_lon,
-                date_approx, date_uncertainty, y_haplogroup, mt_haplogroup,
-                biological_sex, c14_date_range, tomb_id, context_detail,
-                ancestry_components, source, notes, geom
-            ) VALUES (
-                %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s,
-                ST_SetSRID(ST_MakePoint(%s, %s), 4326)
-            )
-            ON CONFLICT (id) DO UPDATE SET
-                findspot = EXCLUDED.findspot,
-                findspot_lat = EXCLUDED.findspot_lat,
-                findspot_lon = EXCLUDED.findspot_lon,
-                date_approx = EXCLUDED.date_approx,
-                date_uncertainty = EXCLUDED.date_uncertainty,
-                y_haplogroup = EXCLUDED.y_haplogroup,
-                mt_haplogroup = EXCLUDED.mt_haplogroup,
-                biological_sex = EXCLUDED.biological_sex,
-                c14_date_range = EXCLUDED.c14_date_range,
-                tomb_id = EXCLUDED.tomb_id,
-                context_detail = EXCLUDED.context_detail,
-                ancestry_components = EXCLUDED.ancestry_components,
-                source = EXCLUDED.source,
-                notes = EXCLUDED.notes,
-                geom = EXCLUDED.geom,
-                updated_at = NOW()
-        """
-        vals_list: list[Any] = [
-            sample.id,
-            sample.findspot,
-            sample.findspot_lat,
-            sample.findspot_lon,
-            sample.date_approx,
-            sample.date_uncertainty,
-            sample.y_haplogroup,
-            sample.mt_haplogroup,
-            sample.biological_sex,
-            sample.c14_date_range,
-            sample.tomb_id,
-            sample.context_detail,
-            sample.ancestry_components,
-            sample.source,
-            sample.notes,
-        ]
-
-        if sample.findspot_lon is None or sample.findspot_lat is None:
-            sql = sql.replace("ST_SetSRID(ST_MakePoint(%s, %s), 4326)", "NULL")
-        else:
-            # for MakePoint: lon, lat
-            vals_list.extend([sample.findspot_lon, sample.findspot_lat])
-
-        with self._conn.cursor() as cur:
-            cur.execute(sql, tuple(vals_list))
-        self._conn.commit()
 
     def find_genetic_matches(
         self,

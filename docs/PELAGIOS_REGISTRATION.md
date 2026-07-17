@@ -1,78 +1,105 @@
 # Registering OpenEtruscan with Pelagios / Peripleo
 
 Getting into the Pelagios graph is a **community / hosting action**, not a code
-change — and it has hard prerequisites that are **not yet met**. This page is the
-honest runbook: what's missing, in what order to fix it, and how to submit.
+change. The discovery artifacts a Peripleo ingester needs are now live on the
+public origin, so this is an execution runbook, not a list of blockers.
 
-> **Status (2026-06): NOT yet registerable.** The Pelagios artifacts are
-> generated correctly by this repo but are **not served on the live site**, so
-> there is nothing for Peripleo to crawl. Fix the prerequisites below first.
+> **Status (verified 2026-07-17): registerable.** The two discovery artifacts
+> resolve on the live site and are mutually consistent (the VoID `void:dataDump`
+> names the feed, and both report the same corpus size). The operator is a
+> Pelagios Network member; the remaining work is the submission itself.
 
-## What works today
+Every URL and number below was confirmed with `curl` against the live origin on
+2026-07-17. The public origin is the **Next.js frontend on Vercel** (repo
+`openEtruscan-frontend`); both artifacts are per-request route handlers rendered
+from live corpus counts (`app/void.ttl/route.ts`, `app/pelagios.jsonld/route.ts`).
+The FastAPI backend in *this* repo is not the public origin — do not point a
+crawler at it.
 
-`openetruscan.api.lod` renders the corpus as valid **W3C Web Annotation**
-JSON-LD. Regenerate and inspect the full dump from the live corpus with:
+## Verified live endpoints
 
-```bash
-python - <<'PY'   # (see git history of this doc for the full snippet)
-# pages /api/search and runs lod.inscription_to_jsonld over every row
-PY
+| URL (as curled) | Result |
+| --- | --- |
+| `https://www.openetruscan.com/void.ttl` | `200`, `text/turtle` — the dataset description |
+| `https://www.openetruscan.com/pelagios.jsonld` | `200`, `application/ld+json` — the annotation dump |
+| `https://openetruscan.com/void.ttl` (apex) | `307` → `https://www.openetruscan.com/void.ttl` |
+| `https://openetruscan.com/pelagios.jsonld` (apex) | `307` → www, then `200` |
+| `https://www.openetruscan.com/.well-known/void.ttl` | `404` — no well-known alias is served |
+
+The canonical host is **`www.openetruscan.com`**; the apex `openetruscan.com`
+`307`-redirects to it (verified on `/`, `/void.ttl`, `/pelagios.jsonld`).
+
+## What the live artifacts contain (verified)
+
+**`void.ttl`** (`text/turtle`) describes one `void:Dataset`,
+`:OpenEtruscanInscriptions`, licensed CC-BY-4.0, and names the dump:
+
+- `void:dataDump <https://openetruscan.com/pelagios.jsonld>`
+- `void:entities 5932`
+- linksets: `:PleiadesLinks void:triples 408`, `:TrismegistosLinks void:triples
+  135`, `:EagleLinks void:triples 0`, and `:PeriodoLinks` (a temporal linkset
+  via `dcterms:temporal`, no triple count declared)
+
+**`pelagios.jsonld`** is a W3C Web Annotation `AnnotationCollection`:
+
+- `"id": "https://openetruscan.com/pelagios.jsonld"`, `"total": 5932`, with a
+  flat `items` array of 5932 annotations (one per inscription — count matches
+  `void:entities`)
+- each annotation carries a `TextualBody`, `dcterms:license`, and, where the row
+  has them, Pleiades / Trismegistos / EAGLE / PeriodO bodies plus a
+  `GeoJSONSelector` point target
+
+## Submitting (operator is a Network member)
+
+The single artifact to hand Pelagios is the **VoID URL** — it self-describes the
+dump and the linksets:
+
+```
+https://www.openetruscan.com/void.ttl
 ```
 
-A run on 2026-06-20 produced 5,932 annotations (~2.9 MB); every item had
-`type` + `target` + `body`; 301 carried a PeriodO `dcterms:temporal`, 307 a
-GeoJSON point. The pipeline is sound.
+1. The Pelagios homepage does not expose a self-serve dataset form; the current
+   path is via the community. Contact the Network (`officers@pelagios.org`) or
+   the relevant LOD/Peripleo working channel linked from <https://pelagios.org>,
+   and provide the VoID URL above.
+2. For a Peripleo ingest config, the dataset dump is the `void:dataDump` target
+   inside that VoID: `https://openetruscan.com/pelagios.jsonld`. **Point strict
+   (non-redirect-following) ingesters at the `www` form**
+   `https://www.openetruscan.com/pelagios.jsonld` directly, because the
+   advertised apex form `307`-redirects (see caveat below).
+3. Highest-value upstream contribution: add or correct **Pleiades** place
+   records where Etruscan findspots are thin — only 408 of 5,932 inscriptions
+   currently carry a Pleiades body.
 
-## Prerequisites (blockers, in order)
+## Honest caveats (verified, not blockers)
 
-1. **Serve the discovery artifacts on the live origin.** Today these all 404:
-   - `https://openetruscan.com/void.ttl` (the dataset description)
-   - `https://openetruscan.com/pelagios.jsonld` (the annotation dump named by
-     `void:dataDump` in [`void.ttl`](../void.ttl))
-   - a SPARQL endpoint (optional)
+- **The advertised dump URL is the apex form and redirects.** `void:dataDump`
+  names `https://openetruscan.com/pelagios.jsonld`, which `307`s to the `www`
+  host; `curl -L` and browsers follow it, but an ingester that refuses
+  cross-host redirects should be given the `www` URL explicitly. (The redirect
+  is same-registrable-domain apex→www.)
+- **Annotation target URIs do not dereference.** Each annotation's `id` /
+  `target.source` is `https://openetruscan.com/inscriptions/{id}` (plural),
+  which returns `404`. The human-readable page lives at the **singular**
+  `https://www.openetruscan.com/inscription/{id}` (`200`, HTML with embedded
+  JSON-LD), and `https://www.openetruscan.com/api/inscription/{id}` returns
+  `200 application/json` (not `application/ld+json`). Peripleo ingests the dump,
+  so this does not block registration, but aligning the emitted target URI with
+  a route that resolves would let LOD consumers follow the link.
+- **EAGLE linkset is empty** (`void:triples 0`); the subset is declared but
+  carries no links yet.
 
-   The live API is the **Vercel/TypeScript** app in the `openEtruscan-frontend`
-   repo; the `/pelagios.jsonld` route in *this* repo's FastAPI is not deployed.
-   Port the feed to a Vercel function (or publish the dump as a static file).
+## Re-verifying before you submit
 
-2. **Make item URIs dereference to JSON-LD.** `…/api/inscription/100` with
-   `Accept: application/ld+json` currently returns plain JSON. Peripleo and LOD
-   consumers expect content negotiation to JSON-LD on each `id`.
+```bash
+# Dataset description (small) — check counts and the dataDump target
+curl -sSL https://www.openetruscan.com/void.ttl
 
-3. **Populate the place links the feed under-reports.** The generated dump had
-   **0 Pleiades bodies** even though the DB reports 408 linked, because
-   `inscription_to_jsonld` resolves Pleiades only from `data/pleiades_mapping.yaml`
-   and **ignores the `inscriptions.pleiades_id` column**. Two fixes:
-   - have `lod.get_pleiades_uri` fall back to the row's `pleiades_id`;
-   - run the (now tuned) Pleiades review pipeline to grow the mapping — see
-     [`PELAGIOS.md`](PELAGIOS.md).
+# Feed size (multi-MB) — confirm the collection total
+curl -sSL https://www.openetruscan.com/pelagios.jsonld | grep -o '"total":[0-9]*' | head -1
+```
 
-4. **Reconcile `void.ttl` with reality.** It currently advertises 11,361
-   entities / 34,477 triples; the live corpus is 5,932 inscriptions. Regenerate
-   it (`api/void_gen.py`) so the counts, `void:dataDump`, and licence are
-   accurate before anyone crawls it.
-
-## Submitting (once the prerequisites are met)
-
-The Pelagios discovery mechanism has changed across Peripleo versions, so
-**confirm the current path with the community** rather than assuming — start at
-<https://pelagios.org> and the Pelagios Network GitHub org. As of writing the
-route is roughly:
-
-1. **Join the Pelagios Network** (it's an association of projects) via the
-   "Get involved" / membership path on pelagios.org.
-2. **Announce the dataset** on the community channels (the mailing list / Slack)
-   and at a **Linked Pasts** event — this is how new gazetteer-linked corpora
-   are surfaced.
-3. **Make it Peripleo-ingestable.** Current Peripleo builds ingest a dataset by
-   pointing a config at a stable dump URL (the `void:dataDump`). Provide the
-   served `pelagios.jsonld` + `void.ttl` URLs.
-4. **Contribute place records upstream** where Etruscan findspots are thin in
-   Pleiades — the highest-value, most-welcomed contribution.
-
-## What I could not do
-
-The submission itself is an external, authenticated community process and
-depends on the live feed existing first — it is **not** something this repo can
-complete on its own. Everything code-side that *can* be prepared is prepared;
-the remaining steps are deploy-and-submit, listed above.
+The counts are rendered live from the corpus (`getVoidStats` /
+`getPelagiosFeedRows` in `openEtruscan-frontend/lib/db/queries.ts`), so they
+track the database and will change as the corpus grows — re-run the checks and
+update this page's numbers when you submit.

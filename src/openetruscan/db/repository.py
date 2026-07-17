@@ -19,7 +19,7 @@ from openetruscan.core.periodo import enrich_timeline_buckets
 class InscriptionRepository:
     """
     Main data access layer for the OpenEtruscan corpus.
-    Encapsulates all SQLAlchemy queries for inscriptions, entities, and genetic samples.
+    Encapsulates all SQLAlchemy queries for inscriptions, entities, and clans.
     """
 
     def __init__(self, session: AsyncSession):
@@ -532,40 +532,6 @@ class InscriptionRepository:
             inscriptions=[self._to_dataclass(row) for row in rows], total=len(rows)
         )
 
-    async def get_genetic_matches(
-        self, inscription_id: str, limit: int = 5
-    ) -> list[dict[str, Any]]:
-        """
-        Find nearest archaeogenetic samples using PostGIS distances.
-        """
-        source = await self.get_by_id(inscription_id)
-        if not source or source.findspot_lat is None:
-            return []
-
-        center = f"SRID=4326;POINT({source.findspot_lon} {source.findspot_lat})"
-        # Fallback to computing point from lat/lon if geom isn't synced in genetic_samples
-        stmt = text(
-            "SELECT id, findspot, y_haplogroup, mt_haplogroup, biological_sex, c14_date_range, "
-            "ST_Distance(ST_SetSRID(ST_MakePoint(findspot_lon, findspot_lat), 4326)::geography, ST_GeogFromText(:center)) as dist "
-            "FROM genetic_samples "
-            "WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL "
-            "ORDER BY ST_SetSRID(ST_MakePoint(findspot_lon, findspot_lat), 4326) <-> ST_GeometryFromText(:center) LIMIT :limit"
-        ).bindparams(center=center, limit=limit)
-
-        result = await self.session.execute(stmt)
-        return [
-            {
-                "id": r.id,
-                "findspot": r.findspot,
-                "y_haplogroup": r.y_haplogroup,
-                "mt_haplogroup": r.mt_haplogroup,
-                "biological_sex": r.biological_sex,
-                "c14_date_range": r.c14_date_range,
-                "distance_m": round(r.dist, 1) if r.dist else None,
-            }
-            for r in result
-        ]
-
     async def get_full_names_network(self, min_count: int = 5) -> dict[str, Any]:
         """
         Generate a global graph of name co-occurrences.
@@ -713,34 +679,6 @@ class InscriptionRepository:
 
         result = await self.session.execute(stmt)
         return result.scalar()
-
-    async def get_genetic_samples(self) -> list[dict[str, Any]]:
-        """
-        Retrieve all genetic samples with spatial coordinates and basic lineage markers.
-        Used for the Explorer Map genetics layer.
-        """
-        stmt = text("""
-            SELECT id, findspot, findspot_lat, findspot_lon, y_haplogroup, mt_haplogroup, 
-                   date_approx, biological_sex, c14_date_range, tomb_id
-            FROM genetic_samples
-            WHERE findspot_lat IS NOT NULL AND findspot_lon IS NOT NULL
-        """)
-        result = await self.session.execute(stmt)
-        return [
-            {
-                "id": r.id,
-                "findspot": r.findspot,
-                "findspot_lat": r.findspot_lat,
-                "findspot_lon": r.findspot_lon,
-                "y_haplogroup": r.y_haplogroup,
-                "mt_haplogroup": r.mt_haplogroup,
-                "date_approx": r.date_approx,
-                "biological_sex": r.biological_sex,
-                "c14_date_range": r.c14_date_range,
-                "tomb_id": r.tomb_id,
-            }
-            for r in result.fetchall()
-        ]
 
     def _to_dataclass(self, model: Inscription) -> InscriptionData:
         """
