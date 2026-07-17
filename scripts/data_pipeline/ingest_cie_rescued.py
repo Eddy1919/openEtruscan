@@ -9,6 +9,7 @@ import sys
 sys.path.append(str(repo_root / "src"))
 
 from openetruscan.core.normalizer import normalize
+from provenance_values import provenance_status_for_findspot
 
 sqlite_db_path = repo_root / "data" / "cie" / "databases" / "cie_rescued.db"
 
@@ -116,7 +117,7 @@ def ingest_batch():
                     "etruscan",
                     "etruscan",
                     f"CIE Rescued ({source})" if source else "CIE Rescued",
-                    "verified",
+                    provenance_status_for_findspot(modern_loc),
                     "rescued,ai-verified",
                 ),
             )

@@ -1,5 +1,7 @@
 import sqlite3
 
+from provenance_values import provenance_status_for_findspot
+
 
 def get_geom_str(lon, lat):
     if lon is not None and lat is not None:
@@ -49,7 +51,7 @@ def export_sql():
             flags = []
             if rd.get("language_hint"):
                 flags.append(rd["language_hint"])
-            prov_status = "verified"
+            prov_status = provenance_status_for_findspot(findspot)
 
             geom = get_geom_str(lon, lat)
 

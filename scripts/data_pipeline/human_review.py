@@ -8,6 +8,7 @@ from pathlib import Path
 # Add src to the sys path so we can invoke the core codebase
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 from openetruscan.core.corpus import Corpus, Inscription
+from provenance_values import provenance_status_for_findspot
 
 
 def human_review():
@@ -82,19 +83,22 @@ def human_review():
         if choice == "y":
             canonical_id = item.get("cie_id", "").replace("CIE ", "").replace("CIE", "").strip()
             formatted_id = f"CIE {canonical_id}"
+            # Re-read from `item` (not the pre-edit `fs`): the [e] flow may have
+            # replaced the record, and the tier must match the stored findspot.
+            findspot = item.get("latin_findspot", "")
 
             insc = Inscription(
                 id=formatted_id,
                 canonical=item.get("etruscan_text_transliterated", ""),
                 raw_text=item.get("etruscan_text_original")
                 or item.get("etruscan_text_transliterated", ""),
-                findspot=item.get("latin_findspot", ""),
+                findspot=findspot,
                 findspot_lat=item.get("auto_lat"),
                 findspot_lon=item.get("auto_lon"),
                 notes=item.get("latin_commentary", ""),
                 bibliography=item.get("bibliography") or "",
                 source="CIE Volume I (HITL Approved)",
-                provenance_status="verified",
+                provenance_status=provenance_status_for_findspot(findspot),
             )
             try:
                 corpus.add(insc)
