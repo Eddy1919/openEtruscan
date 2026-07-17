@@ -95,8 +95,8 @@ dev = [
     # .pre-commit-config.yaml so local runs, pre-commit, and CI agree
     # byte-for-byte (a minor ruff bump silently reformats the tree).
     # Keep these two in lockstep with that file.
-    "ruff==0.4.10",
-    "mypy==1.10.0",
+    "ruff==0.15.22",
+    "mypy==2.3.0",
     "semgrep>=1.60",
     "safety>=3.0",
     # testcontainers spins a real Postgres + pgvector locally for tests that
