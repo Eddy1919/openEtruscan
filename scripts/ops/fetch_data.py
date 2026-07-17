@@ -73,9 +73,7 @@ def download(url: str, dest: Path) -> None:
 def fetch_one(entry: dict[str, str], *, force: bool) -> bool:
     """Fetch and verify a single manifest entry. Returns True on success."""
     dest = REPO_ROOT / entry["dest"]
-    url = (
-        f"https://zenodo.org/api/records/{entry['record_id']}" f"/files/{entry['filename']}/content"
-    )
+    url = f"https://zenodo.org/api/records/{entry['record_id']}/files/{entry['filename']}/content"
 
     if dest.exists() and not force:
         actual = sha256_of(dest)

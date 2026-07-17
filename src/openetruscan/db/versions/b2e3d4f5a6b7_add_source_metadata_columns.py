@@ -56,8 +56,7 @@ def upgrade() -> None:
     # migration idempotent for databases that already have it.
     op.execute(
         sa.text(
-            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_code "
-            "ON inscriptions (source_code)"
+            "CREATE INDEX IF NOT EXISTS ix_inscriptions_source_code ON inscriptions (source_code)"
         )
     )
 
