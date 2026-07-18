@@ -44,11 +44,18 @@ jobs:
           # Full history so Gitleaks can scan all commits, not just the tip.
           fetch-depth: 0
 
-      - name: Gitleaks scan
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITLEAKS_CONFIG: .gitleaks.toml
-          GITLEAKS_VERSION: latest
+      # The gitleaks binary directly, not gitleaks-action: the action
+      # phones the GitHub API to classify the repo owner and, when that
+      # call is rate-limited, fails the job demanding a commercial
+      # license key without ever scanning (observed 2026-07-18). The
+      # pinned binary has no API dependency and no license path.
+      - name: Gitleaks scan (pinned binary, full history)
+        run: |
+          curl -sSfL -o /tmp/gitleaks.tgz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --config .gitleaks.toml \
+            --redact --verbose
 
   pip-audit:
     runs-on: ubuntu-latest
