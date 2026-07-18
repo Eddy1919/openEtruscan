@@ -16,7 +16,7 @@ Pelagios cares about — **place + time + people** — the live feed emits place
 modeled in the corpus but is **not** currently emitted as Pelagios/SNAP Linked
 Data: the standalone SNAP exporter was removed in the 2.0 surface cleanup as an
 unwired backend duplicate. To join the Pelagios graph, see the runbook in
-[`PELAGIOS_REGISTRATION.md`](PELAGIOS_REGISTRATION.md).
+the maintainer-held registration runbook.
 
 ## Raising Pleiades coverage (place axis)
 

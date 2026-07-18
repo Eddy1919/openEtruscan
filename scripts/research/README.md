@@ -11,7 +11,7 @@ anchor sets, sample selections for review, and so on.
 
 | File | Purpose |
 |---|---|
-| [`extract_classical_etruscan.py`](extract_classical_etruscan.py) | Walks `data/classical_texts/formatted/` (Perseus TEI XML), extracts every paragraph mentioning Etruscan/Tyrrhenian, and emits two JSONL outputs: full passages (~1,795) and regex-extracted bilingual gloss candidates (~29, mostly noise). Underpins [Milestone 3](../../research/WBS.md#milestone-3--primary-source-attested-anchor-mining). |
+| [`extract_classical_etruscan.py`](extract_classical_etruscan.py) | Walks `data/classical_texts/formatted/` (Perseus TEI XML), extracts every paragraph mentioning Etruscan/Tyrrhenian, and emits two JSONL outputs: full passages (~1,795) and regex-extracted bilingual gloss candidates (~29, mostly noise). Underpins ROADMAP Milestone 3 (primary-source attested-anchor mining). |
 
 ## Typical use
 

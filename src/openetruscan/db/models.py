@@ -292,7 +292,7 @@ class ProposedAnchor(Base):
     `approved` (row gets appended to `research/anchors/attested.jsonl`
     via a separate data-refresh pipeline), `rejected`, or `duplicate`.
 
-    See `research/notes/community-curation-design.md` for the workflow.
+    See the maintainer-held community-curation design note for the workflow.
     """
 
     __tablename__ = "proposed_anchors"

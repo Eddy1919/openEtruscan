@@ -1,6 +1,6 @@
 # Vector-Symbolic role–filler encoding (WP1 spike)
 
-First build of [`research/parked/NEUROSYMBOLIC_WBS.md`](../../parked/NEUROSYMBOLIC_WBS.md) WP1
+First build of WP1 of the neurosymbolic work plan (maintainer-held)
 (NS1.1 + NS1.2 + NS1.3). Binding-as-algebra (Plate HRR / Kanerva; MAP bipolar
 variant) applied to the real corpus — **zero training**.
 

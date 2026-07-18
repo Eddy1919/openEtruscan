@@ -148,3 +148,13 @@ research/private/
 AGENTS.md
 CLAUDE.md
 scripts/ops/pod.sh
+
+# Maintainer-held planning/runbook docs (kept on disk, not published)
+research/WBS.md
+research/EXECUTION_WBS.md
+research/SOTA_ROADMAP.md
+research/notes/t2-3-implementation-plan.md
+research/notes/community-curation-design.md
+research/notes/cv-detector-plan-etruscan-glyphs.md
+research/parked/NEUROSYMBOLIC_WBS.md
+docs/PELAGIOS_REGISTRATION.md

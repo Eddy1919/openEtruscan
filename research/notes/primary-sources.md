@@ -94,13 +94,13 @@ subset:
 - **Hesychius of Alexandria**'s lexicon — Greek lexicon of obscure
   words including a small set of Etruscan-glossed entries.
 
-These are tracked under [Milestone 3.4](../WBS.md) as a discrete
+These are tracked under ROADMAP Milestone 3 as a discrete
 follow-up. None are paywalled in principle; all are bounded by
 "how much effort to find a clean digital edition".
 
 ## Path forward
 
-[Milestone 3 of the WBS](../WBS.md) sketches the LLM-as-parser approach
+[Milestone 3 of the roadmap](../ROADMAP.md) sketches the LLM-as-parser approach
 on the existing 1,795 passages. The argument for it:
 
 - **The primary text exists**. We have 1,795 paragraphs of Latin /

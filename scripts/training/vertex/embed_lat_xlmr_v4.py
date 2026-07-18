@@ -29,7 +29,7 @@ route layer doesn't need a language-aware alias map. The v4 column in
 Latin-side vanilla XLM-R-base" — both compared against LaBSE's
 parallel-data-trained shared space. That's a fair comparison of two
 embedding strategies, just with a slightly misleading partition
-label. See ``research/SOTA_ROADMAP.md`` for the larger context.
+label. See the maintainer-held research-grade roadmap for the larger context.
 
 Cost / wall clock
 -----------------

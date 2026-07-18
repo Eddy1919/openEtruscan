@@ -271,7 +271,7 @@ A minimal BibTeX entry:
 
 Per the Zenodo record metadata, `10.5281/zenodo.20075835` is the **concept DOI** (resolves to the latest version) and `10.5281/zenodo.20075836` is the **version DOI** for the v1.0.0 deposit. Cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot. (An earlier revision of this section had the two swapped.)
 
-The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md). The research-grade roadmap is in [`research/SOTA_ROADMAP.md`](research/SOTA_ROADMAP.md).
+The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md).
 
 ## Licence
 

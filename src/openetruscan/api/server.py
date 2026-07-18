@@ -1716,7 +1716,7 @@ async def date_estimate(
 # Community-curation surfaces (WBS P4 Option C).
 #
 # Three endpoints + one admin promote-action implement the moderation
-# pipeline specified in research/notes/community-curation-design.md.
+# pipeline specified in the maintainer-held community-curation design note.
 # Submissions land in the `proposed_anchors` table (alembic
 # c8d9e0f1a2b3); admins approve via Bearer-token-gated /anchors/{id}/promote;
 # approved rows are surfaced read-only via /anchors/attested AND

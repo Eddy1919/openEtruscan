@@ -485,7 +485,7 @@ Acknowledging where we still fall short of publishable rigour:
    compares point estimates on n=16 evaluated pairs. A paired
    bootstrap (10k resamples) would let us put a p-value on
    "LaBSE > v4 at field@10". Scoped in
-   [`research/SOTA_ROADMAP.md`](SOTA_ROADMAP.md) as RG.8; not blocking
+   the maintainer-held research-grade roadmap as RG.8; not blocking
    for the P5 work but should land before any external publication.
 
 ---

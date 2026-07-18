@@ -4,7 +4,8 @@ Forward-looking research plan for the multilingual-encoder strand of
 OpenEtruscan. **Read [`FINDINGS.md`](FINDINGS.md) first** — that's the
 honest current state. This file is about where to go next.
 
-The discrete tasks for executing each milestone are in [`WBS.md`](WBS.md).
+The discrete task breakdown behind each milestone is maintainer-held
+planning; this file carries the science.
 
 ---
 
