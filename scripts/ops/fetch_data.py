@@ -3,7 +3,7 @@
 
 Why this exists: the corpus CSVs are deliberately not committed to git (see
 .gitignore) and DVC was retired (its remote survives as a read-only salvage
-snapshot — see data/RECOVERED_BUCKETS.md). The canonical public home of the data is
+snapshot held by the maintainer). The canonical public home of the data is
 Zenodo, which gives us a versioned DOI and stable download URLs. This script
 is the single supported way to restore the data layer of a fresh clone.
 

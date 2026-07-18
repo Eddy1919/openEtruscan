@@ -291,9 +291,7 @@ def results_to_epidoc(
         "    </titleStmt>",
         "    <publicationStmt>",
         "      <authority>OpenEtruscan</authority>",
-        "      <licence target="
-        '"https://creativecommons.org/licenses/by/4.0/">'
-        "CC BY 4.0</licence>",
+        '      <licence target="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</licence>',
         "    </publicationStmt>",
         "    <sourceDesc><p>Aggregated corpus</p></sourceDesc>",
         "  </fileDesc>",

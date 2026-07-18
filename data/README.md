@@ -10,7 +10,7 @@ listed below. (DVC was removed 2026-07-17 — the tooling had been dead
 config since the migration off GCP. An earlier version of this note said
 its remote bucket died with a deleted GCP project; the bucket in fact
 survives, orphaned, in a live project — inventory and salvage map in
-[RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md).)
+the maintainer-held recovered-buckets inventory.)
 
 ## Layout
 
@@ -26,7 +26,8 @@ survives, orphaned, in a live project — inventory and salvage map in
 One entry per artifact in the layout table, plus the Zenodo deposit
 (AGENTS.md rule 6: source, license, retrieval date, transform chain —
 unknowns are recorded as unknown, not guessed). Recovered GCS artifacts
-carry their provenance in [RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md).
+carry their provenance in the maintainer-held recovered-buckets
+inventory (contact the maintainer for access).
 
 ### Zenodo deposit — `openetruscan_clean.csv`
 
@@ -56,7 +57,7 @@ carry their provenance in [RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md).
 - **Source:** studietruschi.org scans of the *Corpus Inscriptionum
   Etruscarum* (six Vol. I fascicles + the Vol. II indices). The exact
   source URLs are recorded in `cie/download_cie.sh`, recovered in the DVC
-  snapshot ([RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md)), which also holds
+  snapshot (documented in the maintainer-held inventory), which also holds
   MD5s and byte sizes for all seven PDFs.
 - **License:** the 1893– edition text is public domain; the terms under
   which studietruschi.org publishes its scans were never recorded —
@@ -97,7 +98,7 @@ carry their provenance in [RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md).
 - **Created:** original training dates unknown except where a checkpoint's
   own `training_metadata.json` records them.
 - **Transform chain:** per checkpoint —
-  [RECOVERED_BUCKETS.md](RECOVERED_BUCKETS.md) documents every recovered
+  The maintainer-held inventory documents every recovered
   checkpoint's training corpus, base model, and metadata. Expected local
   occupants: `byt5-v4`/`byt5-v5`
   ([`research/experiments/byt5_v4_vs_v5/`](../research/experiments/byt5_v4_vs_v5/README.md))

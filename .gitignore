@@ -71,7 +71,6 @@ nginx.dev.conf
 # manifest, restore instructions, recovered-bucket inventory).
 /data/*
 !/data/README.md
-!/data/RECOVERED_BUCKETS.md
 
 # Local security audit (contains grep patterns for secrets — keep local)
 scripts/security_check.sh
@@ -139,3 +138,13 @@ terraform/tofu_*.zip
 # until explicitly promoted to research/v2/ (which IS tracked).
 research/private/
 .env*
+
+# Local caches
+.mypy_cache/
+
+# Agent/operator tooling — kept on disk for maintainer workflows, never
+# published (this is a scholarly repo, not an AI-ops showcase).
+.agents/
+AGENTS.md
+CLAUDE.md
+scripts/ops/pod.sh

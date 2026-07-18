@@ -52,7 +52,7 @@ python research/experiments/lacuna_restoration/eval.py
 
 Both checkpoints survive in `gs://openetruscan-rosetta-vai/models/`
 (complete, with the metadata that pins their vocabularies — see
-`data/RECOVERED_BUCKETS.md`); download them to `data/models/` in the
+the maintainer-held bucket inventory); download them to `data/models/` in the
 layout the script documents, then spot-check the alignment caveats below
 before trusting any new numbers.
 
@@ -75,7 +75,7 @@ Still blocked, in order of severity:
   unavailable.~~ **Resolved 2026-07-18:** complete copies of
   `char-mlm-v1` and `lora-char-head-v1` (with vocabulary metadata) were
   found in `gs://openetruscan-rosetta-vai/models/` during the bucket
-  inventory (`data/RECOVERED_BUCKETS.md`). A re-run remains gated on the
+  inventory (maintainer-held). A re-run remains gated on the
   alignment spot-checks below.
 * The 500-row eval sample requires prod-DB access (`DATABASE_URL`), which is
   no longer provisioned in this repo.
