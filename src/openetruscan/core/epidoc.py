@@ -191,8 +191,8 @@ def inscription_to_epidoc(inscription, language: str = "xet") -> str:
     idno.text = inscription.id
     availability = ET.SubElement(pub_stmt, "availability")
     licence = ET.SubElement(availability, "licence")
-    licence.set("target", "https://creativecommons.org/publicdomain/zero/1.0/")
-    licence.text = "CC0 1.0 Universal"
+    licence.set("target", "https://creativecommons.org/licenses/by/4.0/")
+    licence.text = "CC BY 4.0"
 
     # sourceDesc
     source_desc = ET.SubElement(file_desc, "sourceDesc")
@@ -292,8 +292,8 @@ def results_to_epidoc(
         "    <publicationStmt>",
         "      <authority>OpenEtruscan</authority>",
         "      <licence target="
-        '"https://creativecommons.org/publicdomain/zero/1.0/">'
-        "CC0 1.0</licence>",
+        '"https://creativecommons.org/licenses/by/4.0/">'
+        "CC BY 4.0</licence>",
         "    </publicationStmt>",
         "    <sourceDesc><p>Aggregated corpus</p></sourceDesc>",
         "  </fileDesc>",

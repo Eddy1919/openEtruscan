@@ -43,7 +43,7 @@ date-released: "2026-07-18"
 # also mints its own version-specific DOI; this all-versions identifier is
 # the right one to cite when meaning "the project" rather than "this exact
 # snapshot".
-doi: "10.5281/zenodo.20075836"
+doi: "10.5281/zenodo.20075835"
 preferred-citation:
   type: dataset
   title: "OpenEtruscan corpus v1 — unified Etruscan inscriptions"

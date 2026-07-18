@@ -685,7 +685,7 @@ def _inscription_jsonld(inscription) -> dict:
         ),
         "schema:about": inscription.classification,
         "schema:inLanguage": inscription.language,
-        "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "schema:license": "https://creativecommons.org/licenses/by/4.0/",
     }
     if same_as:
         payload["schema:sameAs"] = same_as
