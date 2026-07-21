@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
 
       - name: Export the locked dependency graph
         run: uv export --frozen --no-emit-project -o /tmp/requirements.txt
