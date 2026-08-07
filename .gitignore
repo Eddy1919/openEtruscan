@@ -93,6 +93,9 @@ slow_query_policy.json
 !/models/etr-lora-v4/
 /models/etr-lora-v4/*
 !/models/etr-lora-v4/README.md
+!/models/openetruscan-classifier/
+/models/openetruscan-classifier/*
+!/models/openetruscan-classifier/README.md
 cloud-sql-proxy
 
 # Editor / agent local state

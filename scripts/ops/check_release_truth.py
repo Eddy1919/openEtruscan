@@ -182,12 +182,50 @@ def check_model_cards(m: dict[str, Any], f: Failures) -> None:
                 card_path,
                 f"BibTeX version = {{{match.group(1)}}}, manifest says {m['version']}",
             )
-        f.contains(
+        # Accept either prose form ("Apache-2.0" / "Apache 2.0"); the card is
+        # written for humans and the punctuation is not the claim.
+        spdx = m["licences"]["model_weights"]["spdx"]
+        f.check(
+            spdx in text or spdx.replace("-", " ") in text,
             card_path,
-            text,
-            m["licences"]["model_weights"]["spdx"].replace("-", " "),
-            "the model-weights licence",
+            f"does not state the model-weights licence ({spdx})",
         )
+        _check_retraction(model, card_path, text, f)
+
+
+def _check_retraction(model: dict[str, Any], card_path: str, text: str, f: Failures) -> None:
+    """A card must not still carry a claim the project has retracted.
+
+    This is the assertion the whole gate exists for. The classifier card
+    advertised "99% Macro F1" for months after the repository, the website,
+    and the changelog had all retracted it — every in-repo surface was correct
+    and the one surface a citing scholar actually reaches was not. A card that
+    reprints its own retracted number is worse than no card.
+    """
+    retraction = model.get("retracted_claim")
+    if not retraction:
+        return
+
+    # The bare figure, however it is punctuated ("99%", "99 %", "0.99 macro").
+    figure = re.search(r"[\d.]+\s*%?", retraction["value"])
+    if figure:
+        stale = re.escape(figure.group(0).strip().rstrip("%"))
+        pattern = rf"(?<![\d.]){stale}\s*%"
+        for match in re.finditer(pattern, text):
+            line = text.count("\n", 0, match.start()) + 1
+            # A retraction notice necessarily quotes the number it retracts.
+            window = text[max(0, match.start() - 300) : match.end() + 300].lower()
+            if "retract" in window:
+                continue
+            f.check(
+                False,
+                f"{card_path}:{line}",
+                f"restates the retracted claim {match.group(0)!r} outside a "
+                f"retraction notice — corrected value is "
+                f"{retraction['corrected_range']}",
+            )
+
+    f.contains(card_path, text.lower(), "retract", "that the earlier claim was retracted")
 
 
 def check_manual_surfaces(m: dict[str, Any], f: Failures, strict: bool) -> list[str]:

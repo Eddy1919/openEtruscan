@@ -22,11 +22,17 @@ OpenEtruscan is an open-source platform for working with the Etruscan epigraphic
 
 The corpus holds **6,633 unified inscriptions**, drawn mostly from the *Larth Dataset* (Vico & Spanakis, 2023; ~71%) and the *Corpus Inscriptionum Etruscarum* (Vol. I extractions; ~29%), with links to Trismegistos, EAGLE, and Pleiades. The cleaned, ML-ready dataset published on Zenodo is a 6,567-row subset (66 rows dropped during cleaning).
 
-> **Which number is which.** Three corpus totals circulate — 6,633 archival, 6,567 published, 5,932 in the Linked Open Data feed. They describe three different artifacts and are reconciled, with the one unexplained delta named as such, in [`release-manifest.json`](release-manifest.json). That file is the single source of truth for every version, count, licence, DOI, and model status this project asserts publicly; `scripts/ops/check_release_truth.py` fails CI when a surface drifts from it. If a number here and a number there disagree, the manifest wins and the other is a bug.
+> **Which number is which.** Three corpus totals circulate and they describe three different artifacts: **6,633** archival (this repository's unified corpus), **6,567** published (the Zenodo deposit, 66 rows dropped in cleaning), and **5,932** deployed (every row in the live production database).
+>
+> **The deployed corpus is smaller than the published one, and we do not yet know why.** The Linked Open Data feed is unfiltered — `getPelagiosFeedRows()` is a bare `SELECT ... FROM inscriptions` — so 5,932 is the live table count, not a subset of a larger served corpus. 701 rows in the archival corpus and 635 in the Zenodo deposit are not in production. Candidates are an older or partial seed, loss during the Cloud SQL → Neon migration, or cleaning applied at load; resolving it needs database access and is tracked as an open corpus item. **Until it is resolved, do not read 6,633 or 6,567 as the size of what the website serves.**
+>
+> All of this is reconciled in [`release-manifest.json`](release-manifest.json), the single source of truth for every version, count, licence, DOI, and model status this project asserts publicly; `scripts/ops/check_release_truth.py` fails CI when a surface drifts from it. If a number here and a number there disagree, the manifest wins and the other is a bug.
 
 ### Provenance disclosure
 
-OpenEtruscan separates **editorial verification of a text** (we trust the published reading) from **archaeological provenance** (we know where the inscribed object actually surfaced). These are two different scholarly claims and each row carries a `provenance_status` in one of four tiers:
+OpenEtruscan separates **editorial verification of a text** (we trust the published reading) from **archaeological provenance** (we know where the inscribed object actually surfaced). These are two different scholarly claims and each row carries a `provenance_status` in one of four tiers.
+
+The table below describes the **archival** corpus (6,633 rows). The live database, being smaller, reports different absolute counts — 2,203 documented / 3,729 undocumented as of 2026-08-08 — at a similar ratio; `/stats/provenance` returns the live breakdown and is authoritative for anything the website shows.
 
 | Tier | Count | Share | Meaning |
 |---|---:|---:|---|

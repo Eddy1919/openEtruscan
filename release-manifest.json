@@ -50,14 +50,17 @@
       "delta_from_archival": -66,
       "delta_explained": true
     },
-    "served_lod": {
+    "deployed": {
       "count": 5932,
-      "label": "Linked Open Data feed",
-      "what": "Entities served by the Pelagios JSON-LD and VoID endpoints, by the feed's own `total` field.",
+      "label": "live production database",
+      "what": "Every row in the `inscriptions` table of the production database. This is also exactly what the Pelagios JSON-LD and VoID endpoints serve: `getPelagiosFeedRows()` is an unfiltered `SELECT ... FROM inscriptions` and `getVoidStats()` is `COUNT(*)`, so the feed's `total` is the table count, not a subset.",
       "authority": "live endpoint",
+      "verified": "2026-08-08 via GET /api/stats/summary -> {\"total\": 5932}",
       "delta_from_published": -635,
+      "delta_from_archival": -701,
       "delta_explained": false,
-      "open_item": "The 635-row gap between the published corpus and the LOD feed is not attributed to a documented filter. Do not present 5,932 as the corpus size. Tracked alongside the 312/282 training-pool delta in research/v2/data/README.md."
+      "open_item": "Earlier wording here blamed an undocumented feed filter. That was wrong: there is no filter. The live database simply holds 701 fewer rows than the archival corpus and 635 fewer than the published Zenodo deposit — the deployed platform serves a smaller corpus than the one its DOI cites. The cause is unknown from the application code alone (candidates: prod seeded from an older or partial export; rows lost in the Cloud SQL -> Neon migration; cleaning applied at load). Resolving it needs database and pipeline access. Owner: Pod A. Until resolved, no surface may present 6,633 or 6,567 as the size of what the website serves.",
+      "downstream_staleness": "README's provenance table (acquired_documented 2,317 / acquired_undocumented 4,316, summing to 6,633) describes the archival corpus. The live API reports 2,203 / 3,729. Both are internally consistent; they describe different artifacts and must be labelled as such."
     }
   },
 
@@ -101,7 +104,7 @@
     {
       "id": "openetruscan-classifier",
       "hub": "Eddy1919/openetruscan-classifier",
-      "card": null,
+      "card": "models/openetruscan-classifier/README.md",
       "status": "claim_retracted",
       "licence": "Apache-2.0",
       "headline_metric": {
@@ -120,7 +123,12 @@
         "retracted_in_repo": true,
         "retracted_on_website": true,
         "retracted_on_hub": false,
-        "action": "The Hugging Face card is the surface a citing scholar reaches first and is the last one still carrying the retracted number. Correct or deprecate it before any further release. Owner: maintainer (requires HF_TOKEN; not automatable from CI)."
+        "hub_state_verified": "2026-08-08. README.md states 'Achieves **99% Macro F1**'. Also wrong on the same card: language code `xue` (Etruscan is `ett`), a v0.5.0 title, and a Cloud Run deployment description the project has migrated away from.",
+        "hub_machine_readable_residue": [
+          "metrics.json reports val_f1_macro 0.7427 for the CNN over a 1,497/375 split whose class balance (commercial support 102) contradicts the v2.0.2 finding that commercial is data-starved. Not a corrected figure; not comparable. Retained for provenance, explained in the card.",
+          "v2/metadata.json carries baseline_milestone '8,091_verified' — a corpus number matching no OpenEtruscan artifact (6,633 archival / 6,567 published / 5,932 deployed). Stray figure from the retracted era."
+        ],
+        "action": "Corrected card authored at models/openetruscan-classifier/README.md and gated by check_release_truth.py. Push it with `python scripts/ops/push_model_card.py openetruscan-classifier --push` (requires HF_TOKEN; publishes to a public repo, so it is opt-in rather than a CI step). Flip retracted_on_hub to true and this surface's status to resolved once the push is verified."
       }
     }
   ],

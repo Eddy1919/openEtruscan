@@ -59,19 +59,56 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `scripts/ops/generate_openapi.py`.
 - The `etr-lora-v4` model card's BibTeX was pinned at version `1.1.0`.
 
+- **A corrected `openetruscan-classifier` model card**, version-controlled at
+  `models/openetruscan-classifier/README.md` and gated by the truth checker,
+  which now fails when a card restates a claim the project has retracted
+  (outside a retraction notice, which necessarily quotes it). The live Hub
+  card was verified on 2026-08-08 and states "Achieves **99% Macro F1**". It
+  is also wrong in three ways the audit did not catch: language code `xue`
+  where Etruscan is `ett`, a `v0.5.0` title, and a Cloud Run deployment
+  description the project migrated away from. `scripts/ops/push_model_card.py`
+  pushes the checked-in card — one file, dry-run by default — instead of
+  `hf_sync.py --upload`, which blunt-uploads whatever is in the git-ignored
+  `data/models/`.
+
+### Changed
+- **The 635-row corpus gap is now located, and the earlier explanation was
+  wrong.** It was recorded as an undocumented Linked Open Data feed filter.
+  There is no filter: `getPelagiosFeedRows()` is a bare
+  `SELECT ... FROM inscriptions` and `getVoidStats()` is `COUNT(*)`, so the
+  feed's `total` is the live table count. Verified against
+  `GET /api/stats/summary`, which returns `{"total": 5932}`. The real finding
+  is larger — **the deployed database holds 701 fewer inscriptions than the
+  archival corpus and 635 fewer than the Zenodo deposit, so the website serves
+  a smaller corpus than its DOI cites.** The manifest's third count is
+  accordingly renamed `served_lod` → `deployed`. Cause unknown from
+  application code; needs database and pipeline access, and is routed to
+  Pod A. README now says so explicitly instead of implying the feed is a
+  subset.
+- README's provenance table is labelled as describing the **archival** corpus
+  (2,317 / 4,316). The live database reports 2,203 / 3,729 at a similar ratio;
+  `/stats/provenance` is authoritative for anything the website shows.
+
 ### Known — not fixed here
-- **The Hugging Face classifier card still advertises ~99% macro F1**, a
-  figure this repository retracted (it was an in-training-set fit; the
-  corrected band is 0.124–0.369 across four architectures). It is the last
-  surface carrying the retracted number and the first one a citing scholar
-  reaches. Correcting it needs `HF_TOKEN` and is a maintainer action;
-  `--strict-manual` blocks the next tag until the manifest records it
-  resolved.
-- **PyPI still serves 0.3.0.** Until the current package is published,
-  `CITATION.cff` and `codemeta.json` describe software nobody can install.
-- **The 635-row gap** between the published corpus (6,567) and the LOD feed
-  (5,932) is not attributed to any documented filter. Recorded in the
-  manifest as `delta_explained: false` rather than papered over.
+- **The Hugging Face card is corrected in git but not yet pushed.** Publishing
+  to a public model repository is opt-in, not a CI step. Run
+  `python scripts/ops/push_model_card.py openetruscan-classifier --push`, then
+  flip `retracted_on_hub` in the manifest.
+- **Two machine-readable files on the Hub still carry retracted-era numbers**
+  and are retained for provenance rather than deleted: `metrics.json`
+  (`val_f1_macro: 0.7427` over a 1,497/375 split whose class balance
+  contradicts the v2.0.2 finding that `commercial` is data-starved) and
+  `v2/metadata.json` (`baseline_milestone: "8,091_verified"` — a corpus number
+  matching no OpenEtruscan artifact). The corrected card explains both; the
+  files themselves are unchanged.
+- **PyPI still serves 0.3.0.** `openetruscan-1.2.0` now builds clean, passes
+  `twine check`, and installs into a fresh environment reporting `1.2.0` from
+  both the package and the CLI — but uploading is irreversible (a version
+  number cannot be reused) and needs a PyPI token, so it stays a maintainer
+  action.
+- **Why the deployed corpus is 701 rows short of the archival one** is
+  unresolved. Now precisely located rather than misattributed to a feed
+  filter; needs database access. Pod A.
 
 ## [1.2.0] — 2026-07-18
 
