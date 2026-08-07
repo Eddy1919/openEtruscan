@@ -52,7 +52,7 @@ preferred-citation:
       family-names: Panichi
       affiliation: "Independent researcher"
   year: 2026
-  url: "https://www.openetruscan.com/data"
+  url: "https://www.openetruscan.com/downloads"
   doi: "10.5281/zenodo.20075836"
   notes: >-
     The cleaned, ML-ready dataset of 6,567 unified inscriptions (a subset

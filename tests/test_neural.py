@@ -113,6 +113,7 @@ class TestMicroTransformer:
 
 
 @pytest.mark.slow
+@pytest.mark.requires_postgres
 class TestNeuralClassifier:
     """Trains on tiny synthetic data to test the full pipeline.
 
@@ -120,6 +121,10 @@ class TestNeuralClassifier:
     flakes on small-sample CI environments (the loss plateau heuristic
     triggers at different epochs per Python minor version). Run locally
     with `pytest -m slow tests/test_neural.py` to exercise the path.
+
+    Marked `requires_postgres` because the training path loads its labelled
+    samples through `Corpus`, which drives psycopg2 directly — on the SQLite
+    fallback it raises `ProgrammingError: invalid dsn` instead of skipping.
     """
 
     @pytest.fixture

@@ -1,0 +1,170 @@
+{
+  "$comment": [
+    "Single source of truth for every number, version, licence, and identifier",
+    "that OpenEtruscan asserts publicly. Surfaces (README, CITATION.cff,",
+    "codemeta.json, SECURITY.md, model cards, the website, PyPI) restate these",
+    "values; `scripts/ops/check_release_truth.py` fails CI when a surface drifts.",
+    "",
+    "Edit this file first, then the surfaces. Never the other way round.",
+    "",
+    "An external audit (2026-08-08) found four different version numbers across",
+    "four public surfaces and three corpus totals with no machine-readable",
+    "reconciliation. This file exists so that cannot recur silently."
+  ],
+
+  "schema_version": 1,
+  "version": "1.2.0",
+  "date_released": "2026-07-18",
+
+  "identifiers": {
+    "concept_doi": "10.5281/zenodo.20075835",
+    "dataset_version_doi": "10.5281/zenodo.20075836",
+    "repository": "https://github.com/Eddy1919/openEtruscan",
+    "frontend_repository": "https://github.com/Eddy1919/openEtruscan-frontend",
+    "website": "https://www.openetruscan.com",
+    "pypi": "https://pypi.org/project/openetruscan/"
+  },
+
+  "canonical_urls": {
+    "$comment": "Every URL a citation or machine-readable record may point at. A path not listed here must not appear in CITATION.cff, codemeta.json, or a model card. `/data` was cited by both and has never existed — it 404s.",
+    "downloads": "https://www.openetruscan.com/downloads",
+    "citation_guide": "https://www.openetruscan.com/cite",
+    "lod_pelagios": "https://www.openetruscan.com/pelagios.jsonld",
+    "lod_void": "https://www.openetruscan.com/void.ttl",
+    "api_root": "https://www.openetruscan.com/api"
+  },
+
+  "corpus_counts": {
+    "$comment": "Three totals, three different artifacts. They are not in conflict; they were merely never reconciled in one machine-readable place. Any public statement of a corpus size must name which of these it means.",
+    "archival": {
+      "count": 6633,
+      "label": "unified platform corpus",
+      "what": "Every record in the platform database after unification of the Larth Dataset (~71%) and CIE Vol. I extractions (~29%).",
+      "authority": "platform database"
+    },
+    "published": {
+      "count": 6567,
+      "label": "cleaned ML-ready corpus",
+      "what": "The Zenodo deposit. 66 rows dropped from the archival corpus during cleaning.",
+      "authority": "Zenodo dataset_version_doi",
+      "delta_from_archival": -66,
+      "delta_explained": true
+    },
+    "served_lod": {
+      "count": 5932,
+      "label": "Linked Open Data feed",
+      "what": "Entities served by the Pelagios JSON-LD and VoID endpoints, by the feed's own `total` field.",
+      "authority": "live endpoint",
+      "delta_from_published": -635,
+      "delta_explained": false,
+      "open_item": "The 635-row gap between the published corpus and the LOD feed is not attributed to a documented filter. Do not present 5,932 as the corpus size. Tracked alongside the 312/282 training-pool delta in research/v2/data/README.md."
+    }
+  },
+
+  "licences": {
+    "$comment": "Per artifact, not per repository. Inbound and outbound differ for data and that is deliberate: contributions are accepted CC0 so the aggregate can be redistributed under a single outbound licence without per-contributor negotiation.",
+    "code": {
+      "spdx": "MIT",
+      "applies_to": "everything in src/, scripts/, services/, tests/, and the frontend repository"
+    },
+    "data_outbound": {
+      "spdx": "CC-BY-4.0",
+      "applies_to": "the Zenodo deposit, the LOD feeds, and every corpus export",
+      "note": "Upstream: Larth Dataset CC-BY-4.0; CIE Vol. I public domain (Pauli et al., 1893–)."
+    },
+    "data_inbound": {
+      "spdx": "CC0-1.0",
+      "applies_to": "inscription data contributed through PRs, CSV import, or the CLI",
+      "note": "CC0 in, CC BY 4.0 out. Contributors waive rights so the aggregate carries one outbound licence; the CC-BY attribution obligation downstream runs to the project and its upstream sources, not to individual contributors."
+    },
+    "model_weights": {
+      "spdx": "Apache-2.0",
+      "applies_to": "etr-lora-v4 and every published adapter or checkpoint",
+      "note": "Matches the base-model licence chain (XLM-R / LaBSE)."
+    },
+    "documentation": {
+      "spdx": "CC-BY-4.0",
+      "applies_to": "README, docs/, research/ prose"
+    }
+  },
+
+  "models": [
+    {
+      "id": "etr-lora-v4",
+      "hub": "Eddy1919/etr-lora-v4",
+      "card": "models/etr-lora-v4/README.md",
+      "status": "published",
+      "licence": "Apache-2.0",
+      "headline_metric": null,
+      "note": "The LoRA adapter itself is unevaluated. The only numbers on the card are the LaBSE baseline column of rosetta-eval-v1 and are labelled as such. Rosetta is a documented negative result: best strict precision@10 = 0.0625 on a 22-pair test split, 16 queries actually evaluated. It does not support translation or decipherment claims."
+    },
+    {
+      "id": "openetruscan-classifier",
+      "hub": "Eddy1919/openetruscan-classifier",
+      "card": null,
+      "status": "claim_retracted",
+      "licence": "Apache-2.0",
+      "headline_metric": {
+        "name": "macro_f1",
+        "value": 0.313,
+        "ci_low": 0.273,
+        "ci_high": 0.348,
+        "architecture": "TF-IDF + Multinomial NB",
+        "eval_set": "v2.0.2 candidate-gold, n=143, 3-rater LLM-jury unanimous, Krippendorff alpha 0.7649",
+        "eval_set_is_expert_ratified": false
+      },
+      "retracted_claim": {
+        "value": "~99% macro F1",
+        "why": "In-training-set fit on a self-labelled subset, not held-out performance.",
+        "corrected_range": "0.124-0.369 macro F1 across four architectures",
+        "retracted_in_repo": true,
+        "retracted_on_website": true,
+        "retracted_on_hub": false,
+        "action": "The Hugging Face card is the surface a citing scholar reaches first and is the last one still carrying the retracted number. Correct or deprecate it before any further release. Owner: maintainer (requires HF_TOKEN; not automatable from CI)."
+      }
+    }
+  ],
+
+  "supported_versions": {
+    "$comment": "Mirrored by SECURITY.md. Security support tracks shipped minors, not the long-abandoned 0.3.x series.",
+    "supported": ["1.2.x"],
+    "security_only": ["1.1.x"],
+    "unsupported": ["< 1.1"]
+  },
+
+  "surfaces": {
+    "$comment": "What restates this manifest. `checked` surfaces are enforced by scripts/ops/check_release_truth.py in CI. `manual` surfaces live outside this repository and are the maintainer's release-checklist responsibility — the checker cannot reach them.",
+    "checked": [
+      "pyproject.toml",
+      "CITATION.cff",
+      "codemeta.json",
+      "SECURITY.md",
+      "README.md",
+      "CHANGELOG.md",
+      "models/etr-lora-v4/README.md"
+    ],
+    "manual": [
+      {
+        "surface": "PyPI",
+        "expected": "1.2.0",
+        "observed": "0.3.0",
+        "status": "stale",
+        "action": "Publish the current package. Until then the CITATION and codemeta versions describe software no one can install."
+      },
+      {
+        "surface": "frontend package.json / Footer / /cite",
+        "expected": "1.2.0",
+        "observed": "0.5.0 / v2.0.0 / 0.5.0",
+        "status": "fixed_in_podc/s1-version-surfaces",
+        "action": "Frontend reads version from its own package.json; podc/s1 aligns all three to this manifest."
+      },
+      {
+        "surface": "Hugging Face model cards",
+        "expected": "macro F1 0.313 (0.273-0.348)",
+        "observed": "~99% macro F1",
+        "status": "carries_retracted_claim",
+        "action": "See models[].retracted_claim.action. Highest-severity open item in the project."
+      }
+    ]
+  }
+}

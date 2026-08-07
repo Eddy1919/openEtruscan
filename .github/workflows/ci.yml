@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install ruff + mypy (pinned)
-        run: pip install --quiet ruff==0.15.22 mypy==2.3.0 types-PyYAML types-requests
+        run: pip install --quiet ruff==0.15.22 mypy==2.3.0 types-PyYAML types-requests pyyaml
       - name: Ruff lint
         run: ruff check .
       - name: Ruff format check
@@ -51,6 +51,14 @@ jobs:
         # pyproject sets ignore_missing_imports for third-party modules, so
         # type errors in our own code still gate without installing torch etc.
         run: mypy src/openetruscan/
+      - name: Release truth (surfaces agree with release-manifest.json)
+        # Cheap, stdlib + pyyaml only, so it belongs in the fast lane. Catches
+        # the drift class an external audit found in 2026-08: four different
+        # version numbers across four public surfaces, a citation URL that
+        # 404s, and a SECURITY.md two majors out of date. Out-of-repo surfaces
+        # (PyPI, Hugging Face) print as notes here and gate at release time
+        # via --strict-manual.
+        run: python scripts/ops/check_release_truth.py
 
   duplication:
     # Copy-paste ratchet over the maintained code roots. research/ and other

@@ -74,7 +74,7 @@
       "@type": "Dataset",
       "name": "OpenEtruscan corpus v1 — unified Etruscan inscriptions",
       "description": "ML-ready cleaned corpus of 6,567 unified Etruscan inscriptions. Derived from Larth Dataset (Vico & Spanakis 2023) and CIE Vol. I.",
-      "url": "https://www.openetruscan.com/data"
+      "url": "https://www.openetruscan.com/downloads"
     },
     {
       "@type": "Dataset",

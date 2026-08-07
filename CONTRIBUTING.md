@@ -22,7 +22,12 @@ pytest
 ruff check src/ tests/
 ```
 
-> **Note:** You do not need a database to contribute. By default, OpenEtruscan runs entirely offline with a local SQLite database.
+> **Note:** You do not need a database to contribute. With no `DATABASE_URL` set
+> and no Docker daemon running, `pytest` falls back to in-memory SQLite and the
+> Postgres-backed tests report as **skips**, not failures — the suite is green
+> offline. To exercise those tests, either start Docker (the suite then boots a
+> one-shot `pgvector/pgvector:pg16` container for you) or point `DATABASE_URL`
+> at your own Postgres. CI always takes the second path.
 
 ## Ways to Contribute
 
@@ -154,7 +159,8 @@ Before submitting a PR, confirm:
 - [ ] All tests pass: `pytest`
 - [ ] Linter and formatter are clean: `ruff check . && ruff format --check .`
 - [ ] Types check: `mypy src/openetruscan/`
-- [ ] OpenAPI schema is in sync if you touched the API: `python scripts/data_pipeline/export_openapi.py` (check for changes in `docs/openapi.json`)
+- [ ] OpenAPI schema is in sync if you touched the API: `python scripts/ops/generate_openapi.py` (check for changes in `docs/openapi.json`)
+- [ ] Public claims still agree: `python scripts/ops/check_release_truth.py`
 - [ ] New features include test cases
 - [ ] Documentation is updated if applicable
 

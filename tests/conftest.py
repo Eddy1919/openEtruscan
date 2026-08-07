@@ -11,14 +11,22 @@ order:
    it directly. This is the path GitHub Actions takes (the ``services:`` block
    in ``.github/workflows/ci.yml`` boots a Postgres + pgvector container).
 
-2. **Local testcontainer** — if ``DATABASE_URL`` is unset and the
-   ``testcontainers`` package is installed, we spin a one-shot
-   ``pgvector/pgvector:pg16`` container per test session and tear it down at
-   the end. Engineers don't need to run ``docker run`` themselves.
+2. **Local testcontainer** — if ``DATABASE_URL`` is unset, the
+   ``testcontainers`` package is installed, *and the Docker daemon answers*,
+   we spin a one-shot ``pgvector/pgvector:pg16`` container per test session
+   and tear it down at the end. Engineers don't need to run ``docker run``
+   themselves.
 
-3. **SQLite fallback** — only when neither (1) nor (2) applies, fall back to
+3. **SQLite fallback** — whenever (1) and (2) do not apply, fall back to
    SQLite. Tests that exercise PostGIS / pgvector / FTS are marked with
    ``pytest.mark.requires_postgres`` and are skipped here.
+
+   "Do not apply" includes *Docker installed but not running*. That case used
+   to raise out of the session fixture and ERROR every Postgres-backed test,
+   which made ``pytest`` un-runnable for any contributor without a Docker
+   daemon — while CONTRIBUTING.md promised no database was needed. Both the
+   fixture and the collection hook now probe the daemon rather than trusting
+   that an importable ``testcontainers`` means a reachable one.
 
 The chosen URL is exported as ``OE_TEST_DATABASE_URL`` and the
 ``Base.metadata.create_all`` is run against it once per session. Per-test
@@ -38,6 +46,7 @@ os.environ.setdefault("ENABLE_DOCS", "1")
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
+from functools import cache  # noqa: E402
 from collections.abc import AsyncGenerator, Generator  # noqa: E402
 from contextlib import suppress  # noqa: E402
 from typing import Any  # noqa: E402
@@ -81,6 +90,9 @@ def _to_async_url(url: str) -> str:
     return url
 
 
+SQLITE_FALLBACK_URL = "sqlite+aiosqlite:///:memory:"
+
+
 def _wait_for_port(host: str, port: int, timeout_s: float = 30.0) -> None:
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
@@ -100,20 +112,42 @@ def database_url() -> Generator[str, None, None]:
         yield _to_async_url(explicit)
         return
 
-    # Local path: try testcontainers. Skip silently if the package is missing
-    # so the SQLite fallback can take over.
-    try:
-        from testcontainers.postgres import PostgresContainer
-    except ImportError:
-        # No testcontainers — leave it to the SQLite fallback.
-        yield "sqlite+aiosqlite:///:memory:"
+    # Local path: testcontainers, but only if it can actually deliver. The
+    # probe covers both "package missing" and "Docker daemon unreachable";
+    # `pip install -e ".[dev]"` always installs the package, so the second is
+    # by far the common case and it used to raise straight out of this fixture
+    # and ERROR every Postgres-backed test. It must reach the same SQLite
+    # fallback as a missing package, or CONTRIBUTING's "you do not need a
+    # database" is false for anyone without a running daemon.
+    #
+    # CI never reaches here — it sets DATABASE_URL and returned above — so this
+    # fallback cannot mask a broken CI service container.
+    if not _testcontainers_available():
+        yield SQLITE_FALLBACK_URL
         return
+
+    from testcontainers.postgres import PostgresContainer
 
     # `pgvector/pgvector:pg16` ships pgvector. PostGIS is NOT in this image,
     # so tests that need PostGIS still need a manual setup or a dedicated
     # image — see `requires_postgis` marker.
-    container = PostgresContainer("pgvector/pgvector:pg16")
-    container.start()
+    #
+    # Construction talks to the daemon (it builds a DockerClient), so it is
+    # inside the guarded block along with start() — a daemon that dies between
+    # the probe and here still degrades to SQLite rather than erroring.
+    try:
+        container = PostgresContainer("pgvector/pgvector:pg16")
+        container.start()
+    except Exception as exc:  # noqa: BLE001 -- any Docker failure means no container
+        warnings.warn(
+            f"testcontainers could not start Postgres ({type(exc).__name__}: {exc}) — "
+            f"falling back to SQLite. Postgres-backed tests will SKIP, not run. "
+            f"Start Docker, or set DATABASE_URL, to exercise them locally.",
+            stacklevel=1,
+        )
+        yield SQLITE_FALLBACK_URL
+        return
+
     try:
         host = container.get_container_host_ip()
         port = int(container.get_exposed_port(5432))
@@ -341,7 +375,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     if on_postgres:
         return
     skip_pg = pytest.mark.skip(
-        reason="requires Postgres backend (set DATABASE_URL or install testcontainers)"
+        reason="requires Postgres backend (set DATABASE_URL, or install testcontainers "
+        "and start Docker)"
     )
     for item in items:
         if any(
@@ -351,9 +386,26 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             item.add_marker(skip_pg)
 
 
+@cache
 def _testcontainers_available() -> bool:
+    """True only if testcontainers can *actually* give us Postgres.
+
+    An importable package is not enough. ``pip install -e ".[dev]"`` always
+    installs testcontainers, so the import check alone reported "Postgres
+    available" on every dev machine — including those with Docker stopped,
+    where the container then failed to start and Postgres-backed tests errored
+    instead of skipping. Probe the daemon.
+
+    Cached: the collection hook and the session fixture both ask, and a daemon
+    that appears mid-session would desync the skip decisions from the backend
+    the fixture already chose.
+    """
     try:
-        import testcontainers.postgres  # noqa: F401
+        from testcontainers.core.docker_client import DockerClient
     except ImportError:
+        return False
+    try:
+        DockerClient().client.ping()
+    except Exception:  # noqa: BLE001 -- daemon down, socket denied, no network
         return False
     return True

@@ -22,6 +22,8 @@ OpenEtruscan is an open-source platform for working with the Etruscan epigraphic
 
 The corpus holds **6,633 unified inscriptions**, drawn mostly from the *Larth Dataset* (Vico & Spanakis, 2023; ~71%) and the *Corpus Inscriptionum Etruscarum* (Vol. I extractions; ~29%), with links to Trismegistos, EAGLE, and Pleiades. The cleaned, ML-ready dataset published on Zenodo is a 6,567-row subset (66 rows dropped during cleaning).
 
+> **Which number is which.** Three corpus totals circulate — 6,633 archival, 6,567 published, 5,932 in the Linked Open Data feed. They describe three different artifacts and are reconciled, with the one unexplained delta named as such, in [`release-manifest.json`](release-manifest.json). That file is the single source of truth for every version, count, licence, DOI, and model status this project asserts publicly; `scripts/ops/check_release_truth.py` fails CI when a surface drifts from it. If a number here and a number there disagree, the manifest wins and the other is a bug.
+
 ### Provenance disclosure
 
 OpenEtruscan separates **editorial verification of a text** (we trust the published reading) from **archaeological provenance** (we know where the inscribed object actually surfaced). These are two different scholarly claims and each row carries a `provenance_status` in one of four tiers:

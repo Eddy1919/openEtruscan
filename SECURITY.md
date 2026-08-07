@@ -2,11 +2,14 @@
 
 ## Supported Versions
 
+Mirrors `supported_versions` in [`release-manifest.json`](release-manifest.json),
+which CI enforces — edit the manifest first.
+
 | Version | Supported          |
 |---------|-------------------|
-| 0.3.x   | ✅ Yes             |
-| 0.2.x   | ⚠️ Security only   |
-| < 0.2   | ❌ No              |
+| 1.2.x   | ✅ Yes             |
+| 1.1.x   | ⚠️ Security only   |
+| < 1.1   | ❌ No              |
 
 ## Reporting a Vulnerability
 

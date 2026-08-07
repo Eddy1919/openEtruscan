@@ -25,14 +25,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Verify tag matches pyproject version
+      - name: Verify tag matches the release manifest
+        # The manifest is the source of truth; pyproject is one of the surfaces
+        # it governs. Checking the tag against the manifest and then running
+        # the full surface check means a tag cannot ship while README, CITATION,
+        # codemeta, SECURITY, or a model card still disagree.
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          PKG=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
-          if [ "$TAG" != "$PKG" ]; then
-            echo "::error::tag v$TAG does not match pyproject version $PKG"
+          MANIFEST=$(python -c 'import json;print(json.load(open("release-manifest.json"))["version"])')
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "::error::tag v$TAG does not match release-manifest.json version $MANIFEST"
             exit 1
           fi
+
+      - name: Release truth (strict — out-of-repo surfaces must be resolved)
+        # --strict-manual is the difference between CI and a release: PyPI and
+        # the Hugging Face cards are advisory notes on every PR, but a tag that
+        # ships while a model card still advertises a retracted metric is the
+        # exact failure this gate exists to stop.
+        run: |
+          pip install --quiet pyyaml
+          python scripts/ops/check_release_truth.py --strict-manual
 
       - name: Extract this version's CHANGELOG section
         run: |

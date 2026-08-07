@@ -164,8 +164,14 @@ class TestPhonologicalDistance:
 
 
 @pytest.mark.slow
+@pytest.mark.requires_postgres
 class TestFamilyGraph:
-    """Test family graph construction and queries (slow — parses all DB inscriptions)."""
+    """Test family graph construction and queries (slow — parses all DB inscriptions).
+
+    `Corpus.load()` hands its DSN straight to psycopg2, so on the SQLite
+    fallback these raise `ProgrammingError: invalid dsn` rather than skipping.
+    The marker makes that an honest skip.
+    """
 
     def _build_test_corpus(self):
         corpus = Corpus.load()

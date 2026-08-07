@@ -14,6 +14,65 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **`release-manifest.json` is now the single source of truth** for every
+  version, corpus count, licence, DOI, and model status the project asserts
+  publicly, and `scripts/ops/check_release_truth.py` fails CI when a surface
+  drifts from it. An external audit found four different version numbers
+  across four public surfaces (repo 1.2.0, PyPI 0.3.0, website footer 2.0.0,
+  citation page 0.5.0) and three corpus totals with no machine-readable
+  reconciliation. Each drift was individually harmless; together they meant
+  a citing scholar had no way to determine what OpenEtruscan actually
+  claims. The gate runs in the CI fast lane, and at release time under
+  `--strict-manual`, which additionally refuses to tag while an out-of-repo
+  surface (PyPI, a Hugging Face card) is recorded as stale.
+- Licences are declared **per artifact** rather than per repository:
+  code MIT, outbound data CC BY 4.0, inbound data contributions CC0,
+  model weights Apache-2.0, documentation CC BY 4.0. The CC0-in /
+  CC-BY-out asymmetry for data was always deliberate but never written
+  down, so it read as a contradiction between `CONTRIBUTING.md` and the
+  Zenodo deposit.
+
+### Fixed
+- **`pytest` no longer requires Docker.** `tests/conftest.py` treated an
+  importable `testcontainers` as proof that Postgres was obtainable, but
+  `pip install -e ".[dev]"` always installs the package — so on any machine
+  without a running daemon the container constructor raised out of the
+  session fixture and **56 tests errored** instead of skipping, while
+  `CONTRIBUTING.md` promised no database was needed. Both the fixture and
+  the collection hook now probe the daemon, and both container construction
+  and `start()` fall back to SQLite with a warning. CI is unaffected: it
+  sets `DATABASE_URL` and returns before this path.
+- **`TestFamilyGraph` and `TestNeuralClassifier` are marked
+  `requires_postgres`.** They drive psycopg2 directly, so on the SQLite
+  fallback they raised `ProgrammingError: invalid dsn` — 12 failures that
+  the 56 errors above were masking. Offline, the suite is now green:
+  478 passed, 32 skipped, 0 errors.
+- **`CITATION.cff` and `codemeta.json` cited `https://www.openetruscan.com/data`,
+  which has never existed.** Both now point at `/downloads`, and the checker
+  validates every citation URL against `canonical_urls` in the manifest.
+- `SECURITY.md` declared support for the `0.3.x` series, two majors behind
+  the shipped release; it now mirrors the manifest (`1.2.x` supported,
+  `1.1.x` security-only).
+- `CONTRIBUTING.md`'s PR checklist pointed at a non-existent
+  `scripts/data_pipeline/export_openapi.py`; the script is
+  `scripts/ops/generate_openapi.py`.
+- The `etr-lora-v4` model card's BibTeX was pinned at version `1.1.0`.
+
+### Known — not fixed here
+- **The Hugging Face classifier card still advertises ~99% macro F1**, a
+  figure this repository retracted (it was an in-training-set fit; the
+  corrected band is 0.124–0.369 across four architectures). It is the last
+  surface carrying the retracted number and the first one a citing scholar
+  reaches. Correcting it needs `HF_TOKEN` and is a maintainer action;
+  `--strict-manual` blocks the next tag until the manifest records it
+  resolved.
+- **PyPI still serves 0.3.0.** Until the current package is published,
+  `CITATION.cff` and `codemeta.json` describe software nobody can install.
+- **The 635-row gap** between the published corpus (6,567) and the LOD feed
+  (5,932) is not attributed to any documented filter. Recorded in the
+  manifest as `delta_explained: false` rather than papered over.
+
 ## [1.2.0] — 2026-07-18
 
 Integrity, security, and surface-honesty release: everything below was
