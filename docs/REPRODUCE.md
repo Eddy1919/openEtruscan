@@ -40,7 +40,11 @@ git and need no fetch.
 
 ## 3. Frozen classification split (Stream A)
 
-The committed split is byte-reproducible from the corpus + silver labels:
+The committed split is byte-reproducible from the corpus + silver labels.
+Since 2026-08-08 the generator is text-disjoint (it samples text groups, not
+rows — PRE_REGISTRATION.md Deviation §D), so the same invocation yields
+**427 test / 285 train**: the pre-registered 400 plus the 27 train rows whose
+normalized text matched a test row.
 
 ```bash
 python -m research.v2.pipelines.classify_split \
