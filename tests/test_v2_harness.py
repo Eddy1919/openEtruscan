@@ -291,6 +291,75 @@ class TestTextKey:
     def test_pure_markup_normalizes_to_empty(self):
         assert classify_split.text_key("[---]") == ""
 
+    def test_nfc_composition_cannot_evade_the_guard(self):
+        # U+0073 U+0301 (s + combining acute) must group with U+015B
+        # (precomposed s-acute): a decomposed spelling of the same text is
+        # the same text for leakage purposes.
+        assert classify_split.text_key("s\u0301uthina") == classify_split.text_key("\u015buthina")
+
+
+class TestNeuralPredictionsWriter:
+    """train_neural.py once destructured eval tuples as (gold, _, id) and
+    wrote the inscription TEXT into the predictions' gold_label field
+    (PRE_REGISTRATION.md Deviation §D, harness-bug disclosure). Pin the
+    writer: gold_label must be a codebook label, never the text."""
+
+    def test_gold_label_field_carries_labels_not_text(self, tmp_path):
+        import pytest
+
+        pytest.importorskip("torch")
+        from research.v2.pipelines import train_neural
+
+        labels = ["funerary", "ownership"]
+        train = tmp_path / "train.jsonl"
+        train.write_text(
+            "".join(
+                json.dumps(
+                    {
+                        "id": f"T{i}",
+                        "canonical_transliterated": f"larth avil {i}",
+                        "silver_label": labels[i % 2],
+                    }
+                )
+                + "\n"
+                for i in range(12)
+            )
+        )
+        gold = tmp_path / "gold.jsonl"
+        gold.write_text(
+            "".join(
+                json.dumps(
+                    {
+                        "id": f"E{i}",
+                        "canonical_transliterated": f"velthur cae {i}",
+                        "gold_label": labels[i % 2],
+                    }
+                )
+                + "\n"
+                for i in range(6)
+            )
+        )
+        out_m, out_p = tmp_path / "m.json", tmp_path / "p.jsonl"
+        rc = train_neural.main(
+            [
+                "--arch", "charcnn",
+                "--train-pool", str(train),
+                "--eval-gold", str(gold),
+                "--out-metrics", str(out_m),
+                "--out-predictions", str(out_p),
+                "--epochs", "1",
+                "--n-resamples", "10",
+            ]
+        )  # fmt: skip
+        assert rc == 0
+        rows = [json.loads(line) for line in out_p.read_text().splitlines()]
+        assert len(rows) == 6
+        for row in rows:
+            assert row["gold_label"] in labels, (
+                f"gold_label carries {row['gold_label']!r}; the (gold, _, id) "
+                "destructuring bug is back"
+            )
+
 
 class TestHandoffBundle:
     """classify_handoff.py — the philologist bundle must be a deterministic

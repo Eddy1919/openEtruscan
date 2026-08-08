@@ -1,4 +1,12 @@
 {
+  "charcnn_vs_embedding-mlp": {
+    "delta_ci_high": 0.2343351150222038,
+    "delta_ci_low": 0.13536029830962296,
+    "delta_point": 0.1889890118990121,
+    "n_resamples": 10000,
+    "p_value": 0.0,
+    "seed": 42
+  },
   "charcnn_vs_microtransformer": {
     "delta_ci_high": 0.2637049354756532,
     "delta_ci_low": 0.049933603137264415,

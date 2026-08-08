@@ -16,9 +16,11 @@ Usage
         --test  research/v2/data/classify_test_v2.jsonl \\
         --queue research/v2/handoff/v2.0-etr/adjudication_queue.csv
 
-Exit status is 1 when any leak is found, so it can gate a release. Pass
-`--expect N` to accept a known, documented leak of exactly N rows (the frozen
-v2 split is 25; see PRE_REGISTRATION.md Deviation D).
+Exit status is 1 when any leak is found. It is a manual audit tool; the
+committed split's disjointness is separately pinned by classify_split.py's
+own guard and by tests/test_v2_harness.py. Pass `--expect N` to accept a
+known, documented leak of exactly N rows (the superseded v2.0.2 split was
+25; see PRE_REGISTRATION.md Deviation D).
 
 The `--queue` argument is optional and answers a sharper question than the
 headline percentage. The published metric is computed on the *unanimous*

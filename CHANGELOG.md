@@ -46,10 +46,13 @@ ship the split-integrity tooling that the v2.0.4 protocol work produced.
   accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
 
 ### Changed
-- **Every public prose surface now carries zero em dashes**: README, both
-  model cards, CITATION.cff, codemeta.json, .zenodo.json, the PyPI
-  description, docs/, this changelog, the pre-registration, and the
-  research-data READMEs. Each instance was recast individually. The pass
+- **The citation-grade prose surfaces now carry zero em dashes**: README,
+  both model cards, CITATION.cff, codemeta.json, .zenodo.json, the PyPI
+  description, this changelog, the pre-registration, the research-data
+  READMEs, and the docs the public surfaces link into (HUGGINGFACE,
+  INTELLIGENCE_V2, REPRODUCE). Not swept: docs/PELAGIOS.md,
+  docs/DEVELOPMENT.md, docs/ARCHITECTURE.md, and older research notes.
+  Each instance was recast individually. The pass
   surfaced two content bugs: the README overview still asserted the
   overturned v2.0.2 claim that no architecture separates from the field
   (it now states the v2.0.4 result), and PRE_REGISTRATION.md's header

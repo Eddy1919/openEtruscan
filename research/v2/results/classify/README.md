@@ -50,12 +50,13 @@ one-sided p, seed=42):
 |---|---|---|---|
 | CharCNN vs TF-IDF+NB | +0.106 | [+0.055, +0.149] | **0.0025** |
 | CharCNN vs MicroTransformer | +0.147 | [+0.050, +0.264] | **0.0023** |
+| CharCNN vs EmbeddingMLP | +0.189 | [+0.135, +0.234] | **<0.0001** |
 | TF-IDF+NB vs EmbeddingMLP | +0.083 | [+0.044, +0.122] | **<0.0001** |
 | TF-IDF+NB vs MicroTransformer | +0.041 | [−0.049, +0.157] | 0.172 (n.s.) |
 
 **Finding A (v2.0.2, "architecture-invariance among local-feature models")
-does not replicate at v2.0.4**: CharCNN now beats both TF-IDF+NB and
-MicroTransformer at p < 0.005 (paired). **Finding B (out-of-distribution
+does not replicate at v2.0.4**: CharCNN now beats all three alternatives
+(TF-IDF+NB p = 0.0025, MicroTransformer p = 0.0023, EmbeddingMLP p < 0.0001, all paired). **Finding B (out-of-distribution
 dense embeddings underperform) replicates**: EmbeddingMLP is still last on
 macro F1 and significantly below TF-IDF+NB, though the gap narrowed
 (0.083 vs the ~0.19 marginal gap at v2.0.2).

@@ -108,7 +108,7 @@ def _req(
     method: str,
     url: str,
     token: str,
-    payload: dict | None = None,
+    payload: dict | list | None = None,
     data: bytes | None = None,
     ctype: str | None = None,
 ) -> dict:

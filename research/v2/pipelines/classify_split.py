@@ -63,6 +63,7 @@ import json
 import random
 import re
 import sys
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -80,10 +81,13 @@ _WS = re.compile(r"\s+")
 def text_key(text: str) -> str:
     """Normalized form used to detect the same inscription text across ids.
 
-    Strips Leiden markup, collapses whitespace, and casefolds. Rows whose text
-    is *entirely* markup normalize to the empty string; those must not be
-    fused into one giant group, so callers fall back to a per-row unique key.
+    Composes to NFC first (a decomposed combining-mark spelling of a text
+    must not evade the leak guard), then strips Leiden markup, collapses
+    whitespace, and casefolds. Rows whose text is *entirely* markup normalize
+    to the empty string; those must not be fused into one giant group, so
+    callers fall back to a per-row unique key.
     """
+    text = unicodedata.normalize("NFC", text)
     return _WS.sub(" ", _MARKUP.sub("", text)).strip().casefold()
 
 

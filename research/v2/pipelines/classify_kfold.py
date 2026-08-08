@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
 
     per_fold = Counter(fold_of.values())
     print(f"rows: {len(fold_of)}  folds: {dict(sorted(per_fold.items()))}", file=sys.stderr)
-    per_class = defaultdict(Counter)
+    per_class: dict[str, Counter[int]] = defaultdict(Counter)
     for insc_id, fold in fold_of.items():
         per_class[silver[insc_id]["label"]][fold] += 1
     for label in sorted(per_class):
