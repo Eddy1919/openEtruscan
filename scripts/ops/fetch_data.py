@@ -36,10 +36,20 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # files here — nothing else in this script should need to change.
 FILES: list[dict[str, str]] = [
     {
+        # v1.0.0 record; the same file ships byte-identical in v1.1.0
+        # (10.5281/zenodo.21854263). Pinned here to the record the frozen
+        # v2 split was regenerated from, so the reproduction chain's ids
+        # stay verbatim.
         "record_id": "20075836",
         "filename": "openetruscan_clean.csv",
         "sha256": "4fc09af94005655bfe26affeeb48295c88606ae23c8dbc33ff5436f9083f69f8",
         "dest": "research/data/openetruscan_clean.csv",
+    },
+    {
+        "record_id": "21854263",
+        "filename": "openetruscan_clean_grouped.csv",
+        "sha256": "0e8cc84b11f019fcaca5d883d8f322fa4b3b4ead8ac4df3dada6ceb1685ecb92",
+        "dest": "research/data/openetruscan_clean_grouped.csv",
     },
 ]
 

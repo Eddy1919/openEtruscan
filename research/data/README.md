@@ -20,7 +20,8 @@ are reproducible from the production database via the scripts in
 
 | File | Rows | Cols | Purpose |
 |---|---|---|---|
-| `openetruscan_clean.csv` | 6,567 | 10 | **The published v1 dataset.** ML-ready; cleaned, tagged, labeled, joined with Larth metadata. **Download via Zenodo DOI**; see citation section below. |
+| `openetruscan_clean.csv` | 6,567 | 10 | **The published dataset.** ML-ready; cleaned, tagged, labeled, joined with Larth metadata. Byte-identical across deposit versions. **Download via Zenodo DOI**; see citation section below. |
+| `openetruscan_clean_grouped.csv` | 6,567 | 12 | The same rows plus `dup_group_id` (content-addressed hash of the Leiden-normalized text) and `dup_group_size`. **Split on `dup_group_id`, not on rows**; row-level random splits leak (PRE_REGISTRATION.md Deviation D). New in deposit v1.1.0 (10.5281/zenodo.21854263). |
 | `openetruscan_normalized.csv` | 6,567 | 7 | Intermediate before the Larth merge. Reproducible from `openetruscan_clean.csv` minus the `translation` / `year_from` / `year_to` columns. |
 
 To regenerate the large CSVs locally from the prod DB:

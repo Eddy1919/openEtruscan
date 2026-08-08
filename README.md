@@ -4,7 +4,7 @@
 
 **Open-source digital corpus platform for Etruscan epigraphy**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20075836.svg)](https://doi.org/10.5281/zenodo.20075836)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21854263.svg)](https://doi.org/10.5281/zenodo.21854263)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -274,14 +274,14 @@ A minimal BibTeX entry:
   author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
-  version   = {1.0.0},
-  doi       = {10.5281/zenodo.20075836},
-  url       = {https://doi.org/10.5281/zenodo.20075836},
+  version   = {1.1.0},
+  doi       = {10.5281/zenodo.21854263},
+  url       = {https://doi.org/10.5281/zenodo.21854263},
   publisher = {Zenodo}
 }
 ```
 
-Per the Zenodo record metadata, `10.5281/zenodo.20075835` is the **concept DOI** (resolves to the latest version) and `10.5281/zenodo.20075836` is the **version DOI** for the v1.0.0 deposit. Cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot. (An earlier revision of this section had the two swapped.)
+Per the Zenodo record metadata, `10.5281/zenodo.20075835` is the **concept DOI** (resolves to the latest version) and `10.5281/zenodo.21854263` is the **version DOI** for the current (v1.1.0) deposit; v1.0.0 remains addressable at `10.5281/zenodo.20075836`. Cite the concept DOI when referencing the project, the version DOI when referencing a specific snapshot. (An earlier revision of this section had the two swapped.)
 
 The frozen reference benchmark is `rosetta-eval-v1`; full reproduction instructions live in [`research/notes/reproduce-rosetta-eval-v1.md`](research/notes/reproduce-rosetta-eval-v1.md).
 

@@ -106,6 +106,7 @@ cloud-sql-proxy
 # + scripts/data_pipeline/merge_larth_metadata.py. Small reference sets
 # (labels, held-out eval) remain tracked in research/data/.
 research/data/openetruscan_clean.csv
+research/data/openetruscan_clean_grouped.csv
 research/data/openetruscan_normalized.csv
 
 # YOLO pretrained weights — pulled lazily by ultralytics when training

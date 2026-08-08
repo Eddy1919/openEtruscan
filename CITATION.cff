@@ -46,14 +46,14 @@ date-released: "2026-08-08"
 doi: "10.5281/zenodo.20075835"
 preferred-citation:
   type: dataset
-  title: "OpenEtruscan corpus v1: unified Etruscan inscriptions"
+  title: "Etruscan Machine Learning Corpus (v1.1.0)"
   authors:
     - given-names: Edoardo
       family-names: Panichi
       affiliation: "Independent researcher"
   year: 2026
   url: "https://www.openetruscan.com/downloads"
-  doi: "10.5281/zenodo.20075836"
+  doi: "10.5281/zenodo.21854263"
   notes: >-
     The cleaned, ML-ready dataset of 6,567 unified inscriptions (a subset
     of the 6,633-record platform corpus). Derived from the Larth Dataset

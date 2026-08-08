@@ -31,9 +31,12 @@ inventory (contact the maintainer for access).
 
 ### Zenodo deposit — `openetruscan_clean.csv`
 
-- **What:** the published 6,567-row ML-ready corpus, version DOI
-  [10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836)
-  (v1.0.0, published 2026-05-07).
+- **What:** the published 6,567-row ML-ready corpus. Current version DOI
+  [10.5281/zenodo.21854263](https://doi.org/10.5281/zenodo.21854263)
+  (v1.1.0, published 2026-08-08: adds `openetruscan_clean_grouped.csv` with
+  `dup_group_id` / `dup_group_size`; the 10-column CSV is byte-identical to
+  v1.0.0, which remains addressable at
+  [10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836)).
 - **Sources:** Larth Dataset (Vico & Spanakis, 2023; ~71% of rows) and CIE
   Vol. I extractions (~29%) — full citations in
   [`research/BIBLIOGRAPHY.md`](../research/BIBLIOGRAPHY.md).

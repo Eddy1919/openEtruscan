@@ -18,7 +18,7 @@
 
   "identifiers": {
     "concept_doi": "10.5281/zenodo.20075835",
-    "dataset_version_doi": "10.5281/zenodo.20075836",
+    "dataset_version_doi": "10.5281/zenodo.21854263",
     "repository": "https://github.com/Eddy1919/openEtruscan",
     "frontend_repository": "https://github.com/Eddy1919/openEtruscan-frontend",
     "website": "https://www.openetruscan.com",
@@ -45,7 +45,7 @@
     "published": {
       "count": 6567,
       "label": "cleaned ML-ready corpus",
-      "what": "The Zenodo deposit. 66 rows dropped from the archival corpus during cleaning.",
+      "what": "The Zenodo deposit (v1.1.0 adds openetruscan_clean_grouped.csv with dup_group_id/dup_group_size columns; the 10-column openetruscan_clean.csv is byte-identical to v1.0.0). 66 rows dropped from the archival corpus during cleaning.",
       "authority": "Zenodo dataset_version_doi",
       "delta_from_archival": -66,
       "delta_explained": true
