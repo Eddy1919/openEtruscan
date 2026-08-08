@@ -51,9 +51,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   pre-registered invocation now yields a text-disjoint 427 test / 285 train
   split — 27 rows move out of an already-starved training pool, which sharpens
   rather than solves the allocation problem noted below. The frozen v2 split
-  was **deliberately not regenerated**: it is the artifact the completed jury
-  run and the philologist handoff are keyed to, and replacing it would orphan
-  both for a metric nobody has yet re-measured.
+  **was regenerated the same day** (initially it was left untouched to protect
+  the jury run keyed to it; the maintainer overrode that). The override is
+  safe: same seed, same sampling path, so the new 427-row test pool is a
+  strict superset of the old 400 and every jury-scored, queue, and handoff id
+  stays valid. It was also moot — the v2.0.2 classify jury raw and
+  candidate-gold files lived only in the retired GCP project's cloudbuild
+  bucket and are unrecoverable (verified 2026-08-08: not in the salvage
+  bucket, not on the Hub, not local), so there was no stored gold to protect.
+  Old hashes are recorded in `research/v2/data/README.md`.
 - The `[Unreleased]` heading appeared twice.
 
 ### Added

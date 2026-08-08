@@ -1,4 +1,32 @@
-# Frozen classification split (Stream A) — repaired 2026-07-17
+# Frozen classification split (Stream A) — superseded 2026-08-08 (text-disjoint)
+
+## Current state (2026-08-08)
+
+The committed split is the **text-disjoint** regeneration: 427 test / 285
+train, produced by the exact pre-registered invocation below after
+`classify_split.py` learned to sample text groups instead of rows
+(PRE_REGISTRATION.md Deviation §D). Three properties, all verified
+programmatically at regeneration time:
+
+1. **The old 400-row test pool is a strict subset of the new 427.** Same
+   seed, same sampling path; the only change is that 27 train rows whose
+   normalized text matched a test row were pulled across. Every id the
+   v2.0.2 jury scored, all 79 adjudication-queue ids, and the philologist
+   handoff CSVs therefore remain valid references into the current test pool.
+2. **The new 285-row train pool is a strict subset of the old 312.** No row
+   entered training that was not already there; 27 left.
+3. **Zero normalized-text overlap between pools** (`split_contamination.py`
+   reports 0/427).
+
+Superseded hashes, for the record: test
+`7df5e46c7d8b26df000b87bd125ef8049e3822ce7c008f76c6a5a8cb0cc75f61` (400 rows),
+train `8a8b83fb0d48139d52b38b0e42a7c772723d41e3581460551272d9e6556c25bb`
+(312 rows). Any historical number citing those hashes was measured against a
+train pool now known to leak 25 test texts.
+
+---
+
+## Prior repair — 2026-07-17
 
 ## What happened
 
