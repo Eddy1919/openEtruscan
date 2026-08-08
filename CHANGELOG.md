@@ -17,6 +17,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
+- **The 635-row gap between the published and deployed corpus is explained:
+  the live corpus is deduplicated.** It was recorded as unattributed. Diffing
+  the live LOD feed against the Zenodo deposit settles it. The live corpus is
+  a strict subset by id — 635 published ids absent, zero live ids absent — and
+  it holds 5,932 rows over 5,932 distinct texts, no repeats at all, where the
+  deposit holds 6,567 rows over 6,097 distinct texts. Of the 635 missing: 57%
+  are exact-text duplicates of a live row, 40% are duplicates once editorial
+  brackets are stripped, and the 13 remaining are Leiden-convention variants
+  (`laut(n)i` / `la(u)tni` / `lautn(i)`). They are spread evenly across the id
+  range (10.8–16.1% per decile), which rules out the partial-or-older-seed
+  hypothesis that an uneven distribution would have supported. **The deposit
+  ships the corpus before deduplication and the website serves it after** —
+  README now says so instead of calling the gap unexplained.
+
+  Not claimed as certain: prod and the deposit normalise text differently, so
+  an exact row-for-row reconciliation is impossible from outside the database.
+  What is certain is the subset relation and prod's zero-duplicate property.
+  Which pipeline step performs the dedup remains undocumented and is tracked
+  in the manifest under `corpus_counts.deployed.still_open`.
 - `docs/openapi.json` joins the surfaces `check_release_truth.py` enforces.
   `api/server.py` passes `__version__` to FastAPI, so a version bump
   invalidates the committed spec. CI already caught that by regenerating and
