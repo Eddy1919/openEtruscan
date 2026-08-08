@@ -33,16 +33,16 @@ model-index:
         # The v4 (LoRA-adapted) adapter has NOT yet been evaluated. The
         # only numbers we have are the LaBSE BASELINE column of
         # rosetta-eval-v1 (see the Evaluation section below), and those
-        # belong to LaBSE — NOT to this adapter. Emitting them in this
+        # belong to LaBSE, NOT to this adapter. Emitting them in this
         # model-index block would let the HF UI attribute LaBSE's scores
         # to etr-lora-v4, which would be false. The v4 result rows will be
         # added after WBS tasks T2.3 (ingest v4 vectors behind a feature
         # flag) and T2.4 (run the head-to-head eval) land in prod and the
         # benchmark gains its v4 row.
-        # metrics: (v4 results pending — intentionally omitted)
+        # metrics: (v4 results pending; intentionally omitted)
 ---
 
-# etr-lora-v4 — Etruscan-side LoRA adapter for LaBSE
+# etr-lora-v4: Etruscan-side LoRA adapter for LaBSE
 
 > **Status note.** The numbers in the YAML frontmatter and in the
 > Evaluation table below are the **LaBSE-only** column of the current
@@ -124,10 +124,10 @@ curl 'http://localhost:8000/neural/rosetta?word=fanu&from=ett&to=lat&embedder=xl
 > Rosetta retrieval is **not** exposed by the current public API
 > (`www.openetruscan.com/api`). Run the example above against a local instance of
 > the research API (`src/openetruscan/api`). Rosetta is a documented negative
-> result — see [`research/FINDINGS.md`](../../research/FINDINGS.md).
+> result; see [`research/FINDINGS.md`](../../research/FINDINGS.md).
 
 The default `embedder` is `LaBSE`. The `embedder=xlmr-lora-v4` value
-is accepted but not yet functional — it currently returns LaBSE
+is accepted but not yet functional; it currently returns LaBSE
 results (pending T2.3).
 
 ## Training data
@@ -140,7 +140,7 @@ Derived from the **OpenEtruscan corpus v1** (Zenodo DOI
   Inscriptionum Etruscarum* Vol. I extractions (~29%).
 - **~8,905 unique Etruscan tokens** on the source side after
   divider-normalisation (see *Training procedure* below).
-- No primary-source-attested anchors are used in training — only the
+- No primary-source-attested anchors are used in training, only the
   raw transcriptions. The Bonfante / Wallace / Pallottino
   equivalences are held out for evaluation in `rosetta-eval-v1`.
 
@@ -195,7 +195,7 @@ committed at
 at the time of the run.** The v4 column will be added when T2.3 lands
 v4 vectors in prod and T2.4 runs the head-to-head.
 
-### Headline numbers — 22-pair test split
+### Headline numbers: 22-pair test split
 
 | Metric | random | Levenshtein | LaBSE (current prod) | v4 (after T2.3 / T2.4) |
 |---|---:|---:|---:|---:|
@@ -251,8 +251,8 @@ Honesty matters more here than marketing:
    apples-to-apples without per-pair pairing.
 3. **No primary-source-attested anchors used in training.** The
    evaluation set is itself the philological consensus. Any training
-   signal that pushed precision up — short of genuinely parallel data
-   we do not have — would be reflecting that same consensus back at
+   signal that pushed precision up (short of genuinely parallel data,
+   which we do not have) would be reflecting that same consensus back at
    us. Work-package P4 (primary-source mining) is the route out.
 4. **Philological consensus reflects a school.** The Bonfante &
    Bonfante / Wallace / Pallottino reading is one school's best
@@ -296,13 +296,13 @@ instructions live in
 
 ## License
 
-**Apache 2.0** — matches the model-artifact licensing scheme of the
+**Apache 2.0**, matching the model-artifact licensing scheme of the
 OpenEtruscan repository (code: MIT, data: CC BY 4.0, models:
 Apache 2.0).
 
 ## Acknowledgements
 
-- Vico, A. and Spanakis, G. (2023). *Larth Dataset* — primary source
+- Vico, A. and Spanakis, G. (2023). *Larth Dataset*: primary source
   for ~71% of the unified corpus.
 - Compilers of the *Corpus Inscriptionum Etruscarum* (CIE Vol. I),
   source of the remaining ~29%.
@@ -312,6 +312,6 @@ Apache 2.0).
   Language and Inscriptions*.
 - Pallottino, M. (1968). *Testimonia Linguae Etruscae*.
 - Feng et al. (2020). *LaBSE: Language-agnostic BERT Sentence
-  Embedding* — the cross-lingual anchor.
+  Embedding*: the cross-lingual anchor.
 - The Pelagios Network, the EpiDoc community, and the Classical
   Language Toolkit.

@@ -40,8 +40,8 @@ model-index:
 > never a held-out result and it never described this classifier's accuracy
 > on unseen inscriptions.
 >
-> Under the v2.0.2 evaluation protocol — a frozen test split, three-rater
-> consensus labels, bootstrap confidence intervals — **macro F1 for this
+> Under the v2.0.2 evaluation protocol (a frozen test split, three-rater
+> consensus labels, bootstrap confidence intervals), **macro F1 for this
 > family of models is in the 0.12–0.37 band**, not 0.99. The full corrected
 > table is below.
 >
@@ -72,20 +72,20 @@ inscription says or means.
 | `cnn.onnx` | Character-level CNN, 7-class inscription type | ~31K |
 | `transformer.onnx` | Micro-transformer, 7-class inscription type | ~274K |
 | `byt5_v2_6gb/` | ByT5-small LoRA adapter for lacuna restoration | LoRA over `google/byt5-small` |
-| `v2/*.onnx` | Superseded legacy exports of the two classifiers | — |
-| `metrics.json`, `v2/metadata.json` | **Retracted-run artifacts.** Provenance only. | — |
+| `v2/*.onnx` | Superseded legacy exports of the two classifiers | n/a |
+| `metrics.json`, `v2/metadata.json` | **Retracted-run artifacts.** Provenance only. | n/a |
 
 Classes: `boundary`, `commercial`, `dedicatory`, `funerary`, `legal`,
 `ownership`, `votive`.
 
 ## Evaluation
 
-### Classification — v2.0.4 protocol (clean split, 2026-08-08)
+### Classification: v2.0.4 protocol (clean split, 2026-08-08)
 
 Evaluated on the v2.0.4 frozen candidate-gold set, n=167: three-rater LLM
 jury (Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash, all on Vertex AI),
 unanimous rows at confidence ≥ medium, Krippendorff α = 0.8557 (α is
-lineage-inflated — two of the three raters are Gemini). Training pool: 285
+lineage-inflated, two of the three raters are Gemini). Training pool: 285
 silver-labelled rows on a **text-disjoint** split. 95% bootstrap CIs,
 10,000 resamples, seed=42. Raw evidence is committed and SHA256-pinned in
 the repository under `research/v2/results/classify/`.
@@ -102,9 +102,9 @@ have zero gold rows at v2.0.4, so the metric's ceiling on this set is ~0.714.
 
 > **These numbers supersede the v2.0.2 table** (TF-IDF+NB 0.313, CharCNN
 > 0.369, MicroTransformer 0.317, EmbeddingMLP 0.124, n=143, α=0.7649). The
-> v2.0.2 split was disjoint by `id` but not by text — 25 of its 400 test rows
+> v2.0.2 split was disjoint by `id` but not by text: 25 of its 400 test rows
 > repeated a train-pool text under a different id, and the leak concentrated
-> in the scored candidate-gold subset — and its raw jury outputs are lost
+> in the scored candidate-gold subset. Its raw jury outputs are also lost
 > with a retired GCP project, so it can never be re-scored. Not a controlled
 > before/after: the gold set, jury, and train pool all changed. Full record:
 > `research/v2/PRE_REGISTRATION.md` Deviation §D.
@@ -117,11 +117,11 @@ models of this class on this corpus, not as a certificate for these files.
 
 Two findings, updated at v2.0.4 (paired bootstrap, same 167 rows, seed=42):
 
-1. **Architecture now matters — the v2.0.2 invariance finding did not
+1. **Architecture now matters: the v2.0.2 invariance finding did not
    replicate.** CharCNN beats TF-IDF+NB (Δ +0.106, p = 0.0025) and
    MicroTransformer (Δ +0.147, p = 0.0023) on the clean split. Data remains
    the dominant constraint, but character-level convolution measurably
-   extracts more from the same 285 labels — the shipped TF-IDF+NB is no
+   extracts more from the same 285 labels; the shipped TF-IDF+NB is no
    longer the best available architecture.
 2. **Out-of-distribution dense embeddings still underperform.** EmbeddingMLP
    stays last on macro F1, significantly below TF-IDF+NB (Δ +0.083,
@@ -131,8 +131,8 @@ Two findings, updated at v2.0.4 (paired bootstrap, same 167 rows, seed=42):
    markers) that carry the typological signal here.
 
 Per-class, the dominant classes are modelled adequately (`funerary` F1 0.88,
-`ownership` F1 0.74 on TF-IDF+NB) and the rare classes — `boundary`, `legal`,
-`votive`, `commercial` — are data-starved and score zero. **The low macro
+`ownership` F1 0.74 on TF-IDF+NB) and the rare classes (`boundary`, `legal`,
+`votive`, `commercial`) are data-starved and score zero. **The low macro
 F1 is that imbalance reported honestly**, since macro F1 weights every class
 equally regardless of support.
 
@@ -145,7 +145,7 @@ bundle awaiting adjudicators regenerates from committed evidence with
 a frontier-model consensus, not with expert epigraphic judgement. Cite them
 with that caveat attached.
 
-### Lacuna restoration — ByT5, v2.0.3 protocol
+### Lacuna restoration: ByT5, v2.0.3 protocol
 
 - Span-exact accuracy **≈ 0.26–0.29** across models on n=66 clean-gold rows.
 - 43 of those 66 gaps are a **single character** wide, so the task as measured
@@ -154,7 +154,7 @@ with that caveat attached.
 - A separate retrieval-augmented experiment lifts span-exact 0.258 → 0.379
   (p = 0.025). Its retriever excludes near-duplicates using the true answer,
   which is conservative for measurement but **is not a deployable retrieval
-  procedure** — do not read 0.379 as production accuracy.
+  procedure**; do not read 0.379 as production accuracy.
 
 An earlier "Finding C" (Sonnet hallucination rate 0.949) was **retracted** as a
 harness artifact and does not appear in the v2.0.3 re-run.
@@ -169,7 +169,7 @@ harness artifact and does not appear in the v2.0.3 re-run.
 they are not corrected figures:
 
 - The split is roughly 6× the size of the v2.0.2 pool and its class balance is
-  entirely different — `commercial` has support 102 there and is data-starved
+  entirely different: `commercial` has support 102 there and is data-starved
   under v2.0.2. That divergence is the signature of self-assigned labels, which
   is precisely what the retraction is about.
 - The evaluation was not held out under a frozen protocol, had no inter-rater
@@ -225,7 +225,7 @@ displays the corrected macro F1 alongside every prediction.
 ## Training data
 
 Derived from the OpenEtruscan corpus, Zenodo DOI
-[10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836) — the
+[10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836), the
 cleaned, ML-ready 6,567-row dataset, itself a subset of the 6,633-record
 archival corpus. Upstream: the *Larth Dataset* (Vico & Spanakis 2023, ~71%)
 and *Corpus Inscriptionum Etruscarum* Vol. I extractions (~29%). Full
