@@ -225,7 +225,7 @@ Apache-2.0, documentation CC BY 4.0. Declared in
   author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
-  version   = {1.2.0},
+  version   = {1.3.0},
   doi       = {10.5281/zenodo.20075835},
   url       = {https://doi.org/10.5281/zenodo.20075835},
   publisher = {Zenodo}

@@ -14,6 +14,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-08-08
+
+Public-truth release. Every version, count, licence, DOI, and model status
+the project asserts now derives from one machine-readable manifest that CI
+enforces, and the retracted classification result is gone from the last
+surface still carrying it.
+
 ### Security
 - **aiohttp 3.14.1 → 3.14.3**, closing three Dependabot alerts: an
   out-of-bounds heap read in the C HTTP response parser on a malformed
@@ -25,6 +32,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **torch 2.12.1 → 2.13.0** in `services/minilm-reranker/requirements.txt`
   (memory corruption via `torch.jit.script`, low). Supersedes Dependabot
   PR #86.
+- **ruff 0.15.22 → 0.16.0 across all three pins**, and `actions/setup-python`
+  v6 → v7 plus `astral-sh/setup-uv` v6 → v7 in every workflow. Dependabot
+  PR #84 bumped ruff only in `pyproject.toml`, leaving `.pre-commit-config.yaml`
+  and `ci.yml` behind — the exact desync the comment above that pin warns
+  about, where CI lints with one version and contributors install another.
+  0.16.0 also formats Python inside Markdown fences, so it reformats
+  `README.md`; merging the bump without applying that would have turned
+  `ruff format --check` red on main the moment CI reached 0.16.0. Both are
+  landed here in lockstep with the reformat applied.
 - **Four high-severity CodeQL alerts closed by deleting dead code, not by
   fixing a vulnerability — all four were false positives.**
   `scripts/attic/migrate_to_tembo.py` was the only source of

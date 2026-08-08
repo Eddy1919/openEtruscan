@@ -108,8 +108,8 @@ pip install 'openetruscan[all]'    # full stack incl. transformers + sotac
 from openetruscan import normalize
 
 result = normalize("LARTHAL")
-print(result.canonical)   # larθal
-print(result.phonetic)    # /lar.tʰal/
+print(result.canonical)  # larθal
+print(result.phonetic)  # /lar.tʰal/
 print(result.old_italic)  # 𐌓𐌀𐌓𐌈𐌀𐌋
 ```
 
