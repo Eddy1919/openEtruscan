@@ -14,6 +14,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Changed
+- `docs/openapi.json` joins the surfaces `check_release_truth.py` enforces.
+  `api/server.py` passes `__version__` to FastAPI, so a version bump
+  invalidates the committed spec. CI already caught that by regenerating and
+  diffing, but only inside a job that installs the full server extra — so it
+  failed late, in a job nobody associates with a version bump, reporting
+  "spec is stale" with no pointer to the cause. The manifest check now
+  compares `info.version` in the fast lane and locally, where the fix is one
+  command.
+
 ## [1.3.0] — 2026-08-08
 
 Public-truth release. Every version, count, licence, DOI, and model status

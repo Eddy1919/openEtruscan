@@ -148,8 +148,10 @@
       "codemeta.json",
       "SECURITY.md",
       "README.md",
+      "docs/openapi.json",
       "CHANGELOG.md",
-      "models/etr-lora-v4/README.md"
+      "models/etr-lora-v4/README.md",
+      "models/openetruscan-classifier/README.md"
     ],
     "manual": [
       {

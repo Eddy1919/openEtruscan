@@ -123,6 +123,30 @@ def check_codemeta(m: dict[str, Any], f: Failures) -> None:
             _check_url_is_canonical(m, f, "codemeta.json", ref.get("url"))
 
 
+def check_openapi(m: dict[str, Any], f: Failures) -> None:
+    """The committed API spec carries the package version in `info.version`.
+
+    `api/server.py` passes `version=__version__` to FastAPI, so bumping the
+    project version silently invalidates `docs/openapi.json`. CI catches it by
+    regenerating and diffing — but only in a job that installs the whole server
+    extra, so it fails late and reports "spec is stale" without connecting that
+    to the version bump three files away. Checking `info.version` here surfaces
+    it in the fast lane, and locally, where the fix is one command.
+    """
+    path = ROOT / "docs" / "openapi.json"
+    if not path.exists():
+        f.check(False, "docs/openapi.json", "missing")
+        return
+    spec = json.loads(path.read_text(encoding="utf-8"))
+    observed = spec.get("info", {}).get("version")
+    f.check(
+        observed == m["version"],
+        "docs/openapi.json",
+        f"info.version is {observed!r}, manifest says {m['version']!r} — "
+        f"regenerate with `python scripts/ops/generate_openapi.py`",
+    )
+
+
 def check_security(m: dict[str, Any], f: Failures) -> None:
     text = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
     supported = m["supported_versions"]
@@ -274,6 +298,7 @@ def main() -> int:
     check_pyproject(manifest, failures)
     check_citation(manifest, failures)
     check_codemeta(manifest, failures)
+    check_openapi(manifest, failures)
     check_security(manifest, failures)
     check_readme(manifest, failures)
     check_changelog(manifest, failures)
