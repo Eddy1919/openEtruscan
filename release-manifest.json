@@ -13,7 +13,7 @@
   ],
 
   "schema_version": 1,
-  "version": "1.3.0",
+  "version": "1.3.1",
   "date_released": "2026-08-08",
 
   "identifiers": {
@@ -26,7 +26,7 @@
   },
 
   "canonical_urls": {
-    "$comment": "Every URL a citation or machine-readable record may point at. A path not listed here must not appear in CITATION.cff, codemeta.json, or a model card. `/data` was cited by both and has never existed — it 404s.",
+    "$comment": "Every URL a citation or machine-readable record may point at. A path not listed here must not appear in CITATION.cff, codemeta.json, or a model card. `/data` was cited by both and has never existed; it 404s.",
     "downloads": "https://www.openetruscan.com/downloads",
     "citation_guide": "https://www.openetruscan.com/cite",
     "lod_pelagios": "https://www.openetruscan.com/pelagios.jsonld",
@@ -59,8 +59,8 @@
       "delta_from_published": -635,
       "delta_from_archival": -701,
       "delta_explained": true,
-      "resolved_2026_08_08": "Deduplication, not data loss. Determined by diffing the live LOD feed against the Zenodo deposit. (1) The live corpus is a STRICT SUBSET by id: 635 published ids absent from prod, zero prod ids absent from the deposit. (2) The published corpus holds 6,567 rows over 6,097 distinct `canonical_transliterated` values — 470 repeats. The live corpus holds 5,932 rows over 5,932 distinct texts — zero repeats, an exact 1:1 that does not occur by chance in short formulaic epigraphic text. (3) Classifying the 635: 362 (57.0%) are exact-text duplicates of a row that IS live, 252 (39.7%) are duplicates after stripping editorial brackets, 8 are duplicate groups dropped entirely, leaving 13 (2.0%) — and those are Leiden-convention variants of live rows (`laut(n)i` / `la(u)tni` / `lautn(i)`, `menar{e}va`, `<antar>`). (4) The missing rows are uniform across the id range (10.8-16.1% per decile, no gradient), which rules out the older-or-partial-snapshot hypothesis: an older export would concentrate them at high ids. Confidence high, not absolute — prod and the deposit normalize text differently (2,498 live texts have no exact match among published `canonical_transliterated`), so an exact row-for-row reconciliation is not possible from outside the database. What is certain is the subset relation and the zero-duplicate property of prod.",
-      "still_open": "Which pipeline step performs the dedup, and whether it is deliberate and reproducible. The repository has form here — flag_duplicates.py, quarantine_duplicates.py and find_duplicates.py all sit in scripts/attic/ — but nothing in the shipped pipeline documents a dedup pass, and the Zenodo deposit ships the PRE-dedup corpus while the website serves the POST-dedup one. Pod A: locate the step, document it, and decide whether the citable deposit should be the deduplicated corpus.",
+      "resolved_2026_08_08": "Deduplication, not data loss. Determined by diffing the live LOD feed against the Zenodo deposit. (1) The live corpus is a STRICT SUBSET by id: 635 published ids absent from prod, zero prod ids absent from the deposit. (2) The published corpus holds 6,567 rows over 6,097 distinct `canonical_transliterated` values (470 repeats). The live corpus holds 5,932 rows over 5,932 distinct texts (zero repeats, an exact 1:1 that does not occur by chance in short formulaic epigraphic text). (3) Classifying the 635: 362 (57.0%) are exact-text duplicates of a row that IS live, 252 (39.7%) are duplicates after stripping editorial brackets, 8 are duplicate groups dropped entirely, leaving 13 (2.0%), and those are Leiden-convention variants of live rows (`laut(n)i` / `la(u)tni` / `lautn(i)`, `menar{e}va`, `<antar>`). (4) The missing rows are uniform across the id range (10.8-16.1% per decile, no gradient), which rules out the older-or-partial-snapshot hypothesis: an older export would concentrate them at high ids. Confidence high, not absolute: prod and the deposit normalize text differently (2,498 live texts have no exact match among published `canonical_transliterated`), so an exact row-for-row reconciliation is not possible from outside the database. What is certain is the subset relation and the zero-duplicate property of prod.",
+      "still_open": "Which pipeline step performs the dedup, and whether it is deliberate and reproducible. The repository has form here (flag_duplicates.py, quarantine_duplicates.py and find_duplicates.py all sit in scripts/attic/), but nothing in the shipped pipeline documents a dedup pass, and the Zenodo deposit ships the PRE-dedup corpus while the website serves the POST-dedup one. Pod A: locate the step, document it, and decide whether the citable deposit should be the deduplicated corpus.",
       "downstream_staleness": "README's provenance table (acquired_documented 2,317 / acquired_undocumented 4,316, summing to 6,633) describes the archival corpus. The live API reports 2,203 / 3,729. Both are internally consistent; they describe different artifacts and must be labelled as such."
     }
   },
@@ -136,7 +136,7 @@
         "hub_state_verified": "2026-08-08. Corrected card pushed and verified live: the retraction notice is present, `language` is `ett`, and the only two occurrences of '99%' are inside the notice that retracts it. Before the push the card stated 'Achieves **99% Macro F1**' and additionally carried the wrong language code `xue`, a v0.5.0 title, and a Cloud Run deployment description the project has migrated away from.",
         "hub_machine_readable_residue": [
           "metrics.json reports val_f1_macro 0.7427 for the CNN over a 1,497/375 split whose class balance (commercial support 102) contradicts the v2.0.2 finding that commercial is data-starved. Not a corrected figure; not comparable. Retained for provenance, explained in the card.",
-          "v2/metadata.json carries baseline_milestone '8,091_verified' — a corpus number matching no OpenEtruscan artifact (6,633 archival / 6,567 published / 5,932 deployed). Stray figure from the retracted era."
+          "v2/metadata.json carries baseline_milestone '8,091_verified', a corpus number matching no OpenEtruscan artifact (6,633 archival / 6,567 published / 5,932 deployed). Stray figure from the retracted era."
         ],
         "action": "DONE 2026-08-08. Corrected card lives at models/openetruscan-classifier/README.md, is gated by check_release_truth.py, and was pushed with `python scripts/ops/push_model_card.py openetruscan-classifier --push`. Re-push from that checked-in file after any edit; never edit the card on the Hub, or the two diverge again."
       }
@@ -151,7 +151,7 @@
   },
 
   "surfaces": {
-    "$comment": "What restates this manifest. `checked` surfaces are enforced by scripts/ops/check_release_truth.py in CI. `manual` surfaces live outside this repository and are the maintainer's release-checklist responsibility — the checker cannot reach them.",
+    "$comment": "What restates this manifest. `checked` surfaces are enforced by scripts/ops/check_release_truth.py in CI. `manual` surfaces live outside this repository and are the maintainer's release-checklist responsibility; the checker cannot reach them.",
     "checked": [
       "pyproject.toml",
       "CITATION.cff",
@@ -166,13 +166,13 @@
     "manual": [
       {
         "surface": "PyPI",
-        "expected": "1.3.0",
+        "expected": "1.3.1",
         "observed": "1.3.0",
-        "status": "resolved_2026-08-08",
+        "status": "stale",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
-        "verified": "2026-08-08 (later same day) via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0. The OIDC trusted-publisher pipeline delivered 1.3.0 from the tag as designed; 1.2.0 was never claimed and never will be (superseded before publish).",
-        "action": "Resolved by the 1.3.0 tag. Remaining hardening: PyPI accepts *any* environment name — tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
+        "verified": "2026-08-08 (later same day) via pypi.org/pypi/openetruscan/json: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0. The OIDC trusted-publisher pipeline delivered 1.3.0 from the tag as designed; 1.2.0 was never claimed and never will be (superseded before publish).",
+        "action": "1.3.1 publishes automatically when the v1.3.1 tag lands (the 1.3.0 tag proved the OIDC pipeline end to end). Until then PyPI serves 1.3.0 with the pre-rewrite README as its long description. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",
@@ -186,7 +186,7 @@
         "expected": "macro F1 0.293 (0.255-0.329) on v2.0.4 candidate-gold",
         "observed": "card pushed 2026-08-08 with v2.0.4 numbers and retraction notice",
         "status": "fixed_2026-08-08",
-        "action": "Resolved. The card is now generated from models/openetruscan-classifier/README.md in git and pushed with scripts/ops/push_model_card.py. metrics.json and v2/metadata.json on the Hub still hold retracted-era numbers by design — they are provenance for the retracted run and the card explains both."
+        "action": "Resolved. The card is now generated from models/openetruscan-classifier/README.md in git and pushed with scripts/ops/push_model_card.py. metrics.json and v2/metadata.json on the Hub still hold retracted-era numbers by design; they are provenance for the retracted run and the card explains both."
       }
     ]
   }

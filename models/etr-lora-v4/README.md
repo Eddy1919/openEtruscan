@@ -263,7 +263,7 @@ the model directly:
   author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
-  version   = {1.3.0},
+  version   = {1.3.1},
   doi       = {10.5281/zenodo.20075836},
   url       = {https://doi.org/10.5281/zenodo.20075836},
   publisher = {Zenodo}

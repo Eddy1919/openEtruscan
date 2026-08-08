@@ -104,8 +104,14 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def _req(method: str, url: str, token: str, payload: dict | None = None,
-         data: bytes | None = None, ctype: str | None = None) -> dict:
+def _req(
+    method: str,
+    url: str,
+    token: str,
+    payload: dict | None = None,
+    data: bytes | None = None,
+    ctype: str | None = None,
+) -> dict:
     body = json.dumps(payload).encode() if payload is not None else data
     req = urllib.request.Request(url, data=body, method=method)
     req.add_header("Authorization", f"Bearer {token}")
@@ -120,11 +126,18 @@ def _req(method: str, url: str, token: str, payload: dict | None = None,
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--grouped-csv", type=Path, required=True,
-                    help="openetruscan_clean_grouped.csv produced by add_dup_group_id.py")
+    ap.add_argument(
+        "--grouped-csv",
+        type=Path,
+        required=True,
+        help="openetruscan_clean_grouped.csv produced by add_dup_group_id.py",
+    )
     ap.add_argument("--record-id", default=CURRENT_RECORD_ID)
-    ap.add_argument("--publish", action="store_true",
-                    help="Actually publish. Without it: create and inspect the draft only.")
+    ap.add_argument(
+        "--publish",
+        action="store_true",
+        help="Actually publish. Without it: create and inspect the draft only.",
+    )
     args = ap.parse_args(argv)
 
     token = os.environ.get("ZENODO_TOKEN", "")
@@ -149,10 +162,14 @@ def main(argv: list[str] | None = None) -> int:
 
     # 3. Upload the grouped file.
     fname = "openetruscan_clean_grouped.csv"
-    _req("POST", f"{API}/records/{draft_id}/draft/files", token,
-         payload=[{"key": fname}])
-    _req("PUT", f"{API}/records/{draft_id}/draft/files/{fname}/content", token,
-         data=args.grouped_csv.read_bytes(), ctype="application/octet-stream")
+    _req("POST", f"{API}/records/{draft_id}/draft/files", token, payload=[{"key": fname}])
+    _req(
+        "PUT",
+        f"{API}/records/{draft_id}/draft/files/{fname}/content",
+        token,
+        data=args.grouped_csv.read_bytes(),
+        ctype="application/octet-stream",
+    )
     _req("POST", f"{API}/records/{draft_id}/draft/files/{fname}/commit", token)
 
     # 4. Metadata: bump version, replace description.
@@ -163,8 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     _req("PUT", f"{API}/records/{draft_id}/draft", token, payload={"metadata": meta})
 
     if not args.publish:
-        print(f"DRY RUN: draft ready at https://zenodo.org/uploads/{draft_id}",
-              file=sys.stderr)
+        print(f"DRY RUN: draft ready at https://zenodo.org/uploads/{draft_id}", file=sys.stderr)
         print("Inspect it, then re-run with --publish.", file=sys.stderr)
         return 0
 
@@ -173,9 +189,11 @@ def main(argv: list[str] | None = None) -> int:
     doi = published.get("doi") or published.get("pids", {}).get("doi", {}).get("identifier", "")
     print(f"published: DOI {doi}")
     print(f"grouped-file sha256 for fetch_data.py: {grouped_sha}")
-    print("Now update, in this order: release-manifest.json "
-          "(identifiers.dataset_version_doi), research/data/README.md, "
-          "scripts/ops/fetch_data.py, CHANGELOG.md.")
+    print(
+        "Now update, in this order: release-manifest.json "
+        "(identifiers.dataset_version_doi), research/data/README.md, "
+        "scripts/ops/fetch_data.py, CHANGELOG.md."
+    )
     return 0
 
 

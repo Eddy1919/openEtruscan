@@ -14,7 +14,49 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-08
+
+Documentation-truth patch release. No change to the installed package's API
+or behaviour; `src/openetruscan/` is untouched. The release exists to put
+the v2.0.4 findings and the rewritten README on PyPI (whose long description
+still shows the pre-rewrite text snapshotted at the 1.3.0 publish) and to
+ship the split-integrity tooling that the v2.0.4 protocol work produced.
+
+### Added
+- **`scripts/data_pipeline/add_dup_group_id.py`**: appends `dup_group_id`
+  (content-addressed hash of the Leiden-normalized text) and
+  `dup_group_size` to a corpus CSV, so any downstream consumer can split on
+  text groups instead of rows. On the published corpus: 5,941 groups, 378
+  multi-row, 626 excess rows of leak surface. Intended for the next Zenodo
+  deposit revision; the deposit itself stays un-deduplicated because the
+  repeats are real artifacts.
+- **`research/v2/pipelines/classify_kfold.py`**: stratified, group-atomic
+  k-fold assignment over all 712 silver labels, the v2.1 split-shape
+  candidate that stops starving `commercial`/`boundary`/`legal` of training
+  data. Assignment only; adopting it for the citable metric awaits a
+  pre-registration amendment.
+- **`scripts/ops/zenodo_new_version.py`**: one-command next version of the
+  Zenodo dataset deposit (keeps `openetruscan_clean.csv` byte-identical,
+  adds the grouped CSV, replaces the description). Dry-run by default;
+  requires `ZENODO_TOKEN`.
+- **`research/v2/eval/split_contamination.py`** measures text-level
+  train/test overlap in any frozen split, per class, and cross-references the
+  adjudication queue to show whether the leak concentrates in the scored
+  subset. Exits non-zero on any leak so it can gate a release; `--expect N`
+  accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
+
 ### Changed
+- **Every public prose surface now carries zero em dashes**: README, both
+  model cards, CITATION.cff, codemeta.json, .zenodo.json, the PyPI
+  description, docs/, this changelog, the pre-registration, and the
+  research-data READMEs. Each instance was recast individually. The pass
+  surfaced two content bugs: the README overview still asserted the
+  overturned v2.0.2 claim that no architecture separates from the field
+  (it now states the v2.0.4 result), and PRE_REGISTRATION.md's header
+  still declared v2.0.3 current with Stream A "final and unchanged".
+- The project title reads "OpenEtruscan: open-source digital corpus
+  platform for Etruscan epigraphy" consistently across CITATION.cff,
+  codemeta.json, and .zenodo.json.
 - **The 635-row gap between the published and deployed corpus is explained:
   the live corpus is deduplicated.** It was recorded as unattributed. Diffing
   the live LOD feed against the Zenodo deposit settles it. The live corpus is
@@ -43,12 +85,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   compares `info.version` in the fast lane and locally, where the fix is one
   command.
 
-### Added
-- **`research/v2/eval/split_contamination.py`** measures text-level
-  train/test overlap in any frozen split, per class, and cross-references the
-  adjudication queue to show whether the leak concentrates in the scored
-  subset. Exits non-zero on any leak so it can gate a release; `--expect N`
-  accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
+### Fixed
+- **Both Hugging Face model cards carried `model-index` blocks with no
+  metrics, which the Hub validator now rejects.** The blocks were
+  deliberate (no metrics are claimed for the exact deposited weights), so
+  they became frontmatter comments preserving the rationale. Both cards
+  pushed and verified byte-identical on the Hub with the v2.0.4 numbers.
 
 ## [v2.0.4, evaluation protocol] - 2026-08-08
 
