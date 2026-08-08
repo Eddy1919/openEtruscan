@@ -156,14 +156,14 @@
     "manual": [
       {
         "surface": "PyPI",
-        "expected": "1.2.0",
+        "expected": "1.3.0",
         "observed": "0.3.0",
         "status": "stale",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
         "verified": "2026-08-08 via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0; 1.2.0 is unclaimed.",
         "artifact_ready": "openetruscan-1.2.0 builds clean, passes `twine check`, and installs into a fresh venv reporting 1.2.0 from both `openetruscan.__version__` and the CLI.",
-        "action": "Publishing is now automated: release.yml gained a `publish` job using PyPI OIDC trusted publishing, so no token is stored anywhere. Two one-time steps remain, both maintainer-only — (1) add the trusted publisher on pypi.org (owner Eddy1919, repo openEtruscan, workflow release.yml, environment pypi), (2) create a GitHub environment named `pypi`. After that, tagging v1.2.0 publishes. Until it is published, CITATION.cff and codemeta.json describe software nobody can install."
+        "action": "Trusted publisher configured on pypi.org (Eddy1919/openEtruscan, release.yml) and the `pypi` GitHub environment exists, both verified 2026-08-08. Tagging now publishes automatically; no token exists anywhere. PyPI accepts *any* environment name — tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",
