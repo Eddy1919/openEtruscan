@@ -156,13 +156,24 @@ jobs:
 
       - name: Pytest
         # --cov-fail-under turns coverage from informational into a gate.
-        # Floor = 45: measured 49% against a pgvector-backed Postgres on
-        # 2026-07-17; the 4-point headroom absorbs lane/env variance. Raise
-        # it as coverage grows — never lower it to make a PR pass.
+        #
+        # Floor = 51. Measured 55% (5467 statements, 2439 missed) on this lane
+        # against a pgvector-backed Postgres, identical in runs 29641408353
+        # (2026-07-18), 31233640141 and 31254874607 (both 2026-08-08) — three
+        # weeks of merges without a single statement of drift, so 55 is the
+        # real number and not a sample. The 4-point headroom follows the
+        # convention set when the floor was 45 against a measured 49; it
+        # absorbs a lane where Postgres or pgvector degrades and tests skip
+        # (locally, with the SQLite fallback and 19 skips, the same suite
+        # reports 54%).
+        #
+        # Raise it as coverage grows — never lower it to make a PR pass. A PR
+        # that drops below the floor has removed test coverage; that is the
+        # finding, not the gate.
         run: |
           if [ "${{ matrix.python-version }}" = "3.12" ]; then
             pytest tests/ -v --tb=short -m "not slow and not real_model" \
-              --cov=openetruscan --cov-report=term-missing --cov-fail-under=45
+              --cov=openetruscan --cov-report=term-missing --cov-fail-under=51
           else
             pytest tests/ -v --tb=short -m "not slow and not real_model"
           fi
