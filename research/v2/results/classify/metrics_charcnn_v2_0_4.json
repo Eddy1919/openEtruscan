@@ -1,0 +1,162 @@
+{
+  "arch": "charcnn",
+  "confusion_matrix": {
+    "boundary": {
+      "boundary": 6,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "commercial": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "dedicatory": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 14,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 11,
+      "votive": 0
+    },
+    "funerary": {
+      "boundary": 1,
+      "commercial": 0,
+      "dedicatory": 30,
+      "funerary": 39,
+      "legal": 0,
+      "ownership": 7,
+      "votive": 0
+    },
+    "legal": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 2,
+      "legal": 0,
+      "ownership": 2,
+      "votive": 0
+    },
+    "ownership": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 2,
+      "funerary": 1,
+      "legal": 0,
+      "ownership": 52,
+      "votive": 0
+    },
+    "votive": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    }
+  },
+  "metrics": {
+    "accuracy": {
+      "ci_high": 0.7365269461077845,
+      "ci_low": 0.592814371257485,
+      "n_resamples": 10000,
+      "point": 0.6646706586826348,
+      "seed": 42
+    },
+    "head2_f1_funerary_ownership": {
+      "ci_high": 0.7994032994032993,
+      "ci_low": 0.666896551724138,
+      "n_resamples": 10000,
+      "point": 0.7371799113346126,
+      "seed": 42
+    },
+    "macro_f1": {
+      "ci_high": 0.4354402354402354,
+      "ci_low": 0.353212065478777,
+      "n_resamples": 10000,
+      "point": 0.39882899184703524,
+      "seed": 42
+    },
+    "tail5_f1": {
+      "ci_high": 0.3,
+      "ci_low": 0.21056466302367943,
+      "n_resamples": 10000,
+      "point": 0.26348862405200435,
+      "seed": 42
+    }
+  },
+  "n_eval": 167,
+  "n_resamples": 10000,
+  "n_train": 285,
+  "per_class": {
+    "boundary": {
+      "f1": 0.923076923076923,
+      "precision": 0.8571428571428571,
+      "recall": 1.0,
+      "support": 6.0
+    },
+    "commercial": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    },
+    "dedicatory": {
+      "f1": 0.3943661971830986,
+      "precision": 0.30434782608695654,
+      "recall": 0.56,
+      "support": 25.0
+    },
+    "funerary": {
+      "f1": 0.6554621848739496,
+      "precision": 0.9285714285714286,
+      "recall": 0.5064935064935064,
+      "support": 77.0
+    },
+    "legal": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 4.0
+    },
+    "ownership": {
+      "f1": 0.8188976377952756,
+      "precision": 0.7222222222222222,
+      "recall": 0.9454545454545454,
+      "support": 55.0
+    },
+    "votive": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    }
+  },
+  "seed": 42,
+  "train_meta": {
+    "best_val_f1": 0.44920948616600787,
+    "epochs_run": 30,
+    "labels_present": [
+      "boundary",
+      "dedicatory",
+      "funerary",
+      "legal",
+      "ownership",
+      "votive"
+    ],
+    "max_len": 128,
+    "n_params": 28006,
+    "train_time_s": 10.53,
+    "vocab_size": 65
+  }
+}

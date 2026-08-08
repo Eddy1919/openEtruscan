@@ -1,0 +1,42 @@
+{
+  "charcnn_vs_embedding-mlp": {
+    "delta_ci_high": 0.2343351150222038,
+    "delta_ci_low": 0.13536029830962296,
+    "delta_point": 0.1889890118990121,
+    "n_resamples": 10000,
+    "p_value": 0.0,
+    "seed": 42
+  },
+  "charcnn_vs_microtransformer": {
+    "delta_ci_high": 0.2637049354756532,
+    "delta_ci_low": 0.049933603137264415,
+    "delta_point": 0.1466737118722064,
+    "n_resamples": 10000,
+    "p_value": 0.0023,
+    "seed": 42
+  },
+  "charcnn_vs_tfidf_nb": {
+    "delta_ci_high": 0.14899637382104058,
+    "delta_ci_low": 0.05505579117346732,
+    "delta_point": 0.10556033303215795,
+    "n_resamples": 10000,
+    "p_value": 0.0025,
+    "seed": 42
+  },
+  "tfidf_nb_vs_embedding-mlp": {
+    "delta_ci_high": 0.12241032795139994,
+    "delta_ci_low": 0.04403459681466812,
+    "delta_point": 0.08342867886685415,
+    "n_resamples": 10000,
+    "p_value": 0.0,
+    "seed": 42
+  },
+  "tfidf_nb_vs_microtransformer": {
+    "delta_ci_high": 0.15709488676112557,
+    "delta_ci_low": -0.049249253754761635,
+    "delta_point": 0.04111337884004845,
+    "n_resamples": 10000,
+    "p_value": 0.172,
+    "seed": 42
+  }
+}

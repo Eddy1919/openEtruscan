@@ -1,0 +1,131 @@
+{
+  "all_unsure_count": 201,
+  "candidate_gold_count": 167,
+  "krippendorff_alpha_overall": 0.8557668634974263,
+  "krippendorff_alpha_per_class": {
+    "boundary": 0.4736842105263158,
+    "commercial": NaN,
+    "dedicatory": 0.31326405867970675,
+    "funerary": 0.25079733256016246,
+    "legal": 0.17324561403508765,
+    "ownership": 0.2548830479864962,
+    "votive": -0.10294117647058831
+  },
+  "n_inscriptions_pool": 427,
+  "n_inscriptions_rated": 427,
+  "n_raters": 3,
+  "queue_count": 59,
+  "raters": [
+    "claude-opus-4-8",
+    "gemini-3.1-pro",
+    "gemini-3.5-flash"
+  ],
+  "thin_rated_skipped": 0,
+  "top_disagreement_pairs": [
+    {
+      "count": 633,
+      "pair": [
+        "unsure",
+        "unsure"
+      ]
+    },
+    {
+      "count": 243,
+      "pair": [
+        "funerary",
+        "funerary"
+      ]
+    },
+    {
+      "count": 171,
+      "pair": [
+        "ownership",
+        "ownership"
+      ]
+    },
+    {
+      "count": 81,
+      "pair": [
+        "dedicatory",
+        "dedicatory"
+      ]
+    },
+    {
+      "count": 60,
+      "pair": [
+        "funerary",
+        "unsure"
+      ]
+    },
+    {
+      "count": 22,
+      "pair": [
+        "ownership",
+        "unsure"
+      ]
+    },
+    {
+      "count": 18,
+      "pair": [
+        "boundary",
+        "boundary"
+      ]
+    },
+    {
+      "count": 13,
+      "pair": [
+        "legal",
+        "legal"
+      ]
+    },
+    {
+      "count": 11,
+      "pair": [
+        "dedicatory",
+        "votive"
+      ]
+    },
+    {
+      "count": 10,
+      "pair": [
+        "legal",
+        "unsure"
+      ]
+    },
+    {
+      "count": 6,
+      "pair": [
+        "dedicatory",
+        "unsure"
+      ]
+    },
+    {
+      "count": 3,
+      "pair": [
+        "votive",
+        "votive"
+      ]
+    },
+    {
+      "count": 2,
+      "pair": [
+        "boundary",
+        "unsure"
+      ]
+    },
+    {
+      "count": 2,
+      "pair": [
+        "ownership",
+        "votive"
+      ]
+    },
+    {
+      "count": 2,
+      "pair": [
+        "funerary",
+        "ownership"
+      ]
+    }
+  ]
+}

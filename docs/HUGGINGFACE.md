@@ -8,18 +8,18 @@
 
 Once the philologist adjudication on the v2.0 candidate-gold set lands (Krippendorff α between two human raters ≥ 0.80 on the 30-row spot-check sub-sample), the following artifacts will be published:
 
-| Artifact | Source | Reported metric (current v2.0.2 numbers) |
+| Artifact | Source | Reported metric (current v2.0.4 numbers) |
 |---|---|---|
-| `classifier_v2/` | `src/openetruscan/ml/classifier.py` (TF-IDF + MultinomialNB) trained on the v2 train pool | TF-IDF + NB: **macro F1 0.313, 95 % CI 0.273 – 0.348** on n=143 candidate-gold rows. Three neural baselines on the same split: CharCNN 0.369 [0.257, 0.432]; MicroTransformer 0.317 [0.202, 0.404]; EmbeddingMLP (frozen MiniLM-multilingual) 0.124 [0.099, 0.149]. |
-| `lacuna_restorer_v2/` | Pre-trained frontier models scored under the v2.0.3 protocol (66 dedup clean-gold tasks); the v1 ByT5+LoRA path is not yet re-evaluated | Opus 4.8 (direct rater): span-exact **0.288** [0.182, 0.394], hallucination 0.000 (by construction). Gemini 3.1 Pro: 0.258 / **0.161**. Gemini 3.5 Flash: 0.258 / 0.545. All span-exact deltas non-significant. ⚠️ The v2.0.2 table (Sonnet 0.949) was **RETRACTED** — empty completions scored as hallucinations; see [`INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md) and CHANGELOG [2.0.3]. |
+| `classifier_v2/` | `src/openetruscan/ml/classifier.py` (TF-IDF + MultinomialNB) trained on the v2 train pool | v2.0.4 (clean text-disjoint split, n=167 candidate-gold, α=0.8557): TF-IDF + NB **macro F1 0.293, 95 % CI 0.255 – 0.329**. Three neural baselines on the same split: **CharCNN 0.399 [0.353, 0.435]**, significantly best (paired Δ +0.106 vs TF-IDF, p=0.0025); MicroTransformer 0.252 [0.140, 0.338]; EmbeddingMLP (frozen MiniLM-multilingual) 0.210 [0.181, 0.242]. Supersedes the v2.0.2 table (0.313 headline), whose split leaked 25 test texts into training ([Deviation §D](../research/v2/PRE_REGISTRATION.md)). Evidence: [`research/v2/results/classify/`](../research/v2/results/classify/). |
+| `lacuna_restorer_v2/` | Pre-trained frontier models scored under the v2.0.3 protocol (66 dedup clean-gold tasks); the v1 ByT5+LoRA path is not yet re-evaluated | Opus 4.8 (direct rater): span-exact **0.288** [0.182, 0.394], hallucination 0.000 (by construction). Gemini 3.1 Pro: 0.258 / **0.161**. Gemini 3.5 Flash: 0.258 / 0.545. All span-exact deltas non-significant. ⚠️ The v2.0.2 table (Sonnet 0.949) was **RETRACTED**: empty completions scored as hallucinations; see [`INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md) and CHANGELOG [2.0.3]. |
 
-Both artifacts will carry a full model card following the [Mitchell et al. 2019](https://arxiv.org/abs/1810.03993) template: intended use, training data, limitations, bias analysis, and the bootstrap-CI'd headline numbers — NOT point estimates without uncertainty.
+Both artifacts will carry a full model card following the [Mitchell et al. 2019](https://arxiv.org/abs/1810.03993) template: intended use, training data, limitations, bias analysis, and the bootstrap-CI'd headline numbers, NOT point estimates without uncertainty.
 
 ## What will NOT ship
 
 - Point-estimate metrics without confidence intervals.
 - Numbers measured on in-distribution training data labelled as "performance".
-- The phrase "state-of-the-art" — there is no peer-reviewed Etruscan classification leaderboard to compare against.
+- The phrase "state-of-the-art": there is no peer-reviewed Etruscan classification leaderboard to compare against.
 
 ## Deployment workflow (when artifacts exist)
 

@@ -365,7 +365,10 @@ def main(argv: list[str] | None = None) -> int:
     write_result(args.out_metrics, payload)
 
     with args.out_predictions.open("w") as f:
-        for (gold, _, insc_id), pred in zip(eval_pairs, preds, strict=False):
+        # eval_pairs tuples are (text, label, id) — destructuring them as
+        # (gold, _, id) shipped the inscription TEXT in the gold_label field
+        # of every v2.0.4 predictions row until 2026-08-08.
+        for (_, gold, insc_id), pred in zip(eval_pairs, preds, strict=False):
             f.write(
                 json.dumps(
                     {

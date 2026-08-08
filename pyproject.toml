@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openetruscan"
-version = "1.3.0"
-description = "Open-source tools for ancient epigraphy — built for Etruscan, designed to be copied."
+version = "1.3.1"
+description = "Open-source tools for ancient epigraphy, built for Etruscan and designed to be copied."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
@@ -49,7 +49,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # epidoc and prosopography stay as no-op extras so existing installs keep
-# working: lxml and networkx were declared but never imported — the EpiDoc
+# working: lxml and networkx were declared but never imported; the EpiDoc
 # exporter uses stdlib ElementTree + defusedxml, and the prosopography graph
 # is pure Python.
 epidoc = []
@@ -62,7 +62,7 @@ neural = ["torch>=2.0", "onnxscript>=0.2"]
 neural-inference = ["onnxruntime>=1.16"]
 sota = ["transformers>=4.30.0", "accelerate>=0.21.0"]
 # CPU cross-encoder reranker for /search/hybrid. Optional because it pulls in
-# torch + transformers (~700 MB resident) — too heavy to co-host with the
+# torch + transformers (~700 MB resident) is too heavy to co-host with the
 # API + Fuseki on a small VM without sizing up.
 rerank = ["sentence-transformers>=3.0", "torch>=2.0"]
 # OpenTelemetry instrumentation. The api auto-wires FastAPI + asyncpg + httpx
@@ -78,7 +78,7 @@ telemetry = [
 # Multilingual transformer stack for the Rosetta Vector Space (2026
 # architecture, see ROADMAP). XLM-R-base + a LoRA adapter fine-tuned
 # on Etruscan inscriptions; contextual embeddings get persisted in
-# pgvector. Heavy deps (torch, transformers) — opt-in only.
+# pgvector. Heavy deps (torch, transformers) are opt-in only.
 transformers = [
     "torch>=2.0",
     "transformers>=4.40",
@@ -188,7 +188,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # numpy ≥2.5 ships PEP 695 `type` statements its stubs, which mypy refuses
-# to parse under python_version = "3.10" — with numpy installed (any dev
+# to parse under python_version = "3.10"; with numpy installed (any dev
 # env) that aborted the whole run before a single project file was checked,
 # so the local gate silently checked nothing. Skipping numpy's stubs keeps
 # the 3.10 target honest for our own code; CI never had numpy in its lint

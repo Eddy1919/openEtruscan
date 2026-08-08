@@ -1,0 +1,166 @@
+{
+  "arch": "embedding-mlp",
+  "confusion_matrix": {
+    "boundary": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 6,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "commercial": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "dedicatory": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 1,
+      "funerary": 15,
+      "legal": 0,
+      "ownership": 9,
+      "votive": 0
+    },
+    "funerary": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 73,
+      "legal": 0,
+      "ownership": 4,
+      "votive": 0
+    },
+    "legal": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 3,
+      "legal": 0,
+      "ownership": 1,
+      "votive": 0
+    },
+    "ownership": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 22,
+      "legal": 0,
+      "ownership": 33,
+      "votive": 0
+    },
+    "votive": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    }
+  },
+  "metrics": {
+    "accuracy": {
+      "ci_high": 0.7125748502994012,
+      "ci_low": 0.5688622754491018,
+      "n_resamples": 10000,
+      "point": 0.6407185628742516,
+      "seed": 42
+    },
+    "head2_f1_funerary_ownership": {
+      "ci_high": 0.7671802054154995,
+      "ci_low": 0.6198228128460688,
+      "n_resamples": 10000,
+      "point": 0.6959783913565426,
+      "seed": 42
+    },
+    "macro_f1": {
+      "ci_high": 0.24181057038199896,
+      "ci_low": 0.18087401104642484,
+      "n_resamples": 10000,
+      "point": 0.20983997994802314,
+      "seed": 42
+    },
+    "tail5_f1": {
+      "ci_high": 0.048,
+      "ci_low": 0.0,
+      "n_resamples": 10000,
+      "point": 0.015384615384615385,
+      "seed": 42
+    }
+  },
+  "n_eval": 167,
+  "n_resamples": 10000,
+  "n_train": 285,
+  "per_class": {
+    "boundary": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 6.0
+    },
+    "commercial": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    },
+    "dedicatory": {
+      "f1": 0.07692307692307693,
+      "precision": 1.0,
+      "recall": 0.04,
+      "support": 25.0
+    },
+    "funerary": {
+      "f1": 0.7448979591836734,
+      "precision": 0.6134453781512605,
+      "recall": 0.948051948051948,
+      "support": 77.0
+    },
+    "legal": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 4.0
+    },
+    "ownership": {
+      "f1": 0.6470588235294118,
+      "precision": 0.7021276595744681,
+      "recall": 0.6,
+      "support": 55.0
+    },
+    "votive": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    }
+  },
+  "seed": 42,
+  "train_meta": {
+    "best_val_f1": 0.9310344827586207,
+    "embed_dim": 384,
+    "embed_time_s": 1.12,
+    "embedder": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "hidden_layer_sizes": [
+      128,
+      64
+    ],
+    "labels_present": [
+      "boundary",
+      "dedicatory",
+      "funerary",
+      "legal",
+      "ownership",
+      "votive"
+    ],
+    "n_params": 57926,
+    "train_time_s": 0.06
+  }
+}

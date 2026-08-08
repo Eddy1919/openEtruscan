@@ -1,0 +1,153 @@
+{
+  "classes_in_eval": [
+    "boundary",
+    "dedicatory",
+    "funerary",
+    "legal",
+    "ownership"
+  ],
+  "confusion_matrix": {
+    "boundary": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 2,
+      "legal": 0,
+      "ownership": 4,
+      "votive": 0
+    },
+    "commercial": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "dedicatory": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 8,
+      "funerary": 3,
+      "legal": 0,
+      "ownership": 14,
+      "votive": 0
+    },
+    "funerary": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 1,
+      "funerary": 74,
+      "legal": 0,
+      "ownership": 2,
+      "votive": 0
+    },
+    "legal": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 4,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    },
+    "ownership": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 3,
+      "funerary": 8,
+      "legal": 0,
+      "ownership": 44,
+      "votive": 0
+    },
+    "votive": {
+      "boundary": 0,
+      "commercial": 0,
+      "dedicatory": 0,
+      "funerary": 0,
+      "legal": 0,
+      "ownership": 0,
+      "votive": 0
+    }
+  },
+  "metrics": {
+    "accuracy": {
+      "ci_high": 0.8203592814371258,
+      "ci_low": 0.688622754491018,
+      "n_resamples": 10000,
+      "point": 0.7544910179640718,
+      "seed": 42
+    },
+    "head2_f1_funerary_ownership": {
+      "ci_high": 0.8646109863181539,
+      "ci_low": 0.7494796801402125,
+      "n_resamples": 10000,
+      "point": 0.8102240896358543,
+      "seed": 42
+    },
+    "macro_f1": {
+      "ci_high": 0.32862725779967156,
+      "ci_low": 0.2552171637885924,
+      "n_resamples": 10000,
+      "point": 0.2932686588148773,
+      "seed": 42
+    },
+    "tail5_f1": {
+      "ci_high": 0.12380952380952379,
+      "ci_low": 0.04444444444444444,
+      "n_resamples": 10000,
+      "point": 0.08648648648648649,
+      "seed": 42
+    }
+  },
+  "model": "TF-IDF (char 2-4-gram) + MultinomialNB(alpha=0.1)",
+  "n_eval": 167,
+  "n_resamples": 10000,
+  "n_train": 285,
+  "per_class": {
+    "boundary": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 6.0
+    },
+    "commercial": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    },
+    "dedicatory": {
+      "f1": 0.43243243243243246,
+      "precision": 0.6666666666666666,
+      "recall": 0.32,
+      "support": 25.0
+    },
+    "funerary": {
+      "f1": 0.880952380952381,
+      "precision": 0.8131868131868132,
+      "recall": 0.961038961038961,
+      "support": 77.0
+    },
+    "legal": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 4.0
+    },
+    "ownership": {
+      "f1": 0.7394957983193278,
+      "precision": 0.6875,
+      "recall": 0.8,
+      "support": 55.0
+    },
+    "votive": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 0.0
+    }
+  },
+  "seed": 42
+}

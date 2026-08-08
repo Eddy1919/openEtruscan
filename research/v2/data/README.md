@@ -1,4 +1,32 @@
-# Frozen classification split (Stream A) — repaired 2026-07-17
+# Frozen classification split (Stream A), superseded 2026-08-08 (text-disjoint)
+
+## Current state (2026-08-08)
+
+The committed split is the **text-disjoint** regeneration: 427 test / 285
+train, produced by the exact pre-registered invocation below after
+`classify_split.py` learned to sample text groups instead of rows
+(PRE_REGISTRATION.md Deviation §D). Three properties, all verified
+programmatically at regeneration time:
+
+1. **The old 400-row test pool is a strict subset of the new 427.** Same
+   seed, same sampling path; the only change is that 27 train rows whose
+   normalized text matched a test row were pulled across. Every id the
+   v2.0.2 jury scored, all 79 adjudication-queue ids, and the philologist
+   handoff CSVs therefore remain valid references into the current test pool.
+2. **The new 285-row train pool is a strict subset of the old 312.** No row
+   entered training that was not already there; 27 left.
+3. **Zero normalized-text overlap between pools** (`split_contamination.py`
+   reports 0/427).
+
+Superseded hashes, for the record: test
+`7df5e46c7d8b26df000b87bd125ef8049e3822ce7c008f76c6a5a8cb0cc75f61` (400 rows),
+train `8a8b83fb0d48139d52b38b0e42a7c772723d41e3581460551272d9e6556c25bb`
+(312 rows). Any historical number citing those hashes was measured against a
+train pool now known to leak 25 test texts.
+
+---
+
+## Prior repair, 2026-07-17
 
 ## What happened
 
@@ -25,7 +53,7 @@ python -m research.v2.pipelines.classify_split \
 `openetruscan_clean.csv` is the public Zenodo deposit
 ([10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836)),
 SHA256 `4fc09af94005655bfe26affeeb48295c88606ae23c8dbc33ff5436f9083f69f8`
-(recorded in `SHA256SUMS`; the CSV itself stays out of git — fetch it with
+(recorded in `SHA256SUMS`; the CSV itself stays out of git; fetch it with
 `scripts/ops/fetch_data.py` or from the DOI).
 
 ## Verification that this is the split the jury ran on
@@ -54,10 +82,10 @@ reported training count. Tracked as an open reproducibility item in
 
 Immediately after the repair, the label provenance tag
 `gold:claude_hand_label` was renamed to `silver:claude_hand_label` in
-`research/data/openetruscan_labels.csv` (184 rows) — those labels are
+`research/data/openetruscan_labels.csv` (184 rows); those labels are
 LLM-derived, not philologist-validated, and the word "gold" invited
 miscitation. The split was regenerated after the rename; membership, row
-order, and silver labels are byte-identical — only the
+order, and silver labels are byte-identical; only the
 `silver_signal_source` strings changed (verified programmatically).
 
 `SHA256SUMS` pins all four artifacts; verify with `shasum -a 256 -c SHA256SUMS`

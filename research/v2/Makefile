@@ -13,13 +13,17 @@ SILVER    := $(REPO_ROOT)/research/data/openetruscan_labels.csv
 # Outputs (produced by v2 pipeline)
 DATA      := $(REPO_ROOT)/research/v2/data
 
-# Stream A artifacts
+# Stream A artifacts. Jury evidence lands under results/ (committed), not
+# data/ — the v2.0.2 jury outputs lived only in a retired project's GCS
+# bucket and are gone; committed evidence cannot be orphaned that way.
+CLF_RESULTS := $(REPO_ROOT)/research/v2/results/classify
+CLF_VER   := v2_0_4
 CLF_TRAIN := $(DATA)/classify_train_pool.jsonl
 CLF_TEST  := $(DATA)/classify_test_v2.jsonl
-CLF_JURY  := $(DATA)/classify_jury_raw.jsonl
-CLF_GOLD  := $(DATA)/classify_candidate_gold.jsonl
-CLF_QUEUE := $(DATA)/classify_adjudication_queue.jsonl
-CLF_SUMM  := $(DATA)/classify_jury_summary.json
+CLF_JURY  := $(CLF_RESULTS)/classify_jury_raw_$(CLF_VER).jsonl
+CLF_GOLD  := $(CLF_RESULTS)/classify_candidate_gold_$(CLF_VER).jsonl
+CLF_QUEUE := $(CLF_RESULTS)/classify_queue_$(CLF_VER).jsonl
+CLF_SUMM  := $(CLF_RESULTS)/classify_jury_summary_$(CLF_VER).json
 
 # Stream B artifacts
 ROS_PAIRS := $(DATA)/rosetta_pairs_raw.jsonl
@@ -38,7 +42,7 @@ LAC_JURY  := $(DATA)/lacuna_jury_raw.jsonl
 PROVIDERS := claude-haiku-4-5 gemini-2.5-pro llama-4-maverick
 
 .PHONY: help all check-compile classify-split classify-jury classify-adjudicate \
-        rosetta-exclude lacuna-mine lacuna-jury clean
+        classify-handoff rosetta-exclude lacuna-mine lacuna-jury clean
 
 help:
 	@echo "OpenEtruscan v2 pipelines"
@@ -47,6 +51,7 @@ help:
 	@echo "  make classify-split        produce frozen stratified test pool ($(CLF_TEST))"
 	@echo "  make classify-jury         run multi-model LLM jury (~\$$15 in API)"
 	@echo "  make classify-adjudicate   build candidate-gold + adjudication-queue"
+	@echo "  make classify-handoff      build the philologist handoff bundle"
 	@echo ""
 	@echo "Stream B — Rosetta-eval-v2"
 	@echo "  make rosetta-exclude       verify zero train/test lemma contamination"
@@ -103,6 +108,13 @@ classify-adjudicate:
 	    --out-gold $(CLF_GOLD) \
 	    --out-queue $(CLF_QUEUE) \
 	    --out-summary $(CLF_SUMM)
+
+classify-handoff:
+	@cd $(REPO_ROOT) && $(PY) -m research.v2.pipelines.classify_handoff \
+	    --queue $(CLF_QUEUE) \
+	    --gold $(CLF_GOLD) \
+	    --out-dir $(REPO_ROOT)/research/v2/handoff/v2.0.4-etr \
+	    --seed 42
 
 # --- Stream B ---------------------------------------------------------------
 rosetta-exclude:
