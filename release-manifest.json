@@ -157,7 +157,11 @@
         "expected": "1.2.0",
         "observed": "0.3.0",
         "status": "stale",
-        "action": "Publish the current package. Until then the CITATION and codemeta versions describe software no one can install."
+        "self_resolving": true,
+        "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
+        "verified": "2026-08-08 via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0; 1.2.0 is unclaimed.",
+        "artifact_ready": "openetruscan-1.2.0 builds clean, passes `twine check`, and installs into a fresh venv reporting 1.2.0 from both `openetruscan.__version__` and the CLI.",
+        "action": "Publishing is now automated: release.yml gained a `publish` job using PyPI OIDC trusted publishing, so no token is stored anywhere. Two one-time steps remain, both maintainer-only — (1) add the trusted publisher on pypi.org (owner Eddy1919, repo openEtruscan, workflow release.yml, environment pypi), (2) create a GitHub environment named `pypi`. After that, tagging v1.2.0 publishes. Until it is published, CITATION.cff and codemeta.json describe software nobody can install."
       },
       {
         "surface": "frontend package.json / Footer / /cite",
@@ -171,7 +175,8 @@
         "expected": "macro F1 0.313 (0.273-0.348)",
         "observed": "~99% macro F1",
         "status": "carries_retracted_claim",
-        "action": "See models[].retracted_claim.action. Highest-severity open item in the project."
+        "blocked_on": "The HF_TOKEN in the maintainer's .env.local is expired or revoked: it is well-formed (hf_ prefix, 35 chars) but GET /api/whoami-v2 returns 401, and the upload fails 401 'Invalid username or password' against a repository that reads fine anonymously. Not a code or permissions bug on our side.",
+        "action": "Mint a new write-scoped token at https://huggingface.co/settings/tokens, put it in .env.local, then run `python scripts/ops/push_model_card.py openetruscan-classifier --push` from the main checkout (worktrees do not carry the git-ignored .env.local). The corrected card is committed at models/openetruscan-classifier/README.md and is gate-checked. Flip retracted_on_hub and this surface's status once the push is verified. Highest-severity open item in the project."
       }
     ]
   }

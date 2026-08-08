@@ -90,10 +90,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `/stats/provenance` is authoritative for anything the website shows.
 
 ### Known — not fixed here
-- **The Hugging Face card is corrected in git but not yet pushed.** Publishing
-  to a public model repository is opt-in, not a CI step. Run
-  `python scripts/ops/push_model_card.py openetruscan-classifier --push`, then
-  flip `retracted_on_hub` in the manifest.
+- **The Hugging Face card is corrected in git but the push is blocked on an
+  expired token.** The `HF_TOKEN` in `.env.local` is well-formed but the Hub
+  rejects it: `GET /api/whoami-v2` returns 401, and the upload fails 401
+  against a repository that reads fine anonymously. Mint a new write-scoped
+  token, then run
+  `python scripts/ops/push_model_card.py openetruscan-classifier --push` from
+  the main checkout — worktrees do not carry the git-ignored `.env.local` —
+  and flip `retracted_on_hub` in the manifest.
 - **Two machine-readable files on the Hub still carry retracted-era numbers**
   and are retained for provenance rather than deleted: `metrics.json`
   (`val_f1_macro: 0.7427` over a 1,497/375 split whose class balance
@@ -101,11 +105,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `v2/metadata.json` (`baseline_milestone: "8,091_verified"` — a corpus number
   matching no OpenEtruscan artifact). The corrected card explains both; the
   files themselves are unchanged.
-- **PyPI still serves 0.3.0.** `openetruscan-1.2.0` now builds clean, passes
-  `twine check`, and installs into a fresh environment reporting `1.2.0` from
-  both the package and the CLI — but uploading is irreversible (a version
-  number cannot be reused) and needs a PyPI token, so it stays a maintainer
-  action.
+- **PyPI still serves 0.3.0**, but publishing is no longer a manual step.
+  `release.yml` gained a `publish` job using PyPI OIDC trusted publishing, so
+  no token is stored on a laptop or in GitHub secrets — the drift happened
+  because publishing depended on somebody remembering. It runs after the
+  strict manifest check, rebuilds from the tag, re-verifies that the artifact
+  filename matches the tag, and re-runs `twine check` before upload. Two
+  one-time maintainer steps remain: add the trusted publisher on pypi.org and
+  create a GitHub environment named `pypi`. Until then the job fails with an
+  OIDC error while the GitHub Release still succeeds — the release is not held
+  hostage to the setup.
 - **Why the deployed corpus is 701 rows short of the archival one** is
   unresolved. Now precisely located rather than misattributed to a feed
   filter; needs database access. Pod A.

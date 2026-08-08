@@ -229,11 +229,22 @@ def _check_retraction(model: dict[str, Any], card_path: str, text: str, f: Failu
 
 
 def check_manual_surfaces(m: dict[str, Any], f: Failures, strict: bool) -> list[str]:
+    """Report out-of-repo surfaces; under --strict-manual, fail on the blocking ones.
+
+    A surface marked `self_resolving` is one the release pipeline itself
+    updates — PyPI is stale precisely *until* a tag publishes it. Failing the
+    strict gate on those would deadlock: the tag cannot pass the gate until
+    PyPI is current, and PyPI cannot become current without the tag. They stay
+    advisory in both modes and are reported either way.
+
+    Everything else blocks. The Hugging Face card is the case that matters: a
+    tag must never ship while a public card still advertises a retracted
+    metric, and nothing about tagging fixes that on its own.
+    """
     notes: list[str] = []
     for surface in m["surfaces"]["manual"]:
         status = surface["status"]
-        resolved = status.startswith(_RESOLVED_PREFIXES)
-        if resolved:
+        if status.startswith(_RESOLVED_PREFIXES):
             continue
         line = (
             f"{surface['surface']}: expected {surface['expected']!r}, "
@@ -241,7 +252,7 @@ def check_manual_surfaces(m: dict[str, Any], f: Failures, strict: bool) -> list[
         )
         if status not in _KNOWN_MANUAL_STATES:
             f.check(False, "release-manifest.json", f"unrecognised manual status {status!r}")
-        if strict:
+        if strict and not surface.get("self_resolving", False):
             f.check(False, "manual surface", line)
         else:
             notes.append(line)

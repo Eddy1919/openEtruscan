@@ -6,6 +6,12 @@ name: Release
 # mints the versioned DOI from .zenodo.json — publishing a release IS the
 # archival step, so tags only get pushed when CHANGELOG, pyproject,
 # CITATION.cff, and codemeta.json already agree on the version.
+#
+# PyPI drifted to 0.3.0 while the repository shipped 1.2.0 because publishing
+# was a manual step somebody had to remember, run from a laptop holding a
+# token. The `publish` job below removes both failure modes: the tag is the
+# trigger, and OIDC trusted publishing means no token exists to expire, leak,
+# or be forgotten. One-time setup is documented on that job.
 
 on:
   push:
@@ -67,3 +73,66 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --title "openetruscan $GITHUB_REF_NAME" \
             --notes-file /tmp/notes.md
+
+  publish:
+    # Publish to PyPI only after `release` has passed the manifest check, so a
+    # tag whose surfaces disagree never reaches the index. PyPI is the one
+    # surface here that is genuinely irreversible — a version number cannot be
+    # reused or replaced, only yanked — which is why it runs last and behind
+    # every gate.
+    #
+    # ONE-TIME SETUP (no secret is ever stored):
+    #   1. pypi.org -> openetruscan -> Manage -> Publishing -> Add a new publisher
+    #        Owner:        Eddy1919
+    #        Repository:   openEtruscan
+    #        Workflow:     release.yml
+    #        Environment:  pypi
+    #   2. GitHub -> Settings -> Environments -> New environment named `pypi`.
+    #      Add required reviewers there if you want a human approval step
+    #      between the tag and the upload.
+    # After that, `git tag v1.2.0 && git push --tags` publishes. If step 1 is
+    # skipped this job fails with an OIDC error and the GitHub Release still
+    # succeeds — the release is not held hostage to the setup.
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      # Job-level `permissions` REPLACES the workflow default rather than
+      # merging with it, so both scopes must be listed. `contents: read` is
+      # what actions/checkout needs; write is deliberately withheld, since
+      # this job must never be able to push to the repository.
+      contents: read
+      # Mints the short-lived OIDC token PyPI exchanges for an upload token.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          pip install --quiet build
+          python -m build
+
+      - name: Verify the built version matches the tag
+        # `python -m build` reads pyproject, which `release` already checked
+        # against the manifest — but the artifact filename is what PyPI
+        # actually indexes, and an unexpected name here means something
+        # rewrote the version during the build.
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ ! -f "dist/openetruscan-$TAG.tar.gz" ]; then
+            echo "::error::expected dist/openetruscan-$TAG.tar.gz; got: $(ls dist)"
+            exit 1
+          fi
+
+      - name: Check artifact metadata
+        run: |
+          pip install --quiet twine
+          twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
