@@ -41,7 +41,7 @@ The taxonomy is informed by Bonfante & Bonfante (2002), Wallace (2008), and Adie
 
 ## Why categorization matters for evaluation
 
-The pre-registered primary metric is `P@10` (does the gold equivalent appear in the model's top-10 retrieval?). But P@10 is brutal on `gloss_only` pairs whose Latin/Greek equivalent is a rare word, so the secondary `semantic_field@10` metric uses the category to score "near miss" hits. The semantic-field vocabularies are frozen in [`eval/semantic_fields.json`](../eval/semantic_fields.json) at the freeze commit.
+The pre-registered primary metric is `P@10` (does the gold equivalent appear in the model's top-10 retrieval?). But P@10 is brutal on `gloss_only` pairs whose Latin/Greek equivalent is a rare word, so the secondary `semantic_field@10` metric uses the category to score "near miss" hits. The semantic-field vocabularies are frozen in [`eval/semantic_fields.json`](../../eval/semantic_fields.json) at the freeze commit.
 
 A pair's category cannot be changed after results are seen. If you realize a pair was miscategorized, log the correction in `data/rosetta_corrections.jsonl` and re-run; do not retroactively edit the frozen pair file.
 

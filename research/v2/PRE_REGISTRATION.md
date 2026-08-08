@@ -101,7 +101,7 @@ Given an Etruscan inscription with a marked lacuna (Leiden `[...]` or dotted-bra
 
 ### Primary metrics
 - **Char-level top-1 accuracy** on the lacuna span (mean across rows)
-- **Hallucination rate** — fraction of rows where the model emits ≥1 character outside the marked lacuna span (i.e., it changes a non-lacuna character). Defined formally in [`codebooks/lacunae.md`](codebooks/lacunae.md).
+- **Hallucination rate** — fraction of rows where the model emits ≥1 character outside the marked lacuna span (i.e., it changes a non-lacuna character). Defined formally in [`codebooks/lacunae.md`](codebooks/etr/lacunae.md).
 
 ### Secondary metrics
 - Char-level top-3 accuracy

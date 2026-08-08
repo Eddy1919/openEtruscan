@@ -15,7 +15,7 @@ You are paid for thinking, not speed. If a row needs 5 minutes of bibliography l
 
 ## Setup
 
-1. Read [`codebooks/classification.md`](../codebooks/classification.md) end-to-end before starting. Same for `lacunae.md` when working that queue.
+1. Read [`codebooks/classification.md`](../codebooks/etr/classification.md) end-to-end before starting. Same for `lacunae.md` when working that queue.
 2. Open the queue JSONL alongside this guide. Each row carries:
    - `id` — inscription identifier
    - `raw_text` / `canonical_transliterated` — the text
