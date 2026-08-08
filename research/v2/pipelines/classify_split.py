@@ -23,10 +23,32 @@ Behavior
   REPLACEMENT, stratum-proportional. Tail strata with fewer than 2 rows are
   upsampled to at least 2 rows each (so every class has ≥2 test examples).
 - The training pool is the remainder. The script guarantees zero overlap
-  between train and test by id.
+  between train and test both by id AND by normalized text (see below).
 - Each output row carries: id, raw_text, canonical_transliterated,
   translation (if present), silver_label, silver_confidence, source_tag,
   stratum_id, split_seed, codebook_version.
+
+Text-level disjointness
+-----------------------
+An id-only guard is not sufficient. The corpus holds 6,567 rows over 6,097
+distinct `canonical_transliterated` values — 470 rows repeat a text that also
+appears under a *different* id (`mi`, `suθina`, `aplu`, `alpan` and other short
+formulaic items recur across genuinely distinct artifacts). An id-disjoint
+split therefore still leaks: the model can see the exact test string, with the
+same label, during training.
+
+Measured on the frozen v2 split, which was generated before this guard existed:
+25/400 test rows (6.2%) had a bracket-stripped twin in the train pool and 23 of
+those twins carried the same label. The leak is not uniform — it concentrates in
+short, high-frequency forms, which are also the rows an LLM jury most reliably
+agrees on, so it is *enriched* in the unanimous candidate-gold set that carries
+the published metric rather than diluted across the full test pool.
+
+This generator therefore samples **text groups**, not rows: once a row enters
+the test pool, every other silver-labelled row sharing its normalized text
+follows it there. Groups are almost all singletons, so stratum proportions move
+only slightly, but the test pool may finish a few rows above `--n-test`. The
+run fails outright if any normalized text still appears on both sides.
 
 This script is a SPLIT generator. It does NOT label data. The test rows are
 still silver-labeled — the LLM-jury + adjudication pipeline replaces those
@@ -39,6 +61,7 @@ import argparse
 import csv
 import json
 import random
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -46,6 +69,22 @@ from typing import Any
 
 CODEBOOK_VERSION = "v2.0"
 SEED = 42
+
+# Leiden editorial markup and lacuna marks. Two rows that differ only in how an
+# editor bracketed a restoration are the same string for leakage purposes:
+# `la(u)tni`, `lautn(i)` and `laut(n)i` all reduce to `lautni`.
+_MARKUP = re.compile(r"[\[\]<>{}()?\-–—]")
+_WS = re.compile(r"\s+")
+
+
+def text_key(text: str) -> str:
+    """Normalized form used to detect the same inscription text across ids.
+
+    Strips Leiden markup, collapses whitespace, and casefolds. Rows whose text
+    is *entirely* markup normalize to the empty string; those must not be
+    fused into one giant group, so callers fall back to a per-row unique key.
+    """
+    return _WS.sub(" ", _MARKUP.sub("", text)).strip().casefold()
 
 
 def _source_tag(insc_id: str) -> str:
@@ -276,6 +315,29 @@ def main(argv: list[str] | None = None) -> int:
             if len(test_ids) >= target_test:
                 break
 
+    # Expand the test pool to whole text groups. Sampling picked individual
+    # ids; any silver-labelled sibling sharing the same normalized text would
+    # otherwise land in train and hand the model the answer.
+    groups: dict[str, list[str]] = defaultdict(list)
+    for insc_id in silver:
+        key = text_key(corpus.get(insc_id, {}).get("canonical_transliterated", ""))
+        # Empty key = text was entirely markup; keep those rows ungrouped.
+        groups[key or f"\0{insc_id}"].append(insc_id)
+
+    pulled = 0
+    for insc_id in sorted(test_ids):
+        key = text_key(corpus.get(insc_id, {}).get("canonical_transliterated", ""))
+        for sibling in groups[key or f"\0{insc_id}"]:
+            if sibling not in test_ids:
+                test_ids.add(sibling)
+                pulled += 1
+    if pulled:
+        print(
+            f"Text-group expansion: pulled {pulled} sibling row(s) into test to "
+            f"keep the split text-disjoint (test now {len(test_ids)})",
+            file=sys.stderr,
+        )
+
     # Materialize rows
     def _row(insc_id: str) -> dict[str, Any]:
         silver_row = silver[insc_id]
@@ -305,8 +367,33 @@ def main(argv: list[str] | None = None) -> int:
         for insc_id in sorted(train_ids):
             f.write(json.dumps(_row(insc_id), ensure_ascii=False) + "\n")
 
+    # Contamination guard. An `assert` is the wrong tool here — `python -O`
+    # strips it, and this is the check the frozen v2 split silently failed.
+    if test_ids & train_ids:
+        print(
+            f"CONTAMINATION: {len(test_ids & train_ids)} ids in both pools.",
+            file=sys.stderr,
+        )
+        return 1
+    train_keys = {
+        text_key(corpus.get(i, {}).get("canonical_transliterated", "")) for i in train_ids
+    }
+    train_keys.discard("")
+    shared = sorted(
+        k
+        for k in (text_key(corpus.get(i, {}).get("canonical_transliterated", "")) for i in test_ids)
+        if k and k in train_keys
+    )
+    if shared:
+        print(
+            f"CONTAMINATION: {len(shared)} test row(s) share normalized text with "
+            f"the train pool (first few: {shared[:5]}). An id-disjoint split is "
+            f"not enough — see 'Text-level disjointness' in this module's docstring.",
+            file=sys.stderr,
+        )
+        return 1
+
     # Report
-    assert not (test_ids & train_ids), "CONTAMINATION: train and test overlap!"
     print(f"Total silver rows: {n_total}", file=sys.stderr)
     print(f"Test pool:  {len(test_ids):4d} rows  → {args.out_test}", file=sys.stderr)
     print(f"Train pool: {len(train_ids):4d} rows  → {args.out_train}", file=sys.stderr)

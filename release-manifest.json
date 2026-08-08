@@ -115,7 +115,20 @@
         "ci_high": 0.348,
         "architecture": "TF-IDF + Multinomial NB",
         "eval_set": "v2.0.2 candidate-gold, n=143, 3-rater LLM-jury unanimous, Krippendorff alpha 0.7649",
-        "eval_set_is_expert_ratified": false
+        "eval_set_is_expert_ratified": false,
+        "status": "upper_bound_pending_clean_rerun",
+        "contamination_caveat": {
+          "$comment": "Not a retraction. The figure stands as reported; what changed on 2026-08-08 is that we can no longer call the split it was measured on clean. Any surface quoting 0.313 must carry this qualifier.",
+          "summary": "Measured on a train/test split that is disjoint by id but not by text. Treat 0.313 as an upper bound.",
+          "leak": "25 of 400 test rows (6.2%) have a bracket-stripped text twin in the 312-row train pool; 23 of those twins carry the same silver label.",
+          "why_worse_than_it_looks": "The metric is scored on the unanimous candidate-gold subset (n=143), and the leak concentrates there rather than spreading over the 400. Leaked rows are 92% single-token vs 16.5% in the non-unanimous adjudication queue, and 0 of the 25 landed in that queue against 4.9 expected under an even spread. Macro-averaging amplifies it further in the thin classes: votive 2/8 leaked (25%), dedicatory 8/63 (12.7%), each class carrying 1/7 of the score.",
+          "magnitude_unknown": "The direction of the bias is known; the size is not. Nobody has re-scored on a clean split. The published 95% CI is a bootstrap over sampling noise and does not model contamination, so it does not bound this.",
+          "root_cause": "The pre-registered contamination clause required disjointness by id. 470 corpus rows repeat a canonical_transliterated value under a different id, because short formulaic inscriptions recur across genuinely distinct artifacts.",
+          "fixed_in_generator": "research/v2/pipelines/classify_split.py now samples text groups and refuses to emit a split whose pools share normalized text. The frozen v2 split was deliberately NOT regenerated — it is the artifact the completed jury run and the philologist handoff are keyed to.",
+          "audit": "python -m research.v2.eval.split_contamination --train research/v2/data/classify_train_pool.jsonl --test research/v2/data/classify_test_v2.jsonl --queue research/v2/handoff/v2.0-etr/adjudication_queue.csv",
+          "recorded": "research/v2/PRE_REGISTRATION.md Deviation D",
+          "clears_when": "Stream A is re-scored on a text-disjoint split; until then no surface may present 0.313 as a clean held-out result."
+        }
       },
       "retracted_claim": {
         "value": "~99% macro F1",

@@ -186,6 +186,21 @@ Four architectures spanning two orders of magnitude in parameter count were eval
 | MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 |
 | EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.124** (0.099 – 0.149) | 0.469 |
 
+> **Treat all four as upper bounds.** They share a split that is disjoint by `id`
+> but not by text: 25 of the 400 test rows (6.2%) repeat a train-pool text under
+> a different id, 23 of them with the same label. Short formulaic inscriptions
+> (`mi`, `suθina`, `aplu`) recur across genuinely distinct artifacts, and the
+> pre-registered guard only ever checked ids. The leak concentrates in the scored
+> subset rather than washing out — leaked rows are 92% single-token, and none of
+> the 25 reached the non-unanimous adjudication queue against 4.9 expected under
+> an even spread — and macro-averaging amplifies it where classes are thinnest
+> (votive 2/8, dedicatory 8/63). How much this inflates the figures is unmeasured;
+> the CIs above are bootstraps over sampling noise and do not model it. The split
+> generator now enforces text-level disjointness; the frozen split is kept as-is
+> because a completed jury run and the philologist handoff are keyed to it. Full
+> account in [Deviation §D](research/v2/PRE_REGISTRATION.md); audit it yourself
+> with `python -m research.v2.eval.split_contamination`.
+
 Two findings:
 
 1. **Architecture-invariance among local-feature models.** TF-IDF+NB, CharCNN, and MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. Adding parameters does not move macro F1 — the bottleneck is data, not architecture.
@@ -339,7 +354,7 @@ What stays here (and gets first billing in this README):
 - **Frozen, stratified test split** (seed=42, 400 rows, 7 classes with a class-2 floor) — see [`research/v2/pipelines/classify_split.py`](research/v2/pipelines/classify_split.py).
 - **3-rater LLM jury** (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick on Vertex AI; Sonnet substituted for Opus per [Deviation §A](research/v2/PRE_REGISTRATION.md)) produces independent labels; Krippendorff α and a unanimous-agreement filter promote rows to candidate-gold. Classifier α = 0.7649 on the full pool; n=143 candidate-gold rows.
 - **Pre-registered eval** with bootstrap 95% CIs on every metric and paired-bootstrap p-values on every model-comparison claim — see [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md) and [`research/v2/eval/bootstrap.py`](research/v2/eval/bootstrap.py).
-- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.313 ± 0.038 (TF-IDF + NB on n=143).
+- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.313 ± 0.038 (TF-IDF + NB on n=143), and that number is itself an **upper bound**: the split behind it is text-contaminated ([Deviation §D](research/v2/PRE_REGISTRATION.md)).
 - **~~Finding C (v2.0.2)~~ — RETRACTED at v2.0.3.** The "Sonnet hallucinates 94.9%, frontier model loses" claim was a harness artifact: empty Vertex completions scored as hallucinations (see §Lacuna restoration above). The corrected v2.0.3 re-run (Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash) finds **no significant model difference on accuracy** (span-exact 0.29 / 0.26 / 0.26, all p>0.2); the only real gap is hallucination (Gemini 3.5 Flash 0.545 vs Gemini 3.1 Pro 0.161). See [`docs/INTELLIGENCE_V2.md`](docs/INTELLIGENCE_V2.md).
 
 ### v0.5.0 infrastructure

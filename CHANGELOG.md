@@ -14,7 +14,63 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [Unreleased]
+### Changed
+- **The v2 classifier split was contaminated at the text level, and every
+  macro-F1 figure in the v2 tables is now labelled an upper bound.** The
+  pre-registered guard required train/test disjointness by `id`. That is not
+  the property the metric needs: 470 corpus rows repeat a
+  `canonical_transliterated` value under a *different* id, because short
+  formulaic inscriptions (`mi`, `suθina`, `aplu`, `alpan`, `turce`) recur
+  across genuinely distinct artifacts. 25 of the 400 frozen test rows (6.2%)
+  have a bracket-stripped twin in the 312-row train pool, 23 of them carrying
+  the same silver label. The leak does not average out over the pool: the
+  headline is scored on the unanimous n=143 candidate-gold subset, leaked rows
+  are 92% single-token against 16.5% in the non-unanimous adjudication queue,
+  and **none of the 25 reached that queue** against 4.9 expected under an even
+  spread — so it is enriched exactly where the metric is computed. Macro
+  averaging amplifies it in the thin classes (votive 2/8 = 25%, dedicatory
+  8/63 = 12.7%, each class carrying 1/7 of the score). Nothing is retracted:
+  the direction of the bias is known, the magnitude is not, and the published
+  95% CIs are bootstraps over sampling noise that do not model contamination.
+  `0.313` and its three companions now read as upper bounds pending a clean
+  re-run, on the README, the model card, `docs/INTELLIGENCE_V2.md`,
+  `docs/HUGGINGFACE.md`, and `release-manifest.json`. Recorded as
+  [Deviation §D](research/v2/PRE_REGISTRATION.md). Deviation §B's claim that
+  "Stream A is unaffected" is corrected — it was unaffected by the
+  empty-completion bug, not by the duplicate inflation recorded in the same
+  entry, which Stream A then carried unguarded for three more months.
+
+### Fixed
+- **`classify_split.py` samples text groups instead of rows.** A row entering
+  the test pool now takes every silver-labelled row sharing its normalized
+  text with it, and the generator exits non-zero rather than emit a split
+  whose pools share a normalized text. `text_key()` strips Leiden markup so
+  `la(u)tni` / `lautn(i)` / `laut(n)i` group together, while keeping genuinely
+  distinct words (`mi` vs `mini`) apart; rows that are entirely markup stay
+  ungrouped instead of fusing into one blob. Regenerating with the
+  pre-registered invocation now yields a text-disjoint 427 test / 285 train
+  split — 27 rows move out of an already-starved training pool, which sharpens
+  rather than solves the allocation problem noted below. The frozen v2 split
+  was **deliberately not regenerated**: it is the artifact the completed jury
+  run and the philologist handoff are keyed to, and replacing it would orphan
+  both for a metric nobody has yet re-measured.
+- The `[Unreleased]` heading appeared twice.
+
+### Added
+- **`research/v2/eval/split_contamination.py`** — measures text-level
+  train/test overlap in any frozen split, per class, and cross-references the
+  adjudication queue to show whether the leak concentrates in the scored
+  subset. Exits non-zero on any leak so it can gate a release; `--expect N`
+  accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
+
+### Known
+
+- **The v2 split allocates 400 of 712 labels (56%) to test.** `commercial`
+  gets 0 train / 2 test, `boundary` 1/9, `legal` 3/7 — three of the seven
+  classes in the macro denominator cannot be learned at all, and `commercial`
+  contributes a structural zero to every macro F1 in the v2 tables. Stratified
+  k-fold CV over text groups would use the scarce labels better and give
+  tighter intervals than a single holdout. Queued for the Stream A re-run.
 
 ### Changed
 - **The 635-row gap between the published and deployed corpus is explained:

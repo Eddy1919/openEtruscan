@@ -94,6 +94,18 @@ Krippendorff α = 0.7649. Training pool: 282 silver-labelled rows.
 | MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 |
 | EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.124** (0.099 – 0.149) | 0.469 |
 
+> **Read all four as upper bounds.** The split behind them is disjoint by `id`
+> but not by text — 25 of 400 test rows (6.2%) repeat a train-pool text under a
+> different id, 23 of them carrying the same label. Short formulaic inscriptions
+> (`mi`, `suθina`, `aplu`) recur across genuinely distinct artifacts, and the
+> pre-registered contamination guard only checked ids. The leak concentrates in
+> the n=143 subset these numbers are scored on rather than spreading across the
+> 400, and macro-averaging amplifies it in the thinnest classes (votive 2/8,
+> dedicatory 8/63). Nobody has re-scored on a clean split, so the size of the
+> inflation is unknown and the bootstrap CIs do not bound it. Nothing here is
+> retracted — but do not cite these as clean held-out results. Detail:
+> `research/v2/PRE_REGISTRATION.md` Deviation §D.
+
 **These are architecture-level results, not measurements of the exact weights
 in this repository.** The artifacts here were deposited on 2026-05-02 and
 predate this protocol. Re-running them against the v2.0.2 frozen split is

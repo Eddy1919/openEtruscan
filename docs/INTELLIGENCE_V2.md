@@ -30,6 +30,17 @@ The v2 protocol fixes both by pre-registering metrics, freezing splits, running 
 | MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 | 0.530 | 0.232 |
 | EmbeddingMLP (MiniLM-multilingual) | 58K + frozen 384-d encoder | **0.124** (0.099 – 0.149) | 0.469 | 0.434 | 0.000 |
 
+> **All four rows are upper bounds.** The shared split is id-disjoint but not
+> text-disjoint: 25/400 test rows (6.2%) repeat a train-pool text under a
+> different id, 23 with the same label, because short formulaic inscriptions
+> recur across distinct artifacts and the pre-registered guard checked only ids.
+> The leak does not dilute across the 400 — it concentrates in the n=143 scored
+> subset (leaked rows are 92% single-token; 0 of 25 reached the non-unanimous
+> queue against 4.9 expected), and macro-averaging amplifies it in the thin
+> classes (votive 2/8 = 25%, dedicatory 8/63 = 12.7%). The magnitude of the
+> inflation is unmeasured and the bootstrap CIs do not bound it. See
+> [Deviation §D](../research/v2/PRE_REGISTRATION.md).
+
 **Two findings, both replicated between v2.0.1 (n=159) and v2.0.2 (n=143):**
 
 *Finding A — architecture-invariance among local-feature models.* TF-IDF+NB / CharCNN / MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. **Adding parameters does not move macro F1; the bottleneck is data, not architecture.**

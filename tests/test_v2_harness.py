@@ -196,6 +196,102 @@ class TestSplitGeneratorRefusesEmptyText:
         assert all(r["raw_text"].strip() for r in rows)
 
 
+class TestSplitIsTextDisjoint:
+    """An id-disjoint split still leaks when one text carries several ids.
+
+    The frozen v2 split was generated before this guard existed and leaks
+    25/400 test rows; see PRE_REGISTRATION.md Deviation D.
+    """
+
+    @staticmethod
+    def _run(tmp_path, corpus_rows, n_test="4"):
+        silver = tmp_path / "silver.csv"
+        silver.write_text(
+            "id,label,confidence,signal_source\n"
+            + "".join(f"{i},funerary,high,keyword\n" for i, _ in corpus_rows)
+        )
+        corpus = tmp_path / "corpus.csv"
+        corpus.write_text(
+            "id,raw_text,canonical_transliterated,translation\n"
+            + "".join(f"{i},{t},{t},\n" for i, t in corpus_rows)
+        )
+        rc = classify_split.main(
+            [
+                "--corpus", str(corpus),
+                "--silver", str(silver),
+                "--out-train", str(tmp_path / "train.jsonl"),
+                "--out-test", str(tmp_path / "test.jsonl"),
+                "--n-test", n_test,
+                "--seed", "42",
+            ]
+        )  # fmt: skip
+
+        def _read(name):
+            path = tmp_path / name
+            if not path.exists():
+                return []
+            return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+        return rc, _read("train.jsonl"), _read("test.jsonl")
+
+    def test_repeated_text_under_distinct_ids_never_straddles_the_split(self, tmp_path):
+        # `mi` recurs across eight genuinely distinct artifacts in the real
+        # corpus. Whichever side it lands on, all eight go together.
+        rows = [(f"A{i}", "mi") for i in range(8)] + [(f"B{i}", f"avil {i}") for i in range(8)]
+        rc, train, test = self._run(tmp_path, rows)
+        assert rc == 0
+        sides = {"train": {r["id"] for r in train}, "test": {r["id"] for r in test}}
+        mi_ids = {f"A{i}" for i in range(8)}
+        assert mi_ids <= sides["train"] or mi_ids <= sides["test"], (
+            "the `mi` group was split across train and test"
+        )
+
+    def test_leiden_variants_of_one_word_are_one_group(self, tmp_path):
+        # These four are the same word bracketed four ways; the manifest lists
+        # them among the 635 rows the live DB deduplicates away.
+        variants = ["la(u)tni", "lautn(i)", "laut(n)i", "lautni"]
+        rows = [(f"L{i}", v) for i, v in enumerate(variants)]
+        rows += [(f"C{i}", f"cae {i}") for i in range(8)]
+        rc, train, test = self._run(tmp_path, rows)
+        assert rc == 0
+        lautni = {f"L{i}" for i in range(4)}
+        train_ids, test_ids = {r["id"] for r in train}, {r["id"] for r in test}
+        assert lautni <= train_ids or lautni <= test_ids
+
+    def test_no_normalized_text_spans_both_pools(self, tmp_path):
+        rows = [(f"A{i}", "mi") for i in range(4)]
+        rows += [(f"B{i}", "su(θ)ina") for i in range(4)]
+        rows += [(f"C{i}", "suθina") for i in range(4)]
+        rows += [(f"D{i}", f"unique {i}") for i in range(8)]
+        rc, train, test = self._run(tmp_path, rows, n_test="8")
+        assert rc == 0
+        train_keys = {classify_split.text_key(r["canonical_transliterated"]) for r in train}
+        test_keys = {classify_split.text_key(r["canonical_transliterated"]) for r in test}
+        assert not (train_keys & test_keys) - {""}
+
+    def test_rows_that_are_pure_markup_are_not_fused_into_one_group(self, tmp_path):
+        # `[---]` and `[?]` both normalize to the empty string. Grouping on
+        # that would sweep every unreadable row into a single blob.
+        rows = [("M0", "[---]"), ("M1", "[?]"), ("M2", "{}")]
+        rows += [(f"D{i}", f"avil {i}") for i in range(9)]
+        rc, _, test = self._run(tmp_path, rows)
+        assert rc == 0
+        assert len(test) < len(rows), "empty-key rows were fused into one group"
+
+
+class TestTextKey:
+    def test_strips_leiden_markup_and_casefolds(self):
+        assert classify_split.text_key("La(u)tni") == "lautni"
+        assert classify_split.text_key("menar{e}va") == "menareva"
+        assert classify_split.text_key("<antar>") == "antar"
+
+    def test_does_not_collapse_genuinely_distinct_words(self):
+        assert classify_split.text_key("mi") != classify_split.text_key("mini")
+
+    def test_pure_markup_normalizes_to_empty(self):
+        assert classify_split.text_key("[---]") == ""
+
+
 class TestBootstrapStability:
     @staticmethod
     def _mean(rows):

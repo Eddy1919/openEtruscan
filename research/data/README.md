@@ -54,10 +54,24 @@ canonical_words_only        text   intact tokens only — no editorial brackets,
                                    uncertainty markers, no lacuna dashes. For
                                    word-embedding training where the model should
                                    learn from attested whole forms.
-translation                 text   English gloss from the Larth dataset (when present)
-year_from                   int    earliest plausible date (BCE convention; positive
-                                   integer = BCE; e.g. 650 = 650 BCE)
-year_to                     int    latest plausible date (BCE)
+translation                 text   English gloss from the Larth dataset. Present on
+                                   1,800 of 6,567 rows (27.4%); empty otherwise.
+year_from                   float  earliest plausible date, chronologically. BCE
+                                   convention: positive = BCE, so 650 means 650 BCE.
+                                   Written as a float ("650.0"), not an int. Present
+                                   on 307 rows (4.7%).
+year_to                     float  latest plausible date, chronologically (BCE).
+                                   NOTE the convention inverts the usual numeric
+                                   ordering: because both are positive BCE counts,
+                                   year_from >= year_to always — 650 BCE to 625 BCE
+                                   is stored as (650.0, 625.0), and that holds for
+                                   217 of the 307 dated rows. A naive
+                                   `year_from <= x <= year_to` filter matches nothing.
+                                   Three rows carry year_to = 0, which is not a year
+                                   in the BCE convention; treat 0 as "to the end of
+                                   the era", not as a date. The internal Inscription
+                                   model uses the OPPOSITE sign convention
+                                   (`date_approx`, negative = BCE) — do not mix them.
 intact_token_ratio          float  fraction of canonical tokens that are complete (0–1).
                                    Filtering knob for ML pipelines. Set to 0.0 for
                                    non-clean rows.
@@ -80,6 +94,55 @@ ocr_failed      319  ( 4.9%)  — digit-substitution OCR junk; diagnostic only
 | **2** (clean ∧ intact) | `data_quality=clean ∧ intact_token_ratio=1` | 4,058 | Word-embedding training |
 | **3** (any clean) | `data_quality=clean` | 6,094 | Sequence / lacuna-restoration training (partial words and editorial markup are useful here) |
 | **4** (full) | `*` | 6,567 | Diagnostic / error analysis |
+
+### What the tiers do not filter
+
+The `data_quality` tag is a character-set judgement, not a judgement about
+whether a row is Etruscan or whether its text was read correctly. Three things
+survive into the higher tiers:
+
+- **Latin-language inscriptions.** 525 of the 6,094 `clean` rows (8.6%) are
+  more than half uppercase, and many are genuine Latin-orthography epigraphy
+  from CIE — `PVLFENNIA ARRI`, `PVPIA L.F`, `VEL. PURNI | FERINE`. They are
+  correctly transcribed and correctly tagged `clean`; they are simply not
+  Etruscan. 485 of them sit in Tier 2, which this table recommends for
+  Etruscan word-embedding training. There is no `language` or `script_system`
+  column to separate them — both fields exist in the internal `Inscription`
+  model and are dropped at export.
+- **Retrograde-OCR noise, in Tier 1.** 52 Tier-1 rows are uppercase OCR junk
+  (`L.A.R.I.T.I.T.E.I`, `XIIX....`, `IΘIΘAΘAΘA`, `VΘVΘV.ΘIΘV.V`), and because
+  Tier 1 requires `canonical_italic IS NOT NULL` they have had Old Italic
+  glyphs *regenerated* for them — `𐌋.𐌀.𐌓.𐌉.𐌕.𐌉.𐌕.𐌄.𐌉`. The regeneration is
+  deterministic and faithful to its input, but its input was noise, and the
+  output is not distinguishable from an attested glyph sequence by inspection.
+  That is 1.5% of the tier this table recommends for glyph models. Filter on
+  `canonical_transliterated` being predominantly lowercase if that matters.
+- **Duplicate texts.** 6,567 rows carry 6,097 distinct
+  `canonical_transliterated` values; 470 rows repeat a text that appears under
+  another id. This is usually correct — `mi` ("I am") really is carved on
+  eight different artifacts — but it means **row-level random splits leak**.
+  Split on text, not on `id`. See
+  [`research/v2/eval/split_contamination.py`](../v2/eval/split_contamination.py)
+  for what happens when you don't.
+
+### Columns this export does not carry
+
+The internal `Inscription` model
+([`src/openetruscan/core/corpus.py`](../../src/openetruscan/core/corpus.py))
+holds roughly 25 fields; this CSV publishes 10. Absent here: `findspot`,
+`findspot_lat` / `findspot_lon`, `object_type`, `medium`, `source`,
+`language`, `script_system`, `classification`, `completeness`, `pleiades_id`,
+`trismegistos_id`, `bibliography`.
+
+Two consequences worth stating plainly. First, **there is no per-row `source`
+column**, so the attribution split described under *License & citation* below
+cannot actually be applied by a consumer: the Larth-derived rows are
+identifiable only where a `translation` is present, and 72.6% of rows have
+none. Second, the absent `object_type` / `medium` are the fields most likely
+to matter for inscription-type classification — `mi` is labelled `ownership`
+seven times and `dedicatory` once in this corpus, and no amount of text
+modelling can separate those readings when the text is two characters. The
+object carrying the text can.
 
 ## Provenance
 
