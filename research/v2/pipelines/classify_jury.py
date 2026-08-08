@@ -170,6 +170,33 @@ def _make_openai(model: str) -> Provider:
     return Provider(name=model, invoke=invoke)
 
 
+def _make_gemini_vertex(model: str) -> Provider:
+    """Gemini via Vertex AI with ADC — no API key, same billing project as
+    Claude. The API-key path below (`_make_gemini`) is kept for local runs,
+    but the 2026-08 re-run found the stored key stale while ADC just worked,
+    so Vertex is now the default route for Gemini raters."""
+
+    def invoke(system: str, user: str) -> str:
+        from google import genai  # type: ignore
+        from google.genai import types as genai_types  # type: ignore
+
+        client = genai.Client(
+            vertexai=True,
+            project=VERTEX_PROJECT_ID,
+            # Gemini publisher models resolve in the `global` location
+            # regardless of VERTEX_REGION (which Anthropic-on-Vertex uses).
+            location=os.environ.get("GEMINI_VERTEX_LOCATION", "global"),
+        )
+        resp = client.models.generate_content(
+            model=model,
+            contents=user,
+            config=genai_types.GenerateContentConfig(system_instruction=system),
+        )
+        return (resp.text or "").strip()
+
+    return Provider(name=model, invoke=invoke)
+
+
 def _make_gemini(model: str) -> Provider:
     def invoke(system: str, user: str) -> str:
         import google.generativeai as genai  # type: ignore
@@ -234,10 +261,14 @@ def _make_vertex_maas(model: str) -> Provider:
 # for the billing project. If a generate call returns 404, the id is wrong —
 # update here, do not re-invent the timestamp.
 PROVIDER_REGISTRY: dict[str, Callable[[], Provider]] = {
+    "claude-opus-4-8": lambda: _make_anthropic_vertex("claude-opus-4-8"),
     "claude-opus-4-7": lambda: _make_anthropic_vertex("claude-opus-4-7"),
     "claude-sonnet-4-6": lambda: _make_anthropic_vertex("claude-sonnet-4-6"),
     "claude-haiku-4-5": lambda: _make_anthropic_vertex("claude-haiku-4-5@20251001"),
     "gemini-2.5-pro": lambda: _make_gemini("gemini-2.5-pro"),
+    "gemini-2.5-pro-vertex": lambda: _make_gemini_vertex("gemini-2.5-pro"),
+    "gemini-3.1-pro": lambda: _make_gemini_vertex("gemini-3.1-pro-preview"),
+    "gemini-3.5-flash": lambda: _make_gemini_vertex("gemini-3.5-flash"),
     "llama-4-scout": lambda: _make_vertex_maas("meta/llama-4-scout-17b-16e-instruct-maas"),
     "llama-4-maverick": lambda: _make_vertex_maas("meta/llama-4-maverick-17b-128e-instruct-maas"),
     "mistral-large-2411": lambda: _make_vertex_maas("mistralai/mistral-large-2411"),

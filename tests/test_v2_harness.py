@@ -30,7 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from research.v2.eval import bootstrap, lacuna_metrics  # noqa: E402
-from research.v2.pipelines import classify_adjudicate, classify_split  # noqa: E402
+from research.v2.pipelines import classify_adjudicate, classify_kfold, classify_split  # noqa: E402
 
 
 def _lacuna_row(**overrides):
@@ -292,6 +292,91 @@ class TestTextKey:
         assert classify_split.text_key("[---]") == ""
 
 
+class TestKFoldAssignment:
+    """classify_kfold.py — the v2.1 split shape: group-atomic stratified CV."""
+
+    @staticmethod
+    def _fixtures():
+        silver = {
+            f"A{i}": {"label": "funerary", "confidence": "high", "signal_source": "k"}
+            for i in range(20)
+        }
+        # Two Leiden variants of one word, labelled — must land in ONE fold.
+        silver["V0"] = {"label": "votive", "confidence": "high", "signal_source": "k"}
+        silver["V1"] = {"label": "votive", "confidence": "high", "signal_source": "k"}
+        corpus = {f"A{i}": {"canonical_transliterated": f"avil {i}"} for i in range(20)}
+        corpus["V0"] = {"canonical_transliterated": "alpan(a)"}
+        corpus["V1"] = {"canonical_transliterated": "alpana"}
+        return silver, corpus
+
+    def test_text_groups_never_span_folds(self):
+        silver, corpus = self._fixtures()
+        fold_of = classify_kfold.assign_folds(silver, corpus, n_folds=5, seed=42)
+        assert fold_of["V0"] == fold_of["V1"]
+        assert set(fold_of) == set(silver)
+
+    def test_same_seed_same_assignment(self):
+        silver, corpus = self._fixtures()
+        a = classify_kfold.assign_folds(silver, corpus, n_folds=5, seed=42)
+        b = classify_kfold.assign_folds(silver, corpus, n_folds=5, seed=42)
+        assert a == b
+
+    def test_majority_class_spreads_over_all_folds(self):
+        silver, corpus = self._fixtures()
+        fold_of = classify_kfold.assign_folds(silver, corpus, n_folds=5, seed=42)
+        funerary_folds = {fold_of[f"A{i}"] for i in range(20)}
+        assert funerary_folds == {0, 1, 2, 3, 4}
+
+
+class TestDupGroupIdScript:
+    """scripts/data_pipeline/add_dup_group_id.py — the column that lets any
+    downstream consumer split on text groups instead of rows."""
+
+    @staticmethod
+    def _run(tmp_path, rows):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "add_dup_group_id",
+            REPO_ROOT / "scripts/data_pipeline/add_dup_group_id.py",
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        src = tmp_path / "in.csv"
+        src.write_text("id,canonical_transliterated\n" + "".join(f"{i},{t}\n" for i, t in rows))
+        out = tmp_path / "out.csv"
+        assert mod.main(["--input", str(src), "--output", str(out)]) == 0
+        import csv
+
+        return list(csv.DictReader(out.open()))
+
+    def test_variants_share_a_group_and_size_counts_them(self, tmp_path):
+        got = self._run(
+            tmp_path,
+            [("A", "la(u)tni"), ("B", "lautn(i)"), ("C", "lautni"), ("D", "mi")],
+        )
+        lautni = [r for r in got if r["id"] in "ABC"]
+        assert len({r["dup_group_id"] for r in lautni}) == 1
+        assert all(r["dup_group_size"] == "3" for r in lautni)
+        (mi,) = [r for r in got if r["id"] == "D"]
+        assert mi["dup_group_size"] == "1"
+        assert mi["dup_group_id"] != lautni[0]["dup_group_id"]
+
+    def test_pure_markup_rows_stay_singletons(self, tmp_path):
+        got = self._run(tmp_path, [("A", "[---]"), ("B", "[?]"), ("C", "{}")])
+        assert len({r["dup_group_id"] for r in got}) == 3
+        assert all(r["dup_group_size"] == "1" for r in got)
+
+    def test_group_id_is_content_addressed_not_order_dependent(self, tmp_path):
+        a = self._run(tmp_path, [("A", "suθina"), ("B", "mi")])
+        b = self._run(tmp_path, [("X", "mi"), ("Y", "suθina")])
+        key = lambda rows, text: next(  # noqa: E731
+            r["dup_group_id"] for r in rows if r["canonical_transliterated"] == text
+        )
+        assert key(a, "mi") == key(b, "mi")
+        assert key(a, "suθina") == key(b, "suθina")
+
+
 class TestBootstrapStability:
     @staticmethod
     def _mean(rows):
@@ -388,7 +473,10 @@ class TestCommittedEvidencePins:
 
     def test_frozen_split_carries_text_and_preregistered_n(self):
         rows = [json.loads(line) for line in (self.DATA / "classify_test_v2.jsonl").open()]
-        assert len(rows) == 400, "pre-registered test-pool size"
+        # 427 = the pre-registered 400 (seed=42) plus the 27 train-pool rows
+        # whose normalized text matched a test row, pulled across when the
+        # split was made text-disjoint (PRE_REGISTRATION.md Deviation §D).
+        assert len(rows) == 427, "text-disjoint superset of the pre-registered 400"
         assert all(
             (r["raw_text"] or "").strip() or (r["canonical_transliterated"] or "").strip()
             for r in rows
@@ -406,10 +494,11 @@ class TestCommittedEvidencePins:
         assert queue_ids <= split_ids, "the jury's adjudication queue must be a subset"
 
     def test_no_train_test_contamination(self):
-        test_ids = {
-            str(json.loads(line)["id"]) for line in (self.DATA / "classify_test_v2.jsonl").open()
-        }
-        train_ids = {
-            str(json.loads(line)["id"]) for line in (self.DATA / "classify_train_pool.jsonl").open()
-        }
-        assert not (test_ids & train_ids)
+        test_rows = [json.loads(line) for line in (self.DATA / "classify_test_v2.jsonl").open()]
+        train_rows = [json.loads(line) for line in (self.DATA / "classify_train_pool.jsonl").open()]
+        assert not {str(r["id"]) for r in test_rows} & {str(r["id"]) for r in train_rows}
+        # Id-disjointness alone allowed the leak Deviation §D documents; the
+        # committed split must also be text-disjoint, permanently.
+        test_keys = {classify_split.text_key(r["canonical_transliterated"]) for r in test_rows}
+        train_keys = {classify_split.text_key(r["canonical_transliterated"]) for r in train_rows}
+        assert not (test_keys & train_keys) - {""}
