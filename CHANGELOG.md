@@ -40,6 +40,34 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   empty-completion bug, not by the duplicate inflation recorded in the same
   entry, which Stream A then carried unguarded for three more months.
 
+- **The 635-row gap between the published and deployed corpus is explained:
+  the live corpus is deduplicated.** It was recorded as unattributed. Diffing
+  the live LOD feed against the Zenodo deposit settles it. The live corpus is
+  a strict subset by id — 635 published ids absent, zero live ids absent — and
+  it holds 5,932 rows over 5,932 distinct texts, no repeats at all, where the
+  deposit holds 6,567 rows over 6,097 distinct texts. Of the 635 missing: 57%
+  are exact-text duplicates of a live row, 40% are duplicates once editorial
+  brackets are stripped, and the 13 remaining are Leiden-convention variants
+  (`laut(n)i` / `la(u)tni` / `lautn(i)`). They are spread evenly across the id
+  range (10.8–16.1% per decile), which rules out the partial-or-older-seed
+  hypothesis that an uneven distribution would have supported. **The deposit
+  ships the corpus before deduplication and the website serves it after** —
+  README now says so instead of calling the gap unexplained.
+
+  Not claimed as certain: prod and the deposit normalise text differently, so
+  an exact row-for-row reconciliation is impossible from outside the database.
+  What is certain is the subset relation and prod's zero-duplicate property.
+  Which pipeline step performs the dedup remains undocumented and is tracked
+  in the manifest under `corpus_counts.deployed.still_open`.
+- `docs/openapi.json` joins the surfaces `check_release_truth.py` enforces.
+  `api/server.py` passes `__version__` to FastAPI, so a version bump
+  invalidates the committed spec. CI already caught that by regenerating and
+  diffing, but only inside a job that installs the full server extra — so it
+  failed late, in a job nobody associates with a version bump, reporting
+  "spec is stale" with no pointer to the cause. The manifest check now
+  compares `info.version` in the fast lane and locally, where the fix is one
+  command.
+
 ### Fixed
 - **`classify_split.py` samples text groups instead of rows.** A row entering
   the test pool now takes every silver-labelled row sharing its normalized
@@ -71,41 +99,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Known
 
-- **The v2 split allocates 400 of 712 labels (56%) to test.** `commercial`
+- **The v2 split allocates 427 of 712 labels (60%) to test.** `commercial`
   gets 0 train / 2 test, `boundary` 1/9, `legal` 3/7 — three of the seven
   classes in the macro denominator cannot be learned at all, and `commercial`
   contributes a structural zero to every macro F1 in the v2 tables. Stratified
   k-fold CV over text groups would use the scarce labels better and give
-  tighter intervals than a single holdout. Queued for the Stream A re-run.
-
-### Changed
-- **The 635-row gap between the published and deployed corpus is explained:
-  the live corpus is deduplicated.** It was recorded as unattributed. Diffing
-  the live LOD feed against the Zenodo deposit settles it. The live corpus is
-  a strict subset by id — 635 published ids absent, zero live ids absent — and
-  it holds 5,932 rows over 5,932 distinct texts, no repeats at all, where the
-  deposit holds 6,567 rows over 6,097 distinct texts. Of the 635 missing: 57%
-  are exact-text duplicates of a live row, 40% are duplicates once editorial
-  brackets are stripped, and the 13 remaining are Leiden-convention variants
-  (`laut(n)i` / `la(u)tni` / `lautn(i)`). They are spread evenly across the id
-  range (10.8–16.1% per decile), which rules out the partial-or-older-seed
-  hypothesis that an uneven distribution would have supported. **The deposit
-  ships the corpus before deduplication and the website serves it after** —
-  README now says so instead of calling the gap unexplained.
-
-  Not claimed as certain: prod and the deposit normalise text differently, so
-  an exact row-for-row reconciliation is impossible from outside the database.
-  What is certain is the subset relation and prod's zero-duplicate property.
-  Which pipeline step performs the dedup remains undocumented and is tracked
-  in the manifest under `corpus_counts.deployed.still_open`.
-- `docs/openapi.json` joins the surfaces `check_release_truth.py` enforces.
-  `api/server.py` passes `__version__` to FastAPI, so a version bump
-  invalidates the committed spec. CI already caught that by regenerating and
-  diffing, but only inside a job that installs the full server extra — so it
-  failed late, in a job nobody associates with a version bump, reporting
-  "spec is stale" with no pointer to the cause. The manifest check now
-  compares `info.version` in the fast lane and locally, where the fix is one
-  command.
+  tighter intervals than a single holdout. `classify_kfold.py` implements the
+  assignment; adopting it for the citable metric awaits a pre-registration
+  amendment.
 
 ## [1.3.0] — 2026-08-08
 
