@@ -17,44 +17,33 @@ The v2 protocol fixes both by pre-registering metrics, freezing splits, running 
 
 **Reference architecture.** TF-IDF (character 2–4-grams, max 3000 features, min_df=2) + Multinomial Naive Bayes (α=0.1). Identical to the v1 production architecture under `src/openetruscan/ml/classifier.py`. Reusing the v1 architecture deliberately so that the rigor delta between v1 and v2 is in the *evaluation*, not the *model*.
 
-**Training data.** 282 silver-labeled inscriptions from the v1 reasoning-cascade output (`research/data/openetruscan_labels.csv`), filtered to those NOT in the v2 frozen test split.
+**Training data.** 285 silver-labeled inscriptions from the v1 reasoning-cascade output (`research/data/openetruscan_labels.csv`), filtered to those NOT in the v2 frozen test split. (v2.0.2 trained on 312 — 282 historically reported — before the split was made text-disjoint; the 27 rows whose text matched a test row moved to the test pool at v2.0.4.)
 
-**Evaluation data (v2.0.2).** 143 candidate-gold inscriptions, drawn from a 400-row stratified test split and labeled by a 3-model LLM jury (**Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick** on Vertex AI) under the codebook at [`research/v2/codebooks/etr/classification.md`](../research/v2/codebooks/etr/classification.md). A row enters candidate-gold only if all three raters independently agreed at confidence ≥ medium. **Krippendorff α = 0.7649 across raters** on the full pool. v2.0.1 (n=159, 2-rater jury) is superseded; see [Deviation §A in PRE_REGISTRATION.md](../research/v2/PRE_REGISTRATION.md) for the substitution rationale.
+**Evaluation data (v2.0.4).** 167 candidate-gold inscriptions, drawn from the **text-disjoint** 427-row stratified test split ([Deviation §D](../research/v2/PRE_REGISTRATION.md)) and labeled by a 3-model LLM jury (**Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash**, all on Vertex AI, 2026-08-08, 1,281 ratings, zero API errors) under the codebook at [`research/v2/codebooks/etr/classification.md`](../research/v2/codebooks/etr/classification.md). A row enters candidate-gold only if all three raters independently agreed at confidence ≥ medium. **Krippendorff α = 0.8557** on the full pool — read with the same lineage caveat as the v2.0.3 lacuna panel: two of three raters are Gemini, which inflates α relative to a three-lineage jury. Gold class support: funerary 77 / ownership 55 / dedicatory 25 / boundary 6 / legal 4 / votive 0 / commercial 0; `macro_f1` averages over all 7 classes, so its ceiling on this set is ~0.714. The v2.0.2 eval (n=143, Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, α=0.7649) is superseded — its split leaked 25 test texts into training and its raw jury outputs are lost with the retired GCP project. Evidence for everything below: [`research/v2/results/classify/`](../research/v2/results/classify/), committed and SHA256-pinned.
 
-**Head-to-head: four architectures on the same v2.0.2 split** (10 000-resample bootstrap, seed=42):
+**Head-to-head: four architectures on the v2.0.4 split** (10 000-resample bootstrap, seed=42):
 
 | Architecture | Params | Macro F1 (95% CI) | Accuracy | Head-2 F1 | Tail-5 F1 |
 |---|---|---|---|---|---|
-| TF-IDF + NB | ~3K | **0.313** (0.273 – 0.348) | 0.776 | 0.838 | 0.103 |
-| CharCNN | 28K | **0.369** (0.257 – 0.432) | 0.657 | 0.762 | 0.211 |
-| MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 | 0.530 | 0.232 |
-| EmbeddingMLP (MiniLM-multilingual) | 58K + frozen 384-d encoder | **0.124** (0.099 – 0.149) | 0.469 | 0.434 | 0.000 |
+| **CharCNN** | 28K | **0.399** (0.353 – 0.435) | 0.665 | 0.737 | 0.264 |
+| TF-IDF + NB | ~3K | **0.293** (0.255 – 0.329) | 0.755 | 0.810 | 0.087 |
+| MicroTransformer | 274K | **0.252** (0.140 – 0.338) | 0.317 | 0.384 | 0.200 |
+| EmbeddingMLP (MiniLM-multilingual) | 58K + frozen 384-d encoder | **0.210** (0.181 – 0.242) | 0.641 | 0.696 | 0.015 |
 
-> **All four rows are upper bounds.** The shared split is id-disjoint but not
-> text-disjoint: 25/400 test rows (6.2%) repeat a train-pool text under a
-> different id, 23 with the same label, because short formulaic inscriptions
-> recur across distinct artifacts and the pre-registered guard checked only ids.
-> The leak does not dilute across the 400 — it concentrates in the n=143 scored
-> subset (leaked rows are 92% single-token; 0 of 25 reached the non-unanimous
-> queue against 4.9 expected), and macro-averaging amplifies it in the thin
-> classes (votive 2/8 = 25%, dedicatory 8/63 = 12.7%). The magnitude of the
-> inflation is unmeasured and the bootstrap CIs do not bound it. See
-> [Deviation §D](../research/v2/PRE_REGISTRATION.md).
+**Two findings, updated at v2.0.4** (paired bootstrap on the same 167 rows, one-sided p, seed=42 — the pre-registered comparison test, now actually computed):
 
-**Two findings, both replicated between v2.0.1 (n=159) and v2.0.2 (n=143):**
+*Finding A (v2.0.2) — architecture-invariance — **did not replicate**.* On the contaminated split the three local-feature models clustered at 0.31–0.37 with overlapping CIs. On the clean split CharCNN separates decisively: vs TF-IDF+NB Δ = +0.106, 95% CI [+0.055, +0.149], **p = 0.0025**; vs MicroTransformer Δ = +0.147 [+0.050, +0.264], **p = 0.0023**. Character-level convolution is the strongest measured architecture. The "data, not architecture" conclusion survives only in weakened form: data remains the dominant constraint (macro F1 ≤ 0.714 by class-support ceiling alone), but architecture measurably matters within it.
 
-*Finding A — architecture-invariance among local-feature models.* TF-IDF+NB / CharCNN / MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. **Adding parameters does not move macro F1; the bottleneck is data, not architecture.**
+*Finding B — out-of-distribution dense embeddings underperform — **replicated**.* EmbeddingMLP stays last on macro F1: vs TF-IDF+NB Δ = −0.083 [−0.122, −0.044], **p < 0.0001**. The gap narrowed from v2.0.2 (where the marginal CIs sat ~0.19 apart), but a frozen modern-multilingual encoder still discards the surface-morphological features (`-uce`, `mi…al`, `tular spural`) that carry the typological signal.
 
-*Finding B — out-of-distribution dense embeddings fail.* EmbeddingMLP with multilingual MiniLM as a frozen encoder lands at 0.124 — CI [0.099, 0.149] does **not** overlap with TF-IDF+NB's CI [0.273, 0.348]. **Significant at p<0.05** by the non-overlapping-CI heuristic. A pretrained encoder with no Etruscan in its training distribution discards exactly the surface-morphological features (`-uce`, `mi…al`, `tular spural`) that carry the typological signal; character n-grams capture them. This contradicts the conventional NLP intuition that dense pretrained embeddings always beat surface-feature baselines.
-
-**Honest interpretation.** The reference TF-IDF+NB architecture works for the two dominant classes (`funerary` F1 0.84, `ownership` F1 0.79) and fails on the rare classes. The path to better numbers runs through *more annotated data*, not better models — confirmed across four architectures spanning 3 K → 274 K parameters.
+**Honest interpretation.** The shipped TF-IDF+NB architecture works for the two dominant classes (`funerary` F1 0.88, `ownership` F1 0.74) and scores zero on every class with ≤6 gold rows. The path to better numbers still runs through *more annotated data* — but v2.0.4 shows the CharCNN extracts measurably more from the same data, so the production classifier is no longer the best available architecture.
 
 ## 3. v2 lacuna restoration
 
 > ⚠️ **RETRACTION (v2.0.3, 2026-07-04) — the v2.0.2 lacuna results below the fold were a harness artifact and are withdrawn.**
 > The v2.0.2 lacuna jury **scored empty API responses as hallucinations**. 114 of 125 Claude Sonnet 4.6 rows were empty completions — `max_tokens=1024` was exhausted while the model echoed `restored_full` — and `lacuna_jury.py` counted every empty response as `hallucinated=True`. The reported **Sonnet 0.949 hallucination rate** and the "a frontier reasoning model is significantly worse at p<0.001" narrative (old Finding C) measured a **Vertex integration failure, not model behaviour**; on the 11 rows Sonnet actually answered it led the field. The set was additionally inflated by exact duplicates (125 rows → 70 unique tasks). The corrected v2.0.3 re-run replaces the table, significance test, and findings below.
 >
-> **Scope of the retraction:** this affects the lacuna stream (Stream C) **only**. The classifier stream in §2 (jury = Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, Krippendorff α = 0.7649, n=143) uses short outputs, was never touched by the empty-completion bug, and **stands unchanged**. See [`CHANGELOG.md` §2.0.3](../CHANGELOG.md) and [PRE_REGISTRATION.md Deviation §B](../research/v2/PRE_REGISTRATION.md#b--v202-lacuna-finding-c-retracted-harness-artifact-v203-re-run).
+> **Scope of the retraction:** this affects the lacuna stream (Stream C) **only**. The classifier stream uses short outputs and was never touched by the empty-completion bug — but it did NOT stand unchanged, as an earlier revision of this note claimed: the same §B entry records the lacuna set was "inflated by exact duplicates", and the identical defect was later found in the classifier split (25/400 leaked test texts, [Deviation §D](../research/v2/PRE_REGISTRATION.md)). The classifier numbers in §2 above are the v2.0.4 clean re-run. See [`CHANGELOG.md` §2.0.3](../CHANGELOG.md) and [PRE_REGISTRATION.md Deviation §B](../research/v2/PRE_REGISTRATION.md#b--v202-lacuna-finding-c-retracted-harness-artifact-v203-re-run).
 
 **Task.** Given an inscription with a marked Leiden-notation lacuna of known character width, produce the character sequence most likely to have been there. Scored against the editor's published restoration.
 
@@ -131,7 +120,7 @@ By design:
 - No claim that the v2 numbers are "good" or "state-of-the-art". They are honest numbers; whether they meet a particular bar is for downstream readers to decide.
 
 Future v2.1 work (tracked in [`research/v2/README.md`](../research/v2/README.md)):
-- ~~3-rater jury once Anthropic Vertex quota is granted.~~ **Done at v2.0.2** — Sonnet 4.6 was substituted for Opus per [`PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md) Deviation §A; classifier Krippendorff α = 0.7649, full results in §2 and §3.
+- ~~3-rater jury once Anthropic Vertex quota is granted.~~ **Done at v2.0.2** (Sonnet 4.6 substituted for Opus per [`PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md) Deviation §A, α = 0.7649) and **re-run at v2.0.4** with Opus 4.8 on the clean split (α = 0.8557, Deviation §D); current results in §2.
 - Philologist adjudication of the queue rows, target Krippendorff α ≥ 0.80 between humans.
 - Multi-language extension (Oscan, Faliscan, Raetian) using the same architecture.
 - Lacuna eval set expansion to n ≥ 200 so the v2.0.3 raters (Opus 4.8 / Gemini 3.1 Pro / Gemini 3.5 Flash), currently indistinguishable on accuracy at n=66, can be tested for significance, and so a lineage-independent rater panel can replace the current 2×Google jury.

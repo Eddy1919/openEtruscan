@@ -15,31 +15,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
-- **The v2 classifier split was contaminated at the text level, and every
-  macro-F1 figure in the v2 tables is now labelled an upper bound.** The
-  pre-registered guard required train/test disjointness by `id`. That is not
-  the property the metric needs: 470 corpus rows repeat a
-  `canonical_transliterated` value under a *different* id, because short
-  formulaic inscriptions (`mi`, `suθina`, `aplu`, `alpan`, `turce`) recur
-  across genuinely distinct artifacts. 25 of the 400 frozen test rows (6.2%)
-  have a bracket-stripped twin in the 312-row train pool, 23 of them carrying
-  the same silver label. The leak does not average out over the pool: the
-  headline is scored on the unanimous n=143 candidate-gold subset, leaked rows
-  are 92% single-token against 16.5% in the non-unanimous adjudication queue,
-  and **none of the 25 reached that queue** against 4.9 expected under an even
-  spread — so it is enriched exactly where the metric is computed. Macro
-  averaging amplifies it in the thin classes (votive 2/8 = 25%, dedicatory
-  8/63 = 12.7%, each class carrying 1/7 of the score). Nothing is retracted:
-  the direction of the bias is known, the magnitude is not, and the published
-  95% CIs are bootstraps over sampling noise that do not model contamination.
-  `0.313` and its three companions now read as upper bounds pending a clean
-  re-run, on the README, the model card, `docs/INTELLIGENCE_V2.md`,
-  `docs/HUGGINGFACE.md`, and `release-manifest.json`. Recorded as
-  [Deviation §D](research/v2/PRE_REGISTRATION.md). Deviation §B's claim that
-  "Stream A is unaffected" is corrected — it was unaffected by the
-  empty-completion bug, not by the duplicate inflation recorded in the same
-  entry, which Stream A then carried unguarded for three more months.
-
 - **The 635-row gap between the published and deployed corpus is explained:
   the live corpus is deduplicated.** It was recorded as unattributed. Diffing
   the live LOD feed against the Zenodo deposit settles it. The live corpus is
@@ -68,6 +43,79 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   compares `info.version` in the fast lane and locally, where the fix is one
   command.
 
+### Added
+- **`research/v2/eval/split_contamination.py`** — measures text-level
+  train/test overlap in any frozen split, per class, and cross-references the
+  adjudication queue to show whether the leak concentrates in the scored
+  subset. Exits non-zero on any leak so it can gate a release; `--expect N`
+  accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
+
+## [v2.0.4 — evaluation protocol] — 2026-08-08
+
+The Stream A (classification) contamination finding and its same-day
+clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
+
+### Changed
+- **The v2 classifier split was contaminated at the text level; every
+  macro-F1 figure in the v2.0.2 tables became an upper bound.** The
+  pre-registered guard required train/test disjointness by `id`. That is not
+  the property the metric needs: 470 corpus rows repeat a
+  `canonical_transliterated` value under a *different* id, because short
+  formulaic inscriptions (`mi`, `suθina`, `aplu`, `alpan`, `turce`) recur
+  across genuinely distinct artifacts. 25 of the 400 frozen test rows (6.2%)
+  have a bracket-stripped twin in the 312-row train pool, 23 of them carrying
+  the same silver label. The leak does not average out over the pool: the
+  headline is scored on the unanimous n=143 candidate-gold subset, leaked rows
+  are 92% single-token against 16.5% in the non-unanimous adjudication queue,
+  and **none of the 25 reached that queue** against 4.9 expected under an even
+  spread — so it is enriched exactly where the metric is computed. Macro
+  averaging amplifies it in the thin classes (votive 2/8 = 25%, dedicatory
+  8/63 = 12.7%, each class carrying 1/7 of the score). Nothing is retracted:
+  the direction of the bias is known, the magnitude is not, and the published
+  95% CIs are bootstraps over sampling noise that do not model contamination.
+  `0.313` and its three companions were relabelled upper bounds on every
+  surface pending a clean re-run — which landed the same day; see the next
+  entry. Recorded as
+  [Deviation §D](research/v2/PRE_REGISTRATION.md). Deviation §B's claim that
+  "Stream A is unaffected" is corrected — it was unaffected by the
+  empty-completion bug, not by the duplicate inflation recorded in the same
+  entry, which Stream A then carried unguarded for three more months.
+
+- **The citable classifier number is now macro F1 0.293 (0.255 – 0.329),
+  TF-IDF + NB on v2.0.4 candidate-gold (n=167).** It supersedes 0.313
+  (v2.0.2), which was measured on the text-contaminated split against gold
+  labels that are lost — the v2.0.2 jury raw and candidate-gold files lived
+  only in the retired GCP project's cloudbuild bucket (verified: not in the
+  salvage bucket, not on the Hub, not local), so re-scoring it is
+  permanently impossible. The re-run is not a controlled before/after: gold
+  set, jury panel, and train pool all changed. Full head-to-head, per-class
+  tables, and paired tests: `research/v2/results/classify/README.md`.
+- **Finding A (architecture invariance) did not replicate.** On the clean
+  split, CharCNN reaches **0.399 (0.353 – 0.435)** and beats TF-IDF+NB
+  (paired bootstrap Δ +0.106, p = 0.0025) and MicroTransformer (Δ +0.147,
+  p = 0.0023). The v2.0.2 claim that parameters don't move macro F1 is
+  withdrawn; the pre-registration's mandatory paired-bootstrap test — which
+  v2.0.2 never actually computed for model comparisons — is what settles it.
+  Finding B (frozen multilingual embeddings underperform) replicates:
+  EmbeddingMLP 0.210, significantly below TF-IDF+NB (p < 0.0001), gap
+  narrowed. README, `docs/INTELLIGENCE_V2.md`, the model card,
+  `docs/HUGGINGFACE.md`, and `release-manifest.json` all restate v2.0.4.
+
+### Added
+- **Fresh 3-rater jury over the full 427-row text-disjoint pool**: Claude
+  Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash on Vertex AI, 1,281 ratings,
+  zero API errors, Krippendorff α = 0.8557 (lineage caveat: 2×Gemini, same
+  as the v2.0.3 lacuna panel; Llama-family MaaS raters are not enabled on
+  the available billing project). Candidate-gold 167 / queue 59 /
+  all-unsure 201. **All evidence is committed and SHA256-pinned under
+  `research/v2/results/classify/`** — the layout exists because the v2.0.2
+  evidence was cloud-only and died with its project.
+- **`classify_handoff.py` + `make classify-handoff`**: the philologist
+  bundle (`research/v2/handoff/v2.0.4-etr/`, 59-row queue + two blind
+  30-row spot-checks) now regenerates deterministically from committed
+  adjudication outputs. The v2.0-etr bundle is marked superseded and kept
+  as the historical record.
+
 ### Fixed
 - **`classify_split.py` samples text groups instead of rows.** A row entering
   the test pool now takes every silver-labelled row sharing its normalized
@@ -89,15 +137,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   bucket, not on the Hub, not local), so there was no stored gold to protect.
   Old hashes are recorded in `research/v2/data/README.md`.
 - The `[Unreleased]` heading appeared twice.
-
-### Added
-- **`research/v2/eval/split_contamination.py`** — measures text-level
-  train/test overlap in any frozen split, per class, and cross-references the
-  adjudication queue to show whether the leak concentrates in the scored
-  subset. Exits non-zero on any leak so it can gate a release; `--expect N`
-  accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
+- `train_neural.py` wrote the inscription *text* into the predictions
+  files' `gold_label` field (tuple destructured `(gold, _, id)` instead of
+  `(_, gold, id)`). In-memory metrics were computed from a separate,
+  correct list and are unaffected; the committed prediction files were
+  regenerated after the fix. Caught same-day by a paired-bootstrap sanity
+  check returning degenerate deltas.
 
 ### Known
+- Candidate-gold has zero rows for `votive` and `commercial`, so macro F1
+  (averaged over all 7 codebook classes, unchanged convention) is bounded
+  at ~0.714 on this set. The philologist ratification step is still
+  pending; until it lands these labels remain LLM-consensus silver.
 
 - **The v2 split allocates 427 of 712 labels (60%) to test.** `commercial`
   gets 0 train / 2 test, `boundary` 1/9, `legal` 3/7 — three of the seven

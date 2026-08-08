@@ -110,30 +110,26 @@
       "licence": "Apache-2.0",
       "headline_metric": {
         "name": "macro_f1",
-        "value": 0.313,
-        "ci_low": 0.273,
-        "ci_high": 0.348,
+        "value": 0.293,
+        "ci_low": 0.255,
+        "ci_high": 0.329,
         "architecture": "TF-IDF + Multinomial NB",
-        "eval_set": "v2.0.2 candidate-gold, n=143, 3-rater LLM-jury unanimous, Krippendorff alpha 0.7649",
+        "eval_set": "v2.0.4 candidate-gold, n=167, 3-rater LLM-jury unanimous (Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash on Vertex), Krippendorff alpha 0.8557 (lineage-inflated: 2 of 3 raters are Gemini)",
         "eval_set_is_expert_ratified": false,
-        "status": "upper_bound_pending_clean_rerun",
-        "contamination_caveat": {
-          "$comment": "Not a retraction. The figure stands as reported; what changed on 2026-08-08 is that we can no longer call the split it was measured on clean. Any surface quoting 0.313 must carry this qualifier.",
-          "summary": "Measured on a train/test split that is disjoint by id but not by text. Treat 0.313 as an upper bound.",
-          "leak": "25 of 400 test rows (6.2%) have a bracket-stripped text twin in the 312-row train pool; 23 of those twins carry the same silver label.",
-          "why_worse_than_it_looks": "The metric is scored on the unanimous candidate-gold subset (n=143), and the leak concentrates there rather than spreading over the 400. Leaked rows are 92% single-token vs 16.5% in the non-unanimous adjudication queue, and 0 of the 25 landed in that queue against 4.9 expected under an even spread. Macro-averaging amplifies it further in the thin classes: votive 2/8 leaked (25%), dedicatory 8/63 (12.7%), each class carrying 1/7 of the score.",
-          "magnitude_unknown": "The direction of the bias is known; the size is not. Nobody has re-scored on a clean split. The published 95% CI is a bootstrap over sampling noise and does not model contamination, so it does not bound this.",
-          "root_cause": "The pre-registered contamination clause required disjointness by id. 470 corpus rows repeat a canonical_transliterated value under a different id, because short formulaic inscriptions recur across genuinely distinct artifacts.",
-          "fixed_in_generator": "research/v2/pipelines/classify_split.py now samples text groups and refuses to emit a split whose pools share normalized text. The frozen v2 split was deliberately NOT regenerated — it is the artifact the completed jury run and the philologist handoff are keyed to.",
-          "audit": "python -m research.v2.eval.split_contamination --train research/v2/data/classify_train_pool.jsonl --test research/v2/data/classify_test_v2.jsonl --queue research/v2/handoff/v2.0-etr/adjudication_queue.csv",
-          "recorded": "research/v2/PRE_REGISTRATION.md Deviation D",
-          "clears_when": "Stream A is re-scored on a text-disjoint split; until then no surface may present 0.313 as a clean held-out result."
+        "best_architecture_note": "TF-IDF+NB is the headline because it is the shipped classifier (src/openetruscan/ml/classifier.py). The best measured architecture at v2.0.4 is CharCNN: macro F1 0.399 (0.353-0.435), significantly above TF-IDF+NB (paired bootstrap delta +0.106, p=0.0025) - the v2.0.2 architecture-invariance finding did not replicate.",
+        "macro_convention": "macro_f1 averages over all 7 codebook classes regardless of gold support; votive and commercial have 0 gold rows at v2.0.4, so the metric's ceiling on this set is 5/7 = 0.714.",
+        "evidence": "research/v2/results/classify/ (committed, SHA256-pinned)",
+        "superseded_figure": {
+          "value": 0.313,
+          "ci": "0.273-0.348",
+          "why_superseded": "Measured at v2.0.2 on a split that was id-disjoint but not text-disjoint: 25/400 test rows repeated a train-pool text under a different id, and the leak concentrated in the scored candidate-gold subset (0 of 25 leaked rows reached the non-unanimous queue against 4.9 expected). The v2.0.2 gold labels are additionally LOST - they lived only in a retired GCP project's cloudbuild bucket - so the figure can never be re-scored. Not retracted (the direction of the bias is known, its size is not measurable anymore); superseded by the v2.0.4 clean re-run. Full record: research/v2/PRE_REGISTRATION.md Deviation D.",
+          "split_fix": "research/v2/pipelines/classify_split.py samples text groups and refuses text-overlapping pools; audit any split with python -m research.v2.eval.split_contamination."
         }
       },
       "retracted_claim": {
         "value": "~99% macro F1",
         "why": "In-training-set fit on a self-labelled subset, not held-out performance.",
-        "corrected_range": "0.124-0.369 macro F1 across four architectures",
+        "corrected_range": "0.210-0.399 macro F1 across four architectures (v2.0.4 clean split; the v2.0.2 range was 0.124-0.369)",
         "retracted_in_repo": true,
         "retracted_on_website": true,
         "retracted_on_hub": true,
@@ -172,7 +168,7 @@
         "surface": "PyPI",
         "expected": "1.3.0",
         "observed": "1.3.0",
-        "status": "current",
+        "status": "resolved_2026-08-08",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
         "verified": "2026-08-08 (later same day) via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0. The OIDC trusted-publisher pipeline delivered 1.3.0 from the tag as designed; 1.2.0 was never claimed and never will be (superseded before publish).",
@@ -187,8 +183,8 @@
       },
       {
         "surface": "Hugging Face model cards",
-        "expected": "macro F1 0.313 (0.273-0.348)",
-        "observed": "corrected card live; retraction notice present",
+        "expected": "macro F1 0.293 (0.255-0.329) on v2.0.4 candidate-gold",
+        "observed": "card pushed 2026-08-08 with v2.0.4 numbers and retraction notice",
         "status": "fixed_2026-08-08",
         "action": "Resolved. The card is now generated from models/openetruscan-classifier/README.md in git and pushed with scripts/ops/push_model_card.py. metrics.json and v2/metadata.json on the Hub still hold retracted-era numbers by design — they are provenance for the retracted run and the card explains both."
       }

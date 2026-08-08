@@ -80,61 +80,70 @@ Classes: `boundary`, `commercial`, `dedicatory`, `funerary`, `legal`,
 
 ## Evaluation
 
-### Classification — v2.0.2 protocol
+### Classification — v2.0.4 protocol (clean split, 2026-08-08)
 
-Evaluated on a frozen candidate-gold split, n=143, three-rater LLM jury
-(Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick), unanimous rows only,
-Krippendorff α = 0.7649. Training pool: 282 silver-labelled rows.
-95% bootstrap CIs.
+Evaluated on the v2.0.4 frozen candidate-gold set, n=167: three-rater LLM
+jury (Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash, all on Vertex AI),
+unanimous rows at confidence ≥ medium, Krippendorff α = 0.8557 (α is
+lineage-inflated — two of the three raters are Gemini). Training pool: 285
+silver-labelled rows on a **text-disjoint** split. 95% bootstrap CIs,
+10,000 resamples, seed=42. Raw evidence is committed and SHA256-pinned in
+the repository under `research/v2/results/classify/`.
 
 | Architecture | Params | Macro F1 (95% CI) | Accuracy |
 |---|---:|---|---:|
-| TF-IDF + Multinomial NB | ~3K | **0.313** (0.273 – 0.348) | 0.776 |
-| CharCNN | 28K | **0.369** (0.257 – 0.432) | 0.657 |
-| MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 |
-| EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.124** (0.099 – 0.149) | 0.469 |
+| **CharCNN** | 28K | **0.399** (0.353 – 0.435) | 0.665 |
+| TF-IDF + Multinomial NB | ~3K | **0.293** (0.255 – 0.329) | 0.755 |
+| MicroTransformer | 274K | **0.252** (0.140 – 0.338) | 0.317 |
+| EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.210** (0.181 – 0.242) | 0.641 |
 
-> **Read all four as upper bounds.** The split behind them is disjoint by `id`
-> but not by text — 25 of 400 test rows (6.2%) repeat a train-pool text under a
-> different id, 23 of them carrying the same label. Short formulaic inscriptions
-> (`mi`, `suθina`, `aplu`) recur across genuinely distinct artifacts, and the
-> pre-registered contamination guard only checked ids. The leak concentrates in
-> the n=143 subset these numbers are scored on rather than spreading across the
-> 400, and macro-averaging amplifies it in the thinnest classes (votive 2/8,
-> dedicatory 8/63). Nobody has re-scored on a clean split, so the size of the
-> inflation is unknown and the bootstrap CIs do not bound it. Nothing here is
-> retracted — but do not cite these as clean held-out results. Detail:
+Macro F1 averages over all 7 codebook classes; `votive` and `commercial`
+have zero gold rows at v2.0.4, so the metric's ceiling on this set is ~0.714.
+
+> **These numbers supersede the v2.0.2 table** (TF-IDF+NB 0.313, CharCNN
+> 0.369, MicroTransformer 0.317, EmbeddingMLP 0.124, n=143, α=0.7649). The
+> v2.0.2 split was disjoint by `id` but not by text — 25 of its 400 test rows
+> repeated a train-pool text under a different id, and the leak concentrated
+> in the scored candidate-gold subset — and its raw jury outputs are lost
+> with a retired GCP project, so it can never be re-scored. Not a controlled
+> before/after: the gold set, jury, and train pool all changed. Full record:
 > `research/v2/PRE_REGISTRATION.md` Deviation §D.
 
 **These are architecture-level results, not measurements of the exact weights
 in this repository.** The artifacts here were deposited on 2026-05-02 and
-predate this protocol. Re-running them against the v2.0.2 frozen split is
+predate this protocol. Re-running them against the v2.0.4 frozen split is
 open work; until it lands, treat the band above as the honest expectation for
 models of this class on this corpus, not as a certificate for these files.
 
-Two findings survive the correction:
+Two findings, updated at v2.0.4 (paired bootstrap, same 167 rows, seed=42):
 
-1. **Adding parameters does not help.** TF-IDF+NB, CharCNN, and
-   MicroTransformer cluster at 0.31–0.37 with overlapping CIs across a 100×
-   parameter range. The bottleneck is data, not architecture.
-2. **Out-of-distribution dense embeddings actively hurt.** EmbeddingMLP lands
-   at 0.124 with a CI that does not overlap TF-IDF+NB's. A frozen modern
+1. **Architecture now matters — the v2.0.2 invariance finding did not
+   replicate.** CharCNN beats TF-IDF+NB (Δ +0.106, p = 0.0025) and
+   MicroTransformer (Δ +0.147, p = 0.0023) on the clean split. Data remains
+   the dominant constraint, but character-level convolution measurably
+   extracts more from the same 285 labels — the shipped TF-IDF+NB is no
+   longer the best available architecture.
+2. **Out-of-distribution dense embeddings still underperform.** EmbeddingMLP
+   stays last on macro F1, significantly below TF-IDF+NB (Δ +0.083,
+   p < 0.0001), though the gap narrowed from v2.0.2. A frozen modern
    multilingual encoder discards the surface-morphological features
    (`mi…al/-as` possessives, the `tular spural` boundary formula, suffixal
    markers) that carry the typological signal here.
 
-Per-class, the dominant classes are modelled adequately (`funerary` F1 0.84,
-`ownership` F1 0.79 on TF-IDF+NB) and the rare classes — `boundary`, `legal`,
-`votive`, `commercial` — are data-starved and score near zero. **The low macro
+Per-class, the dominant classes are modelled adequately (`funerary` F1 0.88,
+`ownership` F1 0.74 on TF-IDF+NB) and the rare classes — `boundary`, `legal`,
+`votive`, `commercial` — are data-starved and score zero. **The low macro
 F1 is that imbalance reported honestly**, since macro F1 weights every class
 equally regardless of support.
 
 ### The labels are silver, not gold
 
-The v2.0.2 "candidate-gold" set is **LLM-consensus silver**. Two-philologist
-ratification (target human α ≥ 0.80) has not been performed. These numbers
-measure agreement with a frontier-model consensus, not with expert epigraphic
-judgement. Cite them with that caveat attached.
+The v2.0.4 "candidate-gold" set is **LLM-consensus silver**. Two-philologist
+ratification (target human α ≥ 0.80) has not been performed; the handoff
+bundle awaiting adjudicators regenerates from committed evidence with
+`make -C research/v2 classify-handoff`. These numbers measure agreement with
+a frontier-model consensus, not with expert epigraphic judgement. Cite them
+with that caveat attached.
 
 ### Lacuna restoration — ByT5, v2.0.3 protocol
 

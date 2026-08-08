@@ -175,40 +175,27 @@ OpenEtruscan exports Linked Open Data in formats interoperable with the wider an
 
 This project ships two small models alongside an LLM-jury annotation pipeline. The numbers below are from `research/v2/` — frozen test splits, multi-rater consensus eval, bootstrap-CI'd metrics, full pre-registration in [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md).
 
-### Classifier (7-class inscription type) — v2.0.2 head-to-head
+### Classifier (7-class inscription type) — v2.0.4 head-to-head
 
-Four architectures spanning two orders of magnitude in parameter count were evaluated on the v2.0.2 candidate-gold (n=143, 3-rater LLM-jury unanimous: Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, Krippendorff α=0.7649). Train pool: 282 silver-labelled rows. **"Candidate-gold" is LLM-consensus silver, not gold**: the two-philologist ratification step (target human α ≥ 0.80, [`research/v2/handoff/`](research/v2/handoff/)) has not yet been performed, and these numbers measure agreement with a frontier-model consensus, not with expert epigraphic judgment. Cite them with that caveat.
+Four architectures spanning two orders of magnitude in parameter count, evaluated on the v2.0.4 candidate-gold (n=167, 3-rater LLM-jury unanimous: Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash on Vertex AI, Krippendorff α=0.8557 — lineage-inflated, two of three raters are Gemini). Train pool: 285 silver-labelled rows on the **text-disjoint** frozen split. **"Candidate-gold" is LLM-consensus silver, not gold**: the two-philologist ratification step (target human α ≥ 0.80, [`research/v2/handoff/v2.0.4-etr/`](research/v2/handoff/v2.0.4-etr/)) has not yet been performed, and these numbers measure agreement with a frontier-model consensus, not with expert epigraphic judgment. Cite them with that caveat.
 
 | Architecture | Params | **Macro F1** (95% bootstrap CI) | Accuracy |
 |---|---|---|---|
-| TF-IDF + Multinomial NB | ~3K | **0.313** (0.273 – 0.348) | 0.776 |
-| CharCNN | 28K | **0.369** (0.257 – 0.432) | 0.657 |
-| MicroTransformer | 274K | **0.317** (0.202 – 0.404) | 0.483 |
-| EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.124** (0.099 – 0.149) | 0.469 |
+| **CharCNN** | 28K | **0.399** (0.353 – 0.435) | 0.665 |
+| TF-IDF + Multinomial NB | ~3K | **0.293** (0.255 – 0.329) | 0.755 |
+| MicroTransformer | 274K | **0.252** (0.140 – 0.338) | 0.317 |
+| EmbeddingMLP (multilingual MiniLM, 384-d) | 58K + frozen encoder | **0.210** (0.181 – 0.242) | 0.641 |
 
-> **Treat all four as upper bounds.** They share a split that is disjoint by `id`
-> but not by text: 25 of the 400 test rows (6.2%) repeat a train-pool text under
-> a different id, 23 of them with the same label. Short formulaic inscriptions
-> (`mi`, `suθina`, `aplu`) recur across genuinely distinct artifacts, and the
-> pre-registered guard only ever checked ids. The leak concentrates in the scored
-> subset rather than washing out — leaked rows are 92% single-token, and none of
-> the 25 reached the non-unanimous adjudication queue against 4.9 expected under
-> an even spread — and macro-averaging amplifies it where classes are thinnest
-> (votive 2/8, dedicatory 8/63). How much this inflates the figures is unmeasured;
-> the CIs above are bootstraps over sampling noise and do not model it. The split
-> generator now enforces text-level disjointness; the frozen split is kept as-is
-> because a completed jury run and the philologist handoff are keyed to it. Full
-> account in [Deviation §D](research/v2/PRE_REGISTRATION.md); audit it yourself
-> with `python -m research.v2.eval.split_contamination`.
+Reading notes, all load-bearing: `macro_f1` averages over all 7 codebook classes and votive/commercial have zero gold rows at v2.0.4, so the metric's ceiling on this set is ~0.714; and these numbers supersede the v2.0.2 table (TF-IDF+NB 0.313), which was measured on a split later found text-contaminated ([Deviation §D](research/v2/PRE_REGISTRATION.md)) against gold labels that are now lost with a retired GCP project — the two tables are a replacement, not a controlled comparison. Raw evidence for everything here is committed and SHA256-pinned in [`research/v2/results/classify/`](research/v2/results/classify/).
 
-Two findings:
+Two findings, updated at v2.0.4:
 
-1. **Architecture-invariance among local-feature models.** TF-IDF+NB, CharCNN, and MicroTransformer cluster at 0.31–0.37 macro F1 with overlapping bootstrap CIs despite 100× parameter-count range. Adding parameters does not move macro F1 — the bottleneck is data, not architecture.
-2. **Out-of-distribution dense embeddings fail.** EmbeddingMLP using a multilingual MiniLM encoder lands at **0.124, with a CI that does not overlap with TF-IDF+NB's** — significant degradation. A frozen modern-multilingual encoder discards the surface-morphological features (`mi…al/-as` possessives, `tular spural` boundary formula, suffixal markers) that carry the typological signal. This contradicts the conventional NLP intuition that dense embeddings beat char-ngrams; for under-resourced ancient corpora with strong domain-specific morphology, the reverse holds.
+1. **Architecture now matters — the v2.0.2 invariance finding did not replicate.** At v2.0.2 the three local-feature models clustered at 0.31–0.37 with overlapping CIs. On the clean split, CharCNN separates: paired bootstrap on the same 167 rows puts it above TF-IDF+NB (Δ +0.106, p = 0.0025) and above MicroTransformer (Δ +0.147, p = 0.0023). Character-level convolution is the strongest measured architecture for this task.
+2. **Out-of-distribution dense embeddings still underperform.** EmbeddingMLP on a frozen multilingual MiniLM encoder stays last on macro F1 (0.210), significantly below TF-IDF+NB (Δ +0.083, p < 0.0001), though the gap narrowed from v2.0.2. A modern-multilingual encoder discards the surface-morphological features (`mi…al/-as` possessives, `tular spural` boundary formula, suffixal markers) that carry the typological signal.
 
-The dominant `funerary` and `ownership` classes are well-modelled (per-class F1 0.84 and 0.79 on TF-IDF+NB); rare classes (`boundary`, `legal`, `votive`, `commercial`) remain data-starved. **The 0.31–0.37 macro band reflects this imbalance honestly** — earlier copy in this repository claimed "99% macro F1", which referred to in-training-set performance on a self-labeled subset and is retracted.
+The dominant `funerary` and `ownership` classes are well-modelled (per-class F1 0.88 and 0.74 on TF-IDF+NB); rare classes (`boundary`, `legal`, `votive`, `commercial`) remain data-starved — earlier copy in this repository claimed "99% macro F1", which referred to in-training-set performance on a self-labeled subset and is retracted.
 
-v2.0.1 (n=159, 2-rater jury without Sonnet) is preserved in GCS as a looser consensus-silver reference; v2.0.2 supersedes it per the closure of Deviation §A in [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md).
+v2.0.2 (n=143) and v2.0.1 (n=159) are superseded; the v2.0.2 raw jury outputs were lost with the retired GCP project, which is why v2.0.4 evidence is committed in-repo. History in [Deviations §A and §D](research/v2/PRE_REGISTRATION.md).
 
 ### Lacuna restoration
 
@@ -347,14 +334,18 @@ What stays here (and gets first billing in this README):
 - **`src/openetruscan/api/`** — the legacy FastAPI server stays in-tree as a parity reference + local-dev convenience (`uvicorn openetruscan.api.server:app`). It is **no longer the production HTTP surface**.
 - **Cloud Build research pipelines** — `cloudbuild/v2-classify-jury.yaml`, `v2-lacuna-jury.yaml`, `v2-train-neural.yaml` were used for the v2 evaluation work. They are not currently running: the former Vertex billing project is deleted, so a re-run needs a live project.
 
-### v2.0.2 annotation & evaluation pipeline (shipped 2026-05-24)
+### v2.0.4 clean re-run — text-disjoint split, new jury, committed evidence (2026-08-08)
+
+The v2.0.2 classifier numbers below are superseded. An audit found the frozen split id-disjoint but not **text**-disjoint — 25/400 test rows repeated a train-pool text under a different id, and the leak concentrated in the scored candidate-gold subset ([Deviation §D](research/v2/PRE_REGISTRATION.md)). The split generator now samples text groups and refuses text-overlapping pools; the split was regenerated as a strict superset (427 test / 285 train); and Stream A re-ran end-to-end with a fresh jury (Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash, α = 0.8557, candidate-gold n=167). Headline: **TF-IDF+NB macro F1 0.293 (0.255 – 0.329)**; best architecture: **CharCNN 0.399 (0.353 – 0.435)**, significantly above the rest — the v2.0.2 architecture-invariance finding did not replicate. All jury evidence is committed and SHA256-pinned in [`research/v2/results/classify/`](research/v2/results/classify/) — the v2.0.2 evidence lived only in a retired GCP project and is unrecoverable, a mistake this layout exists to prevent repeating.
+
+### v2.0.2 annotation & evaluation pipeline (shipped 2026-05-24; classifier numbers superseded at v2.0.4)
 
 `research/v2/` is the gold-annotation and frozen-benchmark infrastructure that this project's earlier metric claims lacked. As of v2.0.2 both the classifier and lacuna streams are evaluated under a full 3-rater LLM jury (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick on Vertex AI); the philologist α≥0.80 spot-check on the adjudication queue remains the final ratification step before Hugging Face publication.
 
 - **Frozen, stratified test split** (seed=42, 400 rows, 7 classes with a class-2 floor) — see [`research/v2/pipelines/classify_split.py`](research/v2/pipelines/classify_split.py).
 - **3-rater LLM jury** (Claude Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick on Vertex AI; Sonnet substituted for Opus per [Deviation §A](research/v2/PRE_REGISTRATION.md)) produces independent labels; Krippendorff α and a unanimous-agreement filter promote rows to candidate-gold. Classifier α = 0.7649 on the full pool; n=143 candidate-gold rows.
 - **Pre-registered eval** with bootstrap 95% CIs on every metric and paired-bootstrap p-values on every model-comparison claim — see [`research/v2/PRE_REGISTRATION.md`](research/v2/PRE_REGISTRATION.md) and [`research/v2/eval/bootstrap.py`](research/v2/eval/bootstrap.py).
-- **Honest retraction** of the earlier "99% Macro F1" headline — the real number on a stricter eval is 0.313 ± 0.038 (TF-IDF + NB on n=143), and that number is itself an **upper bound**: the split behind it is text-contaminated ([Deviation §D](research/v2/PRE_REGISTRATION.md)).
+- **Honest retraction** of the earlier "99% Macro F1" headline — the number this shipped with was 0.313 ± 0.038 (TF-IDF + NB, n=143), itself superseded at v2.0.4 by 0.293 (0.255 – 0.329) on the clean split ([Deviation §D](research/v2/PRE_REGISTRATION.md)).
 - **~~Finding C (v2.0.2)~~ — RETRACTED at v2.0.3.** The "Sonnet hallucinates 94.9%, frontier model loses" claim was a harness artifact: empty Vertex completions scored as hallucinations (see §Lacuna restoration above). The corrected v2.0.3 re-run (Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash) finds **no significant model difference on accuracy** (span-exact 0.29 / 0.26 / 0.26, all p>0.2); the only real gap is hallucination (Gemini 3.5 Flash 0.545 vs Gemini 3.1 Pro 0.161). See [`docs/INTELLIGENCE_V2.md`](docs/INTELLIGENCE_V2.md).
 
 ### v0.5.0 infrastructure
