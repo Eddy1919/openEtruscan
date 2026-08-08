@@ -159,6 +159,11 @@ Before submitting a PR, confirm:
 - [ ] All tests pass: `pytest`
 - [ ] Linter and formatter are clean: `ruff check . && ruff format --check .`
 - [ ] Types check: `mypy src/openetruscan/`
+- [ ] Lockfile matches `pyproject.toml`: `uv lock --check`. **Run this whenever
+      you touch `pyproject.toml` at all** — a version or pin change updates
+      `uv.lock`, and CI installs with `--locked`, so a stale lockfile fails
+      the build with an error that names neither the file you edited nor the
+      job you expected.
 - [ ] OpenAPI schema is in sync if you touched the API: `python scripts/ops/generate_openapi.py` (check for changes in `docs/openapi.json`)
 - [ ] Public claims still agree: `python scripts/ops/check_release_truth.py`
 - [ ] New features include test cases
