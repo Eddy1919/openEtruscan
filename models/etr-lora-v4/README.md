@@ -20,26 +20,15 @@ datasets:
 metrics:
   - precision-at-k
   - cosine-similarity
-model-index:
-  - name: etr-lora-v4
-    results:
-      - task:
-          type: cross-lingual-retrieval
-          name: Etruscan-Latin word-vector retrieval
-        dataset:
-          name: rosetta-eval-v1 (test split)
-          type: Eddy1919/openetruscan-rosetta-eval-v1
-        # NOTE: No metric values are reported here for etr-lora-v4.
-        # The v4 (LoRA-adapted) adapter has NOT yet been evaluated. The
-        # only numbers we have are the LaBSE BASELINE column of
-        # rosetta-eval-v1 (see the Evaluation section below), and those
-        # belong to LaBSE, NOT to this adapter. Emitting them in this
-        # model-index block would let the HF UI attribute LaBSE's scores
-        # to etr-lora-v4, which would be false. The v4 result rows will be
-        # added after WBS tasks T2.3 (ingest v4 vectors behind a feature
-        # flag) and T2.4 (run the head-to-head eval) land in prod and the
-        # benchmark gains its v4 row.
-        # metrics: (v4 results pending; intentionally omitted)
+# No model-index block, deliberately. The v4 (LoRA-adapted) adapter has NOT
+# yet been evaluated. The only numbers we have are the LaBSE BASELINE column
+# of rosetta-eval-v1 (see the Evaluation section below), and those belong to
+# LaBSE, NOT to this adapter. A model-index would let the HF UI attribute
+# LaBSE's scores to etr-lora-v4, which would be false, and the Hub validator
+# rejects a model-index whose results carry no metrics. The v4 result rows
+# will be added after WBS tasks T2.3 (ingest v4 vectors behind a feature
+# flag) and T2.4 (run the head-to-head eval) land in prod and the benchmark
+# gains its v4 row.
 ---
 
 # etr-lora-v4: Etruscan-side LoRA adapter for LaBSE

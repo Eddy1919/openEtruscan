@@ -16,18 +16,15 @@ datasets:
   - Eddy1919/openetruscan-corpus
 metrics:
   - f1
-model-index:
-  - name: openetruscan-classifier
-    results:
-      # No metric values are reported here. The artifacts in this repository
-      # were deposited 2026-05-02 and predate the v2.0.2 evaluation protocol
-      # that produced the corrected numbers in the Evaluation section below.
-      # They have NOT been re-evaluated under it, so attributing those scores
-      # to these exact weights would be a second unverified claim replacing
-      # the first. The Evaluation section reports results per *architecture*
-      # and says so. Result rows go here once these artifacts are re-run
-      # against the v2.0.2 frozen test split.
-      []
+# No model-index block, deliberately. The artifacts in this repository were
+# deposited 2026-05-02 and predate the evaluation protocol that produced the
+# numbers in the Evaluation section below. They have NOT been re-evaluated
+# under it, so attributing those scores to these exact weights would be a
+# second unverified claim replacing the first. The Evaluation section reports
+# results per *architecture* and says so. A model-index with result rows goes
+# here once these artifacts are re-run against the v2.0.4 frozen test split.
+# (The Hub validator also rejects a model-index whose results carry no
+# metrics, which is exactly the state this card is honest about.)
 ---
 
 # OpenEtruscan Intelligence Suite
