@@ -1,5 +1,14 @@
 # Philologist handoff bundle — OpenEtruscan v2.0 (Etruscan classification)
 
+> **Superseded 2026-08-08 by [`../v2.0.4-etr/`](../v2.0.4-etr/).** This
+> bundle was built from the v2.0.1 2-rater jury, whose raw outputs lived
+> only in a since-retired GCP project and are no longer recoverable, and it
+> predates the text-disjointness repair of the frozen split
+> (PRE_REGISTRATION.md Deviation §D). It is kept as the historical record of
+> what adjudicators were sent in May 2026. New adjudication work should use
+> the v2.0.4 bundle, which is regenerable at any time with
+> `make -C research/v2 classify-handoff` from committed evidence.
+
 This directory packages everything two human adjudicators need to ratify the v2.0 classification gold set. Generated automatically from the v2 jury outputs at `gs://<retired-project>_cloudbuild/openetruscan-v2/classify/20260520T205613Z/`.
 
 ## Source provenance

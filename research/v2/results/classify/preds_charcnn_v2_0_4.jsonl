@@ -1,0 +1,167 @@
+{"id": "10007", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "10161", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "10857", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "12789", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "1431", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "1462", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "14876", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "15157", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "15546", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "16824", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "21077", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "3059", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "31", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "3758", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "3960", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5060", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "5067", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "5423", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5473", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5521", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5751", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "5755", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5874", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "7254", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7843", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7849", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "8881", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "8962", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9073", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9179", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9182", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9205", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9240", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9243", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "9264", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9276", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "9295", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9343", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9446", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "boundary", "correct": false}
+{"id": "9449", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "9474", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "AS 5.1", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "AT 1.105", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.15", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "AT 1.47", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AV 6.1", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Af 3.1", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "At 1.100", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.111", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.172", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 142", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "CIE 1765", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1767", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 1876", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2093", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2097", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2113", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2196", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2209", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2269", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2333", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2440", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 247", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "CIE 2533", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2550", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2611", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2635", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2694", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 312", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "CIE 319", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 439", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "CIE 441", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CODEX_CP_B", "arch": "charcnn", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_A", "arch": "charcnn", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_B", "arch": "charcnn", "gold_label": "legal", "predicted_label": "ownership", "correct": false}
+{"id": "Cl 1.1006", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.147", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.1807", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.2261", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.2513", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.314", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.324", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cm 2.13", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.32", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.46", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.65", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Co 3.6", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 1.10", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.141", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.5", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 1.6", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 2.15", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.20", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.27", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 3.10", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.11", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.12", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.17", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 3.20", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 3.7", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.9", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 5.2", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 5.3", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 5.4", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 108", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 110", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 120", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 164", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 165", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 166", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 181", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 190", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 197", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 208", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 209", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 215", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 216", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 221", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 238", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 261", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 269", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 270", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 271", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 273", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 28", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 284", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 289", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 29", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 290", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 295", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 303", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 304", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 331", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 332", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 339", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 340", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 341", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 346", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 353", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 358", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 52", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 81", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 86", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Fa 3.1", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Fa 6.3", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Fs 8.3", "arch": "charcnn", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "Li 1.1", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "OA 3.9", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Pe 8.4", "arch": "charcnn", "gold_label": "legal", "predicted_label": "ownership", "correct": false}
+{"id": "Ru 5.1", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.107", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.147", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.168", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.191", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.35", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.59", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.62", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.66", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.82", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.89", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.9", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 5.5", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vc 6.6", "arch": "charcnn", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Ve 3.13", "arch": "charcnn", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Vs 1.178", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "Vs 1.45", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Vt 1.58", "arch": "charcnn", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}

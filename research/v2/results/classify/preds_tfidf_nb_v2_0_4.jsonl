@@ -1,0 +1,167 @@
+{"id": "10007", "text": "turce murila fercnas", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "10161", "text": "mi apirθe mlaχ", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "10857", "text": "suθina", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "12789", "text": "mi mlaχ mlakasi arθus(i) elaivana", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "1431", "text": "tlesnei(alisa) cumeresa", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "1462", "text": "θania velsi(al) tlesnasa", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "14876", "text": "metli arnθi(al) puia", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "15157", "text": "tular a(inpu", "gold_label": "boundary", "predicted_label": "ownership", "correct": false}
+{"id": "15546", "text": "eca suθi", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "16824", "text": "tular", "gold_label": "boundary", "predicted_label": "ownership", "correct": false}
+{"id": "21077", "text": "mi larθias ur(ial)", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "3059", "text": "arnθ lautni(al) fulni(e)s", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "31", "text": "ravnθu supnai(al)", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "3758", "text": "aulevelimnasθefrisa", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "3960", "text": "larθi puia tites", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5060", "text": "mi larθas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "5067", "text": "mi pesnas(i)al", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "5423", "text": "tenθas avil", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5473", "text": "ramθa apatrui larθal aleθnal camnas", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5521", "text": "arnθ cutnas zilcte lupu", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5751", "text": "eca mutna arnθ(i)al", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5755", "text": "atnas larθal svalce avil", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5874", "text": "arnθ χurcles larθ(i)al ramθas(a) ne(ts)v(is)tnial zilc", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "7254", "text": "mi falai[e]<a>l", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7843", "text": "mi malana", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7849", "text": "mi saθarase", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "8881", "text": "tular", "gold_label": "boundary", "predicted_label": "ownership", "correct": false}
+{"id": "8962", "text": "la{v}<u>χ<u>m<a>sa(s) mi", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9073", "text": "mi uinias", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "9179", "text": "t(it)e θuma mi", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9182", "text": "mi arnθ(us) vestraes", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9205", "text": "mi θarnies", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9240", "text": "mi alieθi f(astias)", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9243", "text": "tular spu(ral)", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "9264", "text": "mi puin(i)el", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "9276", "text": "alpnas turce aiseras θuflθicla(s) trutvecie(s)", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "9295", "text": "mi{ }ni mulvene{ }ke", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9343", "text": "mi mulu velχainasi", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9446", "text": "arinas larθ(i)al papals", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "9449", "text": "mi suθi larθial", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "9474", "text": "mi spanti nuzina(s)", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "AS 5.1", "text": "aneσ' • caeσ' • puil • hu<p> ni • ei • itruta", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.105", "text": "aleθnas • v • v • θelu • zilaθ • parχis • zilaθ • eterav clenar • ci • acnanasa • elsσ'i zilaχnu • θeluσ'a ril • xxviiii papalser • acnanasa • vi • manim • arce ril • lxvi", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.15", "text": "vipinanas • velθur • velθurus • avils • xv", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.47", "text": "saturinies • arnθ • larθal • fulnial avils • xxxviii", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AV 6.1", "text": "[θ]ucer itane zinace titenas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Af 3.1", "text": "mi puinel kartazie els φ[---]na", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "At 1.100", "text": "[al]eθnas arnθ larisal zilaθ tarχnalθi amce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.111", "text": "θanχvil ruvfi puia arnθal aleθ{na}s", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.172", "text": "larθ χurχles arnθal χurχles θanχvilus[c] cracial clan avils ciem zaθrms lupu", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 142", "text": "a) mi[.]capi[.]l.versni.l b) mi.capi[.]l[.]versni.se.l.versni.lupuqe", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "CIE 1765", "text": "ana: arntnei: tutnal: vl: papasna: puia", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1767", "text": "arntni: sepu: tutnal: clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1876", "text": "θania : cainei : nautisal : vi : sec", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2093", "text": "lθ·velcialu·vipinal·lupu", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2097", "text": "[l]arza [:] [l]autni [:] [velχes] ///////// [pum]pus : clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2113", "text": "arniθal : velθurs : puia", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2196", "text": "atale vilias lautni", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2209", "text": "RAMTA VIBIIIS·L LAVTNI Ramta Vibies·L lautni", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2269", "text": "THANA HELI ATAR CLAN", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2333", "text": "θesia:suθunial:puia", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2440", "text": "marcenei | clantinei | au·petnal | sec", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 247", "text": "mi vels tites | mlnanes", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "CIE 2533", "text": "frana: peidne: sciria: cencual: sec:", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2550", "text": "PUPLI·PETINATE·LAUTNI", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2611", "text": "putialisa:sec", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2635", "text": "IMVIV.I IHTVAL MIKIANA MVEQL l.pupuni|lautni|anainis|verus", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2694", "text": "rusci·calisus | lautni", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 312", "text": "mi hupnina larθ|acrniś:larθial:felsnal", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 319", "text": "larθi:vipin[ei]|ls:secuś|puia", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 439", "text": "tular raśnal|tular raśnal", "gold_label": "boundary", "predicted_label": "ownership", "correct": false}
+{"id": "CIE 441", "text": "v·cusu·cr·l·apa|peθrual·clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CODEX_CP_B", "text": "tenθas velθinas arznal clenaraśi θil śvalce velθina afuna θuruni ei mlesiθi", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_A", "text": "et petruiś ścevaś eliuntś vinac restmc cenuśa tenθur śar cusuθuraś larisalisula peśc spante tenθur sa śranś arcl clθii tersna θui spanθi mleśieθic raśnas inni peś petruś pavac traulac tiur tenθurś tenθaś zacinat priniserac zal cuśuθurśum", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_B", "text": "aule salini cusual zilci larθal cusuś titinal larisalc saliniś aulesla celti neitiś tarśminaśś sparza inθuχt ceśa ratm suθiu suθiusa velχeś cusuśa uleśla velθuruś tlniś velθurusla larθalc celatinas vetnal larisalc celatinaś pitlnal", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "Cl 1.1006", "text": "vel • fastntru • aθ", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.147", "text": "lθ peθna aθ titial ścire", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.1807", "text": "aθ herine vipinal fufle", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.2261", "text": "aule śeiante σinu larθal tiścuśn al clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.2513", "text": "aθ tiφile palpe pulias", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.314", "text": "θana punp naσ lautni θa", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.324", "text": "velia śeianti aθ unatn cumerunia raθum naśa", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cm 2.13", "text": "mi χuliχna cupe.s. .a.l.θ.r.na.s. .e.i. minipi capi mini θanu", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.32", "text": "mi limu.r.ce.s. ta pruχu.m.", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.46", "text": "mi e.i. mi.n.pi capi mi numar θevru.c.l.na.s. qupe.s. fulu.σ'.la", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.65", "text": "mi cupes ta", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Co 3.6", "text": "veliaσ • fanacnal • θuflθao alpan • menaχe • clen • ceχa • tuθineσ • tlenaχeiσ", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 1.10", "text": "avle • tarχnas • larθal • clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.141", "text": "vel • crepus • [lar]θaliσ'a", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.5", "text": "av • tarχnas • av • c • crucrials •", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.6", "text": "li • tarχnas • crucrials", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 2.15", "text": "mi lariςa velθieς", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.20", "text": "mi karkanas θahvna", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.27", "text": "mi mlaχ mlakaš pruχum", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 3.10", "text": "mi mulu larisale velχainasi", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.11", "text": "mini mu.l.vanice mama.r.ce ve.l.χana.ς.", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.12", "text": "mi hirumesi mulu", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.17", "text": "mini turuce larθ apunaς veleθnalς", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 3.20", "text": "mi<ni> aranθ ramuθaςi veςtiricinala muluvanice", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.7", "text": "mi spurieisi teiθurnasi aliqu", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.9", "text": "mini σpurie utaš muluvanice", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 5.2", "text": "laris • av le • laris al • clenar sval • cn • ς'uθi ceriχunce apac • atic saniς'θu i • cesu clavtieθ urasi", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 5.3", "text": "vel matunas larisaliσ'a an cn ς'uθi ceriχunce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 5.4", "text": "laris a[t]ies an cn tamera φurθce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 108", "text": "mi araθia", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 110", "text": "ei menepi χape mi • mi karkus venelus", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 120", "text": "mi zinace velθ[ur a]ncinies.", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 164", "text": "mi araθia", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 165", "text": "mi satu qurtunia{nia}s", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 166", "text": "mi ramuθas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 181", "text": "meinei • papaσliσ a • vl • titialc • sec", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 190", "text": "laris raθmsnas turce", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 197", "text": "mi larθia tarnas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 208", "text": "mi larθus", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 209", "text": "mi venelus σiθurnas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 215", "text": "mi urqenas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 216", "text": "mi larza", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 221", "text": "mi fasθiia alσiia", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 238", "text": "ecn turce pivi patrus unial huinθnaias", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 261", "text": "mi • cavθas", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 269", "text": "mini muluvanice tetana ve.l.ka.s.na.s. veleliiasi", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 270", "text": "mi venelus", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 271", "text": "mi mutilates", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 273", "text": "mi tarnaial", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 28", "text": "mi ςunθeruza ςpuriaς mlakaς", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 284", "text": "mini muluvunike pisna perkena", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 289", "text": "mi hvlaves spati", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 29", "text": "[ecn] [•] [tur]ce • cavi • cr[ai]culi • hercle.s.", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 290", "text": "[mi r]amuθas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 295", "text": "mi aranθial", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 303", "text": "mi mulu araθiale θanaχvilus prasanaia", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 304", "text": "men tite", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 331", "text": "mi venus platunalus", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 332", "text": "ecn turce avle havrnas tuθina apana selvansl tularias", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 339", "text": "arnθ savpunias turce menrvas", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 340", "text": "cn • turce tite • uta ves • v • l • hercles alpan •", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 341", "text": "mi cailes cutus", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 346", "text": "mi xuiḥṿlies qutum", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 353", "text": "mi[ni velθ]ur paiθinaie[s mu]lu[vani]ce", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 358", "text": "mi cailes cutus", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 52", "text": "sepres • a • a • vi svalce • avil • xl", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 81", "text": "mi cipaχ", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 86", "text": "mi venelus σ{ }hekuntenas", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Fa 3.1", "text": "mi aliqu auvilesi", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Fa 6.3", "text": "mi araθiale ziχuχe", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Fs 8.3", "text": "tular • σpur al • hil • pura pum • vipśl vχ • papr", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "Li 1.1", "text": "mi śuθi larθial muθikuσ", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "OA 3.9", "text": "cae siprisnies {i} tur ce hercles clen ce χa munis en cae lur χve truta ala alp nina luθs inpa lxχn/a", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Pe 8.4", "text": "iχ • ca ceχa • ziχuχe", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "Ru 5.1", "text": "vl • afuna • vl • pes naliσ'a • cn • σ'uθi ceriχunce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.107", "text": "felsnas la leθes svalce avil cvi murce capue tleχe hanipaluscle", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.147", "text": "ceicnas arnθ arnθal avils xxix", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.168", "text": "semni • r[a]mθa • spitus • la[rθal] puia • amce • lupu • avils • xxii huσ'ur • ci • acnanas", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.191", "text": "velθur larθal • clan pumpual clan • larθial avils • cealχls • lupu", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.35", "text": "σ'eθre curunas • velus [ • ] [r]amθa[s] [ • ] avenalc sam man • σuθ[i]θ • arce ...", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.59", "text": "ravnθu velχai velθuruσ'a seχ larθialiσ'la", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.62", "text": "laris velχas veluσ'a clan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.66", "text": "vel aties velθurus lemniσ'a celati cesu", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.82", "text": "arnθ • apunas • velus • {maa-} maχ cezpalχ • avil svalce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.89", "text": "lucer • laθerna svalce avil xxvi", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.9", "text": "velθur partunus larisaliσ'a clan ramθas cuclnial zilχ ceχaneri tenθas avil svalθas lxxxii", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 5.5", "text": "zilci vel[u]s[i] hul χniesi larθ vel χas vel[θur]us aprθn[al] c cl[a]n sacniσ'a θui [ecl]θ σ'uθiθ acazrce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vc 6.6", "text": "ruvfies acil", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Ve 3.13", "text": "m[i]ni mulvanice venali.a. .š.lapina.š. .e.n. mi<ni>pi capi m[i] n[u]na.i.", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Vs 1.178", "text": "vel leinies larθial ruva arnθialum clan velusum prumaθσ avils semφσ lupuce", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vs 1.45", "text": "aveles vhulχenas rutelna", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vt 1.58", "text": "mi laruσ arianaσ • anaσnieσ klan", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}

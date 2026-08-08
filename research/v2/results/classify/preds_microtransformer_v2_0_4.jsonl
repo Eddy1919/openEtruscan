@@ -1,0 +1,167 @@
+{"id": "10007", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "10161", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "10857", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "12789", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "1431", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "1462", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "14876", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "15157", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "15546", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "16824", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "21077", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "3059", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "31", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "3758", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "3960", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5060", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "5067", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "5423", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5473", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5521", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5751", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5755", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "5874", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "7254", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "7843", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7849", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "8881", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "8962", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9073", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9179", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "9182", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "9205", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "9240", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "9243", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "boundary", "correct": true}
+{"id": "9264", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9276", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "9295", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9343", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9446", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "9449", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "9474", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "AS 5.1", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "AT 1.105", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "legal", "correct": false}
+{"id": "AT 1.15", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "AT 1.47", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "AV 6.1", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Af 3.1", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "At 1.100", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "At 1.111", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "At 1.172", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 142", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 1765", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1767", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1876", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2093", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2097", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2113", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2196", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2209", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2269", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2333", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2440", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "votive", "correct": false}
+{"id": "CIE 247", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "CIE 2533", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2550", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2611", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2635", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 2694", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 312", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 319", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CIE 439", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "CIE 441", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "CODEX_CP_B", "arch": "microtransformer", "gold_label": "legal", "predicted_label": "dedicatory", "correct": false}
+{"id": "CODEX_TCo_A", "arch": "microtransformer", "gold_label": "legal", "predicted_label": "legal", "correct": true}
+{"id": "CODEX_TCo_B", "arch": "microtransformer", "gold_label": "legal", "predicted_label": "legal", "correct": true}
+{"id": "Cl 1.1006", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.147", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.1807", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.2261", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.2513", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.314", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cl 1.324", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cm 2.13", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cm 2.32", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.46", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cm 2.65", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Co 3.6", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 1.10", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 1.141", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 1.5", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.6", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 2.15", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 2.20", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 2.27", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 3.10", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.11", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.12", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.17", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 3.20", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Cr 3.7", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.9", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 5.2", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 5.3", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Cr 5.4", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 108", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 110", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 120", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 164", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 165", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 166", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 181", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 190", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 197", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 208", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 209", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 215", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 216", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 221", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 238", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 261", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 269", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 270", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 271", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 273", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 28", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 284", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 289", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 29", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 290", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 295", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 303", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 304", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 331", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 332", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 339", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 340", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 341", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 346", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 353", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 358", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 52", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "ETP 81", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 86", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Fa 3.1", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Fa 6.3", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Fs 8.3", "arch": "microtransformer", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "Li 1.1", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "OA 3.9", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "legal", "correct": false}
+{"id": "Pe 8.4", "arch": "microtransformer", "gold_label": "legal", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ru 5.1", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.107", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.147", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.168", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.191", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.35", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.59", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.62", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.66", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.82", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.89", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 1.9", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ta 5.5", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Vc 6.6", "arch": "microtransformer", "gold_label": "ownership", "predicted_label": "dedicatory", "correct": false}
+{"id": "Ve 3.13", "arch": "microtransformer", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "Vs 1.178", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}
+{"id": "Vs 1.45", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "votive", "correct": false}
+{"id": "Vt 1.58", "arch": "microtransformer", "gold_label": "funerary", "predicted_label": "dedicatory", "correct": false}

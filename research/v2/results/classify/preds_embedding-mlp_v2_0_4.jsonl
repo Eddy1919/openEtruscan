@@ -1,0 +1,167 @@
+{"id": "10007", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "10161", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "10857", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "12789", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "1431", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "1462", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "14876", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "15157", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "15546", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "16824", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "21077", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "3059", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "31", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "3758", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "3960", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5060", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "5067", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "5423", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5473", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5521", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5751", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5755", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "5874", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "7254", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "7843", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "7849", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "8881", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "8962", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "9073", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9179", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9182", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "9205", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9240", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9243", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "9264", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "9276", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "9295", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9343", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "9446", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "9449", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "9474", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "AS 5.1", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.105", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.15", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AT 1.47", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "AV 6.1", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Af 3.1", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "At 1.100", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.111", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "At 1.172", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 142", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1765", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1767", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 1876", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2093", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2097", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2113", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2196", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2209", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2269", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2333", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2440", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 247", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "CIE 2533", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2550", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2611", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2635", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 2694", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 312", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 319", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CIE 439", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "CIE 441", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "CODEX_CP_B", "arch": "embedding-mlp", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_A", "arch": "embedding-mlp", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "CODEX_TCo_B", "arch": "embedding-mlp", "gold_label": "legal", "predicted_label": "funerary", "correct": false}
+{"id": "Cl 1.1006", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.147", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.1807", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.2261", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.2513", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.314", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cl 1.324", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cm 2.13", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Cm 2.32", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cm 2.46", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Cm 2.65", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Co 3.6", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 1.10", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.141", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.5", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 1.6", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 2.15", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.20", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 2.27", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Cr 3.10", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.11", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 3.12", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.17", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 3.20", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Cr 3.7", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 3.9", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 5.2", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Cr 5.3", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "Cr 5.4", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 108", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 110", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 120", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 164", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 165", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 166", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 181", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 190", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 197", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 208", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 209", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 215", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 216", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 221", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 238", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "dedicatory", "correct": true}
+{"id": "ETP 261", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 269", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 270", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 271", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 273", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 28", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 284", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 289", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 29", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 290", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 295", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 303", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 304", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 331", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 332", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 339", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 340", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "ETP 341", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 346", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 353", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "ETP 358", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 52", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "ETP 81", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "ETP 86", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Fa 3.1", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "ownership", "correct": false}
+{"id": "Fa 6.3", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "ownership", "correct": true}
+{"id": "Fs 8.3", "arch": "embedding-mlp", "gold_label": "boundary", "predicted_label": "funerary", "correct": false}
+{"id": "Li 1.1", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "OA 3.9", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Pe 8.4", "arch": "embedding-mlp", "gold_label": "legal", "predicted_label": "ownership", "correct": false}
+{"id": "Ru 5.1", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.107", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.147", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.168", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.191", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.35", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.59", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.62", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.66", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.82", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.89", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 1.9", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Ta 5.5", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vc 6.6", "arch": "embedding-mlp", "gold_label": "ownership", "predicted_label": "funerary", "correct": false}
+{"id": "Ve 3.13", "arch": "embedding-mlp", "gold_label": "dedicatory", "predicted_label": "funerary", "correct": false}
+{"id": "Vs 1.178", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
+{"id": "Vs 1.45", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "ownership", "correct": false}
+{"id": "Vt 1.58", "arch": "embedding-mlp", "gold_label": "funerary", "predicted_label": "funerary", "correct": true}
