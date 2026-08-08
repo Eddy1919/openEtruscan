@@ -167,12 +167,12 @@
       {
         "surface": "PyPI",
         "expected": "1.3.1",
-        "observed": "1.3.0",
-        "status": "stale",
+        "observed": "1.3.1",
+        "status": "resolved_2026-08-08",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
-        "verified": "2026-08-08 (later same day) via pypi.org/pypi/openetruscan/json: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0. The OIDC trusted-publisher pipeline delivered 1.3.0 from the tag as designed; 1.2.0 was never claimed and never will be (superseded before publish).",
-        "action": "1.3.1 publishes automatically when the v1.3.1 tag lands (the 1.3.0 tag proved the OIDC pipeline end to end). Until then PyPI serves 1.3.0 with the pre-rewrite README as its long description. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
+        "verified": "2026-08-08 via pypi.org/pypi/openetruscan/json after the v1.3.1 tag: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0, 1.3.1; latest is 1.3.1 and the long description is the rewritten README (zero em dashes, v2.0.4 numbers present). 1.2.0 was never claimed and never will be (superseded before publish).",
+        "action": "Resolved by the v1.3.1 tag; the OIDC pipeline published within a minute of the push. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",
