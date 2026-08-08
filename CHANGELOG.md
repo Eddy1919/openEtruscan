@@ -14,6 +14,32 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+- **aiohttp 3.14.1 → 3.14.3**, closing three Dependabot alerts: an
+  out-of-bounds heap read in the C HTTP response parser on a malformed
+  chunked response (high), HTTP request smuggling via WebSocket upgrade
+  (moderate), and a WebSocket client accepting compressed frames without a
+  negotiated `permessage-deflate` (moderate). Transitive, via the `http`
+  extra of a Google client library — nothing in this project calls aiohttp
+  directly, which is exactly why it sat unnoticed at a vulnerable pin.
+- **torch 2.12.1 → 2.13.0** in `services/minilm-reranker/requirements.txt`
+  (memory corruption via `torch.jit.script`, low). Supersedes Dependabot
+  PR #86.
+- **Four high-severity CodeQL alerts closed by deleting dead code, not by
+  fixing a vulnerability — all four were false positives.**
+  `scripts/attic/migrate_to_tembo.py` was the only source of
+  `py/clear-text-logging-sensitive-data` in the repository. The flagged
+  lines print a secret's *name* (`FRONTEND_ADMIN_TOKEN`) rather than its
+  value, or are the `redact_url()` call that performs the redaction; line 88
+  is a generic `err()` helper writing to stderr. CodeQL matched on
+  identifiers containing "secret"/"url" flowing into `print` without
+  modelling the sanitiser. Nothing was exploitable. The script went because
+  it is obsolete twice over — the project left GCP, then left Tembo for Neon
+  — so it documented a path no longer taken to a provider no longer used.
+  Its allowlist entry in `.gitleaks.toml` went with it, and
+  `scripts/attic/README.md` records the removal rather than dropping the row
+  silently; git history retains the file.
+
 ### Added
 - **`release-manifest.json` is now the single source of truth** for every
   version, corpus count, licence, DOI, and model status the project asserts

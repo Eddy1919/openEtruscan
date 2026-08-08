@@ -56,7 +56,15 @@ exist.
 | `generate_neural_embeddings.py` | Computed XLM-R embeddings for all inscriptions and stored them in Postgres/pgvector. | One-time embedding backfill; superseded by the Vertex jobs in `training/`. | pgvector rows |
 | `grade_rescued_inscriptions.py` | LLM-graded the quality of rescued CIE rows in `cie_rescued.db`. | One-time review pass. | `data/cie/rescued_grading_report.md` |
 | `migrate_graph.py` | Built the `FamilyGraph` from the corpus and loaded prosopography nodes/edges into Postgres. | One-time graph load. | prosopography tables |
-| `migrate_to_tembo.py` | pg_dump/restore migration of the corpus from Cloud SQL to Tembo Cloud, with pgvector/PostGIS verification. | One-shot infra migration off GCP. | migrated database |
 | `train_byt5_v2.py` | Fine-tuned the ByT5 lacuna-restoration model (v2) on corpus pairs from Postgres. | Superseded by v3 (`ml/lacuna.py` head + etr-lora-v4 encoder). | v2 model weights |
 | `train_embedding_classifier.py` | Trained a logistic-regression head on pgvector embeddings and exported it to ONNX. | One-time head training. | `embedding_head.onnx` + meta JSON |
 | `update_geotags.py` | Backfilled coordinates, Pleiades IDs, and PostGIS `geom` for all inscriptions in live Postgres. | One-time geotag enrichment. | `inscriptions` geo columns |
+
+## Deleted from the attic
+
+The attic keeps spent scripts as an audit trail, so removals are recorded
+here rather than made silently. Git history still holds every one of them.
+
+| File | Removed | Why |
+|---|---|---|
+| `migrate_to_tembo.py` | 2026-08-08 | `pg_dump`/restore migration of the corpus from Cloud SQL to Tembo Cloud. Obsolete twice over: the project left GCP, then left Tembo for Neon, so it documents a path no longer taken to a provider no longer used. It was also the sole source of four `py/clear-text-logging-sensitive-data` CodeQL alerts — **all four false positives**: the flagged lines print a *secret's name* (`FRONTEND_ADMIN_TOKEN`) rather than its value, or are the `redact_url()` call that does the redacting. Deleted as dead code, not as a security fix; nothing in it was ever exploitable. Recover with `git log --all -- scripts/attic/migrate_to_tembo.py`. |
