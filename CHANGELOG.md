@@ -69,7 +69,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   description the project migrated away from. `scripts/ops/push_model_card.py`
   pushes the checked-in card — one file, dry-run by default — instead of
   `hf_sync.py --upload`, which blunt-uploads whatever is in the git-ignored
-  `data/models/`.
+  `data/models/`. **The corrected card is now live on the Hub**, verified by
+  re-fetching it: the retraction notice is present, `language` is `ett`, and
+  the only occurrences of "99%" are inside the notice that retracts it. The
+  retracted claim no longer appears on any OpenEtruscan surface.
 
 ### Changed
 - **The 635-row corpus gap is now located, and the earlier explanation was
@@ -90,14 +93,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `/stats/provenance` is authoritative for anything the website shows.
 
 ### Known — not fixed here
-- **The Hugging Face card is corrected in git but the push is blocked on an
-  expired token.** The `HF_TOKEN` in `.env.local` is well-formed but the Hub
-  rejects it: `GET /api/whoami-v2` returns 401, and the upload fails 401
-  against a repository that reads fine anonymously. Mint a new write-scoped
-  token, then run
-  `python scripts/ops/push_model_card.py openetruscan-classifier --push` from
-  the main checkout — worktrees do not carry the git-ignored `.env.local` —
-  and flip `retracted_on_hub` in the manifest.
+- **Two machine-readable files on the Hub still carry retracted-era numbers**
+  and are retained for provenance rather than deleted — see below. The card
+  itself is corrected and live.
 - **Two machine-readable files on the Hub still carry retracted-era numbers**
   and are retained for provenance rather than deleted: `metrics.json`
   (`val_f1_macro: 0.7427` over a 1,497/375 split whose class balance

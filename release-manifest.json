@@ -122,13 +122,13 @@
         "corrected_range": "0.124-0.369 macro F1 across four architectures",
         "retracted_in_repo": true,
         "retracted_on_website": true,
-        "retracted_on_hub": false,
-        "hub_state_verified": "2026-08-08. README.md states 'Achieves **99% Macro F1**'. Also wrong on the same card: language code `xue` (Etruscan is `ett`), a v0.5.0 title, and a Cloud Run deployment description the project has migrated away from.",
+        "retracted_on_hub": true,
+        "hub_state_verified": "2026-08-08. Corrected card pushed and verified live: the retraction notice is present, `language` is `ett`, and the only two occurrences of '99%' are inside the notice that retracts it. Before the push the card stated 'Achieves **99% Macro F1**' and additionally carried the wrong language code `xue`, a v0.5.0 title, and a Cloud Run deployment description the project has migrated away from.",
         "hub_machine_readable_residue": [
           "metrics.json reports val_f1_macro 0.7427 for the CNN over a 1,497/375 split whose class balance (commercial support 102) contradicts the v2.0.2 finding that commercial is data-starved. Not a corrected figure; not comparable. Retained for provenance, explained in the card.",
           "v2/metadata.json carries baseline_milestone '8,091_verified' — a corpus number matching no OpenEtruscan artifact (6,633 archival / 6,567 published / 5,932 deployed). Stray figure from the retracted era."
         ],
-        "action": "Corrected card authored at models/openetruscan-classifier/README.md and gated by check_release_truth.py. Push it with `python scripts/ops/push_model_card.py openetruscan-classifier --push` (requires HF_TOKEN; publishes to a public repo, so it is opt-in rather than a CI step). Flip retracted_on_hub to true and this surface's status to resolved once the push is verified."
+        "action": "DONE 2026-08-08. Corrected card lives at models/openetruscan-classifier/README.md, is gated by check_release_truth.py, and was pushed with `python scripts/ops/push_model_card.py openetruscan-classifier --push`. Re-push from that checked-in file after any edit; never edit the card on the Hub, or the two diverge again."
       }
     }
   ],
@@ -173,10 +173,9 @@
       {
         "surface": "Hugging Face model cards",
         "expected": "macro F1 0.313 (0.273-0.348)",
-        "observed": "~99% macro F1",
-        "status": "carries_retracted_claim",
-        "blocked_on": "The HF_TOKEN in the maintainer's .env.local is expired or revoked: it is well-formed (hf_ prefix, 35 chars) but GET /api/whoami-v2 returns 401, and the upload fails 401 'Invalid username or password' against a repository that reads fine anonymously. Not a code or permissions bug on our side.",
-        "action": "Mint a new write-scoped token at https://huggingface.co/settings/tokens, put it in .env.local, then run `python scripts/ops/push_model_card.py openetruscan-classifier --push` from the main checkout (worktrees do not carry the git-ignored .env.local). The corrected card is committed at models/openetruscan-classifier/README.md and is gate-checked. Flip retracted_on_hub and this surface's status once the push is verified. Highest-severity open item in the project."
+        "observed": "corrected card live; retraction notice present",
+        "status": "fixed_2026-08-08",
+        "action": "Resolved. The card is now generated from models/openetruscan-classifier/README.md in git and pushed with scripts/ops/push_model_card.py. metrics.json and v2/metadata.json on the Hub still hold retracted-era numbers by design — they are provenance for the retracted run and the card explains both."
       }
     ]
   }
