@@ -171,13 +171,12 @@
       {
         "surface": "PyPI",
         "expected": "1.3.0",
-        "observed": "0.3.0",
-        "status": "stale",
+        "observed": "1.3.0",
+        "status": "current",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
-        "verified": "2026-08-08 via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0; 1.2.0 is unclaimed.",
-        "artifact_ready": "openetruscan-1.2.0 builds clean, passes `twine check`, and installs into a fresh venv reporting 1.2.0 from both `openetruscan.__version__` and the CLI.",
-        "action": "Trusted publisher configured on pypi.org (Eddy1919/openEtruscan, release.yml) and the `pypi` GitHub environment exists, both verified 2026-08-08. Tagging now publishes automatically; no token exists anywhere. PyPI accepts *any* environment name — tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
+        "verified": "2026-08-08 (later same day) via pypi.org/pypi/openetruscan/json — released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0. The OIDC trusted-publisher pipeline delivered 1.3.0 from the tag as designed; 1.2.0 was never claimed and never will be (superseded before publish).",
+        "action": "Resolved by the 1.3.0 tag. Remaining hardening: PyPI accepts *any* environment name — tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",

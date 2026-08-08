@@ -292,6 +292,68 @@ class TestTextKey:
         assert classify_split.text_key("[---]") == ""
 
 
+class TestHandoffBundle:
+    """classify_handoff.py — the philologist bundle must be a deterministic
+    function of in-repo adjudication artifacts (the v2.0 bundle wasn't, and
+    became unregenerable when its GCS inputs died with the retired project)."""
+
+    @staticmethod
+    def _record(insc_id, silver, labels):
+        return {
+            "id": insc_id,
+            "raw_text": f"text {insc_id}",
+            "canonical_transliterated": f"text {insc_id}",
+            "translation": "",
+            "silver_label": silver,
+            "silver_confidence": "medium",
+            "jury_summary": {
+                "consensus_label": next(iter(labels.values())),
+                "per_model": [
+                    {"model": m, "label": lab, "confidence": "high", "rationale": "r"}
+                    for m, lab in labels.items()
+                ],
+            },
+        }
+
+    def _write(self, tmp_path):
+        from research.v2.pipelines import classify_handoff
+
+        tmp_path.mkdir(parents=True, exist_ok=True)
+        raters = {"claude-opus-4-8": "funerary", "gemini-3.1-pro": "ownership"}
+        queue = [self._record(f"Q{i}", "funerary", raters) for i in range(5)]
+        gold = [
+            self._record(f"G{i}", "ownership", dict.fromkeys(raters, "ownership"))
+            for i in range(40)
+        ]
+        qp, gp = tmp_path / "q.jsonl", tmp_path / "g.jsonl"
+        qp.write_text("".join(json.dumps(r) + "\n" for r in queue))
+        gp.write_text("".join(json.dumps(r) + "\n" for r in gold))
+        out = tmp_path / "bundle"
+        rc = classify_handoff.main(
+            ["--queue", str(qp), "--gold", str(gp), "--out-dir", str(out), "--seed", "42"]
+        )
+        assert rc == 0
+        return out
+
+    def test_bundle_has_queue_and_matching_blind_spot_checks(self, tmp_path):
+        import csv
+
+        out = self._write(tmp_path)
+        queue = list(csv.DictReader((out / "adjudication_queue.csv").open()))
+        assert len(queue) == 5
+        assert "claude-opus-4-8_label" in queue[0]
+        assert queue[0]["adjudicator_decision"] == ""
+        a = (out / "spot_check_30_adjudicator_A.csv").read_text()
+        b = (out / "spot_check_30_adjudicator_B.csv").read_text()
+        assert a == b, "both adjudicators must receive identical blind samples"
+        assert len(list(csv.DictReader((out / "spot_check_30_adjudicator_A.csv").open()))) == 30
+
+    def test_bundle_is_deterministic(self, tmp_path):
+        a = (self._write(tmp_path / "x") / "adjudication_queue.csv").read_text()
+        b = (self._write(tmp_path / "y") / "adjudication_queue.csv").read_text()
+        assert a == b
+
+
 class TestKFoldAssignment:
     """classify_kfold.py — the v2.1 split shape: group-atomic stratified CV."""
 
