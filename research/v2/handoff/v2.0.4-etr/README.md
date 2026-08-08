@@ -1,8 +1,8 @@
-# Philologist handoff bundle — OpenEtruscan v2.0.4 (Etruscan classification)
+# Philologist handoff bundle: OpenEtruscan v2.0.4 (Etruscan classification)
 
 Everything two human adjudicators need to ratify the v2.0.4 classification
-gold set. Unlike the superseded [`../v2.0-etr/`](../v2.0-etr/) bundle — which
-was built ad hoc from GCS files that died with a retired GCP project — this
+gold set. Unlike the superseded [`../v2.0-etr/`](../v2.0-etr/) bundle, which
+was built ad hoc from GCS files that died with a retired GCP project, this
 one regenerates deterministically from committed evidence:
 
 ```bash
@@ -11,16 +11,16 @@ make -C research/v2 classify-handoff
 
 ## Source provenance
 
-- Codebook version: v2.0 (frozen 2026-05-17; unchanged — only the jury and
+- Codebook version: v2.0 (frozen 2026-05-17; unchanged, only the jury and
   the split changed at v2.0.4)
 - Test pool: the **text-disjoint** frozen split, 427 rows, seed=42
   (`research/v2/data/classify_test_v2.jsonl`; PRE_REGISTRATION.md Deviation
-  §D — a strict superset of the pre-registered 400)
+  §D; a strict superset of the pre-registered 400)
 - Jury: **Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash**, all via
   Vertex AI, run 2026-08-08, 427×3 ratings, zero API errors
 - Jury outcome: **167 candidate-gold** (unanimous, confidence ≥ medium) |
   **59 adjudication queue** (disagreement) | **201 all-unsure**
-- Krippendorff α = **0.8557** overall — read it with the lineage caveat:
+- Krippendorff α = **0.8557** overall; read it with the lineage caveat:
   two of three raters share the Gemini lineage, which inflates agreement
   (same caveat as the v2.0.3 lacuna panel, PRE_REGISTRATION.md §B)
 - Raw evidence: [`../../results/classify/`](../../results/classify/)

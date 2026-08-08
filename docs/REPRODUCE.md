@@ -18,7 +18,7 @@ uv sync --extra dev        # + test/lint toolchain (pulls [all], incl. torch)
 ```
 
 Without uv: `python -m venv .venv && .venv/bin/pip install -e ".[dev]"`
-(unlocked — versions may drift; `uv.lock` is the source of truth).
+(unlocked; versions may drift, and `uv.lock` is the source of truth).
 
 ## 2. Fetch the corpus
 
@@ -42,7 +42,7 @@ git and need no fetch.
 
 The committed split is byte-reproducible from the corpus + silver labels.
 Since 2026-08-08 the generator is text-disjoint (it samples text groups, not
-rows — PRE_REGISTRATION.md Deviation §D), so the same invocation yields
+rows; PRE_REGISTRATION.md Deviation §D), so the same invocation yields
 **427 test / 285 train**: the pre-registered 400 plus the 27 train rows whose
 normalized text matched a test row.
 
@@ -57,7 +57,7 @@ python -m research.v2.pipelines.classify_split \
 ```
 
 (`make -C research/v2 classify-split` runs the same command.) Verify inputs
-and outputs against `research/v2/data/SHA256SUMS` — the manifest mixes
+and outputs against `research/v2/data/SHA256SUMS`; the manifest mixes
 repo-root-relative input paths with local output names, so check in two
 steps from the repo root:
 
@@ -102,7 +102,7 @@ API on `http://localhost:8000`.
 
 One caveat: if a local Postgres already holds port 5432, override the
 port mapping before `up` and adjust `DATABASE_URL` to match.
-`openetruscan import` works on this PostGIS-less stack — the corpus
+`openetruscan import` works on this PostGIS-less stack; the corpus
 probes for the `geom` column and omits it when absent, so rows import
 with plain lat/lon and no spatial geometry (`tests/test_corpus_geom.py`
 pins both paths).
@@ -112,7 +112,7 @@ pins both paths).
 Reproducible from the repo:
 
 - the committed eval result JSONs (`eval/rosetta-eval-v1-*.json`);
-- the frozen 39/22 anchor split (61 pairs) — regenerate with
+- the frozen 39/22 anchor split (61 pairs); regenerate with
   `eval/harness/_generate_eval_split.py` (`SEED = 20260510`, stratified by
   category × confidence);
 - the eval protocol itself (`eval/harness/run_rosetta_eval.py`,
@@ -122,7 +122,7 @@ Reproducible from the repo:
 **Not yet publicly reproducible:** re-running the benchmark against the
 historical model column requires the original embedding vectors. These were
 believed lost with their GCS bucket, but survive in
-`gs://openetruscan-rosetta-vai/embeddings/` — `labse-v1.jsonl` and
+`gs://openetruscan-rosetta-vai/embeddings/`: `labse-v1.jsonl` and
 `etr-xlmr-lora-v4.jsonl` MD5-verified on 2026-07-17 against the historical
 manifest (pinned commits, schema state, run log) in
 [research/notes/reproduce-rosetta-eval-v1.md](../research/notes/reproduce-rosetta-eval-v1.md).

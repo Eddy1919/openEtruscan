@@ -9,7 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > (PyPI `openetruscan`, `pyproject.toml`), while `v2.0.x` entries are
 > **evaluation-protocol versions** of the `research/v2/` annotation and
 > benchmark work. Earlier revisions of this file used bare `[2.0.3]` for a
-> protocol version, which read as a package release — those headings now
+> protocol version, which read as a package release; those headings now
 > carry the `evaluation protocol` label.
 
 ## [Unreleased]
@@ -18,7 +18,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **The 635-row gap between the published and deployed corpus is explained:
   the live corpus is deduplicated.** It was recorded as unattributed. Diffing
   the live LOD feed against the Zenodo deposit settles it. The live corpus is
-  a strict subset by id — 635 published ids absent, zero live ids absent — and
+  a strict subset by id (635 published ids absent, zero live ids absent), and
   it holds 5,932 rows over 5,932 distinct texts, no repeats at all, where the
   deposit holds 6,567 rows over 6,097 distinct texts. Of the 635 missing: 57%
   are exact-text duplicates of a live row, 40% are duplicates once editorial
@@ -26,7 +26,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (`laut(n)i` / `la(u)tni` / `lautn(i)`). They are spread evenly across the id
   range (10.8–16.1% per decile), which rules out the partial-or-older-seed
   hypothesis that an uneven distribution would have supported. **The deposit
-  ships the corpus before deduplication and the website serves it after** —
+  ships the corpus before deduplication and the website serves it after**;
   README now says so instead of calling the gap unexplained.
 
   Not claimed as certain: prod and the deposit normalise text differently, so
@@ -37,20 +37,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `docs/openapi.json` joins the surfaces `check_release_truth.py` enforces.
   `api/server.py` passes `__version__` to FastAPI, so a version bump
   invalidates the committed spec. CI already caught that by regenerating and
-  diffing, but only inside a job that installs the full server extra — so it
+  diffing, but only inside a job that installs the full server extra, so it
   failed late, in a job nobody associates with a version bump, reporting
   "spec is stale" with no pointer to the cause. The manifest check now
   compares `info.version` in the fast lane and locally, where the fix is one
   command.
 
 ### Added
-- **`research/v2/eval/split_contamination.py`** — measures text-level
+- **`research/v2/eval/split_contamination.py`** measures text-level
   train/test overlap in any frozen split, per class, and cross-references the
   adjudication queue to show whether the leak concentrates in the scored
   subset. Exits non-zero on any leak so it can gate a release; `--expect N`
   accepts a known documented leak. Covered by `tests/test_v2_harness.py`.
 
-## [v2.0.4 — evaluation protocol] — 2026-08-08
+## [v2.0.4, evaluation protocol] - 2026-08-08
 
 The Stream A (classification) contamination finding and its same-day
 clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
@@ -68,23 +68,23 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   headline is scored on the unanimous n=143 candidate-gold subset, leaked rows
   are 92% single-token against 16.5% in the non-unanimous adjudication queue,
   and **none of the 25 reached that queue** against 4.9 expected under an even
-  spread — so it is enriched exactly where the metric is computed. Macro
+  spread, so it is enriched exactly where the metric is computed. Macro
   averaging amplifies it in the thin classes (votive 2/8 = 25%, dedicatory
   8/63 = 12.7%, each class carrying 1/7 of the score). Nothing is retracted:
   the direction of the bias is known, the magnitude is not, and the published
   95% CIs are bootstraps over sampling noise that do not model contamination.
   `0.313` and its three companions were relabelled upper bounds on every
-  surface pending a clean re-run — which landed the same day; see the next
+  surface pending a clean re-run, which landed the same day; see the next
   entry. Recorded as
   [Deviation §D](research/v2/PRE_REGISTRATION.md). Deviation §B's claim that
-  "Stream A is unaffected" is corrected — it was unaffected by the
+  "Stream A is unaffected" is corrected: it was unaffected by the
   empty-completion bug, not by the duplicate inflation recorded in the same
   entry, which Stream A then carried unguarded for three more months.
 
 - **The citable classifier number is now macro F1 0.293 (0.255 – 0.329),
   TF-IDF + NB on v2.0.4 candidate-gold (n=167).** It supersedes 0.313
   (v2.0.2), which was measured on the text-contaminated split against gold
-  labels that are lost — the v2.0.2 jury raw and candidate-gold files lived
+  labels that are lost: the v2.0.2 jury raw and candidate-gold files lived
   only in the retired GCP project's cloudbuild bucket (verified: not in the
   salvage bucket, not on the Hub, not local), so re-scoring it is
   permanently impossible. The re-run is not a controlled before/after: gold
@@ -94,8 +94,8 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   split, CharCNN reaches **0.399 (0.353 – 0.435)** and beats TF-IDF+NB
   (paired bootstrap Δ +0.106, p = 0.0025) and MicroTransformer (Δ +0.147,
   p = 0.0023). The v2.0.2 claim that parameters don't move macro F1 is
-  withdrawn; the pre-registration's mandatory paired-bootstrap test — which
-  v2.0.2 never actually computed for model comparisons — is what settles it.
+  withdrawn; the pre-registration's mandatory paired-bootstrap test (which
+  v2.0.2 never actually computed for model comparisons) is what settles it.
   Finding B (frozen multilingual embeddings underperform) replicates:
   EmbeddingMLP 0.210, significantly below TF-IDF+NB (p < 0.0001), gap
   narrowed. README, `docs/INTELLIGENCE_V2.md`, the model card,
@@ -108,7 +108,7 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   as the v2.0.3 lacuna panel; Llama-family MaaS raters are not enabled on
   the available billing project). Candidate-gold 167 / queue 59 /
   all-unsure 201. **All evidence is committed and SHA256-pinned under
-  `research/v2/results/classify/`** — the layout exists because the v2.0.2
+  `research/v2/results/classify/`**; the layout exists because the v2.0.2
   evidence was cloud-only and died with its project.
 - **`classify_handoff.py` + `make classify-handoff`**: the philologist
   bundle (`research/v2/handoff/v2.0.4-etr/`, 59-row queue + two blind
@@ -125,13 +125,13 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   distinct words (`mi` vs `mini`) apart; rows that are entirely markup stay
   ungrouped instead of fusing into one blob. Regenerating with the
   pre-registered invocation now yields a text-disjoint 427 test / 285 train
-  split — 27 rows move out of an already-starved training pool, which sharpens
+  split: 27 rows move out of an already-starved training pool, which sharpens
   rather than solves the allocation problem noted below. The frozen v2 split
   **was regenerated the same day** (initially it was left untouched to protect
   the jury run keyed to it; the maintainer overrode that). The override is
   safe: same seed, same sampling path, so the new 427-row test pool is a
   strict superset of the old 400 and every jury-scored, queue, and handoff id
-  stays valid. It was also moot — the v2.0.2 classify jury raw and
+  stays valid. It was also moot: the v2.0.2 classify jury raw and
   candidate-gold files lived only in the retired GCP project's cloudbuild
   bucket and are unrecoverable (verified 2026-08-08: not in the salvage
   bucket, not on the Hub, not local), so there was no stored gold to protect.
@@ -151,7 +151,7 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   pending; until it lands these labels remain LLM-consensus silver.
 
 - **The v2 split allocates 427 of 712 labels (60%) to test.** `commercial`
-  gets 0 train / 2 test, `boundary` 1/9, `legal` 3/7 — three of the seven
+  gets 0 train / 2 test, `boundary` 1/9, `legal` 3/7: three of the seven
   classes in the macro denominator cannot be learned at all, and `commercial`
   contributes a structural zero to every macro F1 in the v2 tables. Stratified
   k-fold CV over text groups would use the scarce labels better and give
@@ -159,7 +159,7 @@ clean re-run. Full narrative: PRE_REGISTRATION.md Deviation §D.
   assignment; adopting it for the citable metric awaits a pre-registration
   amendment.
 
-## [1.3.0] — 2026-08-08
+## [1.3.0] - 2026-08-08
 
 Public-truth release. Every version, count, licence, DOI, and model status
 the project asserts now derives from one machine-readable manifest that CI
@@ -172,7 +172,7 @@ surface still carrying it.
   chunked response (high), HTTP request smuggling via WebSocket upgrade
   (moderate), and a WebSocket client accepting compressed frames without a
   negotiated `permessage-deflate` (moderate). Transitive, via the `http`
-  extra of a Google client library — nothing in this project calls aiohttp
+  extra of a Google client library; nothing in this project calls aiohttp
   directly, which is exactly why it sat unnoticed at a vulnerable pin.
 - **torch 2.12.1 → 2.13.0** in `services/minilm-reranker/requirements.txt`
   (memory corruption via `torch.jit.script`, low). Supersedes Dependabot
@@ -180,14 +180,14 @@ surface still carrying it.
 - **ruff 0.15.22 → 0.16.0 across all three pins**, and `actions/setup-python`
   v6 → v7 plus `astral-sh/setup-uv` v6 → v7 in every workflow. Dependabot
   PR #84 bumped ruff only in `pyproject.toml`, leaving `.pre-commit-config.yaml`
-  and `ci.yml` behind — the exact desync the comment above that pin warns
+  and `ci.yml` behind, the exact desync the comment above that pin warns
   about, where CI lints with one version and contributors install another.
   0.16.0 also formats Python inside Markdown fences, so it reformats
   `README.md`; merging the bump without applying that would have turned
   `ruff format --check` red on main the moment CI reached 0.16.0. Both are
   landed here in lockstep with the reformat applied.
 - **Four high-severity CodeQL alerts closed by deleting dead code, not by
-  fixing a vulnerability — all four were false positives.**
+  fixing a vulnerability; all four were false positives.**
   `scripts/attic/migrate_to_tembo.py` was the only source of
   `py/clear-text-logging-sensitive-data` in the repository. The flagged
   lines print a secret's *name* (`FRONTEND_ADMIN_TOKEN`) rather than its
@@ -195,8 +195,8 @@ surface still carrying it.
   is a generic `err()` helper writing to stderr. CodeQL matched on
   identifiers containing "secret"/"url" flowing into `print` without
   modelling the sanitiser. Nothing was exploitable. The script went because
-  it is obsolete twice over — the project left GCP, then left Tembo for Neon
-  — so it documented a path no longer taken to a provider no longer used.
+  it is obsolete twice over (the project left GCP, then left Tembo for Neon),
+  so it documented a path no longer taken to a provider no longer used.
   Its allowlist entry in `.gitleaks.toml` went with it, and
   `scripts/attic/README.md` records the removal rather than dropping the row
   silently; git history retains the file.
@@ -223,7 +223,7 @@ surface still carrying it.
 ### Fixed
 - **`pytest` no longer requires Docker.** `tests/conftest.py` treated an
   importable `testcontainers` as proof that Postgres was obtainable, but
-  `pip install -e ".[dev]"` always installs the package — so on any machine
+  `pip install -e ".[dev]"` always installs the package, so on any machine
   without a running daemon the container constructor raised out of the
   session fixture and **56 tests errored** instead of skipping, while
   `CONTRIBUTING.md` promised no database was needed. Both the fixture and
@@ -232,7 +232,7 @@ surface still carrying it.
   sets `DATABASE_URL` and returns before this path.
 - **`TestFamilyGraph` and `TestNeuralClassifier` are marked
   `requires_postgres`.** They drive psycopg2 directly, so on the SQLite
-  fallback they raised `ProgrammingError: invalid dsn` — 12 failures that
+  fallback they raised `ProgrammingError: invalid dsn`: 12 failures that
   the 56 errors above were masking. Offline, the suite is now green:
   478 passed, 32 skipped, 0 errors.
 - **`CITATION.cff` and `codemeta.json` cited `https://www.openetruscan.com/data`,
@@ -254,7 +254,7 @@ surface still carrying it.
   is also wrong in three ways the audit did not catch: language code `xue`
   where Etruscan is `ett`, a `v0.5.0` title, and a Cloud Run deployment
   description the project migrated away from. `scripts/ops/push_model_card.py`
-  pushes the checked-in card — one file, dry-run by default — instead of
+  pushes the checked-in card (one file, dry-run by default) instead of
   `hf_sync.py --upload`, which blunt-uploads whatever is in the git-ignored
   `data/models/`. **The corrected card is now live on the Hub**, verified by
   re-fetching it: the retraction notice is present, `language` is `ett`, and
@@ -268,7 +268,7 @@ surface still carrying it.
   `SELECT ... FROM inscriptions` and `getVoidStats()` is `COUNT(*)`, so the
   feed's `total` is the live table count. Verified against
   `GET /api/stats/summary`, which returns `{"total": 5932}`. The real finding
-  is larger — **the deployed database holds 701 fewer inscriptions than the
+  is larger: **the deployed database holds 701 fewer inscriptions than the
   archival corpus and 635 fewer than the Zenodo deposit, so the website serves
   a smaller corpus than its DOI cites.** The manifest's third count is
   accordingly renamed `served_lod` → `deployed`. Cause unknown from
@@ -279,38 +279,38 @@ surface still carrying it.
   (2,317 / 4,316). The live database reports 2,203 / 3,729 at a similar ratio;
   `/stats/provenance` is authoritative for anything the website shows.
 
-### Known — not fixed here
+### Known, not fixed here
 - **Two machine-readable files on the Hub still carry retracted-era numbers**
-  and are retained for provenance rather than deleted — see below. The card
+  and are retained for provenance rather than deleted; see below. The card
   itself is corrected and live.
 - **Two machine-readable files on the Hub still carry retracted-era numbers**
   and are retained for provenance rather than deleted: `metrics.json`
   (`val_f1_macro: 0.7427` over a 1,497/375 split whose class balance
   contradicts the v2.0.2 finding that `commercial` is data-starved) and
-  `v2/metadata.json` (`baseline_milestone: "8,091_verified"` — a corpus number
+  `v2/metadata.json` (`baseline_milestone: "8,091_verified"`, a corpus number
   matching no OpenEtruscan artifact). The corrected card explains both; the
   files themselves are unchanged.
 - **PyPI still serves 0.3.0**, but publishing is no longer a manual step.
   `release.yml` gained a `publish` job using PyPI OIDC trusted publishing, so
-  no token is stored on a laptop or in GitHub secrets — the drift happened
+  no token is stored on a laptop or in GitHub secrets; the drift happened
   because publishing depended on somebody remembering. It runs after the
   strict manifest check, rebuilds from the tag, re-verifies that the artifact
   filename matches the tag, and re-runs `twine check` before upload. Two
   one-time maintainer steps remain: add the trusted publisher on pypi.org and
   create a GitHub environment named `pypi`. Until then the job fails with an
-  OIDC error while the GitHub Release still succeeds — the release is not held
+  OIDC error while the GitHub Release still succeeds; the release is not held
   hostage to the setup.
 - **Why the deployed corpus is 701 rows short of the archival one** is
   unresolved. Now precisely located rather than misattributed to a feed
   filter; needs database access. Pod A.
 
-## [1.2.0] — 2026-07-18
+## [1.2.0] - 2026-07-18
 
 Integrity, security, and surface-honesty release: everything below was
 adversarially reviewed before merge (cross-model where available,
 independent same-model auditors flagged as such otherwise).
 
-### Fixed — integrity repairs (S2)
+### Fixed: integrity repairs (S2)
 - **CIE pipeline emits four-tier provenance values.** The regeneration
   chain hardcoded pre-migration `verified`/`rejected`, which the
   `provenance_status` CHECK constraint prohibits; the findspot-based
@@ -318,11 +318,11 @@ independent same-model auditors flagged as such otherwise).
   used by every pipeline script, upserts refresh the value, and
   `Corpus.review_quarantine` (no callers, prohibited values only) is
   deprecated and raises with guidance. `export_rejected.py` moved to the
-  attic — its query matches nothing by construction post-migration.
+  attic; its query matches nothing by construction post-migration.
 - **`docs/openapi.json` regenerated (0.5.0 → 1.1.0)** and drift-gated in
   CI via the new `scripts/ops/generate_openapi.py`; the duplicate
   `export_openapi.py` is deleted.
-- **byt5-restorer refuses to start without an explicit `MODEL_URI`** —
+- **byt5-restorer refuses to start without an explicit `MODEL_URI`**;
   it previously defaulted to plain `google/byt5-small` while advertising
   `byt5-lacunae-v1`. `/health` now reports the resolved model;
   `deploy-byt5.sh` requires and passes `MODEL_URI`; the env-contract
@@ -334,13 +334,13 @@ independent same-model auditors flagged as such otherwise).
 - **`/health` no longer probes the retired Fuseki host**, whose
   hostname only the deleted self-hosting compose ever defined.
 
-### Removed — self-hosting compose surface
+### Removed: self-hosting compose surface
 - Root `docker-compose.yml` retired (depended on absent `nginx.conf`
   and retired infrastructure); `docker-compose.dev.yml` is the only
   compose surface, and the docs no longer claim a self-hosted
   production stack or SPARQL endpoint.
 
-### Removed — archaeogenetics runtime & backend Linked-Data duplicates (S3)
+### Removed: archaeogenetics runtime & backend Linked-Data duplicates (S3)
 - **Deprecated archaeogenetics HTTP surface deleted.** `GET /genetics/samples`
   and `GET /inscriptions/{id}/genetics` (both already `deprecated=True`, both
   reading an empty `genetic_samples` table) are gone, along with the repository
@@ -350,7 +350,7 @@ independent same-model auditors flagged as such otherwise).
   import), and the orphaned `Corpus.find_genetic_matches` (zero callers).
   The ingest script `scripts/data_pipeline/ingest_genetics.py` is deleted.
   The `GeneticSample` ORM model, its table, and
-  every migration are retained deliberately — deleting the model would make
+  every migration are retained deliberately; deleting the model would make
   `alembic revision --autogenerate` propose a `DROP TABLE genetic_samples`,
   and the table is still read by the deprecation-fenced
   `core.spatial`/`core.lineage` modules and by `core.kinship` (not fenced,
@@ -358,17 +358,17 @@ independent same-model auditors flagged as such otherwise).
   only diff.
 - **Backend Linked-Data generators deleted as duplicates of the live frontend.**
   `api/void_gen.py`, `api/snap_exporter.py`, and the stale root `void.ttl` are
-  removed — nothing imported them and no route served them. The live discovery
+  removed; nothing imported them and no route served them. The live discovery
   artifacts are the frontend's `void.ttl` and `pelagios.jsonld` routes;
   `docs/PELAGIOS_REGISTRATION.md` is rewritten as a submission runbook against
   the verified live URLs (`/void.ttl`, `/pelagios.jsonld`; 5,932 entities), and
   `docs/PELAGIOS.md` no longer claims a SNAP people-feed that is not served.
 
-### Fixed — corpus import without PostGIS
+### Fixed: corpus import without PostGIS
 - **`openetruscan import` no longer fails on a PostGIS-less database.**
   `Corpus.add()`/`add_batch()` referenced the `geom` column unconditionally
   (even the no-coordinates branch wrote NULL into it), but `_ensure_db()`
-  only creates that column where the PostGIS extension installs — on the
+  only creates that column where the PostGIS extension installs; on the
   `docker-compose.dev.yml` stack (pgvector image, no PostGIS) every insert
   died with `UndefinedColumn` and imports failed 100%. The corpus now probes
   once per connection whether `inscriptions.geom` exists and omits the
@@ -385,7 +385,7 @@ independent same-model auditors flagged as such otherwise).
   showed 16 commands instead of the documented 14. Each is now registered
   once; a test pins the exact 14-name command set.
 
-### Removed — dead-code prune (S2 audit)
+### Removed: dead-code prune (S2 audit)
 Every item was verified before removal (no importers/callers repo-wide,
 or an import that no longer resolves).
 - 11 dead files deleted: 6 scripts with broken imports or superseded
@@ -396,8 +396,8 @@ or an import that no longer resolves).
   images in `research/parked/cv_pipeline`.
 - 3 declared-but-never-imported dependencies dropped: `lxml` (EpiDoc uses
   stdlib ElementTree + defusedxml) and `networkx` (prosopography is pure
-  Python) from the extras — the `epidoc`/`prosopography` extras remain as
-  no-ops so existing installs keep resolving — and `google-cloud-storage`
+  Python) from the extras (the `epidoc`/`prosopography` extras remain as
+  no-ops so existing installs keep resolving), and `google-cloud-storage`
   from the byt5-restorer service.
 - 13 spent one-off scripts moved from `scripts/{ml,data_pipeline,ops}` to
   `scripts/attic/` (enrichment backfills, superseded trainers, the
@@ -408,10 +408,10 @@ or an import that no longer resolves).
 - `core/lineage`, `core/spatial`, `ml/lacuna`, `ml/entity_linker_v2`, and
   `ml/embedding_classifier` now emit a `DeprecationWarning` on import and
   will be removed in 2.0. Nothing inside the repo imports them, but they
-  ship in the wheel, so external imports cannot be ruled out — hence a
+  ship in the wheel, so external imports cannot be ruled out; hence a
   deprecation cycle instead of deletion.
 
-### Fixed — rosetta-eval-v1 baseline integrity
+### Fixed: rosetta-eval-v1 baseline integrity
 - **Random baseline no longer fabricates its vocab size.** A failed
   `/neural/rosetta/vocab` fetch made `run_rosetta_eval.py --baseline random`
   silently compute the "analytic" column from a hard-coded V=100,000,
@@ -427,12 +427,12 @@ or an import that no longer resolves).
   history squash killed the pinned commit ids. Details in
   `research/notes/reproduce-rosetta-eval-v1.md`.
 
-## [1.1.0] — 2026-07-17
+## [1.1.0] - 2026-07-17
 
 Integrity and reproducibility release, closing the gaps found by the
 2026-07-17 audit.
 
-### Fixed — evidence chain
+### Fixed: evidence chain
 - **Frozen classification split repaired.** The committed
   `research/v2/data/classify_test_v2.jsonl` (99 rows) and train pool (613
   rows) had empty text on every row and contradicted the pre-registered
@@ -449,16 +449,16 @@ Integrity and reproducibility release, closing the gaps found by the
 - **Pre-registration re-anchored** (Deviation §C): the July 2026 history
   squash destroyed freeze commit `c281ed9`; integrity is now anchored in
   content hashes, not commit ids.
-- **`initial_schema` migration was an empty stamp** — `alembic upgrade head`
+- **`initial_schema` migration was an empty stamp**: `alembic upgrade head`
   could not bootstrap an empty database (failed at the second migration).
   Reconstructed the 2026-04-04 base DDL; the full 17-migration chain now
   applies cleanly from empty and is exercised by `tests/test_migrations.py`.
 - **Jury harness**: API failures are recorded as `label="api_error"` (missing
   data) instead of `"unsure"` (abstention), and any api_error blocks
-  candidate-gold promotion — the same bug class as the retracted lacuna
+  candidate-gold promotion, the same bug class as the retracted lacuna
   Finding C, closed in the classification stream before it produced one.
 - **Label provenance rename**: `gold:claude_hand_label` →
-  `silver:claude_hand_label` (184 rows) — those labels are LLM-derived, not
+  `silver:claude_hand_label` (184 rows); those labels are LLM-derived, not
   philologist-validated. Split regenerated; membership unchanged.
 
 ### Added
@@ -492,34 +492,34 @@ Integrity and reproducibility release, closing the gaps found by the
   `10.5281/zenodo.20075835`, the v1.0.0 deposit is `…20075836` (previously
   stated backwards).
 
-## [v2.0.3 — evaluation protocol] — 2026-07-04
+## [v2.0.3, evaluation protocol] - 2026-07-04
 
-### Retracted — v2.0.2 lacuna "Finding C" (harness artifact)
+### Retracted: v2.0.2 lacuna "Finding C" (harness artifact)
 
 The v2.0.2 lacuna jury scored **empty API responses as hallucinations**. 114
 of 125 Claude Sonnet 4.6 rows were empty completions (`max_tokens=1024`
 exhausted while echoing `restored_full`), and `lacuna_jury.py` counted every
 empty response as `hallucinated=True`. The reported **0.949** Sonnet
 hallucination rate and the "frontier model loses at p<0.001" narrative
-measured a Vertex integration failure, not model behaviour — on the 11 rows
+measured a Vertex integration failure, not model behaviour; on the 11 rows
 Sonnet actually answered it led the field. The 118-row set was additionally
 inflated by exact duplicates (125 rows → 70 unique tasks).
 
-### Fixed — lacuna harness
+### Fixed: lacuna harness
 
-- `research/v2/pipelines/lacuna_jury.py` — empty/unparseable responses now
+- `research/v2/pipelines/lacuna_jury.py`: empty/unparseable responses now
   carry `no_parse=True` and are **never** scored as hallucinations.
-- `research/v2/pipelines/classify_jury.py` — Anthropic-Vertex `max_tokens`
+- `research/v2/pipelines/classify_jury.py`: Anthropic-Vertex `max_tokens`
   1024 → 4096, non-empty retry that raises on persistent empty, and
   removed the hardcoded default pointing at a since-deleted GCP project.
-- `research/v2/eval/{lacuna_metrics,compute_lacuna_v2}.py` — `no_parse` rows
+- `research/v2/eval/{lacuna_metrics,compute_lacuna_v2}.py`: `no_parse` rows
   excluded from accuracy/hallucination denominators; coverage reported.
 
-### Added — corrected lacuna re-run (v2.0.3)
+### Added: corrected lacuna re-run (v2.0.3)
 
-3-rater jury — **Claude Opus 4.8** (direct agentic rater; Opus is not on the
+3-rater jury of **Claude Opus 4.8** (direct agentic rater; Opus is not on the
 available Vertex projects, only Haiku 4.5) + **Gemini 3.1 Pro** + **Gemini
-3.5 Flash** — on the deduplicated **66 clean-gold tasks** (width-1-dominated),
+3.5 Flash**, on the deduplicated **66 clean-gold tasks** (width-1-dominated),
 10 000-resample bootstrap, seed=42:
 
 | Model            | Span exact (95 % CI)      | Char acc top-1            | Hallucination             | Cover |
@@ -528,12 +528,12 @@ available Vertex projects, only Haiku 4.5) + **Gemini 3.1 Pro** + **Gemini
 | Gemini 3.1 Pro   | 0.258 (0.161 – 0.371)     | 0.315 (0.210 – 0.426)     | **0.161** (0.081 – 0.258) | 62/66 |
 | Gemini 3.5 Flash | 0.258 (0.152 – 0.364)     | 0.278 (0.178 – 0.389)     | 0.545 (0.424 – 0.667)     | 66/66 |
 
-- **No model wins on accuracy** — all span-exact deltas non-significant
+- **No model wins on accuracy**: all span-exact deltas non-significant
   (paired bootstrap p = 0.24 / 0.37 / 0.66). The task is difficulty/data-bound,
   echoing the classifier's "data, not architecture" result.
-- **Real differentiator is hallucination** — Gemini 3.5 Flash alters context
+- **Real differentiator is hallucination**: Gemini 3.5 Flash alters context
   outside the span on 54.5 % of rows vs Gemini 3.1 Pro's 16.1 %.
-- **Independence caveat** — the two Gemini raters agree with each other (0.339)
+- **Independence caveat**: the two Gemini raters agree with each other (0.339)
   far more than with Opus (0.18–0.24); a Krippendorff α over this 2×Google
   panel is inflated by shared lineage. Opus's 0.000 hallucination is by
   construction (`restored_full` assembled mechanically) and not comparable.
@@ -542,19 +542,19 @@ available Vertex projects, only Haiku 4.5) + **Gemini 3.1 Pro** + **Gemini
   `lacuna_v2_0_3.json`. The classifier stream (short outputs) is unaffected by
   the empty-completion bug; α = 0.7649 stands (GCS raw spot-check pending).
 
-## [1.0.0] — 2026-05-24
+## [1.0.0] - 2026-05-24
 
 First stable release. Closes the v1 audit gaps, ships the v2.0.2 evaluation
 suite (3-rater LLM jury for classification and lacuna restoration), and
 publishes a polished frontend + backend pair to production.
 
-### Added — Research-grade evaluation infrastructure
+### Added: Research-grade evaluation infrastructure
 
-- **v2.0.2 classifier jury** — 3-rater (Claude Sonnet 4.6 + Gemini 2.5 Pro +
+- **v2.0.2 classifier jury**: 3-rater (Claude Sonnet 4.6 + Gemini 2.5 Pro +
   Llama 4 Maverick on Vertex AI) over a frozen 400-row stratified test
   split. **143 candidate-gold rows** at Krippendorff α = 0.7649; remaining
   99-row queue awaiting philologist α ≥ 0.80 spot-check.
-- **v2.0.2 lacuna jury** — ⚠️ **RETRACTED at v2.0.3** (see the [2.0.3] entry
+- **v2.0.2 lacuna jury**: ⚠️ **RETRACTED at v2.0.3** (see the [2.0.3] entry
   above). The Sonnet lacuna row and "Finding C" were a harness artifact:
   empty Vertex completions scored as hallucinations. Superseded by the
   v2.0.3 re-run (Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash).
@@ -562,17 +562,17 @@ publishes a polished frontend + backend pair to production.
   **0.313** (0.273 – 0.348), CharCNN 0.369, MicroTransformer 0.317,
   EmbeddingMLP (MiniLM, frozen) 0.124. Architecture-invariance among
   local-feature models confirmed; OOD dense embeddings fail.
-- **Pre-registration protocol** — `research/v2/PRE_REGISTRATION.md` is the
+- **Pre-registration protocol**: `research/v2/PRE_REGISTRATION.md` is the
   authoritative spec. Deviation §A documents the Sonnet-for-Opus
   substitution that closed at v2.0.2.
 
-### Added — Frontend polish (web app)
+### Added: Frontend polish (web app)
 
-- **WCAG 2.1 AA compliance** — Lighthouse a11y 92 → **100**. axe-core
+- **WCAG 2.1 AA compliance**: Lighthouse a11y 92 → **100**. axe-core
   Serious violations reduced 88 % across all 16 public routes
   (color-contrast, list semantics, landmark dedup, canvas alt text,
   scrollable-region keyboard access).
-- **Mobile performance refactor** — Lighthouse perf desktop **75 → 99**,
+- **Mobile performance refactor**: Lighthouse perf desktop **75 → 99**,
   mobile **75 → 92**. Mobile path now ships as Server Components
   (`MobileHome` + `MobileNav` + `MobileFooter`), with three
   `useSyncExternalStore`-gated dynamic-import islands for the rich
@@ -607,14 +607,14 @@ publishes a polished frontend + backend pair to production.
 
 ### Retracted
 
-- The earlier "**99 % macro F1**" headline on the classifier — that number
+- The earlier "**99 % macro F1**" headline on the classifier; that number
   was an in-training-set fit on a self-labelled subset, not held-out
   performance. The current honest number is `0.313 ± 0.038`.
 - The earlier "**Phil. Safety: High (Sentinels)**" qualitative label on
-  lacuna restoration — replaced by the explicit hallucination-rate metric
+  lacuna restoration, replaced by the explicit hallucination-rate metric
   and Finding C above.
 
-## [0.5.0] — 2026-05-10
+## [0.5.0] - 2026-05-10
 
 Pre-1.0 development milestones (Larth dataset ingestion, CIE Vol. I
 unification, FastAPI server, Vercel frontend, multilingual encoder, v1

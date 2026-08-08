@@ -1,4 +1,4 @@
-# Frozen classification split (Stream A) — superseded 2026-08-08 (text-disjoint)
+# Frozen classification split (Stream A), superseded 2026-08-08 (text-disjoint)
 
 ## Current state (2026-08-08)
 
@@ -26,7 +26,7 @@ train pool now known to leak 25 test texts.
 
 ---
 
-## Prior repair — 2026-07-17
+## Prior repair, 2026-07-17
 
 ## What happened
 
@@ -53,7 +53,7 @@ python -m research.v2.pipelines.classify_split \
 `openetruscan_clean.csv` is the public Zenodo deposit
 ([10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836)),
 SHA256 `4fc09af94005655bfe26affeeb48295c88606ae23c8dbc33ff5436f9083f69f8`
-(recorded in `SHA256SUMS`; the CSV itself stays out of git — fetch it with
+(recorded in `SHA256SUMS`; the CSV itself stays out of git; fetch it with
 `scripts/ops/fetch_data.py` or from the DOI).
 
 ## Verification that this is the split the jury ran on
@@ -82,10 +82,10 @@ reported training count. Tracked as an open reproducibility item in
 
 Immediately after the repair, the label provenance tag
 `gold:claude_hand_label` was renamed to `silver:claude_hand_label` in
-`research/data/openetruscan_labels.csv` (184 rows) — those labels are
+`research/data/openetruscan_labels.csv` (184 rows); those labels are
 LLM-derived, not philologist-validated, and the word "gold" invited
 miscitation. The split was regenerated after the rename; membership, row
-order, and silver labels are byte-identical — only the
+order, and silver labels are byte-identical; only the
 `silver_signal_source` strings changed (verified programmatically).
 
 `SHA256SUMS` pins all four artifacts; verify with `shasum -a 256 -c SHA256SUMS`

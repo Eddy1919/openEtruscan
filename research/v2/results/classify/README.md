@@ -1,9 +1,9 @@
-# Stream A evidence — v2.0.4 classification re-run (2026-08-08)
+# Stream A evidence: v2.0.4 classification re-run (2026-08-08)
 
 Committed raw evidence for the v2.0.4 clean re-run. Everything here is
 reproducible from the frozen split + this jury raw file; nothing lives only
-in cloud storage. (The v2.0.2 equivalents did — retired-project GCS bucket —
-and are unrecoverable. That loss is why this directory exists.)
+in cloud storage. (The v2.0.2 equivalents lived only in a retired project's
+GCS bucket and are unrecoverable. That loss is why this directory exists.)
 
 ## Why v2.0.4 exists
 
@@ -19,14 +19,14 @@ Stream A end-to-end on the text-disjoint 427/285 split with a fresh jury.
 |---|---|---|
 | Split | 400 test / 312 train, id-disjoint only, 25 leaked texts | 427 test / 285 train, text-disjoint (0 leaked) |
 | Jury | Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick | Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash (Vertex, 2026-08-08, 1,281 ratings, 0 API errors) |
-| Krippendorff α | 0.7649 | **0.8557** (lineage caveat: 2 of 3 raters are Gemini — shared lineage inflates α; same caveat as the v2.0.3 lacuna panel) |
+| Krippendorff α | 0.7649 | **0.8557** (lineage caveat: 2 of 3 raters are Gemini, and shared lineage inflates α; same caveat as the v2.0.3 lacuna panel) |
 | Candidate-gold | n=143 (labels LOST with retired project) | **n=167** (committed here) |
 | Queue / all-unsure | 79 / 178 | 59 / 201 |
 
 Candidate-gold class support: funerary 77, ownership 55, dedicatory 25,
 boundary 6, legal 4, **votive 0, commercial 0**. `macro_f1` averages over
 all 7 codebook classes regardless of support (`eval/classify_metrics.py`),
-so the two absent classes contribute structural zeros — the ceiling of the
+so the two absent classes contribute structural zeros; the ceiling of the
 metric on this gold set is 5/7 ≈ 0.714. The v2.0.2 numbers used the same
 convention.
 
@@ -56,7 +56,7 @@ one-sided p, seed=42):
 **Finding A (v2.0.2, "architecture-invariance among local-feature models")
 does not replicate at v2.0.4**: CharCNN now beats both TF-IDF+NB and
 MicroTransformer at p < 0.005 (paired). **Finding B (out-of-distribution
-dense embeddings underperform) replicates** — EmbeddingMLP is still last on
+dense embeddings underperform) replicates**: EmbeddingMLP is still last on
 macro F1 and significantly below TF-IDF+NB, though the gap narrowed
 (0.083 vs the ~0.19 marginal gap at v2.0.2).
 
@@ -64,7 +64,7 @@ macro F1 and significantly below TF-IDF+NB, though the gap narrowed
 
 | File | What |
 |---|---|
-| `classify_jury_raw_v2_0_4.jsonl` | 1,281 rows — every (rater, inscription) judgment with rationale |
+| `classify_jury_raw_v2_0_4.jsonl` | 1,281 rows: every (rater, inscription) judgment with rationale |
 | `classify_candidate_gold_v2_0_4.jsonl` | 167 unanimous rows with `gold_label` |
 | `classify_queue_v2_0_4.jsonl` | 59 disagreement rows for the philologist queue |
 | `classify_jury_summary_v2_0_4.json` | α, per-class α, disagreement pairs |
