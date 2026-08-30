@@ -29,11 +29,20 @@ treatment), confirm the Etruscan form, the gloss, and the locus, then set
 | `citation_modern` | modern treatment (Bonfante & Bonfante 2002; Wallace 2008; Pallottino TLE 1968) |
 | `confidence` | `high` / `medium` / `low` — philological confidence in the PAIR, independent of adjudication |
 | `notes` | disputes, transmission problems, competing readings |
-| `adjudication` | `{status: seeded|verified|rejected, by, date}` |
+| `adjudication` | `{status: seeded|llm_checked|verified|rejected, by, date}` |
+| `check_url` | required for `llm_checked`: the online edition/page the locus was corroborated against |
+
+## Adjudication ladder
+
+`seeded` (drafted from literature, unchecked) → `llm_checked` (an LLM with
+web access corroborated the locus against an online edition; `check_url`
+required; still not trusted) → `verified` (a human checked form, gloss, and
+locus against the sources) or `rejected` (reason in notes).
 
 ## Rules
 
 1. **No use before verification.** Only `verified` records may feed an eval.
+   `llm_checked` shortens the human's work; it never substitutes for it.
 2. **Eval before training.** Verified records extend the *evaluation* first
    (a new frozen split, generated the way
    `eval/harness/_generate_eval_split.py` did it — deterministic seed,
@@ -46,20 +55,26 @@ treatment), confirm the Etruscan form, the gloss, and the locus, then set
 4. **Rejected ≠ deleted.** Failed candidates stay, with reasons: negative
    adjudications are data.
 
-## Source map (where the next batches come from)
+## Source map and batch status (2026-08-30)
 
-- **Ancient authors' glosses** (seeded here, partially): the ~60 items
-  collected in TLE and Bonfante & Bonfante 2002 (glossary chapter).
-  Not yet seeded: the Dioscorides plant-name synonyms — the seeder was not
-  confident enough of individual items to draft them; take them directly
-  from a TLE copy.
-- **Bilinguals**: Pyrgi tablets (Etruscan–Phoenician); the ~30 Latin–Etruscan
-  epitaphs (CIE). Cross-referencing corpus ids against the TLE bilingual
-  list is scripted work; the equations they fix are mostly onomastic and
-  kinship/office.
-- **Modern lexica, pair-by-pair**: Bonfante & Bonfante 2002 glossary
-  (~350 entries), Wallace 2008 appendix. Copy facts with citations, not the
-  compilation wholesale.
+- **Ancient authors' glosses** — SEEDED and web-checked: the classic items
+  (Suetonius aesar, Varro subulo, Livy ister, Hesychius entries, Servius
+  capys/lucumo, Paul. ex Festo falado + arseverse, Liber glossarum months)
+  plus the full Dioscorides "nomina Tusca" set (16 forms, Wellmann loci,
+  TLE 808–853) with Briquel 2018's caveat recorded: those forms are Latin
+  in morphology and their Etruscan-language status is contested.
+- **Bilinguals** — the Benelli corpus (27 items + 4 related) is in
+  `bilinguals.jsonl` with ET/TLE/CIE numbers, texts, and the equation each
+  fixes. `crossref_bilinguals.py` matches them against the published corpus
+  (report: `crossref_report.csv`); the lautni = libertus urn (Pe 1.211) and
+  the Pesaro haruspex stone (Um 1.7) are corpus rows.
+- **Modern lexica, pair-by-pair** — SEEDED via `seed_lexicon_batch.py`:
+  ~195 records, each carrying its sources (Bonfante 2002 glossary via the
+  Wiktionary appendix; Steinbauer etruskisch.de; the Mc Callister glossary
+  with Pallottino/Bonfante codes; Liber Linteus/Pyrgi/numerals pages) and
+  its disputes (Steinbauer's shifted numeral row, leine, etera, cepen, meχ,
+  cilθ, tamera, ziva-). Wallace 2008 appendix remains to be mined
+  page-by-page from a physical/scanned copy.
 - **Combinatory candidates**: `research/anchors/attested.jsonl` (17 pairs,
   UNVERIFIED) and the IBM-1 miner output
   (`research/experiments/hybrid_embed/mine_pairs.py`) — both feed the same
