@@ -143,6 +143,33 @@ evaluation large enough to steer by — n=22 gloss pairs and 171 test
 sentences cannot rank five systems. Grow the frozen gold set before growing
 the silver set.
 
+### Retraining on the gold-gloss queue (WP10)
+
+`build_gloss_pairs.py` converts `research/anchors/gold_glosses/` (319
+records, llm_checked tier) into 221 training pairs and an independent
+71-item silver word-level eval (`eval_gloss_silver.py`; ~276-gloss candidate
+pool, chance p@10 0.036). Rosetta-TEST words are excluded from training;
+all rosetta words are excluded from the silver eval. The silver eval is
+llm_checked data, not the frozen benchmark — labeled accordingly.
+
+| variant | val MRR | En→Et R@10 | Et→En R@10 | full-idx R@10 | rosetta 22 | silver 71 p@10 |
+|---|---|---|---|---|---|---|
+| v1 full-finetune | 0.123 | 0.234 | 0.251 | 0.018 | 0.318 | 0.028 |
+| frozen + aug + mined | 0.101 | 0.181 | 0.193 | 0.029 | 0.409 | 0.028 |
+| frozen + gold-gloss | 0.114 | 0.240 | 0.234 | 0.035 | 0.409 | 0.042 |
+| frozen + aug + mined + gold-gloss | 0.108 | 0.222 | 0.263 | 0.026 | 0.364 | 0.085 |
+
+The gold-gloss pairs are the first ingredient that helps without a
+trade-off: frozen+gold-gloss matches v1 on sentence retrieval while
+doubling full-index R@10 and holding rosetta at 0.409. The combined variant
+posts the best silver score (0.085 = 2.4× chance, 6/71; binomial p≈0.03
+before any multiple-comparison correction across the four variants) and the
+best Et→En retrieval. The silver eval also separates systems the n=22
+rosetta could not: v1 and aug+mined sit at chance on it, the gold-gloss
+variants above. Absolute word-level numbers remain small — 221 word pairs
+is a lexicon seed, not a dictionary — and every silver label still awaits
+human verification upstream.
+
 ## Limits
 
 - Semantics is capped by data: 27.4% of rows have translations. WP9 uses
