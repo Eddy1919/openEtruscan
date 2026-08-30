@@ -1,0 +1,20 @@
+corpus_id,bilingual_ids,match,score,latin_text,bilingual_fixes,review_status
+Pe 1.211,ET Pe 1.211; TLE 606; Benelli 4.10,text,0.667,L. SCARPVS. SCARPIAE. L. POPA,lautni = libertus (key lexical fix),id_confirmed
+Um 1.7,ET Um 1.7; TLE 697; Benelli 4.1,text,0.5,[L. CA]FATIUS L. F. STE. HARUSPE[X] FULGURIATOR,netśvis = haruspex; trutnvt + frontac = fulguriator; Etruscan lr. rendered by Latin L.,id_confirmed
+Ar 1.3,ET Ar 1.3; Benelli 4.3,text,0.5,CN. LABERIVS A. F. POM.,Haprni = Laberius (free transposition); -isa genitive without Latin counterpart,id_confirmed
+10733,ET Vs 6.21; Benelli 4.26,text,1.0,LAPI,potter's marks; one of only two non-epitaphs in the corpus,needs_review
+10900,ET Vs 6.21; Benelli 4.26,text,1.0,LAPI,potter's marks; one of only two non-epitaphs in the corpus,needs_review
+CIE 2647,TLE 540,text,1.0,L. PVRNI. L. F.,fully Latin formula (f = filius) re-lettered in Etruscan script,needs_review
+Pe 1.219,ET Cl 1.219; Benelli 4.25,text,0.6,L. PHISIVS. L. L. EVCLES,second lautni = libertus fix (L. L. = Lucii libertus); Greek slave-name Eucles; Fisi = Phisius,needs_review
+CIE 276,ET AS 1.325; Benelli 4.5,text,0.5,C. LICINI. C. F. NIGRI,Lecne = Licinius (known since Lanzi 1789); Vel = C.; matronymic untranslated,needs_review
+CIE 273,ET AS 1.325; Benelli 4.5,text,0.5,C. LICINI. C. F. NIGRI,Lecne = Licinius (known since Lanzi 1789); Vel = C.; matronymic untranslated,needs_review
+16860,ET Pe 1.846; Benelli 4.9,text,0.5,MESIA. AR. L. F. TETIA GNATA,Meśi = Mesia; matronymic calque with GNATA; Etruscan omits female praenomen,needs_review
+2459,ET Pe 1.846; Benelli 4.9,text,0.5,MESIA. AR. L. F. TETIA GNATA,Meśi = Mesia; matronymic calque with GNATA; Etruscan omits female praenomen,needs_review
+14383,ET Pe 1.846; Benelli 4.9,text,0.5,MESIA. AR. L. F. TETIA GNATA,Meśi = Mesia; matronymic calque with GNATA; Etruscan omits female praenomen,needs_review
+CIE 2820,ET Pe 1.846; Benelli 4.9,text,0.5,MESIA. AR. L. F. TETIA GNATA,Meśi = Mesia; matronymic calque with GNATA; Etruscan omits female praenomen,needs_review
+CIE 2483,ET Cl 1.320; TLE 472; Benelli 4.13,text,0.5,Q. SCRIBONIVS. C. F.,the one translated gentilicium: zicu (scribe) = Scribonius,needs_review
+CIE 1849,ET Cl 1.354; TLE 462; CIL I2 2767; Benelli 4.18,text,0.5,C. TREBONI. Q. F. GELLIA. NATVS,Trepu = Trebonius; cae = borrowed Latin Caius,needs_review
+CIE 1850,ET Cl 1.354; TLE 462; CIL I2 2767; Benelli 4.18,text,0.5,C. TREBONI. Q. F. GELLIA. NATVS,Trepu = Trebonius; cae = borrowed Latin Caius,needs_review
+CIE 2505,ET Ta 0.22; Benelli 4.27,text,0.5,VEL MAX,the only southern-Etruria item; personal name in both scripts,needs_review
+CIE 1857,TLE 540,text,0.5,L. PVRNI. L. F.,fully Latin formula (f = filius) re-lettered in Etruscan script,needs_review
+CIE 2793,TLE 540,text,0.5,L. PVRNI. L. F.,fully Latin formula (f = filius) re-lettered in Etruscan script,needs_review

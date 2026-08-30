@@ -123,11 +123,16 @@ def main() -> None:
     ap.add_argument("--mined_csv", type=Path, default=None,
                     help="extra word-level (etr, gloss) TRAIN pairs from mining")
     ap.add_argument("--tag", default="v1", help="suffix for all output files")
+    ap.add_argument("--model_seed", type=int, default=SEED,
+                    help="seed for init/batch order ONLY; the train/val/test "
+                         "split always uses the fixed SEED so seeds are "
+                         "comparable on identical data")
     args = ap.parse_args()
     sfx = "" if args.tag == "v1" else f"_{args.tag}"
 
-    torch.manual_seed(SEED)
-    rng = np.random.default_rng(SEED)
+    torch.manual_seed(args.model_seed)
+    rng = np.random.default_rng(args.model_seed)  # batch order
+    split_rng = np.random.default_rng(SEED)       # split: fixed across seeds
 
     index_df = pd.read_csv(OUT / "index.csv", dtype={"surface": str, "translation": str})
     index_df["surface"] = index_df["surface"].fillna("")
@@ -138,7 +143,7 @@ def main() -> None:
     print(f"pairs: {len(pairs)}")
 
     groups = np.array(sorted(pairs["dup_group_id"].unique()), dtype=object)
-    rng.shuffle(groups)
+    split_rng.shuffle(groups)
     n = len(groups)
     val_g = set(groups[: n // 10])
     test_g = set(groups[n // 10 : 2 * (n // 10)])

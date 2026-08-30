@@ -162,13 +162,40 @@ llm_checked data, not the frozen benchmark — labeled accordingly.
 The gold-gloss pairs are the first ingredient that helps without a
 trade-off: frozen+gold-gloss matches v1 on sentence retrieval while
 doubling full-index R@10 and holding rosetta at 0.409. The combined variant
-posts the best silver score (0.085 = 2.4× chance, 6/71; binomial p≈0.03
-before any multiple-comparison correction across the four variants) and the
-best Et→En retrieval. The silver eval also separates systems the n=22
-rosetta could not: v1 and aug+mined sit at chance on it, the gold-gloss
-variants above. Absolute word-level numbers remain small — 221 word pairs
-is a lexicon seed, not a dictionary — and every silver label still awaits
-human verification upstream.
+posts the best silver score and the best Et→En retrieval. Absolute
+word-level numbers remain small — 221 word pairs is a lexicon seed, not a
+dictionary — and every silver label still awaits human verification.
+
+#### Seed variance + bootstrap CIs (statistical hygiene pass)
+
+frozen+gold-gloss retrained with three extra model seeds (init/batch order
+only; the split stays fixed), 95% percentile-bootstrap CIs over items:
+
+| run | silver p@10 (CI95) | rosetta p@10 (CI95) |
+|---|---|---|
+| v1 baseline | 0.028 [0.000, 0.070] | 0.318 [0.136, 0.500] |
+| frozen+gg (seed 20260830) | 0.042 [0.000, 0.099] | 0.409 [0.227, 0.636] |
+| frozen+gg seed 101 | 0.070 [0.014, 0.141] | 0.318 [0.136, 0.500] |
+| frozen+gg seed 202 | 0.056 [0.014, 0.113] | 0.273 [0.091, 0.455] |
+| frozen+gg seed 303 | 0.056 [0.014, 0.113] | 0.364 [0.182, 0.591] |
+| frozen+aug+mined+gg | 0.085 [0.028, 0.155] | 0.364 [0.182, 0.591] |
+
+Two readings. The direction is seed-stable: every gold-gloss run beats the
+baseline's 0.028 on the silver eval (seed mean 0.056 ± 0.012, chance
+0.036). And no single run clears chance at the 95% level — every CI still
+contains 0.036, and the rosetta CIs span half the unit interval, which is
+the n=22 problem stated as an interval. Conclusion unchanged, now with
+error bars: the effect is real-looking but small, and certifying it needs
+the verified gold eval, not another training run.
+
+#### Cross-lingual router leg, retested with the frozen+gg towers
+
+Still hurts: lexical NDCG@10 0.371 (BM25 + late-interaction) vs 0.331 with
+the cross-lingual leg added; the leg alone scores 0.008. Structural, not a
+tower-quality problem: the frozen queries are Etruscan surface strings, so
+an English-side encoder cannot help on this benchmark by construction.
+English-query search needs its own labeled query set before it can be
+evaluated at all.
 
 ## Limits
 
