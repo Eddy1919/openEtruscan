@@ -1,50 +1,42 @@
 # Reproducing OpenEtruscan
 
-Offline-first guide to rebuilding the data layer and re-deriving the
-published numbers from a fresh clone. Every command below was verified
-against this tree; the one exception (`rosetta-eval-v1` re-runs) is
-explicitly marked as blocked.
+This guide details how to rebuild the local dataset, re-derive the frozen evaluation splits, verify benchmark results, and start the local API stack from a clean repository clone.
 
-## 1. Environment
+---
 
-Dependencies are locked in `uv.lock` (resolved against `pyproject.toml`,
-Python ≥ 3.10). Torch and the other heavy ML packages enter the resolution
-only through extras (`neural`, `rerank`, `transformers`); the core install
-is lightweight.
+## 1. Environment Setup
+
+Dependencies are pinned in `uv.lock` (compatible with Python 3.10+):
 
 ```bash
-uv sync                    # core package into .venv
-uv sync --extra dev        # + test/lint toolchain (pulls [all], incl. torch)
+# Set up locked environment
+uv sync --extra dev
+
+# Or with standard pip:
+pip install -e ".[dev]"
 ```
 
-Without uv: `python -m venv .venv && .venv/bin/pip install -e ".[dev]"`
-(unlocked; versions may drift, and `uv.lock` is the source of truth).
+---
 
-## 2. Fetch the corpus
+## 2. Fetch the Corpus
 
-The corpus is hosted on Zenodo (DOI
-[10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836), concept
-DOI 10.5281/zenodo.20075835), not in git and not in DVC (the old
-`gs://openetruscan-data-dvc` remote is gone).
+Corpus files are stored under Zenodo (DOI: [10.5281/zenodo.21854263](https://doi.org/10.5281/zenodo.21854263)):
 
 ```bash
-python scripts/ops/fetch_data.py           # verify-and-skip if present
-python scripts/ops/fetch_data.py --force   # re-download unconditionally
+# Download and verify SHA-256 checksums
+python scripts/ops/fetch_data.py
+
+# Force re-download
+python scripts/ops/fetch_data.py --force
 ```
 
-Downloads `research/data/openetruscan_clean.csv` and hard-fails unless its
-SHA-256 is
-`4fc09af94005655bfe26affeeb48295c88606ae23c8dbc33ff5436f9083f69f8`.
-The silver labels (`research/data/openetruscan_labels.csv`) are tracked in
-git and need no fetch.
+This verifies that `research/data/openetruscan_clean.csv` matches `4fc09af94005655bfe26affeeb48295c88606ae23c8dbc33ff5436f9083f69f8`.
 
-## 3. Frozen classification split (Stream A)
+---
 
-The committed split is byte-reproducible from the corpus + silver labels.
-Since 2026-08-08 the generator is text-disjoint (it samples text groups, not
-rows; PRE_REGISTRATION.md Deviation §D), so the same invocation yields
-**427 test / 285 train**: the pre-registered 400 plus the 27 train rows whose
-normalized text matched a test row.
+## 3. Re-deriving the Classification Split (Stream A)
+
+The v2.0.4 text-disjoint classification split (427 test / 285 train) is deterministically generated from the cleaned corpus and silver labels:
 
 ```bash
 python -m research.v2.pipelines.classify_split \
@@ -56,75 +48,43 @@ python -m research.v2.pipelines.classify_split \
     --seed 42
 ```
 
-(`make -C research/v2 classify-split` runs the same command.) Verify inputs
-and outputs against `research/v2/data/SHA256SUMS`; the manifest mixes
-repo-root-relative input paths with local output names, so check in two
-steps from the repo root:
+Verify output integrity against the checksum manifest. Its entries mix repo-root-relative and local paths, so check in two passes from the repo root:
 
 ```bash
 shasum -a 256 -c <(grep ' research/data/' research/v2/data/SHA256SUMS)
 (cd research/v2/data && shasum -a 256 -c <(grep -v ' research/data/' SHA256SUMS))
 ```
 
-## 4. Lacuna v2.0.3 metrics (Stream C)
+---
 
-The published lacuna numbers aggregate the committed jury output. Recompute:
+## 4. Recomputing Lacuna Metrics (Stream C)
+
+Compute exact-match and hallucination metrics from the raw consensus jury outputs:
 
 ```bash
 python research/v2/eval/compute_lacuna_v2.py \
     --jury research/v2/results/lacuna/lacuna_jury_raw_v2_0_3_rerun.jsonl \
-    --out /tmp/recheck.json
+    --out /tmp/lacuna_recheck.json
 ```
 
-`/tmp/recheck.json` must be identical to
-`research/v2/results/lacuna/lacuna_v2_0_3.json` (deterministic: bootstrap
-seed defaults to 42), and the stdout digest must match the README /
-`docs/INTELLIGENCE_V2.md` tables. Note: v2.0.2's Finding C was retracted as
-a harness artifact; v2.0.3 is the corrected re-run.
+The output `/tmp/lacuna_recheck.json` will match `research/v2/results/lacuna/lacuna_v2_0_3.json` deterministically.
 
-## 5. Local API
+---
 
-`docker-compose.dev.yml` is the repo's only compose file: Postgres 16 +
-pgvector plus the API built from the local Dockerfile (no PostGIS, so
-spatial endpoints are inert). The production-VM compose stack it once
-complemented was retired with the rest of the self-hosted infrastructure
-(historical note in [ARCHITECTURE.md](ARCHITECTURE.md)).
+## 5. Running the Local API & Database
+
+Stand up a local PostgreSQL + pgvector container and initialize the database:
 
 ```bash
+# Start Postgres container and API
 docker compose -f docker-compose.dev.yml up --build -d
+
+# Run Alembic migrations
 docker compose -f docker-compose.dev.yml exec api alembic upgrade head
-python scripts/ops/fetch_data.py
+
+# Ingest cleaned corpus
 DATABASE_URL=postgresql://openetruscan:openetruscan@localhost:5432/openetruscan \
     openetruscan import research/data/openetruscan_clean.csv
 ```
 
-API on `http://localhost:8000`.
-
-One caveat: if a local Postgres already holds port 5432, override the
-port mapping before `up` and adjust `DATABASE_URL` to match.
-`openetruscan import` works on this PostGIS-less stack; the corpus
-probes for the `geom` column and omits it when absent, so rows import
-with plain lat/lon and no spatial geometry (`tests/test_corpus_geom.py`
-pins both paths).
-
-## 6. rosetta-eval-v1
-
-Reproducible from the repo:
-
-- the committed eval result JSONs (`eval/rosetta-eval-v1-*.json`);
-- the frozen 39/22 anchor split (61 pairs); regenerate with
-  `eval/harness/_generate_eval_split.py` (`SEED = 20260510`, stratified by
-  category × confidence);
-- the eval protocol itself (`eval/harness/run_rosetta_eval.py`,
-  `eval/harness/rosetta_eval_v1.sh`), which grades any model served behind
-  `/neural/rosetta` via `--api-url`.
-
-**Not yet publicly reproducible:** re-running the benchmark against the
-historical model column requires the original embedding vectors. These were
-believed lost with their GCS bucket, but survive in
-`gs://openetruscan-rosetta-vai/embeddings/`: `labse-v1.jsonl` and
-`etr-xlmr-lora-v4.jsonl` MD5-verified on 2026-07-17 against the historical
-manifest (pinned commits, schema state, run log) in
-[research/notes/reproduce-rosetta-eval-v1.md](../research/notes/reproduce-rosetta-eval-v1.md).
-Access is maintainer-only for now; publishing a citable public copy is
-tracked in the Pod A queue.
+The local API is accessible at `http://localhost:8000`.

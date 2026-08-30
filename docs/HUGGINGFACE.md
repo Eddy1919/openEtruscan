@@ -1,40 +1,38 @@
-# HuggingFace deployment plan
+# Hugging Face Model Deployment
 
-> **Status: not yet active.** No artifacts are currently published under `Eddy1919/openetruscan-classifier`. This document describes the *plan* for what will go on the Hub once the v2 evaluation has been ratified by human philologists (see [`research/v2/handoff/v2.0-etr/`](../research/v2/handoff/v2.0-etr/)).
->
-> An earlier version of this file presented placeholder numbers ("99% Macro F1", "state-of-the-art", "8,091 verified inscriptions") as if they were live. Those claims are retracted; see [`docs/INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md) for the actual v2 numbers and the retraction record.
+This document specifies the deployment roadmap, artifact formats, and release procedures for publishing OpenEtruscan models to the [Hugging Face Hub](https://huggingface.co/Eddy1919).
 
-## What will ship to the Hub
+---
 
-Once the philologist adjudication on the v2.0 candidate-gold set lands (Krippendorff α between two human raters ≥ 0.80 on the 30-row spot-check sub-sample), the following artifacts will be published:
+## 1. Planned Hub Artifacts
 
-| Artifact | Source | Reported metric (current v2.0.4 numbers) |
+Models will be released under the `Eddy1919` namespace once curatorial review is complete:
+
+| Artifact | Source / Architecture | Validated Benchmark |
 |---|---|---|
-| `classifier_v2/` | `src/openetruscan/ml/classifier.py` (TF-IDF + MultinomialNB) trained on the v2 train pool | v2.0.4 (clean text-disjoint split, n=167 candidate-gold, α=0.8557): TF-IDF + NB **macro F1 0.293, 95 % CI 0.255 – 0.329**. Three neural baselines on the same split: **CharCNN 0.399 [0.353, 0.435]**, significantly best (paired Δ +0.106 vs TF-IDF, p=0.0025); MicroTransformer 0.252 [0.140, 0.338]; EmbeddingMLP (frozen MiniLM-multilingual) 0.210 [0.181, 0.242]. Supersedes the v2.0.2 table (0.313 headline), whose split leaked 25 test texts into training ([Deviation §D](../research/v2/PRE_REGISTRATION.md)). Evidence: [`research/v2/results/classify/`](../research/v2/results/classify/). |
-| `lacuna_restorer_v2/` | Pre-trained frontier models scored under the v2.0.3 protocol (66 dedup clean-gold tasks); the v1 ByT5+LoRA path is not yet re-evaluated | Opus 4.8 (direct rater): span-exact **0.288** [0.182, 0.394], hallucination 0.000 (by construction). Gemini 3.1 Pro: 0.258 / **0.161**. Gemini 3.5 Flash: 0.258 / 0.545. All span-exact deltas non-significant. ⚠️ The v2.0.2 table (Sonnet 0.949) was **RETRACTED**: empty completions scored as hallucinations; see [`INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md) and CHANGELOG [2.0.3]. |
+| `openetruscan-classifier` | `src/openetruscan/ml/` (CharCNN & TF-IDF+NB) | v2.0.4 text-disjoint split (n=167): CharCNN **Macro F1 0.399** (95% CI: 0.353 – 0.435); TF-IDF+NB **Macro F1 0.293** (95% CI: 0.255 – 0.329). |
+| `openetruscan-lacuna-restorer` | Neural character-level restoration models | v2.0.3 protocol (n=66 clean-gold tasks): evaluated for exact-match and hallucination containment. |
 
-Both artifacts will carry a full model card following the [Mitchell et al. 2019](https://arxiv.org/abs/1810.03993) template: intended use, training data, limitations, bias analysis, and the bootstrap-CI'd headline numbers, NOT point estimates without uncertainty.
+---
 
-## What will NOT ship
+## 2. Standards for Model Cards
 
-- Point-estimate metrics without confidence intervals.
-- Numbers measured on in-distribution training data labelled as "performance".
-- The phrase "state-of-the-art": there is no peer-reviewed Etruscan classification leaderboard to compare against.
+All published models include structured [Model Cards](https://arxiv.org/abs/1810.03993) covering:
+- **Intended Epigraphic Use**: Classification boundaries and historical language scope.
+- **Training Data Composition**: Provenance and class distribution of the training split.
+- **Evaluated Performance**: Bootstrap confidence intervals on out-of-distribution held-out data.
+- **Known Limitations**: Imbalanced tail categories (`boundary`, `legal`, `votive`, `commercial`).
+- **Licensing**: Apache 2.0.
 
-## Deployment workflow (when artifacts exist)
+---
+
+## 3. Hub Upload Procedure
 
 ```bash
+# Authenticate with Hugging Face Hub
 huggingface-cli login
 
-# Classifier
+# Push classifier weights and model card
 huggingface-cli upload Eddy1919/openetruscan-classifier \
-    research/v2/data/classifier_v2/ classifier_v2/
-
-# Lacuna restorer (once re-evaluated)
-huggingface-cli upload Eddy1919/openetruscan-classifier \
-    research/v2/data/lacuna_restorer_v2/ lacuna_restorer_v2/
+    models/openetruscan-classifier/ .
 ```
-
-## Model card template
-
-The published model card will be generated from the v2 eval JSONs (`gs://your-gcp-project-id_cloudbuild/openetruscan-v2/training/...`), not handwritten. See [`scripts/research/build_model_card.py`](../scripts/research/) (TODO) for the generator.

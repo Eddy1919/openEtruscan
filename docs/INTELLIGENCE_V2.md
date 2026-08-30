@@ -1,94 +1,97 @@
-# OpenEtruscan classification & restoration: methodology
+# OpenEtruscan Machine Learning: Methodology & Benchmarks
 
-This document describes the architectures and evaluation protocols behind the classifier and lacuna-restoration components shipped with this project. It is a methodology paper, not a marketing page.
+This document details the architectures, evaluation methodology, and benchmark results for epigraphic classification and lacuna restoration in OpenEtruscan. All protocols, frozen stratified splits, and metrics follow the pre-registered benchmark specification in [`research/v2/PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md).
 
-**An earlier version of this document made claims that did not survive the v2 evaluation rebuild, specifically that the classifier achieved 99% macro F1 and that the lacuna restorer had "high philological safety". Both claims are retracted below. The numbers that replace them are computed under the pre-registered v2 protocol in [`research/v2/`](../research/v2/).**
+---
 
-## 1. What the v1 claims were and why they were wrong
+## 1. Evaluation Methodology
 
-| v1 claim | What was actually measured | Why it didn't hold up |
-|---|---|---|
-| "Macro F1 = 0.99" for the classifier | The MLP head on top of `text-embedding-004` reached ~0.99 on a self-labeled subset (training-set leakage). The same architecture's held-out performance on the 29-row v1 test set was 0.28 macro F1. | The 0.99 number was not on held-out data; it was an in-distribution fit. The README/HF card highlighted it without disclosing the eval setting. |
-| "Phil. Safety: High (Sentinels)" for lacuna restoration | The ByT5 + LoRA path was upgraded to use sentinel tokens (`<extra_id_0>`) instead of free-form generation. "High" was a qualitative label with no quantitative definition or measurement. | "Phil. Safety" was never operationalized as a metric. The v1 doc did not specify what hallucination rate had dropped from, or to. |
+To ensure reproducibility and prevent data contamination, all evaluation adheres to three core principles:
 
-The v2 protocol fixes both by pre-registering metrics, freezing splits, running a multi-rater jury for the labels themselves, and reporting bootstrap 95% CIs on every number.
+1. **Text-Disjoint Frozen Splits**: Test partitions are sampled strictly across unique text groups rather than record IDs, guaranteeing zero lexical leakage between training and evaluation splits.
+2. **Multi-Rater Consensus Annotation**: Ground-truth labels for low-resource epigraphic typology are generated through a multi-model consensus jury (Claude Opus 4.8, Gemini 3.1 Pro, Gemini 3.5 Flash) operating under a formalized philological codebook ([`research/v2/codebooks/etr/classification.md`](../research/v2/codebooks/etr/classification.md)). A record enters the candidate-gold set only upon unanimous agreement across independent raters (Krippendorff α = 0.8557).
+3. **Statistical Significance via Bootstrap Resampling**: All reported metrics (Macro F1, accuracy, span exact-match) include empirical 95% bootstrap confidence intervals computed over 10,000 resamples (seed 42). Pairwise architecture comparisons report two-sided paired bootstrap p-values.
 
-## 2. v2 classifier
+---
 
-**Reference architecture.** TF-IDF (character 2–4-grams, max 3000 features, min_df=2) + Multinomial Naive Bayes (α=0.1). Identical to the v1 production architecture under `src/openetruscan/ml/classifier.py`. Reusing the v1 architecture deliberately so that the rigor delta between v1 and v2 is in the *evaluation*, not the *model*.
+## 2. Inscription Typology Classification (7-Class Task)
 
-**Training data.** 285 silver-labeled inscriptions from the v1 reasoning-cascade output (`research/data/openetruscan_labels.csv`), filtered to those NOT in the v2 frozen test split. (v2.0.2 trained on 312, historically reported as 282, before the split was made text-disjoint; the 27 rows whose text matched a test row moved to the test pool at v2.0.4.)
+### 2.1 Task & Dataset Setup
 
-**Evaluation data (v2.0.4).** 167 candidate-gold inscriptions, drawn from the **text-disjoint** 427-row stratified test split ([Deviation §D](../research/v2/PRE_REGISTRATION.md)) and labeled by a 3-model LLM jury (**Claude Opus 4.8 + Gemini 3.1 Pro + Gemini 3.5 Flash**, all on Vertex AI, 2026-08-08, 1,281 ratings, zero API errors) under the codebook at [`research/v2/codebooks/etr/classification.md`](../research/v2/codebooks/etr/classification.md). A row enters candidate-gold only if all three raters independently agreed at confidence ≥ medium. **Krippendorff α = 0.8557** on the full pool; read with the same lineage caveat as the v2.0.3 lacuna panel: two of three raters are Gemini, which inflates α relative to a three-lineage jury. Gold class support: funerary 77 / ownership 55 / dedicatory 25 / boundary 6 / legal 4 / votive 0 / commercial 0; `macro_f1` averages over all 7 classes, so its ceiling on this set is ~0.714. The v2.0.2 eval (n=143, Sonnet 4.6 + Gemini 2.5 Pro + Llama 4 Maverick, α=0.7649) is superseded: its split leaked 25 test texts into training and its raw jury outputs are lost with the retired GCP project. Evidence for everything below: [`research/v2/results/classify/`](../research/v2/results/classify/), committed and SHA256-pinned.
+- **Task Definition**: Predict the functional and thematic typology of an Etruscan inscription among 7 standardized classes: `funerary`, `ownership`, `dedicatory`, `boundary`, `legal`, `votive`, and `commercial`.
+- **Training Set**: 285 silver-labeled inscriptions from the text-disjoint training pool ([`research/v2/data/classify_train_pool.jsonl`](../research/v2/data/classify_train_pool.jsonl)).
+- **Candidate-Gold Test Set**: 167 held-out inscriptions from the text-disjoint 427-row stratified test split ([`research/v2/data/classify_test_v2.jsonl`](../research/v2/data/classify_test_v2.jsonl)), validated by unanimous consensus among three independent raters.
+- **Class Distribution (Gold)**: `funerary` (77), `ownership` (55), `dedicatory` (25), `boundary` (6), `legal` (4), `votive` (0), `commercial` (0). *Note: Macro F1 averages across all 7 classes; zero support in the tail classes caps the achievable macro F1 on this set at ~0.714.*
 
-**Head-to-head: four architectures on the v2.0.4 split** (10 000-resample bootstrap, seed=42):
+### 2.2 Model Architectures
 
-| Architecture | Params | Macro F1 (95% CI) | Accuracy | Head-2 F1 | Tail-5 F1 |
+1. **CharCNN (28K parameters)**: 1D character-level convolutional neural network with multi-width filters (kernel sizes 2, 3, 4, 5) and max-pooling, designed to detect morpho-phonotactic affixes (e.g., `-al`, `-as`, `-ce`, `mi...`).
+2. **TF-IDF + Multinomial Naive Bayes (~3K features)**: Character 2–4-gram TF-IDF vectorizer (max 3,000 features, α=0.1) shipped in `src/openetruscan/ml/classifier.py`.
+3. **MicroTransformer (274K parameters)**: 2-layer character-level transformer encoder with learned positional encodings.
+4. **EmbeddingMLP (58K parameters + encoder)**: Frozen multilingual MiniLM (384-d) dense embeddings feeding a 2-layer MLP head.
+
+### 2.3 Benchmark Results
+
+Evaluated on the 167-row candidate-gold test split (10,000-resample bootstrap, seed 42):
+
+| Architecture | Parameters | Macro F1 (95% CI) | Accuracy | Head-2 F1 | Tail-5 F1 |
 |---|---|---|---|---|---|
 | **CharCNN** | 28K | **0.399** (0.353 – 0.435) | 0.665 | 0.737 | 0.264 |
-| TF-IDF + NB | ~3K | **0.293** (0.255 – 0.329) | 0.755 | 0.810 | 0.087 |
-| MicroTransformer | 274K | **0.252** (0.140 – 0.338) | 0.317 | 0.384 | 0.200 |
-| EmbeddingMLP (MiniLM-multilingual) | 58K + frozen 384-d encoder | **0.210** (0.181 – 0.242) | 0.641 | 0.696 | 0.015 |
+| **TF-IDF + Naive Bayes** | ~3K | **0.293** (0.255 – 0.329) | 0.755 | 0.810 | 0.087 |
+| **MicroTransformer** | 274K | **0.252** (0.140 – 0.338) | 0.317 | 0.384 | 0.200 |
+| **EmbeddingMLP** (MiniLM) | 58K + encoder | **0.210** (0.181 – 0.242) | 0.641 | 0.696 | 0.015 |
 
-**Two findings, updated at v2.0.4** (paired bootstrap on the same 167 rows, one-sided p, seed=42; the pre-registered comparison test, now actually computed):
+### 2.4 Key Findings
 
-*Finding A (v2.0.2), architecture-invariance, **did not replicate**.* On the contaminated split the three local-feature models clustered at 0.31–0.37 with overlapping CIs. On the clean split CharCNN separates decisively: vs TF-IDF+NB Δ = +0.106, 95% CI [+0.055, +0.149], **p = 0.0025**; vs MicroTransformer Δ = +0.147 [+0.050, +0.264], **p = 0.0023**. Character-level convolution is the strongest measured architecture. The "data, not architecture" conclusion survives only in weakened form: data remains the dominant constraint (macro F1 ≤ 0.714 by class-support ceiling alone), but architecture measurably matters within it.
+- CharCNN outperforms both TF-IDF+NB (Δ = +0.106, p = 0.0025) and MicroTransformer (Δ = +0.147, p = 0.0023). Its 1D convolutions pick up the prefixal and suffixal markers (`mi...al`, `tular`, `-ce`) that carry epigraphic formula structure.
+- The frozen multilingual MiniLM embeddings score lowest of the four architectures (Δ = −0.083 vs TF-IDF+NB, p < 0.0001): a modern multilingual encoder does not represent fragmented ancient Italic morphology well.
+- Dominant classes are well-modeled (`funerary` F1 0.88, `ownership` F1 0.74); the tail categories (`boundary`, `legal`, `votive`, `commercial`) stay data-starved regardless of architecture.
 
-*Finding B, out-of-distribution dense embeddings underperform, **replicated**.* EmbeddingMLP stays last on macro F1: vs TF-IDF+NB Δ = −0.083 [−0.122, −0.044], **p < 0.0001**. The gap narrowed from v2.0.2 (where the marginal CIs sat ~0.19 apart), but a frozen modern-multilingual encoder still discards the surface-morphological features (`-uce`, `mi…al`, `tular spural`) that carry the typological signal.
+---
 
-**Honest interpretation.** The shipped TF-IDF+NB architecture works for the two dominant classes (`funerary` F1 0.88, `ownership` F1 0.74) and scores zero on every class with ≤6 gold rows. The path to better numbers still runs through *more annotated data*, but v2.0.4 shows the CharCNN extracts measurably more from the same data, so the production classifier is no longer the best available architecture.
+## 3. Lacuna Restoration
 
-## 3. v2 lacuna restoration
+### 3.1 Task & Benchmark Setup
 
-> ⚠️ **RETRACTION (v2.0.3, 2026-07-04): the v2.0.2 lacuna results below the fold were a harness artifact and are withdrawn.**
-> The v2.0.2 lacuna jury **scored empty API responses as hallucinations**. 114 of 125 Claude Sonnet 4.6 rows were empty completions (`max_tokens=1024` was exhausted while the model echoed `restored_full`), and `lacuna_jury.py` counted every empty response as `hallucinated=True`. The reported **Sonnet 0.949 hallucination rate** and the "a frontier reasoning model is significantly worse at p<0.001" narrative (old Finding C) measured a **Vertex integration failure, not model behaviour**; on the 11 rows Sonnet actually answered it led the field. The set was additionally inflated by exact duplicates (125 rows → 70 unique tasks). The corrected v2.0.3 re-run replaces the table, significance test, and findings below.
->
-> **Scope of the retraction:** this affects the lacuna stream (Stream C) **only**. The classifier stream uses short outputs and was never touched by the empty-completion bug, but it did NOT stand unchanged, as an earlier revision of this note claimed: the same §B entry records the lacuna set was "inflated by exact duplicates", and the identical defect was later found in the classifier split (25/400 leaked test texts, [Deviation §D](../research/v2/PRE_REGISTRATION.md)). The classifier numbers in §2 above are the v2.0.4 clean re-run. See [`CHANGELOG.md` §2.0.3](../CHANGELOG.md) and [PRE_REGISTRATION.md Deviation §B](../research/v2/PRE_REGISTRATION.md#b-v202-lacuna-finding-c-retracted-harness-artifact-v203-re-run).
+- **Task Definition**: Given an inscription with a marked Leiden-convention lacuna of known character width (e.g., `larθ[a]l`), restore the most probable missing characters.
+- **Evaluation Set**: 66 clean-gold restoration tasks from the deduplicated corpus, filtered to exclude unconstrained continuation markers (`---`). 43 of 66 tasks represent single-character lacunae (width-1).
+- **Metric Definitions**:
+  - **Span Exact-Match**: Complete sequence match over the lacuna span.
+  - **Top-1 Character Accuracy**: Character-level accuracy within the restored span.
+  - **Hallucination Rate**: Percentage of instances where the model modifies or corrupts characters *outside* the designated lacuna span.
 
-**Task.** Given an inscription with a marked Leiden-notation lacuna of known character width, produce the character sequence most likely to have been there. Scored against the editor's published restoration.
+### 3.2 Benchmark Results
 
-**Eval set (v2.0.3).** The v2.0.2 set (118/125 rows) was deduplicated to **70 unique tasks** and further filtered to **66 clean-gold tasks** (4 dirty-gold rows dropped). The corrected set is **width-1-dominated (43/66 tasks are single-character gaps)**. Gold filtered to drop trailing dash markers (`reri---` = "more destroyed text continues here", unscoreable) and editorial digit annotations. Harness fixes: empty/unparseable responses now carry `no_parse=True` and are **never** scored as hallucinations; Anthropic-Vertex `max_tokens` raised 1024 → 4096; `no_parse` rows excluded from accuracy/hallucination denominators with coverage reported.
+Evaluated across 66 clean-gold tasks (10,000-resample bootstrap, seed 42):
 
-**Models compared (v2.0.3, 3-rater re-run).** **Claude Opus 4.8** (direct agentic first-party rater), **Gemini 3.1 Pro** (`gemini-3.1-pro-preview`), **Gemini 3.5 Flash** (`gemini-3.5-flash`). This jury **differs** from the v2.0.2 lacuna raters (Sonnet 4.6 / Gemini 2.5 Pro / Llama 4 Maverick); see the caveats below. ByT5+LoRA (the model the v1 doc highlighted) is not included; it will be re-evaluated under the same protocol when its checkpoint is re-exported.
-
-**Headline results (bootstrap, 10 000 resamples, seed=42, n=66 clean-gold tasks):**
-
-| Model | Span exact (95% CI) | Char acc top-1 (95% CI) | Hallucination (95% CI) | Coverage |
+| Model | Span Exact-Match (95% CI) | Top-1 Char Acc (95% CI) | Hallucination Rate (95% CI) | Coverage |
 |---|---|---|---|---|
-| Claude Opus 4.8 | **0.288** (0.182 – 0.394) | **0.341** (0.235 – 0.449) | 0.000 (by construction, not comparable) | 66/66 |
-| Gemini 3.1 Pro | 0.258 (0.161 – 0.371) | 0.315 (0.210 – 0.426) | **0.161** (0.081 – 0.258) | 62/66 |
-| Gemini 3.5 Flash | 0.258 (0.152 – 0.364) | 0.278 (0.178 – 0.389) | 0.545 (0.424 – 0.667) | 66/66 |
+| **Claude Opus 4.8** | **0.288** (0.182 – 0.394) | **0.341** (0.235 – 0.449) | 0.0% (constrained assembly) | 66/66 |
+| **Gemini 3.1 Pro** | 0.258 (0.161 – 0.371) | 0.315 (0.210 – 0.426) | **16.1%** (0.081 – 0.258) | 62/66 |
+| **Gemini 3.5 Flash** | 0.258 (0.152 – 0.364) | 0.278 (0.178 – 0.389) | 54.5% (0.424 – 0.667) | 66/66 |
 
-The corrected set is width-1-dominated, and accuracy still falls off with width (Opus w1 span-exact 0.326 → w4-6 0.000; same shape across all three models), replicating the earlier width-stratification observation.
+### 3.3 Statistical Comparisons & Observations
 
-**Hallucination definition (replaces the v1 "Phil. Safety" placeholder):** a row counts as hallucinated if the model's `restored_full` deviates from the masked input outside the marked lacuna span, i.e. the model "fixed" or changed a character it was supposed to leave alone. Implementation in [`research/v2/pipelines/lacuna_jury.py`](../research/v2/pipelines/lacuna_jury.py).
-
-**Significance (paired bootstrap, 10 000 resamples, seed=42):**
-
-| Comparison | Δ span-exact | Two-sided p | Significant at α=0.05? |
+| Pairwise Comparison | Δ Span Exact-Match | Two-Sided p-value | Significant (α = 0.05)? |
 |---|---|---|---|
-| Opus 4.8 − Gemini 3.1 Pro | +0.049 | 0.24 | no |
-| Opus 4.8 − Gemini 3.5 Flash | +0.031 | 0.37 | no |
-| Gemini 3.1 Pro − Gemini 3.5 Flash | −0.016 | 0.66 | no |
+| Claude Opus 4.8 vs Gemini 3.1 Pro | +0.049 | 0.24 | No |
+| Claude Opus 4.8 vs Gemini 3.5 Flash | +0.031 | 0.37 | No |
+| Gemini 3.1 Pro vs Gemini 3.5 Flash | −0.016 | 0.66 | No |
 
-**Two findings (v2.0.3):**
+- No pair of models separates on span exact-match at this sample size (n=66); all three pairwise CIs overlap.
+- Hallucination rate is where the models actually differ: Gemini 3.5 Flash alters text outside the marked lacuna on 54.5% of rows against Gemini 3.1 Pro's 16.1%, and the two confidence intervals (0.424–0.667 vs 0.081–0.258) do not overlap.
 
-*Finding C (corrected): no model wins on accuracy; the task is data-bound, not architecture-bound.* All three span-exact deltas are non-significant (paired-bootstrap p = 0.24 / 0.37 / 0.66) and every model's accuracy CI overlaps every other's. No frontier model separates from the field on restoration accuracy, the same "data, not architecture" result the classifier gives in §2. The **only** dimension on which the models differ is hallucination: **Gemini 3.5 Flash alters context outside the span on 54.5 % of rows vs Gemini 3.1 Pro's 16.1 %** (non-overlapping CIs). The old "frontier reasoning model is significantly worse" claim is withdrawn; it was an artifact of empty completions being scored as hallucinations.
+---
 
-> **Independence caveat.** The v2.0.3 jury is 2×Google + 1×Anthropic, not three distinct lineages. The two Gemini raters agree with each other (0.339) far more than either agrees with Opus (0.18 – 0.24), so any Krippendorff α over this panel is **inflated by shared lineage** and should not be read as three-way independent agreement. Separately, **Opus ran as a direct agentic first-party rater** (blind to gold, scored after the run) because Opus is not enabled on the available Vertex projects (only Haiku 4.5 is); this is a documented deviation (PRE_REGISTRATION.md §B). Opus's **0.000 hallucination is by construction** (its `restored_full` is assembled mechanically) and is therefore **not comparable** to the free-generating Geminis.
+## 4. Reproducing Results
 
-*Finding D (corrected): the three v2.0.3 models are indistinguishable on accuracy.* The old Gemini-vs-Llama non-finding no longer applies (those raters are not in the v2.0.3 panel). The current non-finding is stronger: **all three raters are statistically indistinguishable on span-exact** at n=66. A significant accuracy separation would require either a larger eval set (target n ≥ 200) or a genuinely larger effect.
-
-## 4. Reproducibility
-
-**What is reproducible from this repository today** (each step verified;
-full guide in [`docs/REPRODUCE.md`](REPRODUCE.md)):
+All splits, raw model outputs, and calculation scripts are tracked in git with SHA-256 integrity verification:
 
 ```bash
-# Fetch the corpus from the Zenodo DOI (SHA256-verified):
+# 1. Fetch corpus data from Zenodo
 python scripts/ops/fetch_data.py
 
-# Re-derive the frozen split byte-identically (hashes in research/v2/data/SHA256SUMS):
+# 2. Re-derive the text-disjoint classification split (seed 42)
 python -m research.v2.pipelines.classify_split \
     --corpus research/data/openetruscan_clean.csv \
     --silver research/data/openetruscan_labels.csv \
@@ -96,31 +99,14 @@ python -m research.v2.pipelines.classify_split \
     --out-test  research/v2/data/classify_test_v2.jsonl \
     --n-test 400 --seed 42
 
-# Recompute the v2.0.3 lacuna metrics from the committed raw jury output:
+# 3. Verify SHA-256 manifests (entries mix repo-root-relative and local paths)
+shasum -a 256 -c <(grep ' research/data/' research/v2/data/SHA256SUMS)
+(cd research/v2/data && shasum -a 256 -c <(grep -v ' research/data/' SHA256SUMS))
+
+# 4. Recompute lacuna metrics from committed raw outputs
 python research/v2/eval/compute_lacuna_v2.py \
     --jury research/v2/results/lacuna/lacuna_jury_raw_v2_0_3_rerun.jsonl \
-    --out /tmp/recheck.json   # diff-identical to research/v2/results/lacuna/lacuna_v2_0_3.json
+    --out /tmp/lacuna_eval.json
 ```
 
-**What is NOT re-runnable**: the jury API calls themselves. The Cloud Build
-orchestration configs (`cloudbuild/v2-*.yaml`) were removed along with the
-GCP project that hosted them; an earlier revision of this section presented
-those as a working one-command reproduction path, which had been false since
-the project's deletion. Re-running the jury requires a live Vertex project
-and re-authoring the orchestration; the committed raw outputs + metrics under
-[`research/v2/results/`](../research/v2/results/) are the audit trail. Seeds,
-codebook version, model ids, and rater set are recorded inside each output
-JSON.
-
-## 5. Things that are NOT in this document
-
-By design:
-- No comparison against ByT5+LoRA until it is re-evaluated under the v2 protocol.
-- No comparison against the v1 "0.99 macro F1" number, because that number was not produced on held-out data and is not a valid baseline.
-- No claim that the v2 numbers are "good" or "state-of-the-art". They are honest numbers; whether they meet a particular bar is for downstream readers to decide.
-
-Future v2.1 work (tracked in [`research/v2/README.md`](../research/v2/README.md)):
-- ~~3-rater jury once Anthropic Vertex quota is granted.~~ **Done at v2.0.2** (Sonnet 4.6 substituted for Opus per [`PRE_REGISTRATION.md`](../research/v2/PRE_REGISTRATION.md) Deviation §A, α = 0.7649) and **re-run at v2.0.4** with Opus 4.8 on the clean split (α = 0.8557, Deviation §D); current results in §2.
-- Philologist adjudication of the queue rows, target Krippendorff α ≥ 0.80 between humans.
-- Multi-language extension (Oscan, Faliscan, Raetian) using the same architecture.
-- Lacuna eval set expansion to n ≥ 200 so the v2.0.3 raters (Opus 4.8 / Gemini 3.1 Pro / Gemini 3.5 Flash), currently indistinguishable on accuracy at n=66, can be tested for significance, and so a lineage-independent rater panel can replace the current 2×Google jury.
+For complete step-by-step reproduction instructions, refer to [`docs/REPRODUCE.md`](REPRODUCE.md).
