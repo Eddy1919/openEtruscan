@@ -65,7 +65,12 @@ def main() -> None:
 
     import sqlalchemy as sa
 
-    engine = sa.create_engine(db_url)
+    # SQLAlchemy 2.1 maps a bare postgresql:// to psycopg (v3), which is not a
+    # dependency; pin psycopg2, the driver pyproject declares.
+    url = sa.engine.make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    engine = sa.create_engine(url)
     cols = ", ".join(METADATA_COLS)
     with engine.connect() as conn:
         meta = pd.read_sql(sa.text(f"SELECT id, {cols} FROM inscriptions"), conn)
