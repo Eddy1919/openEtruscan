@@ -47,23 +47,23 @@ ENG_MAX_LEN = 64
 D = 128
 EPOCHS = 100
 BATCH = 64
-LR_ETR = 5e-5   # warm-started tower: gentle
-LR_NEW = 3e-4   # english tower + projections: fresh
+LR_ETR = 5e-5  # warm-started tower: gentle
+LR_NEW = 3e-4  # english tower + projections: fresh
 SEED = 20260830
 PATIENCE = 10
 
 
 class EngEncoder(nn.Module):
-    def __init__(self, vocab_size: int, d_model: int = D, n_layers: int = 2,
-                 max_len: int = ENG_MAX_LEN):
+    def __init__(
+        self, vocab_size: int, d_model: int = D, n_layers: int = 2, max_len: int = ENG_MAX_LEN
+    ):
         super().__init__()
         self.emb = nn.Embedding(vocab_size, d_model, padding_idx=PAD)
         nn.init.normal_(self.emb.weight, std=0.02)
         nn.init.zeros_(self.emb.weight[PAD])
         self.pos = nn.Parameter(torch.zeros(1, max_len, d_model))
         nn.init.normal_(self.pos, std=0.02)
-        self.blocks = nn.ModuleList(
-            [EncoderBlock(d_model, 4, 256, 0.15) for _ in range(n_layers)])
+        self.blocks = nn.ModuleList([EncoderBlock(d_model, 4, 256, 0.15) for _ in range(n_layers)])
         self.norm = nn.LayerNorm(d_model)
 
     def forward(self, x):
@@ -105,10 +105,8 @@ def info_nce(ze, zg, dup_mask, temp):
 @torch.no_grad()
 def mrr_eng_to_etr(model, etr_x, eng_x) -> float:
     model.eval()
-    ze = torch.cat([model.encode_etr(etr_x[i : i + BATCH])
-                    for i in range(0, len(etr_x), BATCH)])
-    zg = torch.cat([model.encode_eng(eng_x[i : i + BATCH])
-                    for i in range(0, len(eng_x), BATCH)])
+    ze = torch.cat([model.encode_etr(etr_x[i : i + BATCH]) for i in range(0, len(etr_x), BATCH)])
+    zg = torch.cat([model.encode_eng(eng_x[i : i + BATCH]) for i in range(0, len(eng_x), BATCH)])
     sims = zg @ ze.T
     ranks = (sims >= sims.diag().unsqueeze(1)).sum(1)
     return float((1.0 / ranks.float()).mean())
@@ -116,28 +114,44 @@ def mrr_eng_to_etr(model, etr_x, eng_x) -> float:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--freeze_etr", action="store_true",
-                    help="freeze the Etruscan tower; train projections + English tower only")
-    ap.add_argument("--augment_csv", type=Path, default=None,
-                    help="extra (surface, translation) TRAIN pairs from gloss augmentation")
-    ap.add_argument("--mined_csv", type=Path, default=None,
-                    help="extra word-level (etr, gloss) TRAIN pairs from mining")
+    ap.add_argument(
+        "--freeze_etr",
+        action="store_true",
+        help="freeze the Etruscan tower; train projections + English tower only",
+    )
+    ap.add_argument(
+        "--augment_csv",
+        type=Path,
+        default=None,
+        help="extra (surface, translation) TRAIN pairs from gloss augmentation",
+    )
+    ap.add_argument(
+        "--mined_csv",
+        type=Path,
+        default=None,
+        help="extra word-level (etr, gloss) TRAIN pairs from mining",
+    )
     ap.add_argument("--tag", default="v1", help="suffix for all output files")
-    ap.add_argument("--model_seed", type=int, default=SEED,
-                    help="seed for init/batch order ONLY; the train/val/test "
-                         "split always uses the fixed SEED so seeds are "
-                         "comparable on identical data")
+    ap.add_argument(
+        "--model_seed",
+        type=int,
+        default=SEED,
+        help="seed for init/batch order ONLY; the train/val/test "
+        "split always uses the fixed SEED so seeds are "
+        "comparable on identical data",
+    )
     args = ap.parse_args()
     sfx = "" if args.tag == "v1" else f"_{args.tag}"
 
     torch.manual_seed(args.model_seed)
     rng = np.random.default_rng(args.model_seed)  # batch order
-    split_rng = np.random.default_rng(SEED)       # split: fixed across seeds
+    split_rng = np.random.default_rng(SEED)  # split: fixed across seeds
 
     index_df = pd.read_csv(OUT / "index.csv", dtype={"surface": str, "translation": str})
     index_df["surface"] = index_df["surface"].fillna("")
-    pairs = index_df[(index_df["translation"].fillna("").str.strip() != "")
-                     & (index_df["surface"] != "")].copy()
+    pairs = index_df[
+        (index_df["translation"].fillna("").str.strip() != "") & (index_df["surface"] != "")
+    ].copy()
     pairs["translation"] = pairs["translation"].str.strip().str.lower()
     pairs = pairs.drop_duplicates(subset=["surface", "translation"])
     print(f"pairs: {len(pairs)}")
@@ -147,12 +161,16 @@ def main() -> None:
     n = len(groups)
     val_g = set(groups[: n // 10])
     test_g = set(groups[n // 10 : 2 * (n // 10)])
-    part = np.where(pairs["dup_group_id"].isin(val_g), "val",
-                    np.where(pairs["dup_group_id"].isin(test_g), "test", "train"))
+    part = np.where(
+        pairs["dup_group_id"].isin(val_g),
+        "val",
+        np.where(pairs["dup_group_id"].isin(test_g), "test", "train"),
+    )
     pairs["part"] = part
     print(pairs["part"].value_counts().to_dict())
     pairs[["id", "surface", "translation", "dup_group_id", "part"]].to_csv(
-        OUT / "contrastive_pairs.csv", index=False)
+        OUT / "contrastive_pairs.csv", index=False
+    )
 
     # extra TRAIN-only pairs (augmentation / mining); never touch val/test
     extra_frames = []
@@ -175,8 +193,7 @@ def main() -> None:
         return torch.tensor([pad_to(etr_tok.encode(t)[:MAX_LEN], MAX_LEN) for t in texts])
 
     def eng_batchify(texts):
-        return torch.tensor([pad_to(eng_tok.encode(t)[:ENG_MAX_LEN], ENG_MAX_LEN)
-                             for t in texts])
+        return torch.tensor([pad_to(eng_tok.encode(t)[:ENG_MAX_LEN], ENG_MAX_LEN) for t in texts])
 
     ckpt = torch.load(OUT / "s2s_model.pt", map_location="cpu", weights_only=False)
     etr = Seq2Seq(vocab_size=ckpt["vocab_size"], max_len=ckpt["max_len"])
@@ -184,8 +201,12 @@ def main() -> None:
     model = DualEncoder(etr, EngEncoder(len(eng_tok)))
     print(f"params: {sum(p.numel() for p in model.parameters()):,}")
 
-    new_params = (list(model.eng.parameters()) + list(model.proj_etr.parameters())
-                  + list(model.proj_eng.parameters()) + [model.log_temp])
+    new_params = (
+        list(model.eng.parameters())
+        + list(model.proj_etr.parameters())
+        + list(model.proj_eng.parameters())
+        + [model.log_temp]
+    )
     if args.freeze_etr:
         for p in model.etr.parameters():
             p.requires_grad_(False)
@@ -193,15 +214,19 @@ def main() -> None:
         n_train = sum(p.numel() for p in new_params)
         print(f"etr tower FROZEN; trainable params {n_train:,}")
     else:
-        opt = torch.optim.AdamW([
-            {"params": model.etr.parameters(), "lr": LR_ETR},
-            {"params": new_params, "lr": LR_NEW},
-        ], weight_decay=0.01)
+        opt = torch.optim.AdamW(
+            [
+                {"params": model.etr.parameters(), "lr": LR_ETR},
+                {"params": new_params, "lr": LR_NEW},
+            ],
+            weight_decay=0.01,
+        )
 
     tr = pairs[pairs["part"] == "train"].reset_index(drop=True)
     if extra_frames:
-        tr = pd.concat([tr[["surface", "translation"]]] + extra_frames,
-                       ignore_index=True).drop_duplicates()
+        tr = pd.concat(
+            [tr[["surface", "translation"]]] + extra_frames, ignore_index=True
+        ).drop_duplicates()
         tr = tr.reset_index(drop=True)
         print(f"train pairs incl. extras: {len(tr)}")
     va = pairs[pairs["part"] == "val"].reset_index(drop=True)
@@ -236,10 +261,11 @@ def main() -> None:
             opt.step()
             losses.append(float(loss.detach()))
         mrr = mrr_eng_to_etr(model, va_etr, va_eng)
-        log["epochs"].append({"epoch": epoch, "loss": float(np.mean(losses)),
-                              "val_mrr": mrr})
-        print(f"epoch {epoch:03d} loss {np.mean(losses):.4f} val MRR {mrr:.4f} "
-              f"temp {float(model.log_temp.exp()):.2f}")
+        log["epochs"].append({"epoch": epoch, "loss": float(np.mean(losses)), "val_mrr": mrr})
+        print(
+            f"epoch {epoch:03d} loss {np.mean(losses):.4f} val MRR {mrr:.4f} "
+            f"temp {float(model.log_temp.exp()):.2f}"
+        )
         if mrr > best:
             best, bad = mrr, 0
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
@@ -251,17 +277,26 @@ def main() -> None:
 
     model.load_state_dict(best_state)
     log["best_val_mrr"] = best
-    torch.save({"state_dict": model.state_dict(),
-                "etr_vocab_size": ckpt["vocab_size"], "etr_max_len": ckpt["max_len"],
-                "eng_vocab_size": len(eng_tok)}, OUT / f"contrastive_model{sfx}.pt")
+    torch.save(
+        {
+            "state_dict": model.state_dict(),
+            "etr_vocab_size": ckpt["vocab_size"],
+            "etr_max_len": ckpt["max_len"],
+            "eng_vocab_size": len(eng_tok),
+        },
+        OUT / f"contrastive_model{sfx}.pt",
+    )
 
     # aligned Etruscan vectors for the whole index
     model.eval()
     vecs = []
     with torch.no_grad():
         for i in range(0, len(index_df), BATCH):
-            vecs.append(model.encode_etr(
-                etr_batchify(index_df["surface"].iloc[i : i + BATCH].tolist())).numpy())
+            vecs.append(
+                model.encode_etr(
+                    etr_batchify(index_df["surface"].iloc[i : i + BATCH].tolist())
+                ).numpy()
+            )
     np.save(OUT / f"aligned_etr_vectors{sfx}.npy", np.concatenate(vecs).astype(np.float32))
     (OUT / f"contrastive_train_log{sfx}.json").write_text(json.dumps(log, indent=2))
     print(f"saved aligned vectors | best val MRR {best:.4f}")

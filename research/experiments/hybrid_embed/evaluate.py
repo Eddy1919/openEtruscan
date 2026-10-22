@@ -193,19 +193,28 @@ def eval_structural(index_df, blocks) -> dict:
                 jg = pool_idx[j]
                 st.append(jacc(set(roleseq[q_global]), set(roleseq[jg])))
                 lex.append(jacc(toks[q_global], toks[jg]))
-        results[name] = {"structure_sim": float(np.mean(st)), "lexical_overlap": float(np.mean(lex))}
+        results[name] = {
+            "structure_sim": float(np.mean(st)),
+            "lexical_overlap": float(np.mean(lex)),
+        }
 
     st, lex = [], []
     for qi in queries:
         qg = pool_idx[qi]
         sims = np.array(
-            [cos_counter(ngs[qg], ngs[pool_idx[j]]) if j != qi else -9 for j in range(len(pool_idx))]
+            [
+                cos_counter(ngs[qg], ngs[pool_idx[j]]) if j != qi else -9
+                for j in range(len(pool_idx))
+            ]
         )
         for j in np.argsort(-sims)[:5]:
             jg = pool_idx[j]
             st.append(jacc(set(roleseq[qg]), set(roleseq[jg])))
             lex.append(jacc(toks[qg], toks[jg]))
-    results["char3gram"] = {"structure_sim": float(np.mean(st)), "lexical_overlap": float(np.mean(lex))}
+    results["char3gram"] = {
+        "structure_sim": float(np.mean(st)),
+        "lexical_overlap": float(np.mean(lex)),
+    }
     results["_n_queries"] = int(len(queries))
     results["_pool"] = len(pool_idx)
     return results
@@ -218,8 +227,10 @@ def eval_search(index_df, fused, charlm_enc, role_vec, pos, graph_entity_vec) ->
     docs = [tokenize(s) for s in index_df["surface"]]
     bm25 = BM25(docs)
 
-    queries = [json.loads(line) for line in
-               (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()]
+    queries = [
+        json.loads(line)
+        for line in (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()
+    ]
 
     _dim_char = charlm_enc.encode(["mi"]).shape[1]
     fused_n = fused  # already per-block normalized + concatenated
@@ -228,7 +239,11 @@ def eval_search(index_df, fused, charlm_enc, role_vec, pos, graph_entity_vec) ->
         cv = l2(charlm_enc.encode([q]))[0]
         gtoks = parse_roles(tokenize(q))
         gvecs = [graph_entity_vec[f"{r}:{f}"] for r, f in gtoks if f"{r}:{f}" in graph_entity_vec]
-        gv = np.mean(gvecs, axis=0) if gvecs else np.zeros(next(iter(graph_entity_vec.values())).shape[0], dtype=np.float32)
+        gv = (
+            np.mean(gvecs, axis=0)
+            if gvecs
+            else np.zeros(next(iter(graph_entity_vec.values())).shape[0], dtype=np.float32)
+        )
         gv = gv / max(np.linalg.norm(gv), 1e-9)
         sv = vsa_encode_S(q, role_vec, pos)
         sv = sv / max(np.linalg.norm(sv), 1e-9)
@@ -236,6 +251,7 @@ def eval_search(index_df, fused, charlm_enc, role_vec, pos, graph_entity_vec) ->
 
     try:
         from sentence_transformers import CrossEncoder
+
         reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
     except Exception as exc:  # model download blocked / package issue
         print(f"reranker unavailable, skipping: {exc}")
@@ -271,9 +287,7 @@ def eval_search(index_df, fused, charlm_enc, role_vec, pos, graph_entity_vec) ->
 
         for name, rank in systems.items():
             ranked_ids = [ids[i] for i in rank[:K]]
-            per_cat.setdefault(name, {}).setdefault(cat, []).append(
-                ndcg_at_k(ranked_ids, relevant)
-            )
+            per_cat.setdefault(name, {}).setdefault(cat, []).append(ndcg_at_k(ranked_ids, relevant))
 
     report: dict = {"skipped_queries_no_relevant_in_index": skipped}
     for name, cats in per_cat.items():
@@ -298,8 +312,11 @@ def eval_rosetta(charlm_enc) -> dict:
         sims = lat_vecs @ ev
         top = [latin_vocab[i] for i in np.argsort(-sims)[:K]]
         hits += int(p.lat in top)
-    return {"n": len(test), "candidates": len(latin_vocab),
-            "p_at_10": hits / len(test) if test else 0.0}
+    return {
+        "n": len(test),
+        "candidates": len(latin_vocab),
+        "p_at_10": hits / len(test) if test else 0.0,
+    }
 
 
 def main() -> None:

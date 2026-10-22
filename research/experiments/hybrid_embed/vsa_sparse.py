@@ -33,8 +33,8 @@ from roles import ROLES, parse_roles, tokenize
 HERE = Path(__file__).parent
 OUT = HERE / "out"
 D = 4096
-K = 64          # blocks
-M = D // K      # units per block
+K = 64  # blocks
+M = D // K  # units per block
 SEED = 7
 
 
@@ -70,8 +70,8 @@ def main() -> None:
 
     # ---------------- sparse block code
     rng = np.random.default_rng(SEED)
-    role_idx = {r: rng.integers(0, M, size=K) for r in ROLES}       # [K]
-    fill_idx = rng.integers(0, M, size=(n_fill, K))                  # [n_fill, K]
+    role_idx = {r: rng.integers(0, M, size=K) for r in ROLES}  # [K]
+    fill_idx = rng.integers(0, M, size=(n_fill, K))  # [n_fill, K]
 
     sparse = {}
     for target in ["GENTILICIUM", "PATRONYMIC", "STATUS"]:
@@ -84,7 +84,7 @@ def main() -> None:
             # superposed memory: per-block count vectors [K, M]
             mem = np.zeros((K, M))
             for r, f in roles:
-                bound = (role_idx[r] + fill_idx[fill_id[f]]) % M     # [K]
+                bound = (role_idx[r] + fill_idx[fill_id[f]]) % M  # [K]
                 mem[np.arange(K), bound] += 1.0
             # unbind: shift memory back by the role's indices, then cleanup
             unbound = mem[np.arange(K)[:, None], (fill_idx + r_t[None, :]).T % M]
@@ -96,8 +96,7 @@ def main() -> None:
         sparse[target] = {"acc": ok / tot, "n": tot}
     results[f"sparse_block_K{K}xM{M}"] = sparse
 
-    results["_config"] = {"D": D, "K": K, "M": M, "n_fillers": n_fill,
-                          "sparsity": 1 / M}
+    results["_config"] = {"D": D, "K": K, "M": M, "n_fillers": n_fill, "sparsity": 1 / M}
     (OUT / "vsa_sparse_results.json").write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
 

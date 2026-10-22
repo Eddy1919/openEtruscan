@@ -55,8 +55,12 @@ def main() -> None:
     np.save(OUT / "vsa_S.npy", S)
     np.save(OUT / "vsa_I.npy", I)
     n_roles = sum(len(r) for r in parsed)
-    stats = {"rows": len(parsed), "distinct_fillers": len(fillers), "total_roles": n_roles,
-             "rows_with_roles": int(sum(bool(r) for r in parsed))}
+    stats = {
+        "rows": len(parsed),
+        "distinct_fillers": len(fillers),
+        "total_roles": n_roles,
+        "rows_with_roles": int(sum(bool(r) for r in parsed)),
+    }
     (OUT / "vsa_stats.json").write_text(json.dumps(stats, indent=2))
     print(json.dumps(stats, indent=2))
 

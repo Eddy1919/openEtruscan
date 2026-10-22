@@ -59,8 +59,9 @@ def poincare_dist(u: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
 def project_(theta: torch.Tensor) -> None:
     with torch.no_grad():
         norms = theta.norm(dim=-1, keepdim=True)
-        theta.mul_(torch.where(norms >= MAX_NORM, MAX_NORM / norms.clamp(min=EPS),
-                               torch.ones_like(norms)))
+        theta.mul_(
+            torch.where(norms >= MAX_NORM, MAX_NORM / norms.clamp(min=EPS), torch.ones_like(norms))
+        )
 
 
 def main() -> None:
@@ -79,8 +80,7 @@ def main() -> None:
     clans = sorted(clan_members)
     n_clan = len(clans)
     n_nodes = n_clan + len(index_df)
-    edges = np.array([(ci, n_clan + i)
-                      for ci, c in enumerate(clans) for i in clan_members[c]])
+    edges = np.array([(ci, n_clan + i) for ci, c in enumerate(clans) for i in clan_members[c]])
     print(f"clans {n_clan} | nodes {n_nodes} | edges {len(edges)}")
 
     theta = torch.empty(n_nodes, DIM).uniform_(-1e-3, 1e-3).requires_grad_(True)
@@ -92,14 +92,12 @@ def main() -> None:
         total, nb = 0.0, 0
         for i in range(0, len(order), BATCH):
             b = edges_t[order[i : i + BATCH]]
-            negs = torch.from_numpy(
-                rng.integers(0, n_nodes, size=(len(b), NEG)))
-            cand = torch.cat([b[:, 1:2], negs], dim=1)          # [B, 1+NEG]
-            u = theta[b[:, 0]].unsqueeze(1)                     # [B,1,d]
-            v = theta[cand]                                     # [B,1+NEG,d]
-            d = poincare_dist(u, v)                             # [B,1+NEG]
-            loss = torch.nn.functional.cross_entropy(
-                -d, torch.zeros(len(b), dtype=torch.long))
+            negs = torch.from_numpy(rng.integers(0, n_nodes, size=(len(b), NEG)))
+            cand = torch.cat([b[:, 1:2], negs], dim=1)  # [B, 1+NEG]
+            u = theta[b[:, 0]].unsqueeze(1)  # [B,1,d]
+            v = theta[cand]  # [B,1+NEG,d]
+            d = poincare_dist(u, v)  # [B,1+NEG]
+            loss = torch.nn.functional.cross_entropy(-d, torch.zeros(len(b), dtype=torch.long))
             if theta.grad is not None:
                 theta.grad.zero_()
             loss.backward()
@@ -145,10 +143,14 @@ def main() -> None:
     map_n2v = float(np.mean(ap_e))
 
     np.save(OUT / "hyperbolic_vectors.npy", theta_np[n_clan:].astype(np.float32))
-    results = {"clans_eval": len(eval_clans), "dim_hyperbolic": DIM,
-               "dim_node2vec": int(n2v.shape[1]),
-               "map_hyperbolic": map_hyp, "map_node2vec": map_n2v,
-               "note": "node2vec trained on these same membership edges; its MAP is near ceiling by construction"}
+    results = {
+        "clans_eval": len(eval_clans),
+        "dim_hyperbolic": DIM,
+        "dim_node2vec": int(n2v.shape[1]),
+        "map_hyperbolic": map_hyp,
+        "map_node2vec": map_n2v,
+        "note": "node2vec trained on these same membership edges; its MAP is near ceiling by construction",
+    }
     (OUT / "hyperbolic_results.json").write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
 

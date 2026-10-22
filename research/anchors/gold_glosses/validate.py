@@ -20,10 +20,18 @@ REPO = HERE.parent.parent.parent
 sys.path.insert(0, str(REPO / "eval/harness"))
 from rosetta_eval_pairs import eval_pairs  # noqa: E402
 
-REQUIRED = ["etr", "gloss_en", "lat", "source_type", "citation_primary",
-            "citation_modern", "confidence", "notes", "adjudication"]
-SOURCE_TYPES = {"ancient_gloss", "bilingual", "lexicon", "combinatory",
-                "loanword", "numeral"}
+REQUIRED = [
+    "etr",
+    "gloss_en",
+    "lat",
+    "source_type",
+    "citation_primary",
+    "citation_modern",
+    "confidence",
+    "notes",
+    "adjudication",
+]
+SOURCE_TYPES = {"ancient_gloss", "bilingual", "lexicon", "combinatory", "loanword", "numeral"}
 CONFIDENCES = {"high", "medium", "low"}
 STATUSES = {"seeded", "llm_checked", "verified", "rejected"}
 
@@ -51,7 +59,8 @@ def main() -> int:
         if adj.get("status") not in STATUSES:
             errors.append(f"line {lineno}: bad adjudication.status {adj.get('status')!r}")
         if adj.get("status") in {"verified", "llm_checked"} and not (
-                adj.get("by") and adj.get("date")):
+            adj.get("by") and adj.get("date")
+        ):
             errors.append(f"line {lineno}: {adj.get('status')} without by/date")
         if adj.get("status") == "llm_checked" and not r.get("check_url"):
             errors.append(f"line {lineno}: llm_checked without check_url")
@@ -60,8 +69,7 @@ def main() -> int:
             errors.append(f"line {lineno}: etr not NFC-lowercase-stripped: {etr!r}")
         records.append(r)
 
-    dupes = [k for k, c in Counter((r["etr"], r["gloss_en"]) for r in records).items()
-             if c > 1]
+    dupes = [k for k, c in Counter((r["etr"], r["gloss_en"]) for r in records).items() if c > 1]
     for d in dupes:
         errors.append(f"duplicate (etr, gloss_en): {d}")
 

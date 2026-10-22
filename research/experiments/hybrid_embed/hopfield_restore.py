@@ -69,7 +69,7 @@ def main() -> None:
 
     # dev slice for tuning: last 10% of *training* groups
     train_groups = [g for g in groups if g not in val_groups]
-    dev_groups = set(train_groups[-len(train_groups) // 10:])
+    dev_groups = set(train_groups[-len(train_groups) // 10 :])
     is_dev = train_df["dup_group_id"].isin(dev_groups).to_numpy()
     store_seqs = [s for s, v, d in zip(seqs, is_val, is_dev, strict=False) if not v and not d and s]
     dev_seqs = [s for s, v, d in zip(seqs, is_val, is_dev, strict=False) if not v and d and s]
@@ -85,7 +85,7 @@ def main() -> None:
         y_out = [s + [EOS] for s in batch]
         _, h = hidden_states(model, x, y_in)
         for b, targets in enumerate(y_out):
-            for j, t in enumerate(targets[: MAX_LEN]):
+            for j, t in enumerate(targets[:MAX_LEN]):
                 keys.append(h[b, j].numpy())
                 values.append(t)
     keys = np.stack(keys).astype(np.float32)
@@ -141,10 +141,15 @@ def main() -> None:
     print(f"chosen lam={lam} beta={beta}")
 
     m0, mx, n = damaged_accuracy(val_seqs, lam, beta, SEED + 2)
-    results = {"datastore_entries": int(len(values)), "topk": TOPK,
-               "lambda": lam, "beta": beta,
-               "val_damaged_positions": n,
-               "decoder_only_acc": m0, "decoder_plus_memory_acc": mx}
+    results = {
+        "datastore_entries": int(len(values)),
+        "topk": TOPK,
+        "lambda": lam,
+        "beta": beta,
+        "val_damaged_positions": n,
+        "decoder_only_acc": m0,
+        "decoder_plus_memory_acc": mx,
+    }
     (OUT / "hopfield_results.json").write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
 

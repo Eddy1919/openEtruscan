@@ -58,7 +58,9 @@ class FFN(nn.Module):
     def __init__(self, d_model: int, d_ff: int, dropout: float):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(d_model, d_ff), nn.GELU(), nn.Dropout(dropout),
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(d_ff, d_model),
         )
 
@@ -100,9 +102,17 @@ class DecoderBlock(nn.Module):
 
 
 class Seq2Seq(nn.Module):
-    def __init__(self, vocab_size: int, d_model: int = 128, n_heads: int = 4,
-                 n_enc: int = 3, n_dec: int = 3, d_ff: int = 256,
-                 dropout: float = 0.15, max_len: int = 64):
+    def __init__(
+        self,
+        vocab_size: int,
+        d_model: int = 128,
+        n_heads: int = 4,
+        n_enc: int = 3,
+        n_dec: int = 3,
+        d_ff: int = 256,
+        dropout: float = 0.15,
+        max_len: int = 64,
+    ):
         super().__init__()
         self.d_model = d_model
         self.max_len = max_len
@@ -116,9 +126,11 @@ class Seq2Seq(nn.Module):
         nn.init.normal_(self.pos_enc_emb, std=0.02)
         nn.init.normal_(self.pos_dec_emb, std=0.02)
         self.encoder = nn.ModuleList(
-            [EncoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_enc)])
+            [EncoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_enc)]
+        )
         self.decoder = nn.ModuleList(
-            [DecoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_dec)])
+            [DecoderBlock(d_model, n_heads, d_ff, dropout) for _ in range(n_dec)]
+        )
         self.enc_norm = nn.LayerNorm(d_model)
         self.dec_norm = nn.LayerNorm(d_model)
         self.out_bias = nn.Parameter(torch.zeros(vocab_size))

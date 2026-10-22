@@ -54,12 +54,21 @@ def main() -> None:
         raise SystemExit(1)
     bilinguals = [json.loads(ln) for ln in bil_path.read_text().splitlines() if ln.strip()]
 
-    corpus = pd.read_csv(REPO / "research/data/openetruscan_clean_grouped.csv",
-                         dtype=str).fillna("")
+    corpus = pd.read_csv(REPO / "research/data/openetruscan_clean_grouped.csv", dtype=str).fillna(
+        ""
+    )
     corpus_ids = {norm_id(i): i for i in corpus["id"].fillna("")}
-    corpus_toks = [(row["id"], set(tokenize(row.get("canonical_words_only") or
-                                           row.get("canonical_transliterated") or "")))
-                   for _, row in corpus.iterrows()]
+    corpus_toks = [
+        (
+            row["id"],
+            set(
+                tokenize(
+                    row.get("canonical_words_only") or row.get("canonical_transliterated") or ""
+                )
+            ),
+        )
+        for _, row in corpus.iterrows()
+    ]
 
     rows = []
     for b in bilinguals:
@@ -67,9 +76,15 @@ def main() -> None:
         for ident in b.get("ids", []):
             hit = corpus_ids.get(norm_id(ident))
             if hit:
-                rows.append({"bilingual": "; ".join(b["ids"]), "match": "id",
-                             "corpus_id": hit, "score": 1.0,
-                             "fixes": b.get("fixes", "")})
+                rows.append(
+                    {
+                        "bilingual": "; ".join(b["ids"]),
+                        "match": "id",
+                        "corpus_id": hit,
+                        "score": 1.0,
+                        "fixes": b.get("fixes", ""),
+                    }
+                )
                 matched = True
         etr = b.get("etr_text") or ""
         btoks = set(tokenize(etr))
@@ -77,20 +92,35 @@ def main() -> None:
             for cid, ctoks in corpus_toks:
                 s = jaccard(btoks, ctoks)
                 if s >= TEXT_JACCARD_MIN:
-                    rows.append({"bilingual": "; ".join(b["ids"]), "match": "text",
-                                 "corpus_id": cid, "score": round(s, 3),
-                                 "fixes": b.get("fixes", "")})
+                    rows.append(
+                        {
+                            "bilingual": "; ".join(b["ids"]),
+                            "match": "text",
+                            "corpus_id": cid,
+                            "score": round(s, 3),
+                            "fixes": b.get("fixes", ""),
+                        }
+                    )
                     matched = True
         if not matched:
-            rows.append({"bilingual": "; ".join(b["ids"]), "match": "none",
-                         "corpus_id": "", "score": 0.0, "fixes": b.get("fixes", "")})
+            rows.append(
+                {
+                    "bilingual": "; ".join(b["ids"]),
+                    "match": "none",
+                    "corpus_id": "",
+                    "score": 0.0,
+                    "fixes": b.get("fixes", ""),
+                }
+            )
 
     report = pd.DataFrame(rows).sort_values(["match", "score"], ascending=[True, False])
     report.to_csv(HERE / "crossref_report.csv", index=False)
     n_hit = (report["match"] != "none").sum()
-    print(f"bilinguals: {len(bilinguals)} | rows with a corpus match: "
-          f"{report[report.match != 'none']['bilingual'].nunique()} | "
-          f"match rows: {n_hit}")
+    print(
+        f"bilinguals: {len(bilinguals)} | rows with a corpus match: "
+        f"{report[report.match != 'none']['bilingual'].nunique()} | "
+        f"match rows: {n_hit}"
+    )
     print(report.head(20).to_string(index=False))
 
 

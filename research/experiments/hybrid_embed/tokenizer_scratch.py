@@ -87,8 +87,9 @@ class BPETokenizer:
                 new_words[key] = new_words.get(key, 0) + f
             words = new_words
 
-        pieces = sorted({s for syms in words for s in syms} | set(alphabet)
-                        | {a + b for a, b in merges})
+        pieces = sorted(
+            {s for syms in words for s in syms} | set(alphabet) | {a + b for a, b in merges}
+        )
         vocab = {sp: i for i, sp in enumerate(SPECIALS)}
         for p in pieces:
             vocab[p] = len(vocab)
@@ -137,8 +138,9 @@ class BPETokenizer:
 
     # -------------------------------------------------------------- persistence
     def save(self, path: Path) -> None:
-        path.write_text(json.dumps(
-            {"merges": self.merges, "vocab": self.vocab}, ensure_ascii=False))
+        path.write_text(
+            json.dumps({"merges": self.merges, "vocab": self.vocab}, ensure_ascii=False)
+        )
 
     @classmethod
     def load(cls, path: Path) -> BPETokenizer:
@@ -160,17 +162,26 @@ def main() -> None:
 
     n_words = sum(len(t.split()) for t in texts)
     n_pieces = sum(len(tok.encode(t)) for t in texts)
-    print(f"vocab {len(tok)} | words {n_words:,} | pieces {n_pieces:,} | "
-          f"fertility {n_pieces / n_words:.2f} pieces/word")
+    print(
+        f"vocab {len(tok)} | words {n_words:,} | pieces {n_pieces:,} | "
+        f"fertility {n_pieces / n_words:.2f} pieces/word"
+    )
 
     # WP1 gate: do genitive suffixes emerge as single pieces?
-    suffixes = ["al" + EOW, "us" + EOW, "isa" + EOW, "śa" + EOW, "s" + EOW,
-                "ial" + EOW, "es" + EOW, "sa" + EOW]
-    print("suffix pieces in vocab:",
-          {s.replace(EOW, "</w>"): (s in tok.vocab) for s in suffixes})
+    suffixes = [
+        "al" + EOW,
+        "us" + EOW,
+        "isa" + EOW,
+        "śa" + EOW,
+        "s" + EOW,
+        "ial" + EOW,
+        "es" + EOW,
+        "sa" + EOW,
+    ]
+    print("suffix pieces in vocab:", {s.replace(EOW, "</w>"): (s in tok.vocab) for s in suffixes})
 
     for demo in ["mi mulu larisale velχainasi", "larθ velus clan", "θania pulfnei tutnasa"]:
-        print(f"  {demo!r} -> {[t.replace(EOW,'</w>') for t in tok.tokens(demo)]}")
+        print(f"  {demo!r} -> {[t.replace(EOW, '</w>') for t in tok.tokens(demo)]}")
 
     roundtrip_fail = sum(tok.decode(tok.encode(t)) != " ".join(t.lower().split()) for t in texts)
     print(f"round-trip failures: {roundtrip_fail}/{len(texts)}")

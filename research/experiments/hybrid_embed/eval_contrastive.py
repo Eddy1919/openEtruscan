@@ -38,8 +38,9 @@ BATCH = 64
 
 class Towers:
     def __init__(self, sfx: str = ""):
-        ckpt = torch.load(OUT / f"contrastive_model{sfx}.pt", map_location="cpu",
-                          weights_only=False)
+        ckpt = torch.load(
+            OUT / f"contrastive_model{sfx}.pt", map_location="cpu", weights_only=False
+        )
         etr = Seq2Seq(vocab_size=ckpt["etr_vocab_size"], max_len=ckpt["etr_max_len"])
         self.model = DualEncoder(etr, EngEncoder(ckpt["eng_vocab_size"]))
         self.model.load_state_dict(ckpt["state_dict"])
@@ -51,8 +52,9 @@ class Towers:
     def etr(self, texts: list[str]) -> np.ndarray:
         out = []
         for i in range(0, len(texts), BATCH):
-            x = torch.tensor([pad_to(self.etr_tok.encode(t)[:MAX_LEN], MAX_LEN)
-                              for t in texts[i : i + BATCH]])
+            x = torch.tensor(
+                [pad_to(self.etr_tok.encode(t)[:MAX_LEN], MAX_LEN) for t in texts[i : i + BATCH]]
+            )
             out.append(self.model.encode_etr(x).numpy())
         return np.concatenate(out).astype(np.float32)
 
@@ -60,8 +62,12 @@ class Towers:
     def eng(self, texts: list[str]) -> np.ndarray:
         out = []
         for i in range(0, len(texts), BATCH):
-            x = torch.tensor([pad_to(self.eng_tok.encode(t)[:ENG_MAX_LEN], ENG_MAX_LEN)
-                              for t in texts[i : i + BATCH]])
+            x = torch.tensor(
+                [
+                    pad_to(self.eng_tok.encode(t)[:ENG_MAX_LEN], ENG_MAX_LEN)
+                    for t in texts[i : i + BATCH]
+                ]
+            )
             out.append(self.model.encode_eng(x).numpy())
         return np.concatenate(out).astype(np.float32)
 
@@ -69,21 +75,26 @@ class Towers:
 def retrieval_metrics(sims: np.ndarray, gold: np.ndarray) -> dict:
     """sims: [n_query, n_cand]; gold[i] = correct candidate index."""
     order = np.argsort(-sims, axis=1)
-    ranks = np.array([int(np.where(order[i] == gold[i])[0][0]) + 1
-                      for i in range(len(gold))])
-    return {"r_at_1": float((ranks <= 1).mean()),
-            "r_at_10": float((ranks <= 10).mean()),
-            "mrr": float((1.0 / ranks).mean()),
-            "median_rank": int(np.median(ranks)),
-            "n": int(len(gold))}
+    ranks = np.array([int(np.where(order[i] == gold[i])[0][0]) + 1 for i in range(len(gold))])
+    return {
+        "r_at_1": float((ranks <= 1).mean()),
+        "r_at_10": float((ranks <= 10).mean()),
+        "mrr": float((1.0 / ranks).mean()),
+        "median_rank": int(np.median(ranks)),
+        "n": int(len(gold)),
+    }
 
 
 def main() -> None:
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--tag", default="v1")
-    ap.add_argument("--skip_search", action="store_true",
-                    help="skip the search-router leg (proved harmful in v1)")
+    ap.add_argument(
+        "--skip_search",
+        action="store_true",
+        help="skip the search-router leg (proved harmful in v1)",
+    )
     args = ap.parse_args()
     sfx = "" if args.tag == "v1" else f"_{args.tag}"
 
@@ -120,6 +131,7 @@ def main() -> None:
     # --- rosetta glosses (semantic, both towers)
     sys.path.insert(0, str(REPO / "eval/harness"))
     from rosetta_eval_pairs import eval_pairs
+
     testp = eval_pairs(split="test")
     allp = eval_pairs(min_confidence="low", split=None)
     glosses = sorted({p.gloss.lower() for p in allp})
@@ -129,9 +141,12 @@ def main() -> None:
         ev = towers.etr([p.etr])[0]
         top = [glosses[i] for i in np.argsort(-(zg_gloss @ ev))[:K]]
         hits += int(p.gloss.lower() in top)
-    results["rosetta_gloss"] = {"n": len(testp), "candidates": len(glosses),
-                                "p_at_10": hits / len(testp),
-                                "chance_p_at_10": K / len(glosses)}
+    results["rosetta_gloss"] = {
+        "n": len(testp),
+        "candidates": len(glosses),
+        "p_at_10": hits / len(testp),
+        "chance_p_at_10": K / len(glosses),
+    }
 
     # --- search eval with cross-lingual leg in the router
     if args.skip_search:
@@ -142,8 +157,10 @@ def main() -> None:
     doc_states = load_token_states()
     docs = [tokenize(s) for s in index_df["surface"]]
     bm25 = BM25(docs)
-    queries = [json.loads(line) for line in
-               (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()]
+    queries = [
+        json.loads(line)
+        for line in (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()
+    ]
     per_cat: dict[str, dict[str, list[float]]] = {}
     for q in queries:
         relevant = {r for r in q["relevant_ids"] if r in id_set}
@@ -162,13 +179,14 @@ def main() -> None:
         for name, legs in systems.items():
             rank = legs[0] if len(legs) == 1 else np.argsort(-rrf(legs, len(ids)))
             ranked_ids = [ids[i] for i in rank[:K]]
-            per_cat.setdefault(name, {}).setdefault(cat, []).append(
-                ndcg_at_k(ranked_ids, relevant))
+            per_cat.setdefault(name, {}).setdefault(cat, []).append(ndcg_at_k(ranked_ids, relevant))
     search: dict = {}
     for name, cats in per_cat.items():
         cat_means = {c: float(np.mean(v)) for c, v in sorted(cats.items())}
-        search[name] = {"per_category": cat_means,
-                        "macro_mean": float(np.mean(list(cat_means.values())))}
+        search[name] = {
+            "per_category": cat_means,
+            "macro_mean": float(np.mean(list(cat_means.values()))),
+        }
     results["search_with_crosslingual"] = search
 
     (OUT / f"contrastive_results{sfx}.json").write_text(json.dumps(results, indent=2))

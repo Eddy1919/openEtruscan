@@ -44,15 +44,26 @@ MIN_COUNT = 3
 ENG_TOKEN = re.compile(r"[a-z']+")
 
 LEXICON = {
-    "mi": "i", "mini": "me",
-    "śuθi": "tomb", "suθi": "tomb", "θui": "here",
-    "turce": "gave", "turuce": "gave",
-    "muluvanice": "dedicated", "muluvanece": "dedicated",
+    "mi": "i",
+    "mini": "me",
+    "śuθi": "tomb",
+    "suθi": "tomb",
+    "θui": "here",
+    "turce": "gave",
+    "turuce": "gave",
+    "muluvanice": "dedicated",
+    "muluvanece": "dedicated",
     "zinace": "made",
-    "clan": "son", "sec": "daughter", "puia": "wife",
+    "clan": "son",
+    "sec": "daughter",
+    "puia": "wife",
     "lautni": "freedman",
-    "menrva": "minerva", "hercle": "hercules", "uni": "juno",
-    "fufluns": "bacchus", "nethuns": "neptune", "aritimi": "artemis",
+    "menrva": "minerva",
+    "hercle": "hercules",
+    "uni": "juno",
+    "fufluns": "bacchus",
+    "nethuns": "neptune",
+    "aritimi": "artemis",
 }
 
 
@@ -100,8 +111,8 @@ def main() -> None:
 
     etr_count = Counter(w for s in etr_sents for w in s)
 
-    t_fwd = ibm1(etr_sents, eng_sents)          # p(eng | etr)
-    t_rev = ibm1(eng_sents, etr_sents)          # p(etr | eng)
+    t_fwd = ibm1(etr_sents, eng_sents)  # p(eng | etr)
+    t_rev = ibm1(eng_sents, etr_sents)  # p(etr | eng)
 
     best_eng: dict[str, tuple[str, float]] = {}
     for (e, f), p in t_fwd.items():
@@ -118,27 +129,41 @@ def main() -> None:
 
     rows = []
     for f, (e, p) in sorted(best_eng.items()):
-        if (p >= T_MIN and etr_count[f] >= MIN_COUNT and f not in test_etr
-                and best_etr.get(e, ("", 0))[0] == f):
-            rows.append({"surface": f, "translation": e,
-                         "provenance": "ibm1", "score": round(p, 4)})
+        if (
+            p >= T_MIN
+            and etr_count[f] >= MIN_COUNT
+            and f not in test_etr
+            and best_etr.get(e, ("", 0))[0] == f
+        ):
+            rows.append(
+                {"surface": f, "translation": e, "provenance": "ibm1", "score": round(p, 4)}
+            )
     n_ibm = len(rows)
 
     for p_ in eval_pairs(min_confidence="low", split="train"):
         if p_.etr not in test_etr:
-            rows.append({"surface": p_.etr, "translation": p_.gloss.lower(),
-                         "provenance": "rosetta_train", "score": 1.0})
+            rows.append(
+                {
+                    "surface": p_.etr,
+                    "translation": p_.gloss.lower(),
+                    "provenance": "rosetta_train",
+                    "score": 1.0,
+                }
+            )
     for f, e in LEXICON.items():
         if f not in test_etr:
-            rows.append({"surface": f, "translation": e,
-                         "provenance": "lexicon", "score": 1.0})
+            rows.append({"surface": f, "translation": e, "provenance": "lexicon", "score": 1.0})
 
     mined = pd.DataFrame(rows).drop_duplicates(subset=["surface", "translation"])
     mined.to_csv(OUT / "mined_pairs.csv", index=False)
     print(f"ibm1 {n_ibm} | total mined {len(mined)}")
     print(mined["provenance"].value_counts().to_dict())
-    print(mined[mined.provenance == "ibm1"].sort_values("score", ascending=False)
-          .head(15).to_string(index=False))
+    print(
+        mined[mined.provenance == "ibm1"]
+        .sort_values("score", ascending=False)
+        .head(15)
+        .to_string(index=False)
+    )
 
 
 if __name__ == "__main__":

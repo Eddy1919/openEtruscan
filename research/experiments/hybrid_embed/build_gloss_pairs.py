@@ -36,9 +36,13 @@ def clean_surface(etr: str) -> str:
 
 
 def main() -> None:
-    records = [json.loads(ln) for ln in
-               (REPO / "research/anchors/gold_glosses/gold_glosses.jsonl")
-               .read_text().splitlines() if ln.strip()]
+    records = [
+        json.loads(ln)
+        for ln in (REPO / "research/anchors/gold_glosses/gold_glosses.jsonl")
+        .read_text()
+        .splitlines()
+        if ln.strip()
+    ]
     checked = [r for r in records if r["adjudication"]["status"] == "llm_checked"]
 
     test_etr = {p.etr for p in eval_pairs(min_confidence="low", split="test")}
@@ -57,17 +61,21 @@ def main() -> None:
         h = int(hashlib.sha1(etr.encode()).hexdigest(), 16) % 10
         if h < 8:  # train candidate
             if etr not in test_etr:
-                train_rows.append({"surface": etr, "translation": gloss,
-                                   "confidence": r["confidence"]})
-        else:      # silver-eval candidate
+                train_rows.append(
+                    {"surface": etr, "translation": gloss, "confidence": r["confidence"]}
+                )
+        else:  # silver-eval candidate
             if etr not in test_etr and etr not in train_etr:
-                silver_rows.append({"surface": etr, "translation": gloss,
-                                    "confidence": r["confidence"]})
+                silver_rows.append(
+                    {"surface": etr, "translation": gloss, "confidence": r["confidence"]}
+                )
 
     pd.DataFrame(train_rows).to_csv(OUT / "gg_train_pairs.csv", index=False)
     pd.DataFrame(silver_rows).to_csv(OUT / "gg_silver_eval.csv", index=False)
-    print(f"llm_checked {len(checked)} | train pairs {len(train_rows)} | "
-          f"silver eval {len(silver_rows)} | rosetta-test excluded {len(test_etr)}")
+    print(
+        f"llm_checked {len(checked)} | train pairs {len(train_rows)} | "
+        f"silver eval {len(silver_rows)} | rosetta-test excluded {len(test_etr)}"
+    )
 
 
 if __name__ == "__main__":
