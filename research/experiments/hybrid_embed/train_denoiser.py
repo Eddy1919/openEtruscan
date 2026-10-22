@@ -126,8 +126,8 @@ def main() -> None:
     g_rng.shuffle(groups)
     val_groups = set(groups[: len(groups) // 10])
     is_val = train_df["dup_group_id"].isin(val_groups).to_numpy()
-    train_seqs = [s for s, v in zip(seqs, is_val) if not v and s]
-    val_seqs = [s for s, v in zip(seqs, is_val) if v and s]
+    train_seqs = [s for s, v in zip(seqs, is_val, strict=False) if not v and s]
+    val_seqs = [s for s, v in zip(seqs, is_val, strict=False) if v and s]
     print(f"seqs: {len(train_seqs)} train / {len(val_seqs)} val")
 
     model = Seq2Seq(vocab_size=len(tok), max_len=MAX_LEN)

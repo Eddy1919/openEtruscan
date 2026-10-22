@@ -65,14 +65,14 @@ def main() -> None:
     g_rng.shuffle(groups)
     val_groups = set(groups[: len(groups) // 10])
     is_val = train_df["dup_group_id"].isin(val_groups).to_numpy()
-    val_seqs = [s for s, v in zip(seqs, is_val) if v and s]
+    val_seqs = [s for s, v in zip(seqs, is_val, strict=False) if v and s]
 
     # dev slice for tuning: last 10% of *training* groups
     train_groups = [g for g in groups if g not in val_groups]
     dev_groups = set(train_groups[-len(train_groups) // 10:])
     is_dev = train_df["dup_group_id"].isin(dev_groups).to_numpy()
-    store_seqs = [s for s, v, d in zip(seqs, is_val, is_dev) if not v and not d and s]
-    dev_seqs = [s for s, v, d in zip(seqs, is_val, is_dev) if not v and d and s]
+    store_seqs = [s for s, v, d in zip(seqs, is_val, is_dev, strict=False) if not v and not d and s]
+    dev_seqs = [s for s, v, d in zip(seqs, is_val, is_dev, strict=False) if not v and d and s]
     print(f"store {len(store_seqs)} | dev {len(dev_seqs)} | val {len(val_seqs)}")
 
     # ---------------- build episodic datastore from CLEAN store sequences

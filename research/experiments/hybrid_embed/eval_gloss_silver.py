@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -66,7 +65,7 @@ def main() -> None:
 
     silver = pd.read_csv(OUT / "gg_silver_eval.csv", dtype=str)
     train_g = pd.read_csv(OUT / "gg_train_pairs.csv", dtype=str)
-    silver_pairs = list(zip(silver["surface"], silver["translation"]))
+    silver_pairs = list(zip(silver["surface"], silver["translation"], strict=False))
     pool = sorted(set(silver["translation"]) | set(train_g["translation"]))
 
     ros_test = eval_pairs(split="test")

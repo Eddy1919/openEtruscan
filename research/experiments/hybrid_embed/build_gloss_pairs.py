@@ -36,9 +36,9 @@ def clean_surface(etr: str) -> str:
 
 
 def main() -> None:
-    records = [json.loads(l) for l in
+    records = [json.loads(ln) for ln in
                (REPO / "research/anchors/gold_glosses/gold_glosses.jsonl")
-               .read_text().splitlines() if l.strip()]
+               .read_text().splitlines() if ln.strip()]
     checked = [r for r in records if r["adjudication"]["status"] == "llm_checked"]
 
     test_etr = {p.etr for p in eval_pairs(min_confidence="low", split="test")}

@@ -18,16 +18,15 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import torch
 
-from evaluate import BM25, OUT, REPO, K, l2, ndcg_at_k, rrf
+from evaluate import BM25, OUT, REPO, K, ndcg_at_k, rrf
 from evaluate_v2 import S2SEncoder, load_token_states, maxsim
 from model_scratch import Seq2Seq
-from roles import parse_roles, tokenize
+from roles import tokenize
 from tokenizer_scratch import BPETokenizer
 from train_contrastive import DualEncoder, EngEncoder
 from train_denoiser import pad_to

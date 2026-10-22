@@ -64,7 +64,7 @@ def ibm1(src_sents: list[list[str]], tgt_sents: list[list[str]]) -> dict:
     """t[(tgt_word, src_word)] = p(tgt|src), src side includes NULL."""
     t: dict[tuple[str, str], float] = defaultdict(lambda: 1e-6)
     cooc: dict[str, set[str]] = defaultdict(set)
-    for s, g in zip(src_sents, tgt_sents):
+    for s, g in zip(src_sents, tgt_sents, strict=False):
         for f in s + ["<null>"]:
             for e in g:
                 cooc[f].add(e)
@@ -74,7 +74,7 @@ def ibm1(src_sents: list[list[str]], tgt_sents: list[list[str]]) -> dict:
     for _ in range(EM_ITERS):
         count = defaultdict(float)
         total = defaultdict(float)
-        for s, g in zip(src_sents, tgt_sents):
+        for s, g in zip(src_sents, tgt_sents, strict=False):
             fs = s + ["<null>"]
             for e in g:
                 z = sum(t[(e, f)] for f in fs)

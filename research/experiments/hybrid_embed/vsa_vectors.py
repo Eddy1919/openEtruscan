@@ -46,7 +46,7 @@ def main() -> None:
     fill_vec = {f: atom() for f in fillers}
 
     S = np.zeros((len(parsed), D), dtype=np.float32)
-    I = np.zeros((len(parsed), D), dtype=np.float32)
+    I = np.zeros((len(parsed), D), dtype=np.float32)  # noqa: E741  (I = content matrix, see header)
     for n, roles in enumerate(parsed):
         for k, (role, fill) in enumerate(roles):
             I[n] += (role_vec[role] * fill_vec[fill]).astype(np.float32)

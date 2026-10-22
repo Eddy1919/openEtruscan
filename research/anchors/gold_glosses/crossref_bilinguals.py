@@ -52,7 +52,7 @@ def main() -> None:
     if not bil_path.exists():
         print("bilinguals.jsonl not found — seed it first (see docstring).")
         raise SystemExit(1)
-    bilinguals = [json.loads(l) for l in bil_path.read_text().splitlines() if l.strip()]
+    bilinguals = [json.loads(ln) for ln in bil_path.read_text().splitlines() if ln.strip()]
 
     corpus = pd.read_csv(REPO / "research/data/openetruscan_clean_grouped.csv",
                          dtype=str).fillna("")

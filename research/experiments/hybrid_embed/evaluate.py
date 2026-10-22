@@ -221,7 +221,7 @@ def eval_search(index_df, fused, charlm_enc, role_vec, pos, graph_entity_vec) ->
     queries = [json.loads(line) for line in
                (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()]
 
-    dim_char = charlm_enc.encode(["mi"]).shape[1]
+    _dim_char = charlm_enc.encode(["mi"]).shape[1]
     fused_n = fused  # already per-block normalized + concatenated
 
     def query_vec(q: str) -> np.ndarray:

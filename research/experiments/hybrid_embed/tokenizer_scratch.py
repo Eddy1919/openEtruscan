@@ -43,7 +43,7 @@ class BPETokenizer:
 
     # -------------------------------------------------------------- training
     @classmethod
-    def train(cls, texts: list[str], vocab_size: int = 1000) -> "BPETokenizer":
+    def train(cls, texts: list[str], vocab_size: int = 1000) -> BPETokenizer:
         word_freq: Counter = Counter()
         for t in texts:
             for w in WORD_SEP.split(t.strip().lower()):
@@ -63,7 +63,7 @@ class BPETokenizer:
         while n_base + len(merges) < vocab_size:
             pairs: Counter = Counter()
             for syms, f in words.items():
-                for a, b in zip(syms, syms[1:]):
+                for a, b in zip(syms, syms[1:], strict=False):
                     pairs[(a, b)] += f
             if not pairs:
                 break
@@ -101,7 +101,7 @@ class BPETokenizer:
         syms = list(word[:-1]) + [word[-1] + EOW]
         while len(syms) > 1:
             best, best_rank = None, None
-            for i, pair in enumerate(zip(syms, syms[1:])):
+            for i, pair in enumerate(zip(syms, syms[1:], strict=False)):
                 r = self.merge_rank.get(pair)
                 if r is not None and (best_rank is None or r < best_rank):
                     best, best_rank = i, r
@@ -141,7 +141,7 @@ class BPETokenizer:
             {"merges": self.merges, "vocab": self.vocab}, ensure_ascii=False))
 
     @classmethod
-    def load(cls, path: Path) -> "BPETokenizer":
+    def load(cls, path: Path) -> BPETokenizer:
         d = json.loads(path.read_text())
         return cls([tuple(m) for m in d["merges"]], d["vocab"])
 

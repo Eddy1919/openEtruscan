@@ -59,9 +59,9 @@ def main() -> None:
             gt = [f for r, f in roles if r == target]
             if not gt:
                 continue
-            I = np.zeros(D)
+            I = np.zeros(D)  # noqa: E741  (VSA content vector, see header)
             for r, f in roles:
-                I += role_vec[r] * fill_mat[fill_id[f]]
+                I += role_vec[r] * fill_mat[fill_id[f]]  # noqa: E741
             rec = int(np.argmax(fill_mat @ (I * role_vec[target])))
             tot += 1
             ok += int(fillers[rec] == gt[-1])

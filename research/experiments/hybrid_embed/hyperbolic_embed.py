@@ -139,7 +139,7 @@ def main() -> None:
     n2v = np.load(OUT / "graph_vectors.npy")
     n2v_n = n2v / np.maximum(np.linalg.norm(n2v, axis=1, keepdims=True), 1e-9)
     ap_e = []
-    for c, members in eval_clans.items():
+    for _c, members in eval_clans.items():
         cv = n2v_n[list(members)].mean(axis=0)
         ap_e.append(average_precision(np.argsort(-(n2v_n @ cv)), members))
     map_n2v = float(np.mean(ap_e))
