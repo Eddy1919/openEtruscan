@@ -309,7 +309,9 @@ async def test_inscription_alternate_links_header(client: AsyncClient, sample_da
     assert "application/ld+json" in link
     assert "text/turtle" in link
     assert "application/tei+xml" in link
-    assert response.headers.get("Vary") == "Accept"
+    # CORSMiddleware appends ``Origin`` (starlette >= 1.7), so compare tokens.
+    vary = {token.strip().lower() for token in response.headers.get("Vary", "").split(",")}
+    assert "accept" in vary
 
 
 async def test_inscription_unknown_id_404(client: AsyncClient, sample_data):

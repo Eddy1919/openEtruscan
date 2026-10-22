@@ -26,6 +26,20 @@ from sqlalchemy import create_engine, inspect, text
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
+
+def _sync_url(url: str) -> str:
+    """Pin the sync driver to psycopg2, the one this project declares.
+
+    SQLAlchemy 2.1 maps a bare ``postgresql://`` to psycopg (v3), which is not
+    installed; 2.0 mapped it to psycopg2. Alembic's env.py still wants the bare
+    form (it rewrites it to asyncpg), so only the sync engines built here are
+    pinned, never the URL handed to Alembic.
+    """
+    return url.replace("postgresql+asyncpg://", "postgresql://").replace(
+        "postgresql://", "postgresql+psycopg2://"
+    )
+
+
 # Named distinctly from the conftest-registered `requires_postgres` marker,
 # which has different semantics (this is a module-local env-var skipif).
 needs_postgres_dsn = pytest.mark.skipif(
@@ -37,10 +51,7 @@ needs_postgres_dsn = pytest.mark.skipif(
 @pytest.fixture()
 def scratch_db_url():
     """A freshly created, empty database on the same server; dropped after."""
-    admin = create_engine(
-        DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
-        isolation_level="AUTOCOMMIT",
-    )
+    admin = create_engine(_sync_url(DATABASE_URL), isolation_level="AUTOCOMMIT")
     name = f"migrations_{uuid.uuid4().hex[:12]}"
     with admin.connect() as conn:
         conn.execute(text(f'CREATE DATABASE "{name}"'))
@@ -83,7 +94,7 @@ def _upgrade_head(url: str) -> None:
 def test_upgrade_head_from_empty(scratch_db_url):
     """The full chain applies cleanly to an empty database."""
     _upgrade_head(scratch_db_url)
-    eng = create_engine(scratch_db_url)
+    eng = create_engine(_sync_url(scratch_db_url))
     try:
         tables = set(inspect(eng).get_table_names())
     finally:
@@ -103,7 +114,7 @@ def test_migrations_cover_orm_tables(scratch_db_url):
     from openetruscan.db.models import Base
 
     _upgrade_head(scratch_db_url)
-    eng = create_engine(scratch_db_url)
+    eng = create_engine(_sync_url(scratch_db_url))
     try:
         migrated = set(inspect(eng).get_table_names())
     finally:
