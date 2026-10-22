@@ -98,8 +98,8 @@ dev = [
     # .pre-commit-config.yaml so local runs, pre-commit, and CI agree
     # byte-for-byte (a minor ruff bump silently reformats the tree).
     # Keep these two in lockstep with that file.
-    "ruff==0.16.0",
-    "mypy==2.3.0",
+    "ruff==0.16.5",
+    "mypy==2.3.1",
     # semgrep/safety removed 2026-07-17: semgrep was already dropped from
     # CI (see security.yml) but its click<8.2 cap held the shipped CLI's
     # click at a CVE-affected version; safety is superseded by the

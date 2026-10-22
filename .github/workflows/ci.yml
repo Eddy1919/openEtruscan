@@ -41,7 +41,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install ruff + mypy (pinned)
-        run: pip install --quiet ruff==0.16.0 mypy==2.3.0 types-PyYAML types-requests pyyaml
+        run: pip install --quiet ruff==0.16.5 mypy==2.3.1 types-PyYAML types-requests pyyaml
       - name: Ruff lint
         run: ruff check .
       - name: Ruff format check
