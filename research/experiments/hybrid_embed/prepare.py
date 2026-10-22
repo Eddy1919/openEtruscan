@@ -69,8 +69,15 @@ def main() -> None:
     n_latin_like = int(latin_mask.sum())
     df = df[~latin_mask].copy()
 
-    index_cols = ["id", "surface", "canonical_transliterated", "translation",
-                  "dup_group_id", "dup_group_size", "intact_token_ratio"]
+    index_cols = [
+        "id",
+        "surface",
+        "canonical_transliterated",
+        "translation",
+        "dup_group_id",
+        "dup_group_size",
+        "intact_token_ratio",
+    ]
     df[index_cols].to_csv(OUT / "index.csv", index=False)
 
     # one representative per duplicate group; longest surface keeps the most

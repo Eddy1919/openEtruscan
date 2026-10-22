@@ -43,7 +43,7 @@ class BPETokenizer:
 
     # -------------------------------------------------------------- training
     @classmethod
-    def train(cls, texts: list[str], vocab_size: int = 1000) -> "BPETokenizer":
+    def train(cls, texts: list[str], vocab_size: int = 1000) -> BPETokenizer:
         word_freq: Counter = Counter()
         for t in texts:
             for w in WORD_SEP.split(t.strip().lower()):
@@ -63,7 +63,7 @@ class BPETokenizer:
         while n_base + len(merges) < vocab_size:
             pairs: Counter = Counter()
             for syms, f in words.items():
-                for a, b in zip(syms, syms[1:]):
+                for a, b in zip(syms, syms[1:], strict=False):
                     pairs[(a, b)] += f
             if not pairs:
                 break
@@ -87,8 +87,9 @@ class BPETokenizer:
                 new_words[key] = new_words.get(key, 0) + f
             words = new_words
 
-        pieces = sorted({s for syms in words for s in syms} | set(alphabet)
-                        | {a + b for a, b in merges})
+        pieces = sorted(
+            {s for syms in words for s in syms} | set(alphabet) | {a + b for a, b in merges}
+        )
         vocab = {sp: i for i, sp in enumerate(SPECIALS)}
         for p in pieces:
             vocab[p] = len(vocab)
@@ -101,7 +102,7 @@ class BPETokenizer:
         syms = list(word[:-1]) + [word[-1] + EOW]
         while len(syms) > 1:
             best, best_rank = None, None
-            for i, pair in enumerate(zip(syms, syms[1:])):
+            for i, pair in enumerate(zip(syms, syms[1:], strict=False)):
                 r = self.merge_rank.get(pair)
                 if r is not None and (best_rank is None or r < best_rank):
                     best, best_rank = i, r
@@ -137,11 +138,12 @@ class BPETokenizer:
 
     # -------------------------------------------------------------- persistence
     def save(self, path: Path) -> None:
-        path.write_text(json.dumps(
-            {"merges": self.merges, "vocab": self.vocab}, ensure_ascii=False))
+        path.write_text(
+            json.dumps({"merges": self.merges, "vocab": self.vocab}, ensure_ascii=False)
+        )
 
     @classmethod
-    def load(cls, path: Path) -> "BPETokenizer":
+    def load(cls, path: Path) -> BPETokenizer:
         d = json.loads(path.read_text())
         return cls([tuple(m) for m in d["merges"]], d["vocab"])
 
@@ -160,17 +162,26 @@ def main() -> None:
 
     n_words = sum(len(t.split()) for t in texts)
     n_pieces = sum(len(tok.encode(t)) for t in texts)
-    print(f"vocab {len(tok)} | words {n_words:,} | pieces {n_pieces:,} | "
-          f"fertility {n_pieces / n_words:.2f} pieces/word")
+    print(
+        f"vocab {len(tok)} | words {n_words:,} | pieces {n_pieces:,} | "
+        f"fertility {n_pieces / n_words:.2f} pieces/word"
+    )
 
     # WP1 gate: do genitive suffixes emerge as single pieces?
-    suffixes = ["al" + EOW, "us" + EOW, "isa" + EOW, "śa" + EOW, "s" + EOW,
-                "ial" + EOW, "es" + EOW, "sa" + EOW]
-    print("suffix pieces in vocab:",
-          {s.replace(EOW, "</w>"): (s in tok.vocab) for s in suffixes})
+    suffixes = [
+        "al" + EOW,
+        "us" + EOW,
+        "isa" + EOW,
+        "śa" + EOW,
+        "s" + EOW,
+        "ial" + EOW,
+        "es" + EOW,
+        "sa" + EOW,
+    ]
+    print("suffix pieces in vocab:", {s.replace(EOW, "</w>"): (s in tok.vocab) for s in suffixes})
 
     for demo in ["mi mulu larisale velχainasi", "larθ velus clan", "θania pulfnei tutnasa"]:
-        print(f"  {demo!r} -> {[t.replace(EOW,'</w>') for t in tok.tokens(demo)]}")
+        print(f"  {demo!r} -> {[t.replace(EOW, '</w>') for t in tok.tokens(demo)]}")
 
     roundtrip_fail = sum(tok.decode(tok.encode(t)) != " ".join(t.lower().split()) for t in texts)
     print(f"round-trip failures: {roundtrip_fail}/{len(texts)}")

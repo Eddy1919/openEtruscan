@@ -108,11 +108,27 @@ def main() -> None:
     adj, kept = build_graph(index_df)
     nodes = sorted(adj)
     node_id = {n: i for i, n in enumerate(nodes)}
-    n_insc_in_graph = sum(1 for n in nodes if not any(n.startswith(r + ":") for r in
-                          ("EGO", "VERB", "OBJECT", "STATUS", "THEONYM",
-                           "PRAENOMEN", "GENTILICIUM", "PATRONYMIC")))
-    print(f"graph: {len(nodes)} nodes ({n_insc_in_graph} inscriptions, "
-          f"{len(kept)} entities), building walks...")
+    n_insc_in_graph = sum(
+        1
+        for n in nodes
+        if not any(
+            n.startswith(r + ":")
+            for r in (
+                "EGO",
+                "VERB",
+                "OBJECT",
+                "STATUS",
+                "THEONYM",
+                "PRAENOMEN",
+                "GENTILICIUM",
+                "PATRONYMIC",
+            )
+        )
+    )
+    print(
+        f"graph: {len(nodes)} nodes ({n_insc_in_graph} inscriptions, "
+        f"{len(kept)} entities), building walks..."
+    )
 
     walks = random_walks(adj, rng)
     pairs = skipgram_pairs(walks, node_id, rng)
@@ -143,9 +159,7 @@ def main() -> None:
             )
             neg = emb_out(neg_ids)
             pos_score = torch.nn.functional.logsigmoid((center * ctx).sum(-1))
-            neg_score = torch.nn.functional.logsigmoid(
-                -(neg * center.unsqueeze(1)).sum(-1)
-            ).sum(-1)
+            neg_score = torch.nn.functional.logsigmoid(-(neg * center.unsqueeze(1)).sum(-1)).sum(-1)
             loss = -(pos_score + neg_score).mean()
             opt.zero_grad()
             loss.backward()

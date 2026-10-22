@@ -46,7 +46,7 @@ def main() -> None:
     fill_vec = {f: atom() for f in fillers}
 
     S = np.zeros((len(parsed), D), dtype=np.float32)
-    I = np.zeros((len(parsed), D), dtype=np.float32)
+    I = np.zeros((len(parsed), D), dtype=np.float32)  # noqa: E741  (I = content matrix, see header)
     for n, roles in enumerate(parsed):
         for k, (role, fill) in enumerate(roles):
             I[n] += (role_vec[role] * fill_vec[fill]).astype(np.float32)
@@ -55,8 +55,12 @@ def main() -> None:
     np.save(OUT / "vsa_S.npy", S)
     np.save(OUT / "vsa_I.npy", I)
     n_roles = sum(len(r) for r in parsed)
-    stats = {"rows": len(parsed), "distinct_fillers": len(fillers), "total_roles": n_roles,
-             "rows_with_roles": int(sum(bool(r) for r in parsed))}
+    stats = {
+        "rows": len(parsed),
+        "distinct_fillers": len(fillers),
+        "total_roles": n_roles,
+        "rows_with_roles": int(sum(bool(r) for r in parsed)),
+    }
     (OUT / "vsa_stats.json").write_text(json.dumps(stats, indent=2))
     print(json.dumps(stats, indent=2))
 

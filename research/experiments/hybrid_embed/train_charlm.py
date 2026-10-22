@@ -100,9 +100,7 @@ def main() -> None:
     val_groups = set(groups[: len(groups) // 10])
     is_val = train_df["dup_group_id"].isin(val_groups).to_numpy()
 
-    encoded = torch.tensor(
-        [vocab.encode(t, max_len=MAX_LEN) for t in texts], dtype=torch.long
-    )
+    encoded = torch.tensor([vocab.encode(t, max_len=MAX_LEN) for t in texts], dtype=torch.long)
     xs_train = encoded[~is_val]
     xs_val = encoded[is_val]
     print(f"split: {len(xs_train)} train / {len(xs_val)} val (group-level)")
@@ -132,7 +130,9 @@ def main() -> None:
             losses.append(float(loss))
         g_val.manual_seed(SEED + 1)  # same masks every eval
         acc = masked_accuracy(model, xs_val, vocab, g_val, dev)
-        log["epochs"].append({"epoch": epoch, "loss": float(np.mean(losses)), "val_masked_acc": acc})
+        log["epochs"].append(
+            {"epoch": epoch, "loss": float(np.mean(losses)), "val_masked_acc": acc}
+        )
         print(f"epoch {epoch:02d} loss {np.mean(losses):.4f} val_masked_acc {acc:.4f}")
         if acc > best_acc:
             best_acc, bad = acc, 0
@@ -167,8 +167,12 @@ def main() -> None:
     np.save(OUT / "charlm_vectors.npy", vectors)
     (OUT / "charlm_ids.json").write_text(json.dumps(index_df["id"].tolist()))
     torch.save(
-        {"state_dict": model.state_dict(), "char_to_idx": vocab.char_to_idx,
-         "d_model": D_MODEL, "max_len": MAX_LEN},
+        {
+            "state_dict": model.state_dict(),
+            "char_to_idx": vocab.char_to_idx,
+            "d_model": D_MODEL,
+            "max_len": MAX_LEN,
+        },
         OUT / "charlm_model.pt",
     )
     (OUT / "charlm_train_log.json").write_text(json.dumps(log, indent=2))

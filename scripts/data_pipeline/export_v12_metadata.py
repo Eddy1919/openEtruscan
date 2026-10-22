@@ -32,18 +32,30 @@ from pathlib import Path
 import pandas as pd
 
 METADATA_COLS = [
-    "findspot", "findspot_lat", "findspot_lon", "findspot_uncertainty_m",
-    "object_type", "medium", "language", "script_system", "classification",
-    "completeness", "pleiades_id", "trismegistos_id", "source_code",
+    "findspot",
+    "findspot_lat",
+    "findspot_lon",
+    "findspot_uncertainty_m",
+    "object_type",
+    "medium",
+    "language",
+    "script_system",
+    "classification",
+    "completeness",
+    "pleiades_id",
+    "trismegistos_id",
+    "source_code",
 ]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--grouped", type=Path, required=True,
-                    help="frozen v1.1 openetruscan_clean_grouped.csv")
-    ap.add_argument("--bilinguals", type=Path, default=None,
-                    help="bilingual_annotations.csv to join (optional)")
+    ap.add_argument(
+        "--grouped", type=Path, required=True, help="frozen v1.1 openetruscan_clean_grouped.csv"
+    )
+    ap.add_argument(
+        "--bilinguals", type=Path, default=None, help="bilingual_annotations.csv to join (optional)"
+    )
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
@@ -53,7 +65,12 @@ def main() -> None:
 
     import sqlalchemy as sa
 
-    engine = sa.create_engine(db_url)
+    # SQLAlchemy 2.1 maps a bare postgresql:// to psycopg (v3), which is not a
+    # dependency; pin psycopg2, the driver pyproject declares.
+    url = sa.engine.make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    engine = sa.create_engine(url)
     cols = ", ".join(METADATA_COLS)
     with engine.connect() as conn:
         meta = pd.read_sql(sa.text(f"SELECT id, {cols} FROM inscriptions"), conn)
@@ -73,10 +90,14 @@ def main() -> None:
 
     out.to_csv(args.output, index=False)
     covered = out["findspot"].fillna("").str.len().gt(0).sum()
-    print(f"rows {len(out)} | findspot coverage {covered} "
-          f"({100 * covered / len(out):.1f}%) | wrote {args.output}")
-    print("next: sha256, update scripts/ops/fetch_data.py manifest, "
-          "Zenodo new-version deposit (see research/data/DEPOSIT_v1.2.md)")
+    print(
+        f"rows {len(out)} | findspot coverage {covered} "
+        f"({100 * covered / len(out):.1f}%) | wrote {args.output}"
+    )
+    print(
+        "next: sha256, update scripts/ops/fetch_data.py manifest, "
+        "Zenodo new-version deposit (see research/data/DEPOSIT_v1.2.md)"
+    )
 
 
 if __name__ == "__main__":

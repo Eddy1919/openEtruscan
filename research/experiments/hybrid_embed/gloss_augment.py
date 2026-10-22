@@ -29,8 +29,14 @@ HERE = Path(__file__).parent
 OUT = HERE / "out"
 SEED = 20260830
 
-SYNONYMS = {"jug": "pitcher", "tomb": "grave", "gave": "gifted",
-            "made": "fashioned", "urn": "vessel", "mirror": "speculum"}
+SYNONYMS = {
+    "jug": "pitcher",
+    "tomb": "grave",
+    "gave": "gifted",
+    "made": "fashioned",
+    "urn": "vessel",
+    "mirror": "speculum",
+}
 POSSESSIVE = re.compile(r"\bthe (\w+) of (\w+)\b")
 ARTICLE = re.compile(r"\b(?:the|a|an)\s+")
 
@@ -56,7 +62,7 @@ def variants(gloss: str, rng: np.random.Generator) -> list[tuple[str, str]]:
 
     if len(words) >= 4:
         j = int(rng.integers(1, len(words)))
-        out.append((" ".join(words[:j] + words[j + 1:]), "random_deletion"))
+        out.append((" ".join(words[:j] + words[j + 1 :]), "random_deletion"))
 
     syn = " ".join(SYNONYMS.get(w, w) for w in words)
     if syn != gloss:

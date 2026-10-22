@@ -75,10 +75,10 @@ from openetruscan import normalize, convert
 # Normalise historical transliterations and parse Leiden apparatus
 result = normalize("LARTHAL [VEL]CHAS")
 
-print(result.canonical)   # "larθal velchas"
-print(result.phonetic)    # "/lar.tʰal vel.kʰas/"
+print(result.canonical)  # "larθal velchas"
+print(result.phonetic)  # "/lar.tʰal vel.kʰas/"
 print(result.old_italic)  # "𐌋𐌀𐌓𐌈𐌀𐌋 𐌅𐌄𐌋𐌙𐌀𐌔"
-print(result.apparatus)   # Structured list of editorial annotations
+print(result.apparatus)  # Structured list of editorial annotations
 ```
 
 ### Command-Line Interface (CLI)

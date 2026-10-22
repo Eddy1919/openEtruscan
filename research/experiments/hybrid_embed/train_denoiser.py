@@ -126,8 +126,8 @@ def main() -> None:
     g_rng.shuffle(groups)
     val_groups = set(groups[: len(groups) // 10])
     is_val = train_df["dup_group_id"].isin(val_groups).to_numpy()
-    train_seqs = [s for s, v in zip(seqs, is_val) if not v and s]
-    val_seqs = [s for s, v in zip(seqs, is_val) if v and s]
+    train_seqs = [s for s, v in zip(seqs, is_val, strict=False) if not v and s]
+    val_seqs = [s for s, v in zip(seqs, is_val, strict=False) if v and s]
     print(f"seqs: {len(train_seqs)} train / {len(val_seqs)} val")
 
     model = Seq2Seq(vocab_size=len(tok), max_len=MAX_LEN)
@@ -146,19 +146,25 @@ def main() -> None:
             batch = [train_seqs[j] for j in order[i : i + BATCH]]
             x, y_in, y_out, _ = make_batch(batch, rng)
             logits = model(x, y_in)
-            loss = F.cross_entropy(logits.view(-1, len(tok)), y_out.view(-1),
-                                   ignore_index=PAD)
+            loss = F.cross_entropy(logits.view(-1, len(tok)), y_out.view(-1), ignore_index=PAD)
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
             losses.append(float(loss.detach()))
-        full_acc, corr_acc = evaluate_val(model, val_seqs,
-                                          np.random.default_rng(val_rng_seed))
-        log["epochs"].append({"epoch": epoch, "loss": float(np.mean(losses)),
-                              "val_full_acc": full_acc, "val_corrupted_acc": corr_acc})
-        print(f"epoch {epoch:03d} loss {np.mean(losses):.4f} "
-              f"val full {full_acc:.4f} corrupted {corr_acc:.4f}")
+        full_acc, corr_acc = evaluate_val(model, val_seqs, np.random.default_rng(val_rng_seed))
+        log["epochs"].append(
+            {
+                "epoch": epoch,
+                "loss": float(np.mean(losses)),
+                "val_full_acc": full_acc,
+                "val_corrupted_acc": corr_acc,
+            }
+        )
+        print(
+            f"epoch {epoch:03d} loss {np.mean(losses):.4f} "
+            f"val full {full_acc:.4f} corrupted {corr_acc:.4f}"
+        )
         # early-stop on full-seq accuracy: the damaged-position metric has
         # only ~900 val positions and is too noisy to select a model on
         if full_acc > best:
@@ -172,8 +178,10 @@ def main() -> None:
 
     model.load_state_dict(best_state)
     log["best_val_full_acc"] = best
-    torch.save({"state_dict": model.state_dict(), "vocab_size": len(tok),
-                "max_len": MAX_LEN}, OUT / "s2s_model.pt")
+    torch.save(
+        {"state_dict": model.state_dict(), "vocab_size": len(tok), "max_len": MAX_LEN},
+        OUT / "s2s_model.pt",
+    )
 
     # export pooled vectors + ragged token states for the full index
     model.eval()
@@ -194,7 +202,9 @@ def main() -> None:
     np.save(OUT / "s2s_pooled.npy", pooled)
     np.savez_compressed(
         OUT / "s2s_token_states.npz",
-        states=np.concatenate(states_flat).astype(np.float32) if states_flat else np.zeros((0, 128), np.float32),
+        states=np.concatenate(states_flat).astype(np.float32)
+        if states_flat
+        else np.zeros((0, 128), np.float32),
         lengths=np.array(lengths, dtype=np.int32),
     )
     (OUT / "s2s_train_log.json").write_text(json.dumps(log, indent=2))

@@ -15,7 +15,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -35,8 +34,7 @@ def bootstrap_ci(values: np.ndarray, n_boot: int = 10_000, seed: int = 7):
     return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
 
 
-def rank_metrics(towers: Towers, pairs: list[tuple[str, str]],
-                 candidates: list[str]) -> dict:
+def rank_metrics(towers: Towers, pairs: list[tuple[str, str]], candidates: list[str]) -> dict:
     cand_vecs = l2(towers.eng(candidates))
     cand_idx = {g: i for i, g in enumerate(candidates)}
     hits1, hits10, rr = [], [], []
@@ -51,12 +49,16 @@ def rank_metrics(towers: Towers, pairs: list[tuple[str, str]],
     lo10, hi10 = bootstrap_ci(hits10_a)
     lom, him = bootstrap_ci(rr_a)
     n = len(pairs)
-    return {"n": n, "candidates": len(candidates),
-            "p_at_1": float(np.mean(hits1)),
-            "p_at_10": float(hits10_a.mean()),
-            "p_at_10_ci95": [lo10, hi10],
-            "mrr": float(rr_a.mean()), "mrr_ci95": [lom, him],
-            "chance_p_at_10": K / len(candidates)}
+    return {
+        "n": n,
+        "candidates": len(candidates),
+        "p_at_1": float(np.mean(hits1)),
+        "p_at_10": float(hits10_a.mean()),
+        "p_at_10_ci95": [lo10, hi10],
+        "mrr": float(rr_a.mean()),
+        "mrr_ci95": [lom, him],
+        "chance_p_at_10": K / len(candidates),
+    }
 
 
 def main() -> None:
@@ -66,7 +68,7 @@ def main() -> None:
 
     silver = pd.read_csv(OUT / "gg_silver_eval.csv", dtype=str)
     train_g = pd.read_csv(OUT / "gg_train_pairs.csv", dtype=str)
-    silver_pairs = list(zip(silver["surface"], silver["translation"]))
+    silver_pairs = list(zip(silver["surface"], silver["translation"], strict=False))
     pool = sorted(set(silver["translation"]) | set(train_g["translation"]))
 
     ros_test = eval_pairs(split="test")
@@ -83,11 +85,13 @@ def main() -> None:
             "rosetta_gloss_22": rank_metrics(towers, ros_pairs, ros_pool),
         }
         s, r = results[tag]["silver_gloss_71"], results[tag]["rosetta_gloss_22"]
-        print(f"{tag:22} silver p@10 {s['p_at_10']:.3f} "
-              f"CI[{s['p_at_10_ci95'][0]:.3f},{s['p_at_10_ci95'][1]:.3f}] "
-              f"mrr {s['mrr']:.3f} (chance {s['chance_p_at_10']:.3f}) | "
-              f"rosetta p@10 {r['p_at_10']:.3f} "
-              f"CI[{r['p_at_10_ci95'][0]:.3f},{r['p_at_10_ci95'][1]:.3f}]")
+        print(
+            f"{tag:22} silver p@10 {s['p_at_10']:.3f} "
+            f"CI[{s['p_at_10_ci95'][0]:.3f},{s['p_at_10_ci95'][1]:.3f}] "
+            f"mrr {s['mrr']:.3f} (chance {s['chance_p_at_10']:.3f}) | "
+            f"rosetta p@10 {r['p_at_10']:.3f} "
+            f"CI[{r['p_at_10_ci95'][0]:.3f},{r['p_at_10_ci95'][1]:.3f}]"
+        )
 
     (OUT / "gloss_silver_results.json").write_text(json.dumps(results, indent=2))
     print("saved out/gloss_silver_results.json")

@@ -220,8 +220,12 @@ def scratch_db_url():
     """
     from sqlalchemy import create_engine, text
 
+    # Pin psycopg2 explicitly: SQLAlchemy 2.1 maps a bare ``postgresql://`` to
+    # psycopg (v3), which this project does not install (see test_migrations.py).
     admin = create_engine(
-        DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
+        DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://").replace(
+            "postgresql://", "postgresql+psycopg2://"
+        ),
         isolation_level="AUTOCOMMIT",
     )
     name = f"geomless_{uuid.uuid4().hex[:12]}"

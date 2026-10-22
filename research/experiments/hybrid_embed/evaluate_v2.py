@@ -23,14 +23,23 @@ Output: out/results_v2.json
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import torch
 
-from evaluate import (BM25, OUT, REPO, K, l2, ndcg_at_k, rrf,
-                      eval_structural, vsa_codebook, vsa_encode_S)
+from evaluate import (
+    BM25,
+    OUT,
+    REPO,
+    K,
+    l2,
+    ndcg_at_k,
+    rrf,
+    eval_structural,
+    vsa_codebook,
+    vsa_encode_S,
+)
 from model_scratch import Seq2Seq
 from roles import parse_roles, tokenize
 from tokenizer_scratch import BPETokenizer
@@ -56,7 +65,7 @@ class S2SEncoder:
         toks = []
         for b in range(x.size(0)):
             live = int((~pad_mask[b]).sum())
-            toks.append(states[b, :max(live, 0)].numpy().astype(np.float32))
+            toks.append(states[b, : max(live, 0)].numpy().astype(np.float32))
         return pooled, toks
 
 
@@ -93,8 +102,7 @@ def main() -> None:
     fused_v2 = np.concatenate([l2(s2s_pooled), l2(graph), l2(vsa_S)], axis=1)
 
     print("=== A. structural protocol (v2 blocks) ===")
-    structural = eval_structural(index_df, {"s2s_pooled": s2s_pooled,
-                                            "fused_v2": fused_v2})
+    structural = eval_structural(index_df, {"s2s_pooled": s2s_pooled, "fused_v2": fused_v2})
     print(json.dumps(structural, indent=2))
 
     enc = S2SEncoder()
@@ -105,15 +113,19 @@ def main() -> None:
     for i, s in enumerate(index_df["surface"]):
         for r, f in parse_roles(tokenize(s)):
             ent_rows.setdefault(f"{r}:{f}", []).append(i)
-    graph_entity_vec = {e: graph[rows].mean(axis=0)
-                        for e, rows in ent_rows.items() if len(rows) >= 2}
+    graph_entity_vec = {
+        e: graph[rows].mean(axis=0) for e, rows in ent_rows.items() if len(rows) >= 2
+    }
     g_dim = graph.shape[1]
 
     def query_vec(q: str) -> np.ndarray:
         pooled, _ = enc.encode([q])
         cv = l2(pooled)[0]
-        gvecs = [graph_entity_vec[f"{r}:{f}"] for r, f in parse_roles(tokenize(q))
-                 if f"{r}:{f}" in graph_entity_vec]
+        gvecs = [
+            graph_entity_vec[f"{r}:{f}"]
+            for r, f in parse_roles(tokenize(q))
+            if f"{r}:{f}" in graph_entity_vec
+        ]
         gv = np.mean(gvecs, axis=0) if gvecs else np.zeros(g_dim, dtype=np.float32)
         gv = gv / max(float(np.linalg.norm(gv)), 1e-9)
         sv = vsa_encode_S(q, role_vec, pos)
@@ -122,8 +134,10 @@ def main() -> None:
 
     docs = [tokenize(s) for s in index_df["surface"]]
     bm25 = BM25(docs)
-    queries = [json.loads(line) for line in
-               (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()]
+    queries = [
+        json.loads(line)
+        for line in (REPO / "eval/harness/search_eval_queries.jsonl").read_text().splitlines()
+    ]
 
     per_cat: dict[str, dict[str, list[float]]] = {}
     skipped = 0
@@ -137,27 +151,33 @@ def main() -> None:
         dense_rank = np.argsort(-(fused_v2 @ query_vec(q["query"])))
         _, q_toks = enc.encode([q["query"]])
         li_rank = np.argsort(-maxsim(q_toks[0], doc_states))
-        rrf_rank = np.argsort(-rrf([bm_rank[:100], dense_rank[:100], li_rank[:100]],
-                                   len(ids)))
-        systems = {"bm25": bm_rank, "dense_fused_v2": dense_rank,
-                   "late_interaction": li_rank, "rrf_all": rrf_rank}
+        rrf_rank = np.argsort(-rrf([bm_rank[:100], dense_rank[:100], li_rank[:100]], len(ids)))
+        systems = {
+            "bm25": bm_rank,
+            "dense_fused_v2": dense_rank,
+            "late_interaction": li_rank,
+            "rrf_all": rrf_rank,
+        }
         for name, rank in systems.items():
             ranked_ids = [ids[i] for i in rank[:K]]
-            per_cat.setdefault(name, {}).setdefault(cat, []).append(
-                ndcg_at_k(ranked_ids, relevant))
+            per_cat.setdefault(name, {}).setdefault(cat, []).append(ndcg_at_k(ranked_ids, relevant))
 
     search: dict = {"skipped_queries_no_relevant_in_index": skipped}
     for name, cats in per_cat.items():
         cat_means = {c: float(np.mean(v)) for c, v in sorted(cats.items())}
-        search[name] = {"per_category": cat_means,
-                        "macro_mean": float(np.mean(list(cat_means.values())))}
+        search[name] = {
+            "per_category": cat_means,
+            "macro_mean": float(np.mean(list(cat_means.values()))),
+        }
     print("=== B. offline search eval v2 (NDCG@10) ===")
     print(json.dumps(search, indent=2))
 
     # --- C. rosetta with s2s encoder
     import sys
+
     sys.path.insert(0, str(REPO / "eval/harness"))
     from rosetta_eval_pairs import eval_pairs
+
     test = eval_pairs(split="test")
     allp = eval_pairs(min_confidence="low", split=None)
     latin_vocab = sorted({p.lat for p in allp})
@@ -168,14 +188,21 @@ def main() -> None:
         ev, _ = enc.encode([p.etr])
         top = [latin_vocab[i] for i in np.argsort(-(lat_n @ l2(ev)[0]))[:K]]
         hits += int(p.lat in top)
-    rosetta = {"n": len(test), "candidates": len(latin_vocab),
-               "p_at_10": hits / len(test), "chance_p_at_10": K / len(latin_vocab)}
+    rosetta = {
+        "n": len(test),
+        "candidates": len(latin_vocab),
+        "p_at_10": hits / len(test),
+        "chance_p_at_10": K / len(latin_vocab),
+    }
     print("=== C. rosetta (s2s) ===")
     print(json.dumps(rosetta, indent=2))
 
-    (OUT / "results_v2.json").write_text(json.dumps(
-        {"structural_v2": structural, "search_ndcg10_v2": search,
-         "rosetta_s2s": rosetta}, indent=2))
+    (OUT / "results_v2.json").write_text(
+        json.dumps(
+            {"structural_v2": structural, "search_ndcg10_v2": search, "rosetta_s2s": rosetta},
+            indent=2,
+        )
+    )
     print("saved out/results_v2.json")
 
 
