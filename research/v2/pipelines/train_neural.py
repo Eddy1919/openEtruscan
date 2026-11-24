@@ -37,9 +37,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
-from research.v2.eval.bootstrap import bootstrap_ci, write_result  # noqa: E402
-from research.v2.eval.classify_metrics import (  # noqa: E402
+from research.v2.eval.bootstrap import bootstrap_ci, write_result
+from research.v2.eval.classify_metrics import (
     accuracy,
     confusion_matrix,
     head2_f1,

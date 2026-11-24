@@ -56,8 +56,7 @@ from pathlib import Path
 
 # Reuse the provider registry from classify_jury so we have one source of
 # truth for model adapters.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from classify_jury import PROVIDER_REGISTRY  # noqa: E402
+from research.v2.pipelines.classify_jury import PROVIDER_REGISTRY
 
 SYSTEM_PROMPT = """You are extracting bilingual lexical equivalences between
 Etruscan and {target_lang} from a classical text passage. The classical author

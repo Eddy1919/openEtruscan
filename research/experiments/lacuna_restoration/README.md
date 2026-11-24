@@ -47,7 +47,7 @@ takes ~5 minutes on CPU.
 ## Run
 
 ```bash
-python research/experiments/lacuna_restoration/eval.py
+uv run python research/experiments/lacuna_restoration/eval.py
 ```
 
 Both checkpoints survive in `gs://openetruscan-rosetta-vai/models/`

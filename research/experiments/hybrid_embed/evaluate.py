@@ -37,15 +37,14 @@ import numpy as np
 import pandas as pd
 import torch
 
+from openetruscan.ml.neural import CharMLM, CharVocab
 from roles import ROLES, parse_roles, tokenize
 
 HERE = Path(__file__).parent
 REPO = HERE.parent.parent.parent
 OUT = HERE / "out"
-sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "eval/harness"))
 
-from openetruscan.ml.neural import CharMLM, CharVocab  # noqa: E402
 from rosetta_eval_pairs import eval_pairs  # noqa: E402
 
 K = 10

@@ -22,8 +22,7 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from classify_jury import PROVIDER_REGISTRY  # noqa: E402
+from research.v2.pipelines.classify_jury import PROVIDER_REGISTRY
 
 
 def _resolve_codebook(language: str) -> Path:
