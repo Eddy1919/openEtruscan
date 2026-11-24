@@ -55,7 +55,7 @@ dependencies = [
 epidoc = []
 corpus = ["openetruscan[epidoc]"]
 prosopography = []
-server = ["fastapi", "uvicorn", "pydantic", "pydantic-settings", "slowapi>=0.1.9"]
+server = ["fastapi>=0.142", "uvicorn", "pydantic", "pydantic-settings", "slowapi>=0.1.9"]
 stats = ["numpy>=1.24", "scipy>=1.11", "scikit-learn>=1.3", "joblib>=1.3"]
 lod = ["httpx>=0.25"]
 neural = ["torch>=2.0", "onnxscript>=0.2"]

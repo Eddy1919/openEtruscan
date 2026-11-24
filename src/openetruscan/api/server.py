@@ -8,8 +8,10 @@ Run locally:
 """
 
 import logging
+from collections.abc import MutableMapping
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -51,6 +53,15 @@ def _configure_logging():
         )
     else:
         logging.basicConfig(level=log_level)
+
+
+# Kubernetes-style probes hit these every few seconds; a span per probe is noise.
+_UNTRACED_PATHS = frozenset({"/health", "/ready", "/live"})
+
+
+def _untraced(scope: MutableMapping[str, Any]) -> bool:
+    """FastAPI telemetry ``exclude`` hook: skip spans for the probe endpoints."""
+    return scope.get("path") in _UNTRACED_PATHS
 
 
 def _maybe_install_otel(app: FastAPI) -> None:
@@ -95,7 +106,11 @@ def _maybe_install_otel(app: FastAPI) -> None:
             pass
 
     trace.set_tracer_provider(provider)
-    FastAPIInstrumentor.instrument_app(app, excluded_urls="/health,/ready,/live")
+    # FastAPI >= 0.142 traces requests natively once a real provider is set,
+    # honouring the ``exclude`` hook passed to ``FastAPI(telemetry=...)``. It
+    # stands down when this instrumentor is active, so both paths skip the
+    # same probe endpoints.
+    FastAPIInstrumentor.instrument_app(app, excluded_urls=",".join(sorted(_UNTRACED_PATHS)))
     AsyncPGInstrumentor().instrument()
     HTTPXClientInstrumentor().instrument()
 
@@ -141,6 +156,7 @@ app = FastAPI(
     description="REST API for querying the OpenEtruscan dataset.",
     version=__version__,
     lifespan=lifespan,
+    telemetry={"exclude": _untraced},
     docs_url="/docs" if settings.enable_docs else None,  # Interactive Swagger UI
     redoc_url=None,  # ReDoc disabled for simplicity
     openapi_url="/openapi.json" if settings.enable_docs else None,

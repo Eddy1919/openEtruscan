@@ -2157,7 +2157,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.0" },
     { name = "datasets", marker = "extra == 'transformers'", specifier = ">=2.18" },
     { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "fastapi", marker = "extra == 'server'" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.142" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.25" },
     { name = "httpx", marker = "extra == 'lod'", specifier = ">=0.25" },
     { name = "joblib", marker = "extra == 'stats'", specifier = ">=1.3" },
