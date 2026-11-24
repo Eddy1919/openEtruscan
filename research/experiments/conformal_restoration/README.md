@@ -100,6 +100,10 @@ guarantee rather than a softmax score.
 
 ## Run
 
+Run these inside this checkout's environment (`uv sync --all-extras`, then
+`source .venv/bin/activate` or prefix each command with `uv run`), so the
+scripts import this checkout's `openetruscan` rather than another installed copy.
+
 ```bash
 python scripts/ops/fetch_data.py
 cd research/experiments/hybrid_embed && python prepare.py && python train_charlm.py

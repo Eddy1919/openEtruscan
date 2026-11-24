@@ -7,10 +7,6 @@ import numpy as np
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Ensure we can import XLMREmbedder
-import sys
-
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent / "src"))
 from openetruscan.ml.embeddings import XLMREmbedder
 
 

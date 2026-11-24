@@ -17,7 +17,6 @@ Output: out/charlm_vectors.npy  (float32, [n_index, d_model])
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -25,12 +24,9 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 
+from openetruscan.ml.neural import CharMLM, CharVocab
+
 HERE = Path(__file__).parent
-REPO = HERE.parent.parent.parent
-sys.path.insert(0, str(REPO / "src"))
-
-from openetruscan.ml.neural import CharMLM, CharVocab  # noqa: E402
-
 OUT = HERE / "out"
 MAX_LEN = 128
 D_MODEL = 128

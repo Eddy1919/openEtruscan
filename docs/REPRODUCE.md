@@ -62,7 +62,7 @@ shasum -a 256 -c <(grep ' research/data/' research/v2/data/SHA256SUMS)
 Compute exact-match and hallucination metrics from the raw consensus jury outputs:
 
 ```bash
-python research/v2/eval/compute_lacuna_v2.py \
+python -m research.v2.eval.compute_lacuna_v2 \
     --jury research/v2/results/lacuna/lacuna_jury_raw_v2_0_3_rerun.jsonl \
     --out /tmp/lacuna_recheck.json
 ```

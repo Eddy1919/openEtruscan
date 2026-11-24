@@ -28,10 +28,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-# Allow running as a script from anywhere in the repo
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
-from research.v2.eval.bootstrap import krippendorff_alpha_nominal  # noqa: E402
-from research.v2.eval.classify_metrics import CLASSES  # noqa: E402
+from research.v2.eval.bootstrap import krippendorff_alpha_nominal
+from research.v2.eval.classify_metrics import CLASSES
 
 UNANIMITY_CONF_FLOOR = {"high", "medium"}
 

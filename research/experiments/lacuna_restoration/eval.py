@@ -25,14 +25,13 @@ import torch
 from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-sys.path.append(str(REPO_ROOT / "src"))
-
 # The original ``openetruscan.ml.char_mlm`` module predates the 2026-07
 # history rewrite and no longer exists. The model class survives as
 # ``openetruscan.ml.neural.CharMLM``; tokenization goes through ``CharVocab``.
-from openetruscan.ml.lacuna import ETRUSCAN_CHARS  # noqa: E402
-from openetruscan.ml.neural import CharMLM, CharVocab  # noqa: E402
+from openetruscan.ml.lacuna import ETRUSCAN_CHARS
+from openetruscan.ml.neural import CharMLM, CharVocab
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def load_test_data(limit: int = 500, seed: int = 42) -> list[dict]:

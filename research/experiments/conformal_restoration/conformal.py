@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import json
 import math
-import sys
 from collections import Counter
 from pathlib import Path
 
@@ -41,12 +40,10 @@ import numpy as np
 import pandas as pd
 import torch
 
-HERE = Path(__file__).parent
-REPO = HERE.parent.parent.parent
-HYB = HERE.parent / "hybrid_embed" / "out"
-sys.path.insert(0, str(REPO / "src"))
+from openetruscan.ml.neural import CharMLM, CharVocab
 
-from openetruscan.ml.neural import CharMLM, CharVocab  # noqa: E402
+HERE = Path(__file__).parent
+HYB = HERE.parent / "hybrid_embed" / "out"
 
 TRAIN_SEED = 20260830  # train_charlm.py SEED: reproduces its validation split
 SEED = 20261124

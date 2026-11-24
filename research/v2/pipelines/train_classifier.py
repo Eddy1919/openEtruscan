@@ -26,8 +26,8 @@ Honest framing
   candidate-gold set has 0 examples for them; will populate with broader
   data.
 
-This script is meant to be invoked from cloudbuild/v2-train-classifier.yaml.
-Local invocation is also supported for debugging.
+Run from the repo root as `python -m research.v2.pipelines.train_classifier`;
+research/v2/README.md lists the arguments.
 """
 
 from __future__ import annotations
@@ -39,9 +39,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
-from research.v2.eval.bootstrap import bootstrap_ci, write_result  # noqa: E402
-from research.v2.eval.classify_metrics import (  # noqa: E402
+from research.v2.eval.bootstrap import bootstrap_ci, write_result
+from research.v2.eval.classify_metrics import (
     accuracy,
     confusion_matrix,
     head2_f1,

@@ -46,8 +46,7 @@ from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Iterator
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _secrets import get_secret  # noqa: E402
+from research.v2.pipelines._secrets import get_secret
 
 
 def _resolve_codebook(language: str) -> Path:

@@ -24,9 +24,8 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from bootstrap import bootstrap_ci, paired_bootstrap  # noqa: E402
-from lacuna_metrics import (  # noqa: E402
+from research.v2.eval.bootstrap import bootstrap_ci, paired_bootstrap
+from research.v2.eval.lacuna_metrics import (
     answered,
     char_acc_top1,
     char_acc_top3,

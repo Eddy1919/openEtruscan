@@ -21,7 +21,7 @@ A small set of query inscriptions drawn from across the corpus, designed to surf
 ## Run
 
 ```bash
-python research/experiments/etr_lora_v3_vs_v4_retrieval/eval.py
+uv run python research/experiments/etr_lora_v3_vs_v4_retrieval/eval.py
 ```
 
 ## Results
