@@ -1,11 +1,25 @@
-# Research Roadmap — Rosetta Vector Space
+# Research Roadmap: Rosetta Vector Space
 
 Forward-looking research plan for the multilingual-encoder strand of
-OpenEtruscan. **Read [`FINDINGS.md`](FINDINGS.md) first** — that's the
+OpenEtruscan. **Read [`FINDINGS.md`](FINDINGS.md) first**; it is the
 honest current state. This file is about where to go next.
 
 The discrete task breakdown behind each milestone is maintainer-held
 planning; this file carries the science.
+
+---
+
+## Current gating fact
+
+The bottleneck has moved from models and metrics to human verification.
+The from-scratch [`hybrid_embed`](experiments/hybrid_embed/README.md)
+stack and the pre-registered [`v2/`](v2/) work both end at the same
+gate. The semantic eval is 22 gloss pairs, which cannot rank competing
+systems. The gold-gloss queue
+([`anchors/gold_glosses/`](anchors/gold_glosses/)) holds 319 records and
+0 are human-verified. The classification gold set (167 candidate rows,
+[`v2/handoff/v2.0.4-etr/`](v2/handoff/v2.0.4-etr/)) awaits two
+philologists. Milestones 2 and 5 also depend on philologist time.
 
 ---
 
@@ -28,9 +42,9 @@ These constrain every decision below:
    words. The eval set verifies we're not making nonsense. Both modes
    matter; neither alone suffices.
 4. **Scope honestly.** "Decipher Etruscan" was always overpromised. The
-   ambition is "research-assistant browser for ancient-language
-   inscriptions" — fast shortlists, semantic-field clustering, cognate
-   detection. That's a real product for a real audience.
+   ambition is a "research-assistant browser for ancient-language
+   inscriptions" with fast shortlists, semantic-field clustering, and
+   cognate detection. That's a real product for a real audience.
 
 ---
 
@@ -38,42 +52,29 @@ These constrain every decision below:
 
 The order here is the recommended execution order.
 
-### Milestone 1 — Make the eval scientifically defensible
+### Milestone 1: Make the eval scientifically defensible
 
-**Goal:** before publishing or claiming anything from this system,
-ensure the metrics we report can survive peer review.
-
-**Deliverables:**
-- Levenshtein-only retrieval baseline (rank Latin words by edit
-  distance to the Etruscan source) computed against the same eval set.
-  This tells us whether our model beats trivial surface-form matching.
-- Random-baseline expected precision@k computed analytically.
-- A held-out split of the 61 anchor pairs (39/22) recorded in
-  the eval module so any future training data never leaks to test.
-- A coverage-at-cosine-threshold metric that actually uses cosines
-  (currently a stub).
-- A frozen reference benchmark `rosetta-eval-v1` — locked eval set,
-  locked metric definitions — against which all future model
-  iterations are compared.
-
-**Acceptance:** the eval harness produces a report that includes
-strict-lexical, semantic-field, Levenshtein-baseline, random-baseline,
-and coverage numbers side-by-side. All committed to git, all
-reproducible from a single command.
-
-**Out of scope:** any model retraining or new vocabulary embedding.
-This milestone is metric infrastructure only.
+**Done.** `rosetta-eval-v1` is frozen: 22 test pairs out of 61
+anchors (39/22 split), Levenshtein and analytic random baselines, and
+a coverage-at-cosine metric, all in one report. Harness in
+[`/eval/harness/`](../eval/harness/), committed runs in
+`/eval/rosetta-eval-v1-*.json` ([`/eval/`](../eval/)), reproduction
+manifest in
+[`notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md).
+Results are in [`FINDINGS.md`](FINDINGS.md). The API those runs hit is
+retired, so re-running the model columns needs a local research-API
+instance.
 
 ---
 
-### Milestone 2 — Qualitative-review pipeline
+### Milestone 2: Qualitative-review pipeline
 
 **Goal:** measure the system's value for *novel* hypothesis generation
 on Etruscan words *not* in any anchor set.
 
 **Why this matters:** the eval set verifies we aren't making nonsense
 for words we know. The actual research utility is for words we don't
-know — and that can only be assessed by a domain expert reviewing the
+know, and that can only be assessed by a domain expert reviewing the
 system's top-k outputs.
 
 **Deliverables:**
@@ -93,7 +94,16 @@ written up.
 
 ---
 
-### Milestone 3 — Primary-source attested-anchor mining
+### Milestone 3: Primary-source attested-anchor mining
+
+**Status: partly done; acceptance not met.** The extraction ran over
+all 1,795 passages (27 glosses kept, 17 after review) and the 17 pairs
+are in [`anchors/attested.jsonl`](anchors/attested.jsonl), still
+unverified by a human ([`anchors/README.md`](anchors/README.md)).
+17 is below the 30-pair gate for a contrastive fine-tune, and the
+hard-negative LoRA fallback on those 17 pairs showed no lift
+([`results/labse_hardneg_t43_FINDINGS.md`](results/labse_hardneg_t43_FINDINGS.md)).
+Write-up in [`FINDINGS.md`](FINDINGS.md) under "P4 results so far".
 
 **Goal:** extract bilingual attestations from the classical Latin/Greek
 corpora we already have on disk, *without* recourse to modern
@@ -103,8 +113,8 @@ philological synthesis.
 speakers (Livy, Cicero, Pliny) and post-Etruscan grammarians who
 recorded the language (Suetonius's `aesar=deus`, Festus's loanword
 glosses) are *witness evidence*. Training on these attested pairs is
-methodologically clean — they are what the texts say, not what
-modern scholars have inferred.
+methodologically clean: the texts state them outright, with no
+modern inference in between.
 
 **Deliverables:**
 - LLM-as-parser pipeline over the 1,795 Etruscan-mentioning passages
@@ -125,13 +135,15 @@ modern scholars have inferred.
 LaBSE adapter improves *semantic-field* @5 by at least 1.5× on the
 held-out eval split.
 
-**Out of scope:** Festus, Macrobius, Hesychius — none are in the
-Perseus corpus we have on disk; pulling them from external sources
-proved harder than expected. Tracked as a follow-up.
+**Out of scope:** mining Festus, Macrobius, and Hesychius. None are in
+the Perseus corpus we have on disk, and pulling them from external
+sources proved harder than expected. Seven records citing Hesychius,
+Paulus ex Festo, or Macrobius were seeded by hand into the gold-gloss
+queue instead (`llm_checked`, not human-verified).
 
 ---
 
-### Milestone 4 — Multi-language expansion
+### Milestone 4: Multi-language expansion
 
 **Goal:** broaden the Rosetta space beyond Etruscan + Latin + Greek
 to cover Phoenician, Oscan, Coptic, and other tier-2 languages from
@@ -156,7 +168,7 @@ least 50 Phoenician query words.
 
 ---
 
-### Milestone 5 — Discovery experiments
+### Milestone 5: Discovery experiments
 
 **Goal:** test whether the system actually generates *new* hypotheses
 that survive expert review.
@@ -209,9 +221,9 @@ have an *honest negative result* worth publishing.
 
 | Risk | Mitigation |
 |---|---|
-| Milestone 3 yield is below threshold (< 30 attested pairs after dedup) | Documented in `notes/primary-sources.md`; pivot to expanding the eval anchor set rather than training on a too-small attested set. |
+| Milestone 3 yield is below threshold (< 30 attested pairs after dedup) | Occurred (17 pairs; see [`FINDINGS.md`](FINDINGS.md), "P4 results so far"). Source survey in `notes/primary-sources.md`; pivot to expanding the eval anchor set rather than training on a too-small attested set. |
 | Milestone 2 reviewer access is hard to get | Build the pipeline anyway; the *infrastructure* is the deliverable, even if review-rounds are episodic. |
-| Production DB drift (someone re-ingests / partially overwrites embeddings) | Reproducibility manifest in `research/notes/reproduce-current-eval.md` (TODO) — what bucket file + what revision tag was the eval run against. |
+| Production DB drift (someone re-ingests / partially overwrites embeddings) | Reproducibility manifest in [`notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md): the pinned alembic head, the embedding partitions with their hashes, and the run log. |
 | LaBSE deprecation by HuggingFace | LaBSE checkpoints are fully open and re-hostable; no real risk but worth noting. |
 
 ---
