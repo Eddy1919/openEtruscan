@@ -33,8 +33,8 @@ This directory covers the research strands; engineering-wide topics
 | Eval-pair corpus | [`/eval/harness/rosetta_eval_pairs.py`](../eval/harness/rosetta_eval_pairs.py) | The 61 curated Etruscan↔Latin anchor pairs (39 train, 22 test; Bonfante 2002, Wallace 2008, Pallottino 1968) used to grade retrieval quality. |
 | Production embedding pipeline | [`/scripts/training/vertex/`](../scripts/training/vertex/) | LoRA training, vocabulary embedding (LaBSE, XLM-R), DB ingest. See the README in that directory. |
 | Research extraction tools | [`/scripts/research/`](../scripts/research/) | Tools that mine the Perseus classical corpus for primary-source bilingual evidence. |
-| Primary-source corpus | [`/data/classical_texts/`](../data/classical_texts/) (gitignored, ~5 GB) | Perseus Digital Library `canonical-latinLit` and `canonical-greekLit` mirrors. |
-| Extracted Etruscan-mention passages | [`/data/extracted/etruscan_passages.jsonl`](../data/extracted/etruscan_passages.jsonl) (gitignored) | 1,795 paragraphs from Livy, Dionysius, Cicero, Plutarch, Strabo, Pliny, etc. that mention Etruscan/Tyrrhenian. |
+| Primary-source corpus | `data/classical_texts/` (gitignored, ~5 GB) | Perseus Digital Library `canonical-latinLit` and `canonical-greekLit` mirrors. |
+| Extracted Etruscan-mention passages | `data/extracted/etruscan_passages.jsonl` (gitignored) | 1,795 paragraphs from Livy, Dionysius, Cicero, Plutarch, Strabo, Pliny, etc. that mention Etruscan/Tyrrhenian. |
 | Embedding artefacts (intermediate JSONLs + LoRA adapters) | `gs://openetruscan-rosetta/` | All vector files + adapter checkpoints from the iteration history. |
 
 ## Context for newcomers
