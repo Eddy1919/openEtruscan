@@ -45,6 +45,13 @@ _PROBE = textwrap.dedent(
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
     from openetruscan.api.server import app
 
+    # Request spans only: the probes' own database queries still produce asyncpg
+    # spans, which the exclude hook is not meant to cover.
+    REQUEST_SCOPES = {
+        "fastapi",
+        "opentelemetry.instrumentation.fastapi",
+        "opentelemetry.instrumentation.asgi",
+    }
     exporter = InMemorySpanExporter()
     spans = {}
     # The probes may 500 without a seeded database; spans don't depend on the status.
@@ -57,7 +64,11 @@ _PROBE = textwrap.dedent(
         for path in ("/health", "/ready", "/live", "/no-such-route"):
             exporter.clear()
             client.get(path)
-            spans[path] = [s.name for s in exporter.get_finished_spans()]
+            spans[path] = [
+                s.name
+                for s in exporter.get_finished_spans()
+                if s.instrumentation_scope.name in REQUEST_SCOPES
+            ]
     print(json.dumps(spans))
     """
 )
