@@ -245,7 +245,7 @@ async def test_promote_provenance_happy_path(client: AsyncClient, sample_data, m
 async def test_promote_provenance_rejects_invalid_status(
     client: AsyncClient, sample_data, monkeypatch
 ):
-    """Invalid status must 400, not 500 — guards the DB CHECK constraint."""
+    """Invalid status must 400, not 500; this guards the DB CHECK constraint."""
     from openetruscan.core.config import settings
 
     monkeypatch.setattr(settings, "admin_token", "test-admin-token")
@@ -376,7 +376,7 @@ async def test_admin_endpoint_returns_503_when_token_unconfigured(
     client: AsyncClient, sample_data, monkeypatch
 ):
     """If ADMIN_TOKEN is not set on the deployment, admin endpoints must 503,
-    not 500 — the write surface is intentionally disabled, not crashing."""
+    not 500, because the write surface is intentionally disabled, not crashing."""
     from openetruscan.core.config import settings
 
     monkeypatch.setattr(settings, "admin_token", None)
@@ -414,7 +414,7 @@ class TestParseStructuredQuery:
     """Unit tests for the structured-token parser used by /search/hybrid.
 
     The parser is what closes the chronology and cross_corpus categories
-    in the eval — period words and corpus markers never appear in the
+    in the eval: period words and corpus markers never appear in the
     canonical text, so we extract them and turn them into structured
     repo.search filters before running the FTS+dense pipeline.
     """
@@ -540,7 +540,7 @@ async def test_repo_search_has_trismegistos(db_session, sample_data):
 
 
 # ============================================================================
-# T2.3 — /neural/rosetta + /neural/rosetta/vocab embedder partitioning
+# T2.3: /neural/rosetta + /neural/rosetta/vocab embedder partitioning
 # ============================================================================
 
 
@@ -571,7 +571,7 @@ async def test_rosetta_default_response_echoes_labse_alias(
             "/neural/rosetta",
             params={"word": "definitely-not-real-t2-3", "from": "ett", "to": "lat"},
         )
-    except Exception as exc:  # noqa: BLE001 — same skip pattern as test_multilingual
+    except Exception as exc:  # noqa: BLE001 (same skip pattern as test_multilingual)
         if "language_word_embeddings" in str(exc) or "UndefinedTableError" in type(exc).__name__:
             import pytest
 
@@ -591,7 +591,7 @@ async def test_rosetta_xlmr_lora_v4_alias_resolves(
     sample_data,
 ):
     """Explicit ``?embedder=xlmr-lora-v4`` is accepted (resolves to the
-    on-disk partition); response echoes it back. Empty neighbours is fine —
+    on-disk partition); response echoes it back. Empty neighbours is fine:
     the test DB doesn't populate v4 vectors, but the partition is a
     legitimate alias and must not 400."""
     try:
@@ -624,7 +624,7 @@ async def test_rosetta_vocab_cache_keyed_by_embedder(
     sample_data,
 ):
     """The vocab endpoint accepts ``?embedder=`` and the cache key
-    distinguishes partitions — same lang under different embedders must
+    distinguishes partitions: same lang under different embedders must
     not pollute each other's cache."""
     try:
         # Two calls with the same lang but different embedder alias.
@@ -666,7 +666,7 @@ async def test_rosetta_vocab_unknown_embedder_returns_400(
 
 
 # ============================================================================
-# T5.3 + T5.4 — min_margin filter + dual-track API
+# T5.3 + T5.4: min_margin filter + dual-track API
 # ============================================================================
 
 

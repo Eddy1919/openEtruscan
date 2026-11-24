@@ -5,8 +5,8 @@ The Rosetta Vector Space's persistence + query layer.
 Architecture (see ROADMAP):
   * A multilingual transformer encoder (XLM-RoBERTa by default) produces
     contextual word vectors. The encoder's pretraining covers 100+
-    languages so cross-language retrieval is implicit — no Procrustes
-    alignment step required.
+    languages so cross-language retrieval is implicit, with no Procrustes
+    alignment step.
   * For Etruscan specifically, a LoRA adapter is fine-tuned on the
     inscriptions corpus (see ``finetune.py``). The adapter teaches the
     encoder Etruscan-specific morphology without overwriting the
@@ -18,12 +18,13 @@ Architecture (see ROADMAP):
 
 Public surface
 --------------
-  LANGUAGE_TIERS              — registry of every language we recognise,
+  LANGUAGE_TIERS                registry of every language we recognise,
                                 with viability classification + data status.
-  LanguageRecord              — schema for one language's metadata.
-  populate_language(...)      — embed a vocabulary list with an Embedder
+  LanguageRecord                schema for one language's metadata.
+  populate_language(...)        embed a vocabulary list with an Embedder
                                 and upsert into the pgvector table.
-  find_cross_language_neighbours(word, source_lang, target_lang) — query.
+  find_cross_language_neighbours(word, source_lang, target_lang)
+                                query.
 
 Honest scoping
 --------------
@@ -76,10 +77,10 @@ class LanguageRecord:
 
     Two independent capability flags:
 
-    * ``alignable`` — the encoder can place this language in the shared
+    * ``alignable``: the encoder can place this language in the shared
       multilingual space honestly. Tier 1 + 2 only. Cross-language
       neighbour queries refuse pairs where either side is not alignable.
-    * ``structural_embedding_viable`` — has enough corpus / co-occurrence
+    * ``structural_embedding_viable``: has enough corpus / co-occurrence
       data for the encoder to learn meaningful within-language sign
       relationships. Linear A qualifies; Illyrian (onomastic-only) does
       not. populate_language() refuses to write languages where this is
@@ -208,7 +209,7 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
         notes="~1500 fragments. Enough sign-sequence data to learn "
         "structural neighbourhoods (which sign clusters appear in "
         "similar contexts). Cross-language alignment to deciphered "
-        "languages is NOT supported — no semantic ground truth.",
+        "languages is NOT supported: there is no semantic ground truth.",
     ),
     "xnu": LanguageRecord(
         code="xnu",
@@ -229,7 +230,7 @@ LANGUAGE_TIERS: dict[str, LanguageRecord] = {
         alignable=False,
         structural_embedding_viable=False,
         corpus_status="missing",
-        notes="Onomastic-only — personal names attested in Greek/Latin "
+        notes="Onomastic-only: personal names attested in Greek/Latin "
         "sources, no running text for the encoder to learn from.",
     ),
     "xfa": LanguageRecord(
@@ -275,7 +276,7 @@ async def populate_language(
 ) -> PopulateResult:
     """Embed a vocabulary list and upsert it into ``language_word_embeddings``.
 
-    The caller is responsible for assembling the vocab — typically by
+    The caller is responsible for assembling the vocab, typically by
     iterating a corpus and counting tokens, or by reading the
     ``language_word_embeddings.word`` column from a previous run for
     re-population.
@@ -433,22 +434,22 @@ async def find_cross_language_neighbours(
     ``target_lang`` (cosine similarity in the shared multilingual space).
 
     Refuses tier-3 languages on either side. Refuses unknown codes.
-    Returns an empty list if the source word has no stored vector — the
+    Returns an empty list if the source word has no stored vector; the
     caller can decide whether to embed-on-demand and retry.
 
     Parameters
     ----------
     embedder, embedder_revision : str | None
-        Symmetric partition filter — applies to both source and target.
+        Symmetric partition filter, applied to both source and target.
         Defaults to ``DEFAULT_EMBEDDER`` / ``DEFAULT_EMBEDDER_REVISION``
         (the canonical LaBSE/v1 the API has served since launch).
     source_embedder, source_embedder_revision : str | None
         Per-side override. When set, filters the source-language lookup
         independently from the target. Used by the alias system in
-        api/routes/neural.py so a single client-facing alias (e.g. "xlmr-lora-v4")
-        can map to different DB partitions for ett vs lat — Etruscan
-        went through a LoRA adapter (labelled ``xlmr-lora``), Latin did
-        not (labelled ``xlm-roberta-base``). Falls back to the symmetric
+        api/routes/neural.py so a single client-facing alias (e.g.
+        "xlmr-lora-v4") can map to different DB partitions for ett vs lat:
+        Etruscan went through a LoRA adapter (labelled ``xlmr-lora``), Latin
+        did not (labelled ``xlm-roberta-base``). Falls back to the symmetric
         ``embedder`` / ``embedder_revision`` if unset.
     target_embedder, target_embedder_revision : str | None
         Same idea for the target side.

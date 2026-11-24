@@ -11,18 +11,18 @@ wrong under substring matching.
 
 Categories
 ----------
-``place_pleiades``  — Pelagios-aligned. Gold set = rows sharing a Pleiades ID.
+``place_pleiades``:   Pelagios-aligned. Gold set = rows sharing a Pleiades ID.
                       Query is the canonical place name. Tests semantic place
                       retrieval across name variants (Lat. Caere ↔ It. Caere).
-``place_findspot``  — Free-text findspot column. Gold set = rows with the
+``place_findspot``:   Free-text findspot column. Gold set = rows with the
                       same findspot string. Covers rows without pleiades_id.
-``chronology``       — date_approx bucketed into archaic / classical / late.
+``chronology``:       date_approx bucketed into archaic / classical / late.
                       Tests whether the index can retrieve period-typical
                       vocabulary when given a period name.
-``cross_corpus``    — rows with a Trismegistos ID. Query is "trismegistos"
+``cross_corpus``:     rows with a Trismegistos ID. Query is "trismegistos"
                       and the gold set is every TM-aligned row, testing
                       whether linked-data is reachable in normal search.
-``lexical``          — the v1 substring rule, kept as a baseline category.
+``lexical``:          the v1 substring rule, kept as a baseline category.
 
 Each query carries explicit ``methodology`` metadata so eval consumers can
 decide which categories they trust.
@@ -53,7 +53,7 @@ MAX_GOLD_PER_QUERY = 250
 # Pleiades ID → preferred query string for tests. Derived from the most
 # frequent name in modern usage (e.g. Italian "Tarquinia" rather than the
 # Latin variants stored alongside it). One Pleiades ID can match several
-# findspot strings — that's the *point* of the category.
+# findspot strings; that is the *point* of the category.
 PLEIADES_QUERY_NAMES: dict[str, str] = {
     "413332": "Tarquinia",  # Tarchna / Tarquinii
     "422859": "Caere",  # = Cerveteri
@@ -201,7 +201,7 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
     with the `simple` config tokenises on whitespace and does no stemming,
     so the tokens `clusium` and `clusii` look as unrelated as `cat` and
     `dog`. The query "Clusium" landed only on rows whose findspot literally
-    contained the token `clusium` — a tiny minority of the gold set —
+    contained the token `clusium`, a tiny minority of the gold set,
     and NDCG@10 collapsed.
 
     Until either the FTS config gets a stemmer or queries get expanded with
@@ -240,7 +240,7 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
     return out
 
 
-# Period boundaries — keep in sync with `_PERIOD_RANGES` in
+# Period boundaries: keep in sync with `_PERIOD_RANGES` in
 # `src/openetruscan/api/routes/search.py`. The structured-query parser uses those
 # bounds to translate period tokens into date_min/date_max filters; the
 # eval generator uses these same bounds to build the matching gold set.
@@ -264,7 +264,7 @@ def queries_chronology(rows: list[dict]) -> list[dict]:
     Each period in ``_PERIOD_BOUNDS`` becomes a query whose gold set is every
     row whose ``date_approx`` falls within the period's bounds. Periods can
     overlap (orientalising overlaps archaic; hellenistic == late), which is
-    the academic convention — the same row may be relevant to multiple
+    the academic convention: the same row may be relevant to multiple
     period queries.
     """
     out: list[dict] = []
