@@ -6,9 +6,9 @@ Generates multi-vector embeddings for all inscriptions using Gemini
 text-embedding-004 and stores them in PostgreSQL via pgvector.
 
 Three vectors per inscription:
-  1. emb_text     — Etruscan canonical text only
-  2. emb_context  — Findspot + classification + notes + bibliography (Latin/Italian)
-  3. emb_combined — All fields concatenated for general similarity search
+  1. emb_text:      Etruscan canonical text only
+  2. emb_context:   Findspot + classification + notes + bibliography (Latin/Italian)
+  3. emb_combined:  All fields concatenated for general similarity search
 
 Usage:
     python scripts/generate_embeddings.py --db-url postgresql://...

@@ -13,7 +13,7 @@ The prod dump audit (6,633 rows, /tmp/prod_dump/prod-inscriptions.sql)
 shows three things mixed together in the `canonical` column:
 
   1. Real philological signal we MUST keep:
-       - Greek-block θ χ σ φ ξ ς (and their capitals) — standard
+       - Greek-block θ χ σ φ ξ ς (and their capitals), standard
          Etruscan transliteration (Bonfante 2002, Wallace 2008,
          Pallottino 1968).
        - Latin sibilants ś Ś š ń and IPA dots ṛ ṭ ḥ ṿ ṣ ṇ ẹ.
@@ -28,8 +28,8 @@ shows three things mixed together in the `canonical` column:
        - Stragglers ê þ ð ° Æ Ç     (mostly typos / ASCII-θ stand-ins)
 
   3. Unrecoverable OCR garbage (~140 rows):
-       - Digits or `+` embedded in transliteration ("IAN8VJV1 ANV+:")
-         — these are 1↔I, 8↔B, 9↔R substitutions from a broken
+       - Digits or `+` embedded in transliteration ("IAN8VJV1 ANV+:");
+         these are 1↔I, 8↔B, 9↔R substitutions from a broken
          OCR pass that we cannot back out deterministically.
 
 The deterministic mapping below recovers (2). Rows still failing the
@@ -46,7 +46,7 @@ Usage
       --input  /tmp/etruscan-prod-rawtext-v1.jsonl \\
       --output /tmp/etruscan-prod-rawtext-v1.normalized.jsonl
 
-  # Emit a SQL UPDATE script (no DB connection — review before applying):
+  # Emit a SQL UPDATE script (no DB connection; review before applying):
   python scripts/data_pipeline/normalize_inscriptions.py --emit-sql \\
       > /tmp/normalize.sql
 
@@ -83,7 +83,7 @@ CYRILLIC_MAP: dict[str, str] = {
     "А": "a",  # lookalike A
     "Т": "t",
     "Е": "e",
-    "Ч": "kh",  # phonetic — corresponds to χ in Etruscan transliteration
+    "Ч": "kh",  # phonetic; corresponds to χ in Etruscan transliteration
     "З": "z",
     "Ј": "i",
     "Ѵ": "v",  # archaic Cyrillic izhitsa = Latin V
@@ -91,7 +91,7 @@ CYRILLIC_MAP: dict[str, str] = {
 
 # Latin-Extended-B / IPA Extensions mirror-glyphs. Same root cause as
 # the Cyrillic set above. Ǝ Ƨ Ɔ Ʀ are explicit "reversed letter"
-# code points — they were never meant to appear in Etruscan
+# code points; they were never meant to appear in Etruscan
 # transliteration.
 LATIN_EXT_MIRROR_MAP: dict[str, str] = {
     "Ǝ": "e",
@@ -104,7 +104,7 @@ LATIN_EXT_MIRROR_MAP: dict[str, str] = {
     "Ɛ": "e",  # open-E, occasionally used as θ stand-in but treated as e here
 }
 
-# Roman Numerals / Number Forms block — Ↄ ↄ are "reversed C", another
+# Roman Numerals / Number Forms block: Ↄ ↄ are "reversed C", another
 # OCR artifact on retrograde inscriptions.
 NUMBER_FORMS_MAP: dict[str, str] = {
     "Ↄ": "c",
@@ -112,7 +112,7 @@ NUMBER_FORMS_MAP: dict[str, str] = {
     "⅃": "l",
 }
 
-# Math block — ∃ "there exists" is a perfect mirror E and shows up in
+# Math block: ∃ "there exists" is a perfect mirror E and shows up in
 # OCR output for the same retrograde reason.
 MATH_MAP: dict[str, str] = {
     "∃": "e",
@@ -120,8 +120,8 @@ MATH_MAP: dict[str, str] = {
 }
 
 # Latin-1 / Latin-Extended-A stragglers. The two big ones:
-#   ê (44×) — mojibake of e from a wrong-encoding pass
-#   þ (5×)  — the corpus uses þ as an ASCII stand-in for θ in a
+#   ê (44×):  mojibake of e from a wrong-encoding pass
+#   þ (5×):   the corpus uses þ as an ASCII stand-in for θ in a
 #             handful of records (e.g. "lþ: arntni : creice"). Map
 #             back to θ to keep philological consistency.
 LATIN1_STRAGGLERS_MAP: dict[str, str] = {
@@ -135,8 +135,8 @@ LATIN1_STRAGGLERS_MAP: dict[str, str] = {
     "Ç": "c",
     "Å": "a",
     "υ": "u",  # Greek upsilon used as mojibake for u in CIE 2709-2711 etc.
-    "ϑ": "θ",  # curly-theta variant — same phoneme as θ
-    "ț": "t",  # Romanian t-cedilla — single occurrence (CIE 3281), a typo
+    "ϑ": "θ",  # curly-theta variant; same phoneme as θ
+    "ț": "t",  # Romanian t-cedilla; single occurrence (CIE 3281), a typo
 }
 
 # Combine all corruption maps into one for a single-pass translate().
@@ -180,7 +180,7 @@ LATIN_TO_OLD_ITALIC: dict[str, str] = {
     "φ": "𐌘",
     "χ": "𐌙",
     "f": "𐌚",
-    # Greek sigma (any case) and final sigma render as san — both are
+    # Greek sigma (any case) and final sigma render as san; both are
     # used in the Pallottino-style transliteration for the SAN sibilant.
     "σ": "𐌑",
     "ς": "𐌑",
@@ -285,7 +285,7 @@ def apply_corruption_map(s: str) -> str:
 
 def is_intact_token(t: str) -> bool:
     """
-    A token is 'intact' if it is an attested whole word — no editorial
+    A token is 'intact' if it is an attested whole word, with no editorial
     brackets/braces/parens, no uncertainty markers, no lacuna dashes.
 
     A token like `[lar]θ` or `arnθ[ial]` is partially restored by an
@@ -322,7 +322,7 @@ def has_latin_orthography(s: str) -> bool:
     Latin token (HASTI, PVLFENNIA, ZANIDIA) is the diagnostic.
 
     Pure Roman numerals (XXIX, CVI) are explicitly NOT Latin orthography
-    here — they appear in legitimate late-Etruscan funerary formulae
+    here; they appear in legitimate late-Etruscan funerary formulae
     like "avils : CVI murce" (Ta 1.107) and should still get an Old
     Italic regeneration.
 
@@ -335,7 +335,7 @@ def has_latin_orthography(s: str) -> bool:
         if len(token) < 2:
             continue
         upper = sum(1 for c in token if c.isupper())
-        # All-caps multi-letter token (HASTI, PVLFENNIA, ZANIDIA) — but
+        # All-caps multi-letter token (HASTI, PVLFENNIA, ZANIDIA), but
         # not Roman numerals (XXIX, CVI).
         if upper == len(token):
             if not all(c in ROMAN_NUMERAL_CHARS for c in token):
@@ -374,7 +374,7 @@ def to_old_italic(canonical_clean: str) -> str | None:
         elif 0x10300 <= ord(ch) <= 0x1032F:
             out.append(ch)
         else:
-            # Any letter we cannot map deterministically — bail.
+            # Any letter we cannot map deterministically; bail.
             return None
     return "".join(out)
 
@@ -532,7 +532,7 @@ def emit_csv(rows: Iterable[NormalizedRow], path: Path) -> None:
 def emit_sql(rows: Iterable[NormalizedRow], out=sys.stdout) -> None:
     """
     Emit an idempotent SQL update script. Reviewer must inspect before
-    running it against prod — this script does NOT execute SQL itself.
+    running it against prod; this script does NOT execute SQL itself.
     """
     out.write("-- Generated by normalize_inscriptions.py — review before applying.\n")
     out.write("BEGIN;\n")

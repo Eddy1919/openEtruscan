@@ -1,5 +1,5 @@
 """
-PeriodO (https://perio.do) period linking — the *time* axis of the Pelagios triad.
+PeriodO (https://perio.do) period linking, the *time* axis of the Pelagios triad.
 
 Pelagios links the past through place **and time**. The corpus already carries a
 signed-year estimate per inscription (``date_approx``; negative = BCE) and a
@@ -7,8 +7,8 @@ feature-based period classifier (``openetruscan.core.statistics``). This module
 turns either of those into a stable PeriodO period URI so the LOD feed can be
 joined on chronology the same way it is joined on Pleiades places.
 
-We link against one coherent authority — the MAPPA Lab Tuscany data model
-(PeriodO authority ``p03dzfb``) — whose Etruscan-era periods *tile* the timeline
+We link against one coherent authority, the MAPPA Lab Tuscany data model
+(PeriodO authority ``p03dzfb``), whose Etruscan-era periods *tile* the timeline
 without gaps or overlaps and are spatially scoped to Tuscany/Etruria. Linking by
 the actual year (interval containment) is the primary, most defensible path;
 mapping the coarse archaic/classical/late label is a fallback for rows that have
@@ -16,7 +16,7 @@ a period label but no numeric estimate.
 
 URIs are the canonical PeriodO ARKs (``http://n2t.net/ark:/99152/<id>``); the IDs
 and date bounds below were pulled from the live PeriodO dataset and verified to
-resolve. Pure standard library — always importable and unit-tested.
+resolve. Pure standard library: always importable and unit-tested.
 """
 
 from __future__ import annotations
@@ -131,7 +131,7 @@ def enrich_timeline_buckets(buckets: list[dict]) -> list[dict]:
     Attach PeriodO period fields to ``{"century", "count"}`` timeline rows.
 
     Adds ``period_id`` / ``period_label`` / ``period_uri`` (all None when the
-    bucket's representative year falls outside the Etruscan era). Pure — the DB
+    bucket's representative year falls outside the Etruscan era). Pure. The DB
     layer calls this so the wiring stays unit-testable.
     """
     enriched: list[dict] = []

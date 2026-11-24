@@ -11,7 +11,7 @@ name: CI
 
 # No paths/paths-ignore filters on these triggers: jobs here are candidates
 # for required checks under the operator's upcoming ruleset, and a required
-# check whose workflow is filtered out of a PR never reports a status — the
+# check whose workflow is filtered out of a PR never reports a status; the
 # PR blocks forever. Skip work inside a job instead, if it ever comes to that.
 on:
   push:
@@ -22,9 +22,10 @@ permissions:
   contents: read
 
 # One run per workflow+event+ref: a superseded push cancels the in-flight
-# push run (older main commits lose their per-commit status — acceptable;
-# the tip is what gates). GitHub-hosted runners are free for public repos,
-# so the win is queue latency and notification noise, not billing.
+# push run (older main commits lose their per-commit status, which is
+# acceptable; the tip is what gates). GitHub-hosted runners are free for
+# public repos, so the win is queue latency and notification noise, not
+# billing.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -67,11 +68,11 @@ jobs:
     # would also swallow scripts/research/ (verified against jscpd 5.0.12).
     # Baseline measured 2026-07-17 with jscpd 5.0.12: 2.16% duplicated lines
     # (2.18% tokens, 53 clones across 161 files). The threshold in
-    # .jscpd.json is 2.3 and gates on the duplicated-lines figure — lower it
+    # .jscpd.json is 2.3 and gates on the duplicated-lines figure. Lower it
     # as duplication drops; never raise it to make a PR pass. One legitimate
     # exception: the gate is a percentage, so deleting large non-duplicated
-    # code can push the ratio over the line with zero new duplication —
-    # re-baselining after such deletions is honest, raising to smuggle new
+    # code can push the ratio over the line with zero new duplication.
+    # Re-baselining after such deletions is honest, raising to smuggle new
     # clones in is not (compare the clone list, not just the number).
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +117,7 @@ jobs:
         # pgvector/pgvector replaces postgis/postgis: the old image had
         # PostGIS but NOT pgvector, so conftest's CREATE EXTENSION vector
         # silently failed and every embedding/multilingual test self-skipped
-        # — green CI with the vector search path untested. This image flips
+        # (green CI with the vector search path untested). This image flips
         # the trade: pgvector present (13 previously-skipped tests now run),
         # PostGIS absent (its tests carry their own skip markers and were
         # never running anywhere). A combined image can restore PostGIS later.
@@ -159,15 +160,15 @@ jobs:
         #
         # Floor = 51. Measured 55% (5467 statements, 2439 missed) on this lane
         # against a pgvector-backed Postgres, identical in runs 29641408353
-        # (2026-07-18), 31233640141 and 31254874607 (both 2026-08-08) — three
-        # weeks of merges without a single statement of drift, so 55 is the
+        # (2026-07-18), 31233640141 and 31254874607 (both 2026-08-08), spanning
+        # three weeks of merges without a single statement of drift, so 55 is the
         # real number and not a sample. The 4-point headroom follows the
         # convention set when the floor was 45 against a measured 49; it
         # absorbs a lane where Postgres or pgvector degrades and tests skip
         # (locally, with the SQLite fallback and 19 skips, the same suite
         # reports 54%).
         #
-        # Raise it as coverage grows — never lower it to make a PR pass. A PR
+        # Raise it as coverage grows; never lower it to make a PR pass. A PR
         # that drops below the floor has removed test coverage; that is the
         # finding, not the gate.
         run: |

@@ -4,7 +4,7 @@ For the philologist working the queue produced by the LLM jury.
 
 ## What you're doing
 
-You have a JSONL file of inscriptions where the 3-model jury could not agree on a single label. Your job is to make the call. The goal is *not* to defer to the models — the goal is to apply the codebook strictly and produce a gold answer.
+You have a JSONL file of inscriptions where the 3-model jury could not agree on a single label. Your job is to make the call. The goal is to apply the codebook strictly and produce a gold answer, rather than to defer to the models.
 
 Expected workload:
 - Roughly 200–400 rows per stream (classification + lacuna)
@@ -17,11 +17,11 @@ You are paid for thinking, not speed. If a row needs 5 minutes of bibliography l
 
 1. Read [`codebooks/classification.md`](../codebooks/etr/classification.md) end-to-end before starting. Same for `lacunae.md` when working that queue.
 2. Open the queue JSONL alongside this guide. Each row carries:
-   - `id` — inscription identifier
-   - `raw_text` / `canonical_transliterated` — the text
+   - `id`: inscription identifier
+   - `raw_text` / `canonical_transliterated`: the text
    - `translation` (if any)
-   - `silver_label`, `silver_confidence` — the v1 weak label
-   - `jury_summary.per_model` — what each LLM proposed and why
+   - `silver_label`, `silver_confidence`: the v1 weak label
+   - `jury_summary.per_model`: what each LLM proposed and why
 3. Have the relevant fascicles open: Pallottino-Rix *Etruskische Texte* (ET), CIE volumes, the Larth dataset translations, and Wallace 2008 for vocabulary.
 
 ## Per-row decision
@@ -35,13 +35,13 @@ For each queue row, return one of:
 | `unsure(reason)` | Even applying the codebook strictly, the evidence is genuinely insufficient. | `gold_label = "irreducibly_ambiguous"`, `gold_reason = "<why>"` |
 | `defect` | The row's text is corrupted or non-Etruscan; remove from gold. | `gold_label = "defect"`, `gold_reason = "<why>"` |
 
-**Do not invent classes.** If you find yourself wanting to call something "magical/curse" or "graffito", route to `unsure` instead and flag in your adjudication notes — that's input for a v3 codebook revision, not a v2 label.
+**Do not invent classes.** If you find yourself wanting to call something "magical/curse" or "graffito", route to `unsure` instead and flag in your adjudication notes. That's input for a v3 codebook revision, not a v2 label.
 
 ## Pitfalls
 
 1. **"It looks like a name" ≠ ownership.** A bare personal name on a tomb wall is `funerary` (decision-tree rule 1), not `ownership`. The find-context is decisive.
-2. **Translation bias.** The Larth dataset's English translation can mislead — e.g., translating `cana` as "this" rather than as the dedicatory marker. Trust the Etruscan over the translation.
-3. **Confirmation laziness.** If two models agreed and one dissented, your prior should be 50/50 on the agreement — not 2/3. LLMs share training data and make correlated errors.
+2. **Translation bias.** The Larth dataset's English translation can mislead (e.g., translating `cana` as "this" rather than as the dedicatory marker). Trust the Etruscan over the translation.
+3. **Confirmation laziness.** If two models agreed and one dissented, your prior should be 50/50 on the agreement, not 2/3. LLMs share training data and make correlated errors.
 4. **"My intuition says X."** Apply the rubric, not your gut. If your intuition disagrees with the rubric, log the case in `data/codebook_revision_proposals.md` and follow the rubric for the current row.
 
 ## Krippendorff α check (mandatory before sign-off)

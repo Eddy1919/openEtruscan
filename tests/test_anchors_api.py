@@ -199,7 +199,7 @@ async def test_propose_anchor_persists_source_inscription_id(client, db_session)
     assert body["status"] == "pending"
     new_id = body["id"]
 
-    # 1. Persisted on the row itself — verbatim, including the case.
+    # 1. Persisted on the row itself, verbatim, including the case.
     stmt = select(ProposedAnchor).where(ProposedAnchor.id == new_id)
     row = (await db_session.execute(stmt)).scalar_one()
     assert row.source_inscription_id == "ETR_TEST_001"
@@ -219,7 +219,7 @@ async def test_propose_anchor_persists_source_inscription_id(client, db_session)
 @pytest.mark.asyncio
 @pytest.mark.requires_postgres
 async def test_propose_anchor_accepts_omitted_source_inscription_id(client, db_session):
-    """Hand-typing /propose/aesar (no inscription context) must still work —
+    """Hand-typing /propose/aesar (no inscription context) must still work;
     the column is optional. Verifies NULL is stored, not the empty string."""
     from sqlalchemy import select
 

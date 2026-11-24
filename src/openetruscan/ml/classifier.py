@@ -1,5 +1,5 @@
 """
-Inscription classifier — ML-powered text classification for epigraphic corpora.
+Inscription classifier: ML-powered text classification for epigraphic corpora.
 
 Two modes:
   1. **ML mode**: Multinomial Naive Bayes + TF-IDF trained on labeled inscriptions.
@@ -102,7 +102,7 @@ _KEYWORD_VOCAB: dict[str, list[str]] = {
     ],
     "ownership": [
         # --- Ownership formulae ---
-        "mi",  # I (am) — ownership formula
+        "mi",  # I (am), ownership formula
         "mini",  # me / mine
         "minipi",  # possessive marker
         "zinace",  # made (I made = craftsman mark)

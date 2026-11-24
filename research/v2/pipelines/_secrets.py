@@ -1,6 +1,6 @@
 """Tiny GCP Secret Manager helper for v2 pipelines.
 
-Only one secret is currently routed through here — GOOGLE_API_KEY for the
+Only one secret is currently routed through here, GOOGLE_API_KEY for the
 Gemini Generative Language API. The Anthropic side uses AnthropicVertex
 with Application Default Credentials, so no Anthropic secret is needed.
 
@@ -18,7 +18,7 @@ Resolution order
    `latest`.
 3. Cache in process memory so repeated calls don't hammer the API.
 
-The script does not write to os.environ — callers that need the value as
+The script does not write to os.environ; callers that need the value as
 an env var (e.g. `google.generativeai`) should set it themselves after
 fetching.
 """
@@ -64,7 +64,7 @@ def get_secret(name: str, project_id: str = DEFAULT_PROJECT_ID, version: str = "
     resource = f"projects/{project_id}/secrets/{secret_id}/versions/{version}"
     try:
         response = client.access_secret_version(request={"name": resource})
-    except Exception as e:  # noqa: BLE001 — surface auth errors clearly
+    except Exception as e:  # noqa: BLE001 (surface auth errors clearly)
         raise RuntimeError(
             f"Failed to read secret {secret_id!r} (alias for {name!r}) "
             f"from project {project_id!r}. "

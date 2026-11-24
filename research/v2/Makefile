@@ -1,4 +1,4 @@
-# OpenEtruscan v2 — gold-annotation and frozen-benchmark pipelines.
+# OpenEtruscan v2: gold-annotation and frozen-benchmark pipelines.
 #
 # All paths are repo-relative; run from research/v2/ or with -C.
 # Every target is idempotent: scripts append-and-resume where they can.
@@ -14,8 +14,8 @@ SILVER    := $(REPO_ROOT)/research/data/openetruscan_labels.csv
 DATA      := $(REPO_ROOT)/research/v2/data
 
 # Stream A artifacts. Jury evidence lands under results/ (committed), not
-# data/ — the v2.0.2 jury outputs lived only in a retired project's GCS
-# bucket and are gone; committed evidence cannot be orphaned that way.
+# data/ (the v2.0.2 jury outputs lived only in a retired project's GCS
+# bucket and are gone); committed evidence cannot be orphaned that way.
 CLF_RESULTS := $(REPO_ROOT)/research/v2/results/classify
 CLF_VER   := v2_0_4
 CLF_TRAIN := $(DATA)/classify_train_pool.jsonl
@@ -36,9 +36,9 @@ LAC_POOL  := $(DATA)/lacuna_raw_pairs.jsonl
 LAC_JURY  := $(DATA)/lacuna_jury_raw.jsonl
 
 # Providers. Default 3-model jury, all billed to your-gcp-project-id:
-#   claude-opus-4-7 — AnthropicVertex + ADC                   (europe-west1)
-#   gemini-2.5-pro  — Generative Language API, key in Secret Manager
-#   llama-4-maverick — Vertex Model Garden MaaS + ADC         (us-east5)
+#   claude-opus-4-7:  AnthropicVertex + ADC                   (europe-west1)
+#   gemini-2.5-pro:   Generative Language API, key in Secret Manager
+#   llama-4-maverick: Vertex Model Garden MaaS + ADC          (us-east5)
 PROVIDERS := claude-haiku-4-5 gemini-2.5-pro llama-4-maverick
 
 .PHONY: help all check-compile classify-split classify-jury classify-adjudicate \

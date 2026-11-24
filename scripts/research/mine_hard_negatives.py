@@ -13,7 +13,7 @@ on 2026-05-11)
 The naïve API path **does not work for literary anchors**. The 17 kept
 attested anchors are extracted from classical-author passages
 (Suetonius, Livy, Strabo, …), and almost none of them appear in the
-prod `language_word_embeddings` table — which is built from
+prod `language_word_embeddings` table, which is built from
 inscription tokens, not from literary citations. So
 ``GET /neural/rosetta?word=aesar&from=ett&to=lat`` returns
 ``neighbours: []`` for 16/17 anchors. Only ``apa`` (which happens to
@@ -67,13 +67,13 @@ script):
   - **Regression detector:** during every epoch, re-eval against
     `rosetta-eval-v1` test split's `field@10`. If it drops by more
     than 0.02 absolute from the baseline LaBSE column, abort the
-    epoch — the model is destroying its existing alignment.
+    epoch; the model is destroying its existing alignment.
 
 USAGE
 -----
 
 ```bash
-# (A) API mode (preferred — only works when the source words are in
+# (A) API mode (preferred, but only works when the source words are in
 #     the prod inscriptions vocab; for literary anchors falls back to
 #     0 negatives. See the KNOWN LIMITATION note above.):
 python scripts/research/mine_hard_negatives.py --mode api
@@ -150,7 +150,7 @@ def _stream_gcs_vocab(
 
     Streaming avoids materialising the full ~3.3 GiB file on disk.
     """
-    import numpy as np  # local-import — only needed for offline mode
+    import numpy as np  # local-import; only needed for offline mode
 
     vocab: dict[str, dict[str, np.ndarray]] = {lang: {} for lang in keep_languages}
     proc = subprocess.Popen(

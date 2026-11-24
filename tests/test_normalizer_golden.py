@@ -3,7 +3,7 @@
 tests/fixtures/normalizer_golden.json is the cross-implementation parity
 contract: the same file is consumed by the TypeScript engine's vitest suite
 in the openEtruscan-frontend repo (lib/__fixtures__/). The Python package is
-the source of truth — regenerate the fixture from here (never hand-edit) and
+the source of truth; regenerate the fixture from here (never hand-edit) and
 copy it to the frontend when normalization behavior changes deliberately.
 """
 

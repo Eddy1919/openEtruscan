@@ -1,4 +1,4 @@
-# Lacuna Restoration — XLM-R + char-head vs. char-MLM-from-scratch
+# Lacuna Restoration: XLM-R + char-head vs. char-MLM-from-scratch
 
 ## Question
 
@@ -7,10 +7,10 @@ which of the two replacement architectures recommended in
 [`CURATION_FINDINGS.md`](../../CURATION_FINDINGS.md) Finding 6.3
 actually works on the cleaned 6,567-row Etruscan corpus?
 
-* **Approach A** — character-level transformer trained from scratch
+* **Approach A**: character-level transformer trained from scratch
   on a custom ~50-class Etruscan vocabulary (no LoRA, no sentinels,
   full BERT-style masked-LM training).
-* **Approach B** — `xlm-roberta-base` warm-started from the
+* **Approach B**: `xlm-roberta-base` warm-started from the
   `etr-lora-v4` adapter (then `merge_and_unload`'d), with a small
   MLP classification head reading the hidden state at the native
   `<mask>` token.
@@ -51,7 +51,7 @@ uv run python research/experiments/lacuna_restoration/eval.py
 ```
 
 Both checkpoints survive in `gs://openetruscan-rosetta-vai/models/`
-(complete, with the metadata that pins their vocabularies — see
+(complete, with the metadata that pins their vocabularies; see
 the maintainer-held bucket inventory); download them to `data/models/` in the
 layout the script documents, then spot-check the alignment caveats below
 before trusting any new numbers.
@@ -71,7 +71,7 @@ was recomputed.
 
 Still blocked, in order of severity:
 
-* ~~`gs://openetruscan-rosetta` returns 404 — both checkpoints
+* ~~`gs://openetruscan-rosetta` returns 404; both checkpoints
   unavailable.~~ **Resolved 2026-07-18:** complete copies of
   `char-mlm-v1` and `lora-char-head-v1` (with vocabulary metadata) were
   found in `gs://openetruscan-rosetta-vai/models/` during the bucket
@@ -79,7 +79,7 @@ Still blocked, in order of severity:
   alignment spot-checks below.
 * The 500-row eval sample requires prod-DB access (`DATABASE_URL`), which is
   no longer provisioned in this repo.
-* The original `char_mlm` tokenizer (BOS-prefixed — the historical code
+* The original `char_mlm` tokenizer (BOS-prefixed; the historical code
   offset the mask index by `pos + 1`) is lost. The adapted script encodes
   without BOS and validates vocabulary *size* against checkpoint metadata,
   but a same-size reordered id→char mapping, or the one-position shift a
@@ -97,20 +97,20 @@ reproduced result.
 
 | Model | Top-1 | Top-3 | Top-1 (start) | Top-1 (mid) | Top-1 (end) |
 |---|---|---|---|---|---|
-| Approach A — char-MLM from scratch | 10.0% | 25.9% | — | — | — |
-| Approach B — XLM-R + char head     | **38.0%** | **60.6%** | 35.4% | 39.2% | 36.8% |
+| Approach A: char-MLM from scratch | 10.0% | 25.9% | n/a | n/a | n/a |
+| Approach B: XLM-R + char head     | **38.0%** | **60.6%** | 35.4% | 39.2% | 36.8% |
 
 > **Note.** The 38.0% / 60.6% figures are point estimates on a single
 > 500-row eval, reported without confidence intervals; small differences
 > should not be over-read.
 
 **Approach A failure mode**: collapses onto the word-divider `:`
-and the vowel `e`. Below frequency-weighted random — the model
+and the vowel `e`. Below frequency-weighted random; the model
 learned a marginal-character prior, not a context-conditional one.
 
 **Approach B failure mode**: top-error pairs are *vowel ↔ vowel*
 swaps (e↔a, e↔i, a↔i). These are linguistically plausible
-restorations — the same class of substitution a human philologist
+restorations, the same class of substitution a human philologist
 makes when restoring damaged inscriptions. The flat positional
 profile (35 / 39 / 37%) shows the model is performing genuine
 bidirectional context interpolation, not exploiting word-edge

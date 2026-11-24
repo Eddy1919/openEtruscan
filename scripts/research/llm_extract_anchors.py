@@ -2,7 +2,7 @@
 """Extract bilingual gloss equivalences from the classical-passages corpus
 using Gemini 2.5 Pro on Vertex AI (billed to `your-gcp-project-id`).
 
-Implements WBS task T4.1 — *LLM-as-parser*. The goal is to surface
+Implements WBS task T4.1 (*LLM-as-parser*). The goal is to surface
 **verbatim-attested** equivalences of the form
 
     "the Etruscans called X what we (Greeks / Romans) call Y"
@@ -11,7 +11,7 @@ from the 1,795 Greek + Latin passages in
 `data/extracted/etruscan_passages.jsonl`, without the LLM drawing on
 its outside knowledge of Etruscan. Every emitted equivalence carries
 an `evidence_quote` that **must be a verbatim substring** of the
-source passage — the script post-validates this and drops rows that
+source passage; the script post-validates this and drops rows that
 fail.
 
 Originally specified to run on Claude via Anthropic-on-Vertex (per the
@@ -46,7 +46,7 @@ python scripts/research/llm_extract_anchors.py --output research/anchors/llm_anc
 OUTPUT SCHEMA
 -------------
 
-`research/anchors/llm_anchors_raw.jsonl` — one JSON object per emitted
+`research/anchors/llm_anchors_raw.jsonl` holds one JSON object per emitted
 gloss, with the shape:
 
     {
@@ -65,7 +65,7 @@ If a passage yields zero glosses, no rows are written for that passage
 present"). Resumability is keyed off the per-passage status sidecar
 `<output>.passages.jsonl` which records `{"passage_index": N,
 "status": "processed", "n_glosses": K}` for every passage the script
-has seen (whether or not it produced output) — this is what lets a
+has seen (whether or not it produced output); this is what lets a
 re-run skip already-processed input.
 """
 
@@ -90,7 +90,7 @@ DEFAULT_MODEL = "gemini-2.5-pro"
 DEFAULT_PROJECT = "your-gcp-project-id"
 DEFAULT_REGION = "europe-west1"
 
-# Gemini 2.5 Pro pricing (USD per million tokens) — used only for the
+# Gemini 2.5 Pro pricing (USD per million tokens), used only for the
 # end-of-run cost estimate. Update if pricing changes; this is signal,
 # not billing.
 PRICE_PER_MTOK_INPUT = 1.25
@@ -233,7 +233,7 @@ def _smart_truncate(text: str) -> tuple[str, bool]:
         return text, False
     hits = list(_ETRUSCAN_KEYWORDS.finditer(text))
     if not hits:
-        # No keyword hits but huge passage — fall back to head + tail.
+        # No keyword hits but huge passage; fall back to head + tail.
         head = text[: _MAX_PASSAGE_CHARS // 2]
         tail = text[-_MAX_PASSAGE_CHARS // 2 :]
         return f"{head}\n[... truncated ...]\n{tail}", True

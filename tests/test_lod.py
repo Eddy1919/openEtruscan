@@ -85,7 +85,7 @@ class TestEnrichedJsonLD:
 
     def test_jsonld_uses_row_pleiades_id_when_mapping_misses(self):
         # The findspot→id YAML doesn't cover this row, but its pleiades_id column
-        # does — the feed must still emit the Pleiades link.
+        # does; the feed must still emit the Pleiades link.
         insc = Inscription(
             id="ET_Vc_1.1",
             raw_text="mi velthur",
@@ -165,12 +165,12 @@ class TestReconciliation:
 
     @patch("openetruscan.api.lod._load_trismegistos_mapping", return_value={"ET_Cr_1.1": "828901"})
     def test_reconcile_tm_uses_static_first(self, mock_map):
-        # ET_Cr_1.1 is in the static mapping — should return without API call
+        # ET_Cr_1.1 is in the static mapping; should return without API call
         result = reconcile_trismegistos("ET_Cr_1.1")
         assert result == "828901"
 
     def test_reconcile_tm_returns_none_for_unknown(self):
-        # Unknown ID with empty text — returns None without API call
+        # Unknown ID with empty text; returns None without API call
         result = reconcile_trismegistos("NONEXISTENT", text="")
         assert result is None
 

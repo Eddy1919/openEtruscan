@@ -1,5 +1,5 @@
 """
-OpenEtruscan — Open-source tools for ancient epigraphy.
+OpenEtruscan: open-source tools for ancient epigraphy.
 
 Built for Etruscan, designed to be copied.
 """

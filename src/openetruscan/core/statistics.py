@@ -2,9 +2,9 @@
 Statistical analysis engine for ancient epigraphic corpora.
 
 Three analysis modules:
-  1. Letter frequency analysis   — per-site/date frequency vectors + chi² tests
-  2. Dialect clustering          — cosine-distance Ward clustering + PCA projection
-  3. Dating heuristics           — rule-based chronological classification
+  1. Letter frequency analysis: per-site/date frequency vectors + chi² tests
+  2. Dialect clustering: cosine-distance Ward clustering + PCA projection
+  3. Dating heuristics: rule-based chronological classification
 
 Uses numpy/scipy for modern statistical methods on the OpenEtruscan corpus.
 
@@ -368,7 +368,7 @@ def _pca_2d(matrix: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# 3. DATING HEURISTICS — Descriptive Tagging System
+# 3. DATING HEURISTICS: Descriptive Tagging System
 # ---------------------------------------------------------------------------
 
 # Chronological diagnostic features based on standard Etruscological literature
@@ -427,7 +427,7 @@ class DatingResult:
         date_range: (from_bce, to_bce) as positive numbers.
         confidence: Maximum tag score (backward-compatible; prefer ``tag_scores``).
         tag_scores: Per-period weighted evidence strength (0.0–1.0).
-        method: Always ``"descriptive"`` — signals rule-based tagging.
+        method: Always ``"descriptive"``; signals rule-based tagging.
         caveats: Methodological limitations.
         features: Detailed per-feature report.
     """
@@ -603,7 +603,7 @@ def _bin_midpoint(time_bin: tuple[int, int]) -> int:
 # Calibrated from epigraphic consensus (Rix 1963, Bonfante 2002, Wallace 2008)
 # Index 0 = 700-650 BCE, Index 12 = 100-50 BCE
 _LIKELIHOODS: dict[str, list[float]] = {
-    # K before /a/ — strong archaic marker, drops off after 500 BCE
+    # K before /a/: strong archaic marker, drops off after 500 BCE
     "k_before_a": [
         0.90,
         0.85,
@@ -619,7 +619,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.01,
         0.01,
     ],
-    # Q before /u/ — archaic tripartition
+    # Q before /u/: archaic tripartition
     "q_present": [
         0.80,
         0.75,
@@ -635,7 +635,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.01,
         0.01,
     ],
-    # Absence of F — marks pre-400 BCE
+    # Absence of F: marks pre-400 BCE
     "no_f": [
         0.98,
         0.97,
@@ -651,7 +651,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.02,
         0.01,
     ],
-    # Multiple sibilants — archaic orthography
+    # Multiple sibilants: archaic orthography
     "three_sibilants": [
         0.85,
         0.80,
@@ -667,7 +667,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.05,
         0.03,
     ],
-    # C dominant (K/Q dropped) — classical innovation
+    # C dominant (K/Q dropped): classical innovation
     "c_dominant": [
         0.05,
         0.08,
@@ -683,7 +683,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.65,
         0.60,
     ],
-    # Frequent aspirates — peaks in classical period
+    # Frequent aspirates: peaks in classical period
     "aspirates_frequent": [
         0.30,
         0.35,
@@ -699,7 +699,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.40,
         0.35,
     ],
-    # Genitive -al — develops from late archaic, peaks classical
+    # Genitive -al: develops from late archaic, peaks classical
     "genitive_al": [
         0.10,
         0.15,
@@ -715,7 +715,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.50,
         0.45,
     ],
-    # F present — post-400 BCE innovation
+    # F present: post-400 BCE innovation
     "f_present": [
         0.02,
         0.03,
@@ -731,7 +731,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.98,
         0.99,
     ],
-    # Simplified sibilants — progressive reduction
+    # Simplified sibilants: progressive reduction
     "simplified_sibilants": [
         0.05,
         0.08,
@@ -747,7 +747,7 @@ _LIKELIHOODS: dict[str, list[float]] = {
         0.92,
         0.95,
     ],
-    # Latin influence — grows from 3rd century
+    # Latin influence: grows from 3rd century
     "latin_influence": [
         0.01,
         0.01,

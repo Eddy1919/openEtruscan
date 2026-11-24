@@ -1,21 +1,21 @@
 """
-Leiden-convention parser — separating editorial judgement from epigraphic text.
+Leiden-convention parser, separating editorial judgement from epigraphic text.
 
 Printed editions of ancient inscriptions annotate their readings with the
 Leiden convention. The markup encodes claims *about* the text, not letters
 that were ever incised:
 
-- ``[abc]`` — text lost from the support and restored by the editor
+- ``[abc]``: text lost from the support and restored by the editor
   (EpiDoc ``<supplied reason="lost">``).
-- ``(abc)`` — an abbreviation on the stone, expanded by the editor
+- ``(abc)``: an abbreviation on the stone, expanded by the editor
   (EpiDoc ``<ex>``).
-- ``[...]``, ``[--]``, or a bare run of three or more dashes — lost text the
+- ``[...]``, ``[--]``, or a bare run of three or more dashes: lost text the
   editor declines to restore. Each dot or dash stands for roughly one lost
   letter; ``…`` means even the width is unknown (EpiDoc ``<gap/>``).
 - A combining dot below (U+0323), whether the letter arrives precomposed or
-  decomposed — the letter is physically present but its reading is doubtful
+  decomposed: the letter is physically present but its reading is doubtful
   (EpiDoc ``<unclear>``).
-- ``⸢abc⸣`` (half brackets U+2E22/U+2E23) — damaged but still legible,
+- ``⸢abc⸣`` (half brackets U+2E22/U+2E23): damaged but still legible,
   likewise ``<unclear>``.
 
 If these markers leak into a canonical reading they poison everything
@@ -24,7 +24,7 @@ the FTS index all treat the editor's brackets as if they were letters. This
 module splits an edition string into the plain reading (markup removed) and a
 tuple of EditorialSpan records whose offsets point into that stripped text.
 
-It is deliberately a pure parser — no adapter, no normalizer, no I/O — so the
+It is deliberately a pure parser (no adapter, no normalizer, no I/O), so the
 normalizer can remap the spans through its own folding steps and the EpiDoc
 exporter can turn them into TEI elements, without either depending on the
 other's internals.
@@ -36,10 +36,10 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
-#: Combining dot below — the Leiden "reading unclear" diacritic. Kept as an
+#: Combining dot below, the Leiden "reading unclear" diacritic. Kept as an
 #: escape: the bare combining character is invisible in source.
 _UNDERDOT = "\u0323"
-#: Half brackets (⸢ ⸣) — text partially damaged but still legible.
+#: Half brackets (⸢ ⸣): text partially damaged but still legible.
 _HALF_OPEN = "\u2e22"
 _HALF_CLOSE = "\u2e23"
 
@@ -113,7 +113,7 @@ def parse_leiden(raw: str) -> LeidenParse:
     A single left-to-right scan with a bracket stack: openers remember where
     they started (in the raw string and in the output), closers decide what
     the group meant. A square-bracket group whose content is only dots and
-    dashes is a gap — its placeholder characters are discarded rather than
+    dashes is a gap; its placeholder characters are discarded rather than
     kept, because they were never a reading. Nested groups each get their own
     span; mismatched or orphaned brackets are dropped with a warning instead
     of raising, since real corpus data contains plenty of imperfect markup

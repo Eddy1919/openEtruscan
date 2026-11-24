@@ -43,7 +43,7 @@ class TestPeriodForYear:
         assert p.label_en == expected_label_en
 
     def test_year_in_era_but_off_tile_falls_back_to_umbrella(self):
-        # -730 is inside the umbrella (-720..-90)? No — just outside. Use a year
+        # -730 is inside the umbrella (-720..-90)? No, just outside. Use a year
         # the tiles miss but the umbrella covers: the tiles cover -720..-90 with
         # no gaps, so construct the boundary check on the umbrella edges instead.
         assert period_for_year(-720).label_en == "Orientalizing period"

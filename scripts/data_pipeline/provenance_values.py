@@ -9,7 +9,7 @@ hardcode the pre-migration value 'verified', which that constraint prohibits.
 Two tiers are deliberately never returned by the mapping below, for the same
 reasons the migration's backfill never assigns them: `excavated` is a stronger
 scholarly claim reserved for curatorial review of each record's bibliography,
-and `unknown` marks records whose provenance has not been assessed — a script
+and `unknown` marks records whose provenance has not been assessed; a script
 that has the findspot field in hand has already assessed it.
 """
 
@@ -28,7 +28,7 @@ def provenance_status_for_findspot(findspot: str | None) -> str:
     is named in the source bibliography but the archaeological context is not
     recorded ('acquired_documented'); a missing or empty findspot means the
     context is unknown ('acquired_undocumented'). Like the SQL predicate
-    (`findspot <> ''`), a whitespace-only string counts as a named findspot —
+    (`findspot <> ''`), a whitespace-only string counts as a named findspot;
     trimming is the caller's job.
     """
     if findspot:  # mirrors: findspot IS NOT NULL AND findspot <> ''

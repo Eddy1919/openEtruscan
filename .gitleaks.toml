@@ -1,4 +1,4 @@
-# Gitleaks config — allowlist for known false positives.
+# Gitleaks config: allowlist for known false positives.
 #
 # Gitleaks' built-in `generic-api-key` rule has a high false-positive rate
 # on identifier-shaped strings. Below we whitelist the strings that are
@@ -34,7 +34,7 @@ regexes = [
   '''10\.5281/zenodo\.[0-9]+''',
 ]
 
-# File-level allowlist — paths whose contents have been reviewed and are
+# File-level allowlist: paths whose contents have been reviewed and are
 # known to be public configuration only.
 paths = [
   '''research/v2/configs/.*\.yaml''',

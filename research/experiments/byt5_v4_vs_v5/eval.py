@@ -93,7 +93,7 @@ def main():
 
     gen_config = GenerationConfig(
         max_new_tokens=32,
-        num_beams=1,  # greedy — avoids beam-search early-stop artifacts
+        num_beams=1,  # greedy; avoids beam-search early-stop artifacts
         do_sample=False,
         decoder_start_token_id=0,
     )

@@ -11,7 +11,7 @@ public surfaces (repo 1.2.0, PyPI 0.3.0, website footer 2.0.0, citation page
 0.5.0) and three corpus totals with no machine-readable reconciliation. Each
 drift was individually harmless and collectively meant the project had no
 single public truth. This gate is the mechanism that keeps that from
-recurring — the surfaces cannot silently disagree again, because CI reads
+recurring. The surfaces cannot silently disagree again, because CI reads
 them all against one file.
 
 Surfaces outside this repository (PyPI, Hugging Face, the frontend repo) are
@@ -128,7 +128,7 @@ def check_openapi(m: dict[str, Any], f: Failures) -> None:
 
     `api/server.py` passes `version=__version__` to FastAPI, so bumping the
     project version silently invalidates `docs/openapi.json`. CI catches it by
-    regenerating and diffing — but only in a job that installs the whole server
+    regenerating and diffing, but only in a job that installs the whole server
     extra, so it fails late and reports "spec is stale" without connecting that
     to the version bump three files away. Checking `info.version` here surfaces
     it in the fast lane, and locally, where the fix is one command.
@@ -222,7 +222,7 @@ def _check_retraction(model: dict[str, Any], card_path: str, text: str, f: Failu
 
     This is the assertion the whole gate exists for. The classifier card
     advertised "99% Macro F1" for months after the repository, the website,
-    and the changelog had all retracted it — every in-repo surface was correct
+    and the changelog had all retracted it. Every in-repo surface was correct
     and the one surface a citing scholar actually reaches was not. A card that
     reprints its own retracted number is worse than no card.
     """
@@ -256,7 +256,7 @@ def check_manual_surfaces(m: dict[str, Any], f: Failures, strict: bool) -> list[
     """Report out-of-repo surfaces; under --strict-manual, fail on the blocking ones.
 
     A surface marked `self_resolving` is one the release pipeline itself
-    updates — PyPI is stale precisely *until* a tag publishes it. Failing the
+    updates (PyPI is stale precisely *until* a tag publishes it). Failing the
     strict gate on those would deadlock: the tag cannot pass the gate until
     PyPI is current, and PyPI cannot become current without the tag. They stay
     advisory in both modes and are reported either way.

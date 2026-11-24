@@ -100,7 +100,7 @@ class TestClusterSites:
 
     Rewritten to use the current API which accepts ``list[dict]`` with
     ``findspot`` and ``canonical`` keys instead of a ``Corpus`` instance.
-    No database access required — these are pure-compute tests.
+    No database access required; these are pure-compute tests.
     """
 
     @staticmethod

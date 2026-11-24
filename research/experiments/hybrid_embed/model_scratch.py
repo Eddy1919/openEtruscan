@@ -1,4 +1,4 @@
-"""WP2 — encoder/decoder transformer written from scratch.
+"""WP2: encoder/decoder transformer written from scratch.
 
 torch is used as a tensor/autograd library only: attention, blocks, and the
 seq2seq wiring are implemented here (no nn.Transformer*, no nn.MultiheadAttention).
@@ -6,7 +6,7 @@ seq2seq wiring are implemented here (no nn.Transformer*, no nn.MultiheadAttentio
 Design, sized for a ~25K-running-token corpus:
   * pre-norm blocks, learned positional embeddings
   * one embedding matrix shared by encoder input, decoder input, and the
-    output projection (three-way weight tying — the single biggest
+    output projection (three-way weight tying, the single biggest
     overfitting lever at this corpus size)
   * encoder returns per-token states (late interaction, WP3) and a masked
     mean-pool (fusion block)
@@ -118,7 +118,7 @@ class Seq2Seq(nn.Module):
         self.max_len = max_len
         self.emb = nn.Embedding(vocab_size, d_model, padding_idx=PAD)
         # tied three ways (encoder in, decoder in, output projection): default
-        # N(0,1) init makes the tied logits explode — 0.02 keeps them sane
+        # N(0,1) init makes the tied logits explode; 0.02 keeps them sane
         nn.init.normal_(self.emb.weight, std=0.02)
         nn.init.zeros_(self.emb.weight[PAD])
         self.pos_enc_emb = nn.Parameter(torch.zeros(1, max_len, d_model))

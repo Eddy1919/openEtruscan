@@ -1,4 +1,4 @@
-# WBS T4.3 — LaBSE Hard-Negative LoRA Fine-Tune: Negative Result
+# WBS T4.3 (LaBSE Hard-Negative LoRA Fine-Tune): Negative Result
 
 **Decision date:** 2026-05-11
 **Cost:** ≈ $0.10 (2m01s on a single Vertex AI T4)
@@ -47,21 +47,21 @@ held_out_positive_rank: 21 / 21   (positive ranked LAST in every fold)
 
 Per-fold history is uniform: per-epoch loss does not descend (oscillates
 within ±0.3 of ~7.3 across folds), `on_diag − off_diag` cosine stays at
-~+0.056, regression delta peaks at 6 × 10⁻⁵ — three orders of magnitude
+~+0.056, regression delta peaks at 6 × 10⁻⁵, three orders of magnitude
 below the abort threshold. **The model is essentially unchanged.**
 
 ## Interpretation
 
 The negative is honest and consistent with the prior. With 24,576 trainable
 parameters, `lr = 2e-6`, and 16 anchors per fold, the update budget is
-≈ `24,576 × 2e-6 × 16 × 3 ≈ 2.4` "parameter-update-units" — well below the
+≈ `24,576 × 2e-6 × 16 × 3 ≈ 2.4` "parameter-update-units", well below the
 threshold needed to flip ranks in a 768-dim space where the positives sit
 on the *opposite side* of the manifold from the hard negatives (Greek gloss
 vs Latinate orthographic neighbours).
 
 The hard-negative *miner* did its job: see fold 16, where the model's
 top-3 nearest neighbours to `hister` are `histriam, hysteria, histria`
-(cosines 0.93, 0.93, 0.89). Those are genuine Latin cognates — exactly
+(cosines 0.93, 0.93, 0.89). Those are genuine Latin cognates, exactly
 the orthographic distractors we want the model to learn to push *below*
 the semantic gloss `ludius` (actor). LaBSE knows the orthography but
 not the semantics, and 17 contrastive examples are nowhere near enough
@@ -71,7 +71,7 @@ What this rules out:
 
 - **The "more epochs / bigger LoRA" rescue:** with no signal in `on_diag −
   off_diag` drift after 3 epochs, more epochs are extrapolation in noise.
-  Bigger `r` would risk overfit — the very thing this experiment was
+  Bigger `r` would risk overfit, the very thing this experiment was
   designed *not* to do.
 - **The "scale aren't the problem" hypothesis:** the experiment confirms
   that scale (n=17) *is* the problem.
@@ -84,7 +84,7 @@ What this rules out:
    fine-tuning at this scale.** Future yield improvements should target
    anchor acquisition (Option C / community curation, [PR #55]) before
    any further fine-tune work.
-3. **The mining pipeline is reusable** — when the anchor corpus grows past
+3. **The mining pipeline is reusable.** When the anchor corpus grows past
    ~100 entries (e.g. after a Pelagios curation push) we can rerun the
    exact same job with the new anchors and re-evaluate. The submit script
    takes paths as flags.

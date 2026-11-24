@@ -2,7 +2,7 @@
 negatives mined from prod, with **aggressive overfitting guards**
 because the positive set is only 17 anchors.
 
-This is WBS T4.3 Option B — the "yield < 30 → hard-negative-mining
+This is WBS T4.3 Option B, the "yield < 30 → hard-negative-mining
 last-resort experiment" arm of the decision tree. The whole point
 of this script is to be **conservatively engineered** so that even
 in the worst case, we ship a model that's *not worse* than baseline
@@ -14,7 +14,7 @@ OVERFITTING GUARDS
 1. **r=2 LoRA on LaBSE's late transformer layers only.**
    Parameter count for r=2 q+v adapters across the last 4 of LaBSE's
    12 encoder layers is < 10k trainable parameters. Compare to
-   LaBSE-base's ~471M frozen parameters — fine-tune touches < 0.002%
+   LaBSE-base's ~471M frozen parameters; fine-tune touches < 0.002%
    of capacity. There's not enough parametric room to memorise 17
    anchors.
 
@@ -94,7 +94,7 @@ from __future__ import annotations
 #
 # - **Pure torch + peft, not sentence-transformers wrapper.** Lets us
 #   surgically target LoRA at the LAST 4 BERT layers (`layers_to_transform=
-#   [8, 9, 10, 11]`) via PEFT's LoraConfig — that's the structurally
+#   [8, 9, 10, 11]`) via PEFT's LoraConfig; that's the structurally
 #   small-capacity pattern the overfitting-guard spec prescribes.
 #   sentence-transformers' built-in trainers don't expose a clean
 #   layer-selective hook.
@@ -102,13 +102,13 @@ from __future__ import annotations
 # - **InfoNCE / softmax-with-hard-negatives loss.** Mathematically equivalent
 #   to sentence-transformers' MultipleNegativesRankingLoss when in-batch
 #   negatives are disabled. We disable them and rely on the hard-mined
-#   pool — see the docstring guard #5 for why.
+#   pool; see the docstring guard #5 for why.
 #
 # - **Regression detector simplified.** Full per-epoch
 #   rosetta-eval-v1 re-eval would require pulling the prod Latin
 #   partition + 22 test queries through the fine-tuned model. Instead
 #   we use a faster proxy: the OFF-DIAGONAL mean cosine of
-#   (anchor_i, positive_j) — if this rises by more than `regression_threshold`,
+#   (anchor_i, positive_j). If this rises by more than `regression_threshold`,
 #   the encoder is collapsing semantic-field structure. Functionally
 #   equivalent guard against the failure mode the spec targets.
 # ────────────────────────────────────────────────────────────────────
@@ -304,7 +304,7 @@ def _train_one_fold(
     tokenizer = AutoTokenizer.from_pretrained(args.base_model)
     base = AutoModel.from_pretrained(args.base_model)
 
-    # LoRA on the late transformer layers only — guard #1.
+    # LoRA on the late transformer layers only (guard #1).
     lora_config = LoraConfig(
         r=args.lora_r,
         lora_alpha=args.lora_alpha,
@@ -333,7 +333,7 @@ def _train_one_fold(
         anc_emb0 = _encode_pooled(model, tokenizer, anchors, device, args.max_seq_length)
         pos_emb0 = _encode_pooled(model, tokenizer, positives, device, args.max_seq_length)
         cross_sim0 = (anc_emb0 @ pos_emb0.T).cpu()
-        # Take the OFF-diagonal mean (anchor i vs others' positives — should stay low)
+        # Take the OFF-diagonal mean (anchor i vs others' positives; should stay low)
         mask = ~torch.eye(len(train_rows), dtype=torch.bool)
         if mask.any():
             baseline_offdiag = float(cross_sim0[mask].mean().item())
@@ -356,7 +356,7 @@ def _train_one_fold(
             batch_rows = [train_rows[i] for i in idx]
             anc_texts = [r[0] for r in batch_rows]
             pos_texts = [r[1] for r in batch_rows]
-            # Use 8 hard negatives per anchor — cap so we don't OOM if the
+            # Use 8 hard negatives per anchor; cap so we don't OOM if the
             # mining returned more. (`mine_hard_negatives.py --k 20` produces 20.)
             n_neg = 8
             neg_texts: list[str] = []

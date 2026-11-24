@@ -7,7 +7,7 @@ snapshot held by the maintainer). The canonical public home of the data is
 Zenodo, which gives us a versioned DOI and stable download URLs. This script
 is the single supported way to restore the data layer of a fresh clone.
 
-Stdlib only (urllib, hashlib) — it must work before any dependencies are
+Stdlib only (urllib, hashlib); it must work before any dependencies are
 installed.
 
 Usage:
@@ -33,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # Manifest of Zenodo-hosted data files. Each entry pins the Zenodo record id
 # (a *version* DOI: 10.5281/zenodo.<record_id>), the filename inside that
 # record, the expected SHA-256, and the repo-relative destination. Add new
-# files here — nothing else in this script should need to change.
+# files here; nothing else in this script should need to change.
 FILES: list[dict[str, str]] = [
     {
         # v1.0.0 record; the same file ships byte-identical in v1.1.0

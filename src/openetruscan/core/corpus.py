@@ -237,7 +237,7 @@ class Corpus:
         """Factory method to load the corpus using the default database URL from settings.
 
         ``Corpus.load()`` is the friendly entry point for CLI scripts and tests
-        that don't want to know about schema-management plumbing — it ensures
+        that don't want to know about schema-management plumbing; it ensures
         the schema exists before returning. Hot-path callers in long-running
         workers should use ``Corpus.connect(url, init_schema=False)`` (the
         default) so they don't re-run the IF NOT EXISTS DDL on every connect.
@@ -359,7 +359,7 @@ class Corpus:
     ) -> None:
         """Add an inscription.
 
-        On a database without the ``geom`` column (no PostGIS — e.g. the
+        On a database without the ``geom`` column (no PostGIS, e.g. the
         ``docker-compose.dev.yml`` stack) the row is stored without spatial
         geometry; ``findspot_lat``/``findspot_lon`` are plain columns and
         persist regardless.
@@ -564,7 +564,7 @@ class Corpus:
         Every value this method wrote ('verified'/'rejected'/'quarantined')
         is prohibited by the four-tier ``provenance_status`` CHECK
         constraint (migration ``a1f2c3d4e5f6``), which disentangled
-        editorial review from archaeological provenance — so on a migrated
+        editorial review from archaeological provenance, so on a migrated
         database the UPDATE could only raise ``IntegrityError``, and on an
         unmigrated one it would corrupt provenance data. It has no in-repo
         callers; raising a clear error beats either outcome.
@@ -841,8 +841,8 @@ class Corpus:
     ) -> int:
         """Bulk import from CSV.
 
-        Rows are collected and inserted through ``add_batch`` — one
-        execute_values statement per 500 rows and a single commit — instead of
+        Rows are collected and inserted through ``add_batch`` (one
+        execute_values statement per 500 rows and a single commit) instead of
         one ``add()`` round-trip (and commit) per row.
         """
         path = Path(csv_path)

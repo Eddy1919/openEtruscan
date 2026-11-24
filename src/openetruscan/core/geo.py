@@ -1,5 +1,5 @@
 """
-Geographic utilities — deprecated in favor of PostGIS spatial operations.
+Geographic utilities, deprecated in favor of PostGIS spatial operations.
 """
 
 import math

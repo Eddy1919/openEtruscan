@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Submit the mean-centering pass to Vertex AI. CPU-only — pure linear algebra
+# Submit the mean-centering pass to Vertex AI. CPU-only, pure linear algebra
 # over JSONL streams. Runs both lat-grc and ett files in sequence.
 set -euo pipefail
 
@@ -28,7 +28,7 @@ workerPoolSpecs:
       bootDiskType: pd-ssd
       bootDiskSizeGb: 100
     containerSpec:
-      # pytorch-gpu image requires an accelerator — attach a cheap T4 even
+      # pytorch-gpu image requires an accelerator; attach a cheap T4 even
       # though we're CPU-only; the image bootstraps fastest from cache.
       imageUri: us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.2-2.py310:latest
       env:

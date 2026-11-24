@@ -6,7 +6,7 @@ codebook (`research/v2/codebooks/classification.md`). Outputs one JSONL row
 per (model, inscription).
 
 API providers are pluggable via `--providers`. Default jury is a 3-rater
-panel chosen for training-data independence — Claude Opus 4.7 (Anthropic
+panel chosen for training-data independence: Claude Opus 4.7 (Anthropic
 via Vertex), Gemini 2.5 Pro (Google), and DeepSeek V3 (DeepSeek via Vertex
 Model Garden MaaS). All three bill to the same GCP project; no separate
 vendor billing relationships needed.
@@ -19,7 +19,7 @@ Auth
 - **Gemini**: secret `GOOGLE_API_KEY` is fetched from Secret Manager via
   `_secrets.get_secret`. Pre-resolves to `os.environ["GOOGLE_API_KEY"]` if
   set (useful for local override).
-- **DeepSeek (Vertex MaaS)**: same ADC pattern as Claude — no key. Region
+- **DeepSeek (Vertex MaaS)**: same ADC pattern as Claude, no key. Region
   override via `MAAS_VERTEX_REGION` (defaults to us-central1 where Model
   Garden publishes its MaaS endpoints).
 - **OpenAI** (kept in the registry but not in the default jury): set
@@ -57,10 +57,10 @@ def _resolve_codebook(language: str) -> Path:
 # Default to Etruscan for backward compatibility. Override via --language.
 CODEBOOK_PATH = _resolve_codebook("etr")
 
-# AnthropicVertex defaults — override via env if your Vertex deployment uses
+# AnthropicVertex defaults; override via env if your Vertex deployment uses
 # a different region or project.
 # NOTE: the former hardcoded default project is DELETED. Do not reinstate a
-# deleted project — a run must set VERTEX_PROJECT_ID to a live project with the target
+# deleted project. A run must set VERTEX_PROJECT_ID to a live project with the target
 # Anthropic model enabled in VERTEX_REGION (Opus is NOT on tripcreator-prod as of
 # 2026-07; only Haiku 4.5). Empty default fails fast instead of silently 404ing.
 VERTEX_PROJECT_ID = os.environ.get("VERTEX_PROJECT_ID", "")
@@ -117,7 +117,7 @@ class Provider:
 
 
 def _make_anthropic_vertex(model: str) -> Provider:
-    """Claude via Vertex AI. Uses Application Default Credentials — no API key."""
+    """Claude via Vertex AI. Uses Application Default Credentials (no API key)."""
 
     def invoke(system: str, user: str) -> str:
         from anthropic import AnthropicVertex  # type: ignore
@@ -170,8 +170,8 @@ def _make_openai(model: str) -> Provider:
 
 
 def _make_gemini_vertex(model: str) -> Provider:
-    """Gemini via Vertex AI with ADC — no API key, same billing project as
-    Claude. The API-key path below (`_make_gemini`) is kept for local runs,
+    """Gemini via Vertex AI with ADC (no API key, same billing project as
+    Claude). The API-key path below (`_make_gemini`) is kept for local runs,
     but the 2026-08 re-run found the stored key stale while ADC just worked,
     so Vertex is now the default route for Gemini raters."""
 
@@ -210,14 +210,14 @@ def _make_gemini(model: str) -> Provider:
 
 def _make_vertex_maas(model: str) -> Provider:
     """Open-weights models served via Vertex Model Garden's OpenAI-compatible
-    Model-as-a-Service endpoint. Uses Application Default Credentials —
-    no separate API key. The same adapter shape works for Llama, Mistral,
-    Qwen, etc. — only the `model` id changes.
+    Model-as-a-Service endpoint. Uses Application Default Credentials
+    (no separate API key). The same adapter shape works for Llama, Mistral,
+    Qwen, etc.; only the `model` id changes.
 
     Region override: env var `MAAS_VERTEX_REGION` (default us-east5, which
     is where Meta publishes the Llama 4 MaaS endpoint as of 2026-05).
 
-    Path uses /v1/ — the /v1beta1/ form is NOT current and returns 404 even
+    Path uses /v1/; the /v1beta1/ form is NOT current and returns 404 even
     for enabled models. Verified by the Console "Use this model" snippet.
     """
 
@@ -257,7 +257,7 @@ def _make_vertex_maas(model: str) -> Provider:
 # vendor billing relationships needed. OpenAI is registered but opt-in only.
 #
 # Vertex model ids: keep these in sync with what's published in Model Garden
-# for the billing project. If a generate call returns 404, the id is wrong —
+# for the billing project. If a generate call returns 404, the id is wrong;
 # update here, do not re-invent the timestamp.
 PROVIDER_REGISTRY: dict[str, Callable[[], Provider]] = {
     "claude-opus-4-8": lambda: _make_anthropic_vertex("claude-opus-4-8"),
@@ -452,7 +452,7 @@ def main(argv: list[str] | None = None) -> int:
                 provider = provider_by_key[provider_name]
                 try:
                     raw = provider.invoke(SYSTEM_PROMPT, user_prompt)
-                except Exception as e:  # noqa: BLE001 — log and skip
+                except Exception as e:  # noqa: BLE001 (log and skip)
                     errors += 1
                     print(f"  [{provider_name} {row['id']}] api_error: {e}", file=sys.stderr)
                     # An API failure is missing data, NOT a model abstention.
@@ -460,7 +460,7 @@ def main(argv: list[str] | None = None) -> int:
                     # disposition computation downstream (classify_adjudicate
                     # drops these rows); the previous label="unsure" made an
                     # infrastructure failure indistinguishable from a genuine
-                    # abstention — the same bug class as the retracted lacuna
+                    # abstention, the same bug class as the retracted lacuna
                     # Finding C (PRE_REGISTRATION.md §B).
                     sink.write(
                         json.dumps(

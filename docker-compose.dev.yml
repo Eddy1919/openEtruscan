@@ -1,4 +1,4 @@
-# OpenEtruscan — local development stack, and the repo's only compose file:
+# OpenEtruscan local development stack, and the repo's only compose file:
 # a throwaway Postgres with pgvector plus the API built from the local
 # Dockerfile.
 #
@@ -11,8 +11,8 @@
 #
 # Honest limitation: pgvector/pgvector:pg16 ships pgvector but NOT PostGIS,
 # so the `geom` column is never created and the spatial endpoints are inert
-# in this dev stack. Import degrades gracefully — rows land without spatial
-# geometry, plain findspot_lat/findspot_lon are still stored — and search,
+# in this dev stack. Import degrades gracefully (rows land without spatial
+# geometry, plain findspot_lat/findspot_lon are still stored), and search,
 # pgvector similarity, CRUD, and migrations work as in production.
 
 services:

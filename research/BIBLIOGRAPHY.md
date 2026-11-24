@@ -62,12 +62,12 @@ Citations are alphabetized by author within each section.
 * **Lin, T.-Y., Goyal, P., Girshick, R., He, K. & Dollár, P.** (2017). "Focal Loss for Dense Object Detection." In: *ICCV 2017*, pp. 2980–2988. arXiv:1708.02002.
   *α-balanced focal loss, used in the MicroTransformer + CharCNN classifier training to handle the extreme class imbalance (funerary 57%, commercial 0.3%) in the cascade-labeled training set.*
 
-### Computer vision (glyph detection) — exploratory scaffold, NOT shipped
+### Computer vision (glyph detection): exploratory scaffold, NOT shipped
 
 * **Jocher, G., Chaurasia, A. & Qiu, J.** (2024). "YOLO11 by Ultralytics." Ultralytics, GitHub: https://github.com/ultralytics/ultralytics.
   *Referenced only by an exploratory `research/parked/cv_pipeline/train_yolo.py` scaffold.
   **No trained glyph detector exists and OpenEtruscan has no computer-vision
-  capability** — image→glyph detection is an unbuilt research direction, not a
+  capability**; image→glyph detection is an unbuilt research direction, not a
   shipped model.*
 
 ## Methodological and statistical references

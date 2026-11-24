@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""WP2 — train the from-scratch encoder/decoder as a lacuna-style denoiser.
+"""WP2: train the from-scratch encoder/decoder as a lacuna-style denoiser.
 
 Corruption mimics real epigraphic damage on the token sequence:
   * span corruption: a contiguous span of 1–3 tokens collapses to one [MASK]
-    (a lacuna of unknown length — matches the Leiden `---` convention)
+    (a lacuna of unknown length; matches the Leiden `---` convention)
   * random token masking (point damage)
 Every training sample gets at least one corruption. Target is the original
 sequence; loss is CE over all target positions.
 
 Metrics (group-held-out val, dup_group_id split):
-  * full-seq token accuracy (teacher-forced) — inflated by easy copies
-  * corrupted-region accuracy — the honest number, gate vs charLM 0.396
+  * full-seq token accuracy (teacher-forced): inflated by easy copies
+  * corrupted-region accuracy: the honest number, gate vs charLM 0.396
 
 Output: out/s2s_model.pt, out/s2s_train_log.json
         out/s2s_pooled.npy           [n_index, d]   (fusion block)

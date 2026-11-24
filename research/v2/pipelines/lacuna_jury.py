@@ -116,7 +116,7 @@ def parse_response(insc_id: str, raw: str, width: int, masked: str) -> dict:
     restored_full = str(payload.get("restored_full", ""))
     # A row where the model returned nothing parseable (empty body, non-JSON, or
     # no restored_full) is a NON-ANSWER, not a hallucination. Conflating the two
-    # inflated the retracted v2.0.2 "Sonnet 0.949 hallucination" headline — 114
+    # inflated the retracted v2.0.2 "Sonnet 0.949 hallucination" headline; 114
     # of 125 Sonnet rows were empty completions (max_tokens exhausted echoing
     # restored_full) scored as hallucinations. no_parse rows carry no_parse=True
     # and are excluded from hallucination/accuracy denominators downstream.

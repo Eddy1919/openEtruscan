@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Step 4 — VSA role-filler vectors (the "frontier spike" block).
+"""Step 4: VSA role-filler vectors (the "frontier spike" block).
 
 Re-runs the WP1 HRR/MAP encoder (research/experiments/vsa_role_filler/) over
 the *cleaned* index: bipolar atoms, D=4096, seed 7, MAP binding. Two vectors
 per inscription:
-  * S (structure): sum of role⊗position — captures the epigraphic formula
-  * I (content)  : sum of role⊗filler   — captures who/what fills the slots
+  * S (structure): sum of role⊗position; captures the epigraphic formula
+  * I (content)  : sum of role⊗filler;   captures who/what fills the slots
 
 Zero training. Bipolar hypervectors are the dense equivalent of a spike-count
 code, which is why this block stands in for the neuromorphic reading of the

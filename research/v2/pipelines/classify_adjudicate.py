@@ -2,19 +2,19 @@
 
 Reads the raw jury output and produces three artifacts:
 
-1. `classify_candidate_gold.jsonl` — rows where all jury models agree AND
+1. `classify_candidate_gold.jsonl`: rows where all jury models agree AND
    every model returned confidence ≥ medium. These are the "easy" rows; a
    philologist may still spot-check, but they are not the bottleneck.
 
-2. `classify_adjudication_queue.jsonl` — rows where the jury split. Each row
+2. `classify_adjudication_queue.jsonl`: rows where the jury split. Each row
    carries the proposed labels per model, the disagreement type, and metadata
    the philologist needs to decide. The queue is stratified by class so the
    philologist sees a balanced sample.
 
-3. `classify_jury_summary.json` — aggregate stats: Krippendorff α (overall
+3. `classify_jury_summary.json`: aggregate stats: Krippendorff α (overall
    and per-class), label-confusion across raters, throughput metrics.
 
-The Krippendorff α is computed per the eval/bootstrap module — same
+The Krippendorff α is computed per the eval/bootstrap module, the same
 implementation used in the final eval, so the agreement number reported
 here is directly comparable to the post-adjudication number.
 """
@@ -69,7 +69,7 @@ def classify_row(jury_rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
     # Rows written on an API failure carry label="api_error" (see
     # classify_jury.py): that is missing data, not a rating, and must not
     # enter consensus/unanimity math. Unanimity over an incomplete panel is
-    # not unanimity — any api_error therefore blocks candidate_gold and
+    # not unanimity; any api_error therefore blocks candidate_gold and
     # routes the row to the queue.
     n_api_error = sum(1 for r in jury_rows if r["label"] == "api_error")
     jury_rows = [r for r in jury_rows if r["label"] != "api_error"]

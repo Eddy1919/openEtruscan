@@ -1,6 +1,6 @@
 """Startup/env-contract tests for the byt5-restorer service.
 
-Import-time behaviour only — no model is downloaded or loaded (torch and
+Import-time behaviour only: no model is downloaded or loaded (torch and
 transformers are lazy imports inside the handlers). Not collected by the
 root ``pytest`` run (``testpaths = ["tests"]``); run explicitly:
 

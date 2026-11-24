@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""WP7 — Poincaré-ball embeddings for the clan→inscription hierarchy,
+"""WP7: Poincaré-ball embeddings for the clan→inscription hierarchy,
 vs the Euclidean node2vec block.
 
 Method: Nickel & Kiela 2017. Distance math is ours; torch supplies autograd
 for the Euclidean gradient, which is then rescaled by the inverse metric
-((1-||x||²)/2)² and the points retracted into the ball — Riemannian SGD.
+((1-||x||²)/2)² and the points retracted into the ball (Riemannian SGD).
 (The first hand-derived-gradient version diverged to nan; autograd on the
 same loss is the honest fix, torch stays a tensor library.)
 
@@ -13,7 +13,7 @@ Edges: (clan, inscription) membership pairs from the shared role parser
 
 Comparison deliberately unfair to us: Poincaré d=16 vs node2vec d=128. Note
 node2vec trained on exactly these membership edges, so its MAP is near
-ceiling by construction — the gate is "get close at 8× fewer dims", and any
+ceiling by construction. The gate is "get close at 8× fewer dims", and any
 win would be decisive.
 
 Gate: clan-membership MAP (macro over clans with ≥3 members).

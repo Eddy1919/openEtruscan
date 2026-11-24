@@ -1,4 +1,4 @@
-# Primary-source corpus — what's there, what we extracted
+# Primary-source corpus: what's there, what we extracted
 
 What we have on disk and what we got out of it. Used to drive
 [Milestone 3](../ROADMAP.md) (primary-source attested-anchor mining).
@@ -15,7 +15,7 @@ data/classical_texts/formatted/Latin/      # cleaner per-author layout
 data/classical_texts/formatted/Greek/      # cleaner per-author layout
 ```
 
-The `formatted/` subtree is the easier path — author names are human-
+The `formatted/` subtree is the easier path; author names are human-
 readable directories, and each work is a single XML file with the
 language code in the filename (`*-lat*.xml`, `*-grc*.xml`).
 
@@ -28,7 +28,7 @@ containing Etruscan/Tyrrhenian terms, and emits two JSONL files:
 | Output | Path | Rows |
 |---|---|---|
 | Etruscan-mentioning passages | `data/extracted/etruscan_passages.jsonl` | **1,795** |
-| Regex-extracted bilingual gloss candidates | `data/extracted/etruscan_glosses.jsonl` | 29 (mostly false positives — see below) |
+| Regex-extracted bilingual gloss candidates | `data/extracted/etruscan_glosses.jsonl` | 29 (mostly false positives; see below) |
 
 Top contributing authors (Latin):
 
@@ -66,7 +66,7 @@ quod aesar ... Etrusca lingua deus uocaretur
 ```
 
 29 hits, of which only one is an unambiguously real bilingual
-attestation: **Suetonius, *Divus Augustus* — `aesar = deus`**.
+attestation: **Suetonius, *Divus Augustus*: `aesar = deus`**.
 
 > *"…quod aesar, id est reliqua pars e Caesaris nomine, Etrusca
 > lingua deus uocaretur."*
@@ -83,15 +83,15 @@ make regex too brittle for this task at scale.
 The high-yield bilingual-gloss sources are *not* in the Perseus formatted
 subset:
 
-- **Festus / Sextus Pompeius Festus**, *De Verborum Significatu* — the
+- **Festus / Sextus Pompeius Festus**, *De Verborum Significatu*, the
   ancient Latin grammarian's lexicon. Defines dozens of Etruscan
   loanwords (`histrio`, `popa`, `subulo`, `lanista`, `satura`, etc.).
   *thelatinlibrary.com* has a different *Festus* (Rufius Festus, 4th-
   century historian). Reach via Project Schmidt or Brepols.
-- **Macrobius**, *Saturnalia* III — preserves the standard theonym
+- **Macrobius**, *Saturnalia* III, preserves the standard theonym
   equivalences (`Tinia → Iuppiter`, `Uni → Iuno`, `Menrva → Minerva`)
   with explicit attribution in classical prose.
-- **Hesychius of Alexandria**'s lexicon — Greek lexicon of obscure
+- **Hesychius of Alexandria**'s lexicon: Greek lexicon of obscure
   words including a small set of Etruscan-glossed entries.
 
 These are tracked under ROADMAP Milestone 3 as a discrete
@@ -107,7 +107,7 @@ on the existing 1,795 passages. The argument for it:
   Greek prose mentioning Etruscan.
 - **Regex is too rigid** to recover paraphrased glosses from those
   paragraphs.
-- **An LLM is a good parser**, *if used as a parser* — i.e. asked to
+- **An LLM is a good parser**, *if used as a parser*, i.e. asked to
   extract what's stated in the text, not to volunteer what it knows
   about Etruscan from training data.
 - The output is **traceable**: every extracted pair carries an
@@ -120,14 +120,14 @@ Cost: ~$2-4 for one full sweep with Claude Haiku. Expected yield:
 
 When we review the LLM-extracted candidates:
 
-- **Tier A — Direct equivalence statement.** The author says
+- **Tier A: Direct equivalence statement.** The author says
   explicitly "X means Y in Etruscan/Latin/Greek". Suetonius's
   `aesar = deus` is the prototype. These should be the highest-
   confidence training anchors.
-- **Tier B — Paraphrased equivalence.** Author describes a thing in
+- **Tier B: Paraphrased equivalence.** Author describes a thing in
   Latin/Greek and notes the Etruscan name. Not a 1:1 lemma map but
   close.
-- **Tier C — Contextual adjacency.** Author uses the Etruscan word
+- **Tier C: Contextual adjacency.** Author uses the Etruscan word
   in Latin/Greek text and the surrounding context constrains the
   meaning. Useful for *semantic-field* training but not for
   lexical-equivalence training.

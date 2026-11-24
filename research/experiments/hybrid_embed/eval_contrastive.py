@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""WP9 eval — what did contrastive alignment buy, measured three ways.
+"""WP9 eval: what did contrastive alignment buy, measured three ways.
 
 1. Held-out translation retrieval (test split, groups never seen):
    Eng→Etr and Etr→Eng over (a) the test pool only and (b) the full 5,569-row
    index as distractors. R@1 / R@10 / MRR. Chance R@10 reported alongside.
-2. Rosetta glosses — the first *semantic* rosetta run: embed the Etruscan
+2. Rosetta glosses (the first *semantic* rosetta run): embed the Etruscan
    word with the aligned Etruscan tower, the English gloss with the English
    tower, p@10 over the gloss candidate pool (n=22 frozen test pairs).
    Compare: charLM surface p@10 0.455 (artifact), chance 10/58.

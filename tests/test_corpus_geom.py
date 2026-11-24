@@ -4,14 +4,14 @@ The dev stack (``docker-compose.dev.yml``) runs ``pgvector/pgvector:pg16``,
 which has no PostGIS: ``Corpus._ensure_db()``'s spatial block rolls back and
 the ``geom`` column is never created (no alembic migration creates it
 either). ``add()``/``add_batch()`` used to reference ``geom`` unconditionally
-— even the no-coordinates branch wrote NULL into it — so every import died
+(even the no-coordinates branch wrote NULL into it), so every import died
 with ``UndefinedColumn``. These tests pin the degraded path: statements built
 without the column, detection cached per connection, and an end-to-end import
 against a real PostGIS-less Postgres.
 
 Two halves:
 
-* the unit half needs no database — it checks the SQL builders against the
+* the unit half needs no database; it checks the SQL builders against the
   exact statements the pre-fix code produced (the geom-present path must stay
   byte-for-byte identical) and drives ``add()`` through a recording fake
   connection with the detection flag forced either way;
@@ -39,7 +39,7 @@ from openetruscan.core.corpus import (
 )
 
 # ---------------------------------------------------------------------------
-# Unit half — no database required
+# Unit half: no database required
 # ---------------------------------------------------------------------------
 
 
@@ -197,7 +197,7 @@ def test_add_with_geom_column_keeps_spatial_insert():
 
 
 # ---------------------------------------------------------------------------
-# Integration half — real Postgres without PostGIS
+# Integration half: real Postgres without PostGIS
 # ---------------------------------------------------------------------------
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
@@ -215,8 +215,8 @@ def scratch_db_url():
 
     Same isolation rationale as ``test_migrations.py``: the shared test
     database carries the ORM-created schema, and this test must start from
-    the state the dev stack starts from — empty, then ``alembic upgrade
-    head``.
+    the state the dev stack starts from (empty, then ``alembic upgrade
+    head``).
     """
     from sqlalchemy import create_engine, text
 
@@ -266,7 +266,7 @@ def _upgrade_head(url: str) -> None:
 
 @requires_postgres_dsn
 def test_import_succeeds_on_postgres_without_postgis(scratch_db_url):
-    """The dev-stack repro: alembic bootstrap, then import — must not raise.
+    """The dev-stack repro: alembic bootstrap, then import; must not raise.
 
     Before the fix this died on the first row with
     ``psycopg2.errors.UndefinedColumn: column "geom" of relation
@@ -292,7 +292,7 @@ def test_import_succeeds_on_postgres_without_postgis(scratch_db_url):
         )
         assert inserted == 2
 
-        # The ON CONFLICT clause changed too — the upsert path must survive.
+        # The ON CONFLICT clause changed too; the upsert path must survive.
         corpus.add(
             Inscription(
                 id="GEO_ADD", raw_text="mi larθa spurina", findspot_lat=42.36, findspot_lon=11.99

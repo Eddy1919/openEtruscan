@@ -1,7 +1,7 @@
 """Invariant tests for the research/v2 science harness.
 
 The v2.0.2 lacuna retraction (PRE_REGISTRATION.md Deviation §B) was caused by
-a scorer bug — empty API responses counted as hallucinations. In a tiny-n
+a scorer bug (empty API responses counted as hallucinations). In a tiny-n
 field one harness bug is a paper-level event, so the invariants that fix was
 built on are pinned here permanently:
 
@@ -14,8 +14,8 @@ built on are pinned here permanently:
   6. the committed evidence files match what the published tables claim.
 
 research/ is an importable package (it ships __init__.py) but lives outside
-the installed src/ tree, so the repo root is put on sys.path explicitly —
-same approach as test_llm_extract_anchors.py uses for scripts/.
+the installed src/ tree, so the repo root is put on sys.path explicitly
+(same approach as test_llm_extract_anchors.py uses for scripts/).
 """
 
 from __future__ import annotations
@@ -362,7 +362,7 @@ class TestNeuralPredictionsWriter:
 
 
 class TestHandoffBundle:
-    """classify_handoff.py — the philologist bundle must be a deterministic
+    """classify_handoff.py: the philologist bundle must be a deterministic
     function of in-repo adjudication artifacts (the v2.0 bundle wasn't, and
     became unregenerable when its GCS inputs died with the retired project)."""
 
@@ -424,7 +424,7 @@ class TestHandoffBundle:
 
 
 class TestKFoldAssignment:
-    """classify_kfold.py — the v2.1 split shape: group-atomic stratified CV."""
+    """classify_kfold.py: the v2.1 split shape, group-atomic stratified CV."""
 
     @staticmethod
     def _fixtures():
@@ -432,7 +432,7 @@ class TestKFoldAssignment:
             f"A{i}": {"label": "funerary", "confidence": "high", "signal_source": "k"}
             for i in range(20)
         }
-        # Two Leiden variants of one word, labelled — must land in ONE fold.
+        # Two Leiden variants of one word, labelled; must land in ONE fold.
         silver["V0"] = {"label": "votive", "confidence": "high", "signal_source": "k"}
         silver["V1"] = {"label": "votive", "confidence": "high", "signal_source": "k"}
         corpus = {f"A{i}": {"canonical_transliterated": f"avil {i}"} for i in range(20)}
@@ -460,7 +460,7 @@ class TestKFoldAssignment:
 
 
 class TestDupGroupIdScript:
-    """scripts/data_pipeline/add_dup_group_id.py — the column that lets any
+    """scripts/data_pipeline/add_dup_group_id.py: the column that lets any
     downstream consumer split on text groups instead of rows."""
 
     @staticmethod

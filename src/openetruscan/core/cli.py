@@ -1,5 +1,5 @@
 """
-CLI — command-line interface for OpenEtruscan.
+CLI: command-line interface for OpenEtruscan.
 
 Usage:
     openetruscan normalize "LARTHAL LECNES"
@@ -34,7 +34,7 @@ except Exception:
 @click.group()
 @click.version_option(version=__version__, prog_name="openetruscan")
 def main() -> None:
-    """OpenEtruscan — Open-source tools for ancient epigraphy."""
+    """OpenEtruscan: open-source tools for ancient epigraphy."""
 
 
 @main.command(name="normalize")
@@ -437,7 +437,7 @@ def classify(
         sys.exit(1)
 
     corpus = _get_corpus(db)
-    # Exact-ID lookup first — FTS over canonical text can resolve an ID
+    # Exact-ID lookup first. FTS over canonical text can resolve an ID
     # argument to a completely unrelated row.
     results = corpus.get_by_ids([inscription_id])
     if not results.total:

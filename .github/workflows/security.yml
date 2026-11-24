@@ -3,7 +3,7 @@ name: Security
 # Replaces the `openetruscan-security` Cloud Build trigger.
 # Scope: Gitleaks (secrets) + pip-audit (known CVEs in the locked
 # dependency graph). Bandit + Semgrep stay dropped for chronic
-# false-positive rate — that decision is in the .gitleaks.toml header.
+# false-positive rate; that decision is in the .gitleaks.toml header.
 # pip-audit was reinstated 2026-07-17: auditing pinned versions in
 # uv.lock has a different (near-zero) false-positive profile from
 # static-analysis heuristics, and detection-after-merge is not a gate.
@@ -11,7 +11,7 @@ name: Security
 # No paths/paths-ignore filters on these triggers: gitleaks and pip-audit
 # are candidates for required checks under the operator's upcoming ruleset,
 # and a required check whose workflow is filtered out of a PR never reports
-# a status — the PR blocks forever.
+# a status; the PR blocks forever.
 on:
   push:
     branches: [main]

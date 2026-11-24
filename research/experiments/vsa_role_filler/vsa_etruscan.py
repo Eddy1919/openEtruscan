@@ -1,5 +1,5 @@
 """
-WP1 — Vector-Symbolic role-filler encoding on the real Etruscan corpus.
+WP1: Vector-Symbolic role-filler encoding on the real Etruscan corpus.
 NS1.1 heuristic role parser + NS1.2 HRR/MAP encoder + NS1.3 structural retrieval.
 
 Existence-proof / feasibility spike: does binding-as-algebra (a) round-trip

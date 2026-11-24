@@ -1,12 +1,12 @@
-# ByT5 Lacuna Restorer — Cloud Run service
+# ByT5 Lacuna Restorer: Cloud Run service
 # CPU-only, min-instances=0.  Autoscales to zero between calls.
 # Expected cost: ~€0-3/mo at current traffic.
 #
 # Build:
 #   docker build -t byt5-restorer .
 #
-# The container refuses to start without MODEL_URI in its environment —
-# there is no default checkpoint, because the service labels every response
+# The container refuses to start without MODEL_URI in its environment.
+# There is no default checkpoint, because the service labels every response
 # with the fine-tuned adapter's name and must not silently serve other
 # weights. Env contract and deploy command: README.md alongside this file.
 
@@ -18,7 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     # Point HuggingFace at a writable path. The previous default
     # (~/.cache/huggingface) lived under /home/svc, which `useradd --system`
-    # does *not* create — the runtime then crashed with
+    # does *not* create. The runtime then crashed with
     # `PermissionError at /home/svc when downloading google/byt5-small`.
     HF_HOME=/app/.hf-cache \
     TRANSFORMERS_OFFLINE=0
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download a checkpoint into the image's HF cache so cold starts don't
 # have to hit HuggingFace (~300 MB for byt5-small-sized weights; bakes
-# deterministically). Build-time cache warming ONLY — it does not choose
+# deterministically). Build-time cache warming ONLY; it does not choose
 # what the service serves. That is the runtime MODEL_URI env var, and the
 # prebake saves the startup download only when the two match, so pass
 #   --build-arg PREBAKE_MODEL_URI=<same value you deploy as MODEL_URI>

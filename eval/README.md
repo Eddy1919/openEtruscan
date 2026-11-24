@@ -1,10 +1,10 @@
-# `eval/` — benchmark harness + committed outputs
+# `eval/`: benchmark harness + committed outputs
 
 This is the single home for OpenEtruscan's frozen benchmarks:
 
-- **[`eval/harness/`](harness/README.md)** — the eval scripts and gold-set
+- **[`eval/harness/`](harness/README.md)**: the eval scripts and gold-set
   generators (what *produces* and *scores* a run).
-- **`eval/*.json`** (this level) — the **committed JSON results** of frozen
+- **`eval/*.json`** (this level): the **committed JSON results** of frozen
   runs. These paths are cited by permalink from `research/FINDINGS.md` and
   published model cards, so they are kept stable.
 
@@ -27,10 +27,10 @@ bash eval/harness/rosetta_eval_v1.sh \
 ```
 
 > **Note.** The `neural/rosetta` endpoint this harness hits was only ever served
-> by the now-**retired** `api.openetruscan.com` research API — it is **not** part
+> by the now-**retired** `api.openetruscan.com` research API; it is **not** part
 > of the current public API (`www.openetruscan.com/api`), which does not expose
 > Rosetta retrieval. Reproduce against a local instance of the research API
-> (`src/openetruscan/api`). The Rosetta strand is a documented negative result —
+> (`src/openetruscan/api`). The Rosetta strand is a documented negative result;
 > see [`research/FINDINGS.md`](../research/FINDINGS.md).
 
 `--output auto` writes here with the correct timestamped name.
@@ -39,12 +39,12 @@ bash eval/harness/rosetta_eval_v1.sh \
 
 Top-level keys:
 
-- `benchmark` — frozen-benchmark label (e.g. `rosetta-eval-v1`).
-- `generated_at_utc` — ISO-8601 wall-clock time of the run.
-- `api_url` — URL of the API under test (the "model" column).
-- `random` — analytical random-retrieval baseline (no API traffic).
-- `levenshtein` — edit-distance baseline against the Latin vocab.
-- `model` — the model the API was serving when this ran.
+- `benchmark`: frozen-benchmark label (e.g. `rosetta-eval-v1`).
+- `generated_at_utc`: ISO-8601 wall-clock time of the run.
+- `api_url`: URL of the API under test (the "model" column).
+- `random`: analytical random-retrieval baseline (no API traffic).
+- `levenshtein`: edit-distance baseline against the Latin vocab.
+- `model`: the model the API was serving when this ran.
 
 See [`research/notes/reproduce-rosetta-eval-v1.md`](../research/notes/reproduce-rosetta-eval-v1.md)
 for the full reproducibility manifest.

@@ -65,14 +65,14 @@ nginx.dev.conf
 .vercel
 .env*.local
 
-# Local data artifacts — fetched from the Zenodo DOI via
+# Local data artifacts, fetched from the Zenodo DOI via
 # scripts/ops/fetch_data.py or regeneratable from the pipelines; never
 # committed as blobs. Only the directory docs are tracked (provenance
 # manifest, restore instructions, recovered-bucket inventory).
 /data/*
 !/data/README.md
 
-# Local security audit (contains grep patterns for secrets — keep local)
+# Local security audit (contains grep patterns for secrets, so keep local)
 scripts/security_check.sh
 
 # Ultralytics YOLO runs
@@ -101,7 +101,7 @@ cloud-sql-proxy
 # Editor / agent local state
 .claude/
 
-# Large research datasets — published via Zenodo DOI.
+# Large research datasets, published via Zenodo DOI.
 # Reproducible from the prod DB via scripts/data_pipeline/normalize_inscriptions.py
 # + scripts/data_pipeline/merge_larth_metadata.py. Small reference sets
 # (labels, held-out eval) remain tracked in research/data/.
@@ -109,14 +109,14 @@ research/data/openetruscan_clean.csv
 research/data/openetruscan_clean_grouped.csv
 research/data/openetruscan_normalized.csv
 
-# YOLO pretrained weights — pulled lazily by ultralytics when training
+# YOLO pretrained weights, pulled lazily by ultralytics when training
 # starts. They are not deterministic to the source tree (the upstream
 # model can update under the same filename) and at 5.4 MB each they
 # bloat git history. The training script downloads on first run.
 yolo11n.pt
 yolo*.pt
 
-# Bandit scan output — generated locally + by CI, never used as a
+# Bandit scan output, generated locally + by CI, never used as a
 # committed artefact. The Cloud Build security trigger writes its own
 # transient report at /workspace/bandit.json.
 bandit.json
@@ -124,7 +124,7 @@ bandit.json
 # Local SQLite scratch DB (created by tests when no Postgres is around).
 local_test.db
 
-# Paper drafts — kept private until the manuscript ships. The published
+# Paper drafts, kept private until the manuscript ships. The published
 # narrative on the same material lives in research/FINDINGS.md (which
 # IS tracked). Once a draft is submission-ready, copy it to
 # research/papers/<venue>-<year>/ and add a targeted negative pattern
@@ -137,7 +137,7 @@ terraform/tofu_*.zip
 *.tfstate
 *.tfstate.backup
 
-# Private research staging — manuscript drafts, internal evaluation
+# Private research staging: manuscript drafts, internal evaluation
 # logs, pre-publication artifacts. Anything under here stays local
 # until explicitly promoted to research/v2/ (which IS tracked).
 research/private/
@@ -146,7 +146,7 @@ research/private/
 # Local caches
 .mypy_cache/
 
-# Agent/operator tooling — kept on disk for maintainer workflows, never
+# Agent/operator tooling, kept on disk for maintainer workflows, never
 # published (this is a scholarly repo, not an AI-ops showcase).
 .agents/
 AGENTS.md

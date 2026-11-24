@@ -212,8 +212,8 @@ async def anchors_queue(
     """List pending anchor submissions in oldest-first order.
 
     Auth: Bearer ``settings.admin_token`` (same gate as
-    ``promote_provenance``). The endpoint is intentionally small —
-    pagination via ``limit`` (max 200); the queue is short by design.
+    ``promote_provenance``). The endpoint is intentionally small.
+    Pagination is via ``limit`` (max 200); the queue is short by design.
     """
     from sqlalchemy import asc, func, select
 
@@ -267,7 +267,7 @@ async def promote_anchor(
 
     On ``approve``: status moves to ``approved``. The row does NOT get
     auto-appended to ``research/anchors/attested.jsonl`` from this
-    handler — that's done out-of-band by a Cloud Build job that polls
+    handler. That's done out-of-band by a Cloud Build job that polls
     the table, rebuilds the JSONL, and opens a data-refresh PR. This
     avoids granting the API server git-push permissions, which would
     be a serious security boundary violation.

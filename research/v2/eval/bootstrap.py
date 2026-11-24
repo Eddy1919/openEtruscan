@@ -11,7 +11,7 @@ Design notes
   and gives a much tighter CI on the *delta* than unpaired bootstrapping.
 - Random seeds are pinned. Reproducibility is mandatory.
 - We return both the point estimate and the (lower, upper) bound of the 95% CI
-  (percentile method, not BCa — simpler and adequate for our n).
+  (percentile method, not BCa; simpler and adequate for our n).
 """
 
 from __future__ import annotations

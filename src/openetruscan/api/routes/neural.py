@@ -33,7 +33,7 @@ async def restore_lacunae(
 ):
     """Predict missing characters in text with Leiden conventions (e.g. lar[..]i).
 
-    **Public** endpoint — this is the inference path the frontend `/lacunae`
+    **Public** endpoint. This is the inference path the frontend `/lacunae`
     page calls directly from the browser, so the previous `verify_admin`
     gate was an outright UX bug (the page silently fell back to "demo
     predictions" because every real call returned 401). Rate-limiting at
@@ -42,11 +42,11 @@ async def restore_lacunae(
     the model's max sequence, so there's no privileged data path to guard.
 
     Two modes:
-      * **Remote** — if ``settings.byt5_service_url`` is set we proxy the request
+      * **Remote**: if ``settings.byt5_service_url`` is set we proxy the request
         to a dedicated Cloud Run service (`services/byt5-restorer/`). This is
         the production mode: the API container stays small and inference
         autoscales to zero between calls.
-      * **In-process** — fallback when no service URL is configured. Loads the
+      * **In-process**: fallback when no service URL is configured. Loads the
         torch model lazily and offloads inference to a worker thread.
     """
     if settings.byt5_service_url:

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""WP9c — gloss augmentation: free contrastive positives by paraphrasing the
+"""WP9c gloss augmentation: free contrastive positives by paraphrasing the
 ENGLISH side only (the Etruscan surface is data, never touched).
 
 All transforms are meaning-preserving and rule-based (no external model):
   * possessive flip:   "the X of Y"  ->  "Y's X"
   * article drop:      remove standalone the/a/an
-  * adjacent swap:     one random neighbouring word swap (word-order noise —
+  * adjacent swap:     one random neighbouring word swap (word-order noise;
                        English encoders should not lean on rigid order here)
   * random deletion:   drop one non-first word (glosses ≥4 words only)
   * tight synonym map: jug->pitcher, tomb->grave, gave->gifted,

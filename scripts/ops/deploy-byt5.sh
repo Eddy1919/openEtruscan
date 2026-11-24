@@ -20,7 +20,7 @@ SERVICE_NAME="${SERVICE_NAME:-openetruscan-byt5}"
 SOURCE_DIR="${SOURCE_DIR:-services/byt5-restorer}"
 
 # The service refuses to start without an explicit MODEL_URI (no silent
-# fallback to a base checkpoint) — so the deploy demands it up front
+# fallback to a base checkpoint), so the deploy demands it up front
 # instead of shipping a revision that crashloops.
 if [[ -z "${MODEL_URI:-}" ]]; then
   echo "error: MODEL_URI is required (the adapter the service advertises," >&2

@@ -1,5 +1,5 @@
 """
-EpiDoc XML exporter — generate TEI/EpiDoc XML from inscriptions.
+EpiDoc XML exporter: generate TEI/EpiDoc XML from inscriptions.
 
 EpiDoc is the standard for encoding ancient texts in XML, used by:
 - Papyri.info, EDH, EAGLE, I.Sicily, and virtually all digital epigraphy projects.
@@ -48,7 +48,7 @@ def _recover_apparatus(inscription) -> tuple[EditorialSpan, ...]:
 
     Inscription records persist only raw_text and the canonical reading, not
     the spans the normalizer produced at ingest time. When the raw text
-    carries Leiden markup we re-run the normalizer and use its apparatus —
+    carries Leiden markup we re-run the normalizer and use its apparatus,
     but only if the re-derived canonical matches the stored one, because the
     span offsets index into the canonical string and would otherwise point
     into the wrong text (e.g. legacy rows whose stored canonical still
@@ -79,7 +79,7 @@ def _segments(
 
     Plain stretches carry ``None``. Adjacent spans of the same kind are
     merged (two consecutive underdotted letters are one damaged stretch, not
-    two) — beyond fidelity, this matters because the pretty-printer inserts
+    two). Beyond fidelity, this matters because the pretty-printer inserts
     whitespace between sibling elements with empty tails, which would
     otherwise smuggle spaces into the edition text. Overlapping or nested
     spans keep only the outermost claim: TEI allows nesting, but flat

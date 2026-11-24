@@ -1,5 +1,5 @@
 """
-Validator — checks transcription files for encoding errors and inconsistencies.
+Validator: checks transcription files for encoding errors and inconsistencies.
 """
 
 from __future__ import annotations

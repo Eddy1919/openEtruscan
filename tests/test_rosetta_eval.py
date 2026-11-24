@@ -1,6 +1,6 @@
 """Tests for the Rosetta cross-language eval harness.
 
-The harness hits a live API endpoint (``/neural/rosetta``) — these
+The harness hits a live API endpoint (``/neural/rosetta``); these
 tests use ``respx`` (httpx's mock library) where available, and fall
 back to monkey-patching when not, so the test suite never touches
 prod and never depends on the DB being populated.
@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-# Make the eval helpers importable — same path the script uses.
+# Make the eval helpers importable; same path the script uses.
 sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
 
 import run_rosetta_eval  # noqa: E402
@@ -193,7 +193,7 @@ class TestEvaluate:
         )
         assert report["n_evaluated"] == 1
         assert report["n_skipped"] == 1
-        # Precision@k computed over n_evaluated only — single hit / single
+        # Precision@k computed over n_evaluated only; single hit / single
         # evaluated → 1.0, not 0.5.
         assert report["precision_at_k"][1] == pytest.approx(1.0)
 
@@ -345,7 +345,7 @@ class TestRandomBaseline:
 
     def test_random_baseline_refuses_to_run_without_vocab(self, monkeypatch):
         """A failed vocab fetch must abort the random baseline, not silently
-        substitute a made-up V — a fabricated analytic number is
+        substitute a made-up V. A fabricated analytic number is
         indistinguishable from a real one in the committed JSON."""
 
         def broken_get_vocab(*args, **kw):
@@ -488,7 +488,7 @@ class TestBenchmarkPreset:
         )
         monkeypatch.setattr(run_rosetta_eval, "PER_REQUEST_DELAY_S", 0.0)
 
-        # main() parses argv and prints "Split: test (N pairs)" — assert N matches
+        # main() parses argv and prints "Split: test (N pairs)"; assert N matches
         # the test-split count, not the train-split count.
         rc = run_rosetta_eval.main(
             [
@@ -547,7 +547,7 @@ class TestBenchmarkPreset:
 
 
 # ---------------------------------------------------------------------------
-# T5.1 — cross-encoder rerank (mocked CrossEncoder)
+# T5.1: cross-encoder rerank (mocked CrossEncoder)
 # ---------------------------------------------------------------------------
 
 
@@ -558,7 +558,7 @@ class TestRerank:
 
     def test_rerank_reorders_by_score(self, monkeypatch):
         """Construct a fake CrossEncoder that returns scores inversely
-        proportional to the candidate's bi-encoder rank — so the rerank
+        proportional to the candidate's bi-encoder rank, so the rerank
         pass should swap the order."""
         sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
         import rerank as rerank_mod

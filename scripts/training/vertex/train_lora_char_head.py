@@ -155,7 +155,7 @@ def collate_fn(batch, tokenizer, max_length=64):
         if len(positions) > 0:
             mask_positions.append(positions[0].item())
         else:
-            # Fallback: mask token was truncated — use position 1 (after CLS)
+            # Fallback: mask token was truncated; use position 1 (after CLS)
             mask_positions.append(1)
 
     return {
@@ -189,7 +189,7 @@ class CharPredictionHead(nn.Module):
 
         Args:
             hidden_states: (batch, seq_len, hidden_dim)
-            mask_positions: (batch,) — token index of <mask> per sample
+            mask_positions: (batch,) holding the token index of <mask> per sample
         Returns:
             logits: (batch, num_classes)
         """

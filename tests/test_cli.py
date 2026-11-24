@@ -52,10 +52,10 @@ class TestCLI:
     def test_exact_command_set(self):
         """Each command is registered exactly once, under its documented name.
 
-        Regression: normalize/convert were registered twice — once as
+        Regression: normalize/convert were registered twice, once as
         `normalize-cmd`/`convert-cmd` by the bare @main.command() decorator
         (click derives the name from the function name) and again as
-        `normalize`/`convert` via add_command() — exposing 16 commands
+        `normalize`/`convert` via add_command(), exposing 16 commands
         instead of 14.
         """
         assert sorted(main.commands) == [

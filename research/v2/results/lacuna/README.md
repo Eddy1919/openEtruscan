@@ -1,4 +1,4 @@
-# Lacuna-restoration evidence (Stream C) — v2.0.2 and v2.0.3
+# Lacuna-restoration evidence (Stream C): v2.0.2 and v2.0.3
 
 Raw jury outputs and computed metrics backing the lacuna tables in
 [`README.md`](../../../../README.md), [`CHANGELOG.md`](../../../../CHANGELOG.md) §2.0.3,

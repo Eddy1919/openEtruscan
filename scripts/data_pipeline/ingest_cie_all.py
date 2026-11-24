@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenEtruscan CIE VLM Ingestion — Multi-PDF launcher.
+OpenEtruscan CIE VLM Ingestion: Multi-PDF launcher.
 
 Processes all CIE PDF files, reusing the core logic from ingest_cie_vlm.py.
 Each PDF gets its own progress file and per-page JSON directory.
@@ -227,7 +227,7 @@ def process_pdf(pdf_name: str, skip_pages: int = 4):
     done = set(progress["completed_pages"])
     log.info("Resume: %d pages done, %d entries so far", len(done), progress["total_entries"])
 
-    # NOTE: source labelling lived here but is now dead — DB insertion is bypassed
+    # NOTE: source labelling lived here but is now dead; DB insertion is bypassed
     # in favour of HITL review staging (see below), and ingest_into_db() is deprecated.
 
     pages_dir = CIE_DIR / f"pages_{pdf_name.replace('.pdf', '')}"

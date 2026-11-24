@@ -1,9 +1,9 @@
 """
-Neural inscription classifiers — Character-level CNN & Micro-Transformer.
+Neural inscription classifiers: Character-level CNN & Micro-Transformer.
 
 Two architectures for comparison:
-  1. **CharCNN**: Multi-kernel 1D CNN (~50K params) — production model.
-  2. **MicroTransformer**: 2-layer, 4-head attention (~500K params) — ablation.
+  1. **CharCNN**: Multi-kernel 1D CNN (~50K params), production model.
+  2. **MicroTransformer**: 2-layer, 4-head attention (~500K params), ablation.
 
 Both return ``ClassificationResult`` from ``classifier.py``.
 
@@ -29,7 +29,7 @@ from openetruscan.core.normalizer import normalize
 from openetruscan.ml.classifier import _KEYWORD_VOCAB, ClassificationResult
 
 # ---------------------------------------------------------------------------
-# Lazy torch import — gives a clear error when missing
+# Lazy torch import: gives a clear error when missing
 # ---------------------------------------------------------------------------
 
 _TORCH_AVAILABLE = False
@@ -198,7 +198,7 @@ class CharCNN(nn.Module):
         conv_outs = []
         for conv in self.convs:
             c = F.relu(conv(emb))  # [batch, filters, seq_len]
-            c, _ = c.max(dim=2)  # [batch, filters] — global max pool
+            c, _ = c.max(dim=2)  # [batch, filters]: global max pool
             conv_outs.append(c)
 
         # [batch, filters * num_kernels]
@@ -908,7 +908,7 @@ class NeuralClassifier:
 # The restorer accepts Leiden bracket notation `lar[..]i` (where each
 # `.` is one missing character of known width) and returns a per-mask
 # probability distribution over the Etruscan character vocabulary.
-# Unbounded lacunae `[...]` are rejected — width must be explicit for
+# Unbounded lacunae `[...]` are rejected; width must be explicit for
 # a per-position MLM.
 
 
@@ -1018,7 +1018,7 @@ class LacunaeRestorer:
             # time conditioned on the surrounding visible context.
             chars = list(expanded)
             chars[pos] = mask_token
-            # Other placeholders are unknown to the model — strip them
+            # Other placeholders are unknown to the model; strip them
             # so they don't poison the context.
             masked = "".join(c for c in chars if c != "\x00")
 

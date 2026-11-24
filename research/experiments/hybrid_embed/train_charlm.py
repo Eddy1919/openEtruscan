@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Step 2 — train a from-scratch character MLM on the cleaned Etruscan corpus
+"""Step 2: train a from-scratch character MLM on the cleaned Etruscan corpus
 and export mean-pooled inscription vectors.
 
 Reuses ``openetruscan.ml.neural.CharMLM`` (~430K params at d=128/3 layers).

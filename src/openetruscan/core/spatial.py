@@ -1,5 +1,5 @@
 """
-Spatial Correlation Engine — Links archaeogenetic samples with epigraphic records.
+Spatial Correlation Engine: links archaeogenetic samples with epigraphic records.
 """
 
 import logging

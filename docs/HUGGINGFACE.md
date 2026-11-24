@@ -11,11 +11,11 @@ Two model repositories are published under the [`Eddy1919`](https://huggingface.
 | [`openetruscan-classifier`](https://huggingface.co/Eddy1919/openetruscan-classifier) | `cnn.onnx` / `transformer.onnx` (7-class inscription typology) and a ByT5-small LoRA adapter for lacuna restoration | Live since 2026-05-02. Carries a retraction notice (see below). |
 | [`etr-lora-v4`](https://huggingface.co/Eddy1919/etr-lora-v4) | LoRA adapter over XLM-R-base for Etruscan-Latin cross-lingual retrieval | Live. Only the LaBSE baseline column of `rosetta-eval-v1` is populated; the v4 column is pending tasks T2.3/T2.4. |
 
-Both cards report benchmarks under [`docs/INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md)'s v2.0.4 protocol, but as **architecture-level** results: the deposited weights predate that protocol and have not themselves been re-scored against the frozen v2.0.4 split. The card is explicit about this gap — treat the reported numbers as the expected range for this model class, not a certificate for the exact uploaded files.
+Both cards report benchmarks under [`docs/INTELLIGENCE_V2.md`](INTELLIGENCE_V2.md)'s v2.0.4 protocol, but as **architecture-level** results: the deposited weights predate that protocol and have not themselves been re-scored against the frozen v2.0.4 split. The card is explicit about this gap, so treat the reported numbers as the expected range for this model class, not a certificate for the exact uploaded files.
 
 ## 2. The Retraction
 
-An earlier revision of the classifier card claimed 99% Macro F1. That number came from scoring the model on data it was trained on, using labels the pipeline had assigned to itself — never a held-out result. The card now states the corrected range (0.12–0.37 macro F1 depending on architecture and split) and links back to `release-manifest.json` as the source of truth. `metrics.json` and `v2/metadata.json` in the repository are kept for provenance but should not be cited.
+An earlier revision of the classifier card claimed 99% Macro F1. That number came from scoring the model on data it was trained on, using labels the pipeline had assigned to itself, never a held-out result. The card now states the corrected range (0.12–0.37 macro F1 depending on architecture and split) and links back to `release-manifest.json` as the source of truth. `metrics.json` and `v2/metadata.json` in the repository are kept for provenance but should not be cited.
 
 ## 3. Updating a Card
 

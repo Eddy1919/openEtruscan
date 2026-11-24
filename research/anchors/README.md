@@ -1,6 +1,6 @@
 # Primary-source anchor mining (WBS P4)
 
-> **⚠️ UNVERIFIED — do not train on or evaluate against these files.**
+> **⚠️ UNVERIFIED. Do not train on or evaluate against these files.**
 > Every gloss in this directory is raw LLM extraction (~48% raw precision).
 > The T4.2 human review that would promote rows to attested status has
 > **not been performed**; `attested.jsonl` is a *candidate* keep-list, not a
@@ -16,15 +16,15 @@ passages mentioning the Etruscans.
 | File | Source | Role |
 |---|---|---|
 | `llm_anchors_raw.jsonl` | [`scripts/research/llm_extract_anchors.py`](../../scripts/research/llm_extract_anchors.py) | **Raw** Gemini 2.5 Pro extraction output. One JSON object per gloss; ~48% raw precision; needs hand-review before use. |
-| `llm_anchors_raw.jsonl.passages.jsonl` | same | Per-passage status sidecar — `{passage_index, status, n_glosses}`. Lets the script resume after interruption. Also documents which passages were skipped (`api_error` / `parse_error`). |
+| `llm_anchors_raw.jsonl.passages.jsonl` | same | Per-passage status sidecar: `{passage_index, status, n_glosses}`. Lets the script resume after interruption. Also documents which passages were skipped (`api_error` / `parse_error`). |
 | `llm_anchors_raw.run.log` | same | Full stderr+stdout log of the full-corpus run that produced the JSONL. Audit trail for the token-count / cost / verbatim-drop count claims. |
-| `attested.jsonl` | [`scripts/research/review_anchors.py`](../../scripts/research/review_anchors.py) (T4.2 — not yet implemented) | **Hand-reviewed** keep-list. Rows are to be confirmed by a human against the source passage once the T4.2 review step is implemented (not yet done). Dedup'd against the held-out test split. |
+| `attested.jsonl` | [`scripts/research/review_anchors.py`](../../scripts/research/review_anchors.py) (T4.2, not yet implemented) | **Hand-reviewed** keep-list. Rows are to be confirmed by a human against the source passage once the T4.2 review step is implemented (not yet done). Dedup'd against the held-out test split. |
 
 ## Provenance of `llm_anchors_raw.jsonl`
 
 Generated on **2026-05-11** from
 `data/extracted/etruscan_passages.jsonl` (1,795 classical passages
-mentioning the Etruscans, gitignored — reproducible from upstream
+mentioning the Etruscans, gitignored and reproducible from upstream
 extractions in `scripts/research/extract_classical_etruscan.py`).
 
 | Stat | Value |
@@ -43,7 +43,7 @@ extractions in `scripts/research/extract_classical_etruscan.py`).
 The substantial gap between "27 kept" and "13–18 likely-real" reflects
 that the verbatim-substring check catches *hallucinated citations*
 but cannot catch *appositive metaphors* or *Greek-glossing-Latin*
-false positives — those need T4.2 hand-review.
+false positives, and those need T4.2 hand-review.
 
 ## Re-running
 

@@ -1,5 +1,5 @@
 """
-OpenEtruscan core subpackage — normalizer, corpus, statistics, prosopography, and adapters.
+OpenEtruscan core subpackage: normalizer, corpus, statistics, prosopography, and adapters.
 """
 
 from .adapter import LanguageAdapter, list_available_adapters, load_adapter

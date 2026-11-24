@@ -1,10 +1,10 @@
-"""Stratified K-fold assignment over text groups — the v2.1 split shape.
+"""Stratified K-fold assignment over text groups, the v2.1 split shape.
 
 Why this exists
 ---------------
 The frozen holdout (classify_split.py) allocates 400+ of 712 silver labels
 (56%+) to test. Three of the seven classes end up unlearnable by
-construction — `commercial` 0 train / 2 test, `boundary` 1/9, `legal` 3/7 —
+construction (`commercial` 0 train / 2 test, `boundary` 1/9, `legal` 3/7),
 and `commercial` contributes a structural zero to every macro-F1 computed on
 it (CHANGELOG, Known). K-fold uses every label for both training and
 evaluation: each row is predicted exactly once, by a model that never saw
@@ -19,7 +19,7 @@ Two properties the assignment guarantees:
 2. **Stratified.** Within each label, groups are dealt round-robin across
    folds in deterministic shuffled order, so class proportions stay as even
    as group atomicity allows. A class with fewer groups than folds simply
-   appears in fewer eval folds — its rows are still all evaluated exactly
+   appears in fewer eval folds; its rows are still all evaluated exactly
    once, which is strictly more evaluation than the frozen holdout gives it.
 
 This module only ASSIGNS folds; it does not train. Output is one JSONL, one
@@ -62,7 +62,7 @@ def assign_folds(
     n_folds: int,
     seed: int,
 ) -> dict[str, int]:
-    """Return {inscription_id: fold} — group-atomic, label-stratified."""
+    """Return {inscription_id: fold}, group-atomic and label-stratified."""
     # Group silver ids by normalized text; pure-markup rows stay singletons.
     groups: dict[str, list[str]] = defaultdict(list)
     for insc_id in silver:

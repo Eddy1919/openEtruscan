@@ -5,10 +5,10 @@ If you find OpenEtruscan useful for your research, consider supporting its conti
 ## How to Support
 
 ### For Researchers
-- ⭐ Star the repository — it helps with visibility in the Digital Humanities community
+- ⭐ Star the repository, which helps with visibility in the Digital Humanities community
 - 📝 Cite OpenEtruscan in your publications
 - 📣 Share it with your colleagues and students
-- 📊 Contribute your data — every inscription makes the corpus stronger
+- 📊 Contribute your data. Every inscription makes the corpus stronger
 
 ### For Institutions
 - 🏛️ If your department or research group uses OpenEtruscan, consider contributing developer time or student projects

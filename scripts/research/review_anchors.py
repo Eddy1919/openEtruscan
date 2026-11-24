@@ -5,12 +5,12 @@ Reads `research/anchors/llm_anchors_raw.jsonl` (output of
 `llm_extract_anchors.py`), presents each row to a human reviewer, and
 materialises two output files:
 
-  - `research/anchors/attested.jsonl` — **training-eligible**
+  - `research/anchors/attested.jsonl`: **training-eligible**
     anchors. Each row is a hand-confirmed Etruscan→Latin/Greek
     equivalence whose `(etr_norm, lat_norm)` key does NOT collide
     with the rosetta-eval-v1 test split.
 
-  - `research/anchors/attested_eval_overlap.jsonl` — anchors the
+  - `research/anchors/attested_eval_overlap.jsonl`: anchors the
     reviewer wanted to keep but whose normalised key collides with
     the held-out test pairs. These are **NOT useful for training**
     (would leak the eval set) but ARE useful as a sanity check that
@@ -26,7 +26,7 @@ OPERATING MODES
 
 The script has three modes, exposed via flags:
 
-1. **Interactive review** (default; the WBS T4.2 spec) — prompts
+1. **Interactive review** (default; the WBS T4.2 spec): prompts
    the reviewer per-row with the verbatim quote and asks for one of
    `[k]eep / [s]kip / [e]dit-equivalent / [q]uit-and-save`. The
    `e` action lets the reviewer overwrite a wrongly-extracted
@@ -37,7 +37,7 @@ The script has three modes, exposed via flags:
    python scripts/research/review_anchors.py --interactive
    ```
 
-2. **Apply decisions from a TSV** (`--apply` with `--decisions FILE`) —
+2. **Apply decisions from a TSV** (`--apply` with `--decisions FILE`):
    non-interactive; reads a pre-prepared decisions TSV and
    materialises the JSONL outputs in one shot. Useful when a
    first-pass review happens via PR review on the TSV itself (so
@@ -49,7 +49,7 @@ The script has three modes, exposed via flags:
      --decisions research/anchors/agent_decisions.tsv
    ```
 
-3. **Report-only** (`--report`) — read existing `attested.jsonl` /
+3. **Report-only** (`--report`): read existing `attested.jsonl` /
    `attested_eval_overlap.jsonl` and print the yield breakdown
    (count by source, count by language, by category). Same numbers
    that get appended to FINDINGS.md.
@@ -65,14 +65,14 @@ Tab-separated, header on first line:
 
     passage_index   etruscan_word   action   equivalent_override   note
 
-- `passage_index` (int) — the row's index in the original passages
+- `passage_index` (int): the row's index in the original passages
   file. Joins the decision back to the raw row.
-- `etruscan_word` (str) — included for readability; ignored on read
+- `etruscan_word` (str): included for readability; ignored on read
   (the `passage_index` is the join key).
-- `action` (str) — one of `k`, `s`, `e`.
-- `equivalent_override` (str) — required if action is `e`,
+- `action` (str): one of `k`, `s`, `e`.
+- `equivalent_override` (str): required if action is `e`,
   otherwise blank.
-- `note` (str, optional) — free-text rationale; ignored by the
+- `note` (str, optional): free-text rationale; ignored by the
   script but preserved across runs.
 
 DEDUP AGAINST THE TEST SPLIT
@@ -125,7 +125,7 @@ def _normalise_token(s: str) -> str:
     Lowercase + NFD decompose + strip combining marks (handles
     diacritics + Greek tonos / spiritus). Greek-final sigma → medial.
     Then a single pass of "strip a trailing nominative-singular `s`
-    or accusative-singular `m`" — matches the cases we actually hit
+    or accusative-singular `m`"; it matches the cases we actually hit
     in this corpus (`tauron`/`taurum`, `aesar`/`aesar`, `clan`/`clan`).
     The script-level normaliser doesn't need to be Bonfante-grade;
     only need to catch obvious eval-split collisions.
@@ -134,7 +134,7 @@ def _normalise_token(s: str) -> str:
     s = unicodedata.normalize("NFD", s)
     s = "".join(ch for ch in s if not unicodedata.combining(ch))
     s = s.replace("ς", "σ")
-    # Drop trailing m/s — common Latin/Greek nominative/accusative endings.
+    # Drop trailing m/s, common Latin/Greek nominative/accusative endings.
     s = re.sub(r"[ms]$", "", s)
     return s
 
@@ -283,7 +283,7 @@ def _materialise(
 ) -> tuple[int, int]:
     keep_path.parent.mkdir(parents=True, exist_ok=True)
     n_keep, n_overlap = 0, 0
-    # Truncate-and-rewrite the output files atomically — this is the
+    # Truncate-and-rewrite the output files atomically; this is the
     # authoritative materialisation pass, not append-only.
     with (
         keep_path.open("w", encoding="utf-8") as fk,
@@ -297,7 +297,7 @@ def _materialise(
             if d.action == ACTION_EDIT and d.equivalent_override:
                 out_row["equivalent"] = d.equivalent_override
                 out_row["equivalent_edited_from"] = row["equivalent"]
-            # dt.timezone.utc (not dt.UTC — that alias was added in 3.11 and the
+            # dt.timezone.utc (not dt.UTC, as that alias was added in 3.11 and the
             # CI matrix runs 3.10 too; using timezone.utc keeps it portable).
             out_row["reviewed_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
             if d.note:
@@ -371,7 +371,7 @@ def main() -> int:
         decisions = _interactive(rows, decisions, args.decisions)
 
     if not args.interactive and not args.apply:
-        # No mode flag chosen — default to apply if a non-trivial
+        # No mode flag chosen; default to apply if a non-trivial
         # decisions TSV is present, otherwise drop into interactive.
         if decisions:
             args.apply = True

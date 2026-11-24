@@ -77,7 +77,7 @@ class TestPleiadesExtraction:
         assert "Nowhere" not in links
 
     def test_person_excluded(self):
-        # u4 is a PERSON with a non-Pleiades URI — must not appear.
+        # u4 is a PERSON with a non-Pleiades URI; must not appear.
         links = extract_pleiades_links(parse_recogito_csv(RECOGITO_CSV))
         assert "Larth" not in links
 

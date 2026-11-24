@@ -1,5 +1,5 @@
 """
-NS0.1(silver) + NS1.3 re-score — non-circular where it counts.
+NS0.1(silver) + NS1.3 re-score: non-circular where it counts.
 
 Silver definition of a "structural parallel": two HIGH-CONFIDENCE parses (anchored
 by a known function word / praenomen, not the greedy fallback) with the SAME role
@@ -10,8 +10,8 @@ sequence. We then split each query's silver-positives into:
 The decisive, non-circular numbers are the BASELINES on structural-only positives:
 if char-3-gram / token-overlap can't retrieve same-template/zero-word pairs, that
 proves lexical retrieval cannot do structural parallel-finding. VSA's own score is
-"by construction" (its vector encodes the role sequence); the residual question —
-is 'same parsed template' == 'real philological parallel'? — is the human gate.
+"by construction" (its vector encodes the role sequence); the residual question
+(is 'same parsed template' == 'real philological parallel'?) is the human gate.
 """
 
 import json

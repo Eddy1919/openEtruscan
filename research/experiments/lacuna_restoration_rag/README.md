@@ -3,15 +3,15 @@
 ## Question
 
 Does retrieving parallel inscriptions as in-context evidence lift Etruscan
-lacuna restoration over single-shot prompting — the way Ithaca/Aeneas
+lacuna restoration over single-shot prompting, the way Ithaca/Aeneas
 (Assael et al. 2022; DeepMind 2025) use parallels for Greek/Latin? And is the
 lift genuine generalization or just copying an attested answer?
 
 ## Motivation
 
 The v2.0.3 lacuna re-run (see CHANGELOG `[2.0.3]` and `../../v2/README.md`) found
-its three raters — Claude Opus 4.8 (0.288), Gemini 3.1 Pro (0.258), and Gemini
-3.5 Flash (0.258) — tied at ~0.26–0.29 span-exact single-shot (all differences
+its three raters, Claude Opus 4.8 (0.288), Gemini 3.1 Pro (0.258), and Gemini
+3.5 Flash (0.258), tied at ~0.26–0.29 span-exact single-shot (all differences
 non-significant); the task is data/difficulty-bound. The RAG A/B below is run on
 the two Gemini models (Opus served as a manual direct rater in the jury re-run,
 not through this scripted RAG harness).
@@ -59,10 +59,10 @@ Self-reported confidence tracks accuracy tightly, especially with RAG:
 | medium     | 0.056                 | 0.222               |
 | low        | 0.000                 | 0.083               |
 
-When Pro+RAG reports "high," it is right 81% of the time — enough for a
+When Pro+RAG reports "high," it is right 81% of the time, enough for a
 deployable *restore-at-high-confidence, abstain-otherwise* product.
 
-### Leakage ablation — the lift survives
+### Leakage ablation: the lift survives
 
 Only **11 of 66** tasks had an answer-revealing parallel in their top-8.
 Re-running with those parallels stripped (Gemini 3.5 Flash):
@@ -75,7 +75,7 @@ Re-running with those parallels stripped (Gemini 3.5 Flash):
 
 On the **pure-generalization subset** (55 tasks with no revealing parallel):
 single-shot 0.236 → RAG **0.309**. RAG helps even where there is nothing to
-copy — the gain is genuine formula/structure transfer, not answer leakage. On
+copy. The gain is genuine formula/structure transfer, not answer leakage. On
 the 11 answer-revealed tasks it doubles (0.364 → 0.727), as expected for
 attestation-grounded restoration.
 

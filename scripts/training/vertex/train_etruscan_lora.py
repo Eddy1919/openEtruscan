@@ -1,6 +1,6 @@
 """Vertex AI custom-training entrypoint for the Etruscan LoRA adapter.
 
-Self-contained — no openetruscan package import. Runs inside the
+Self-contained (no openetruscan package import). Runs inside the
 prebuilt ``us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.2-2.py310``
 image, which ships PyTorch 2.2 + transformers + datasets + accelerate.
 PEFT is pip-installed at startup if missing.
@@ -9,7 +9,7 @@ Inputs (via Vertex GCS fuse-mount under /gcs/<bucket>):
     --corpus_path  e.g. /gcs/openetruscan-rosetta/corpus/etruscan-cie-v1.jsonl
     --output_dir   e.g. /gcs/openetruscan-rosetta/adapters/etr-lora-v1
 
-Mirrors openetruscan.ml.finetune.train_etruscan_adapter — kept in
+Mirrors openetruscan.ml.finetune.train_etruscan_adapter, kept in
 lockstep (same LoRA config, same MLM probability, same target_modules).
 """
 
@@ -30,7 +30,7 @@ def _ensure_hf_stack() -> None:
     Transformers >=4.47 requires PyTorch >=2.4, which the prebuilt image
     doesn't have. Pin to the last 4.46.x release that still supports
     torch 2.2. Same constraint cascades to peft (0.13+ tracks newer
-    transformers) — pin to 0.12.x.
+    transformers); pin to 0.12.x.
 
     CRITICAL: the prebuilt image preinstalls torch_xla. HF Trainer
     auto-detects it and routes distributed-training calls (incl. the
@@ -61,15 +61,15 @@ def _normalise_etruscan_dividers(text: str) -> str:
     """Convert Etruscan word-divider punctuation to spaces.
 
     Etruscan epigraphy (per Bonfante 2002 §10) uses `:` and `·` as word
-    dividers — many inscriptions are written with NO spaces, only colons.
+    dividers; many inscriptions are written with NO spaces, only colons.
     Feeding such strings to the tokeniser as-is wastes capacity learning
     representations for these dividers (which are pure typography). The
     XLM-R subword tokeniser handles the resulting whitespace cleanly.
 
     Kept as-is:
-      * `.` (period) — intra-word phonological marker, e.g. `ve.i.tule`,
+      * `.` (period): intra-word phonological marker, e.g. `ve.i.tule`,
         DOES NOT separate words.
-      * `-` (hyphen) — compounding marker, e.g. `velxiti-leθes` joins
+      * `-` (hyphen): compounding marker, e.g. `velxiti-leθes` joins
         praenomen and gentilicium.
     """
     return text.translate(str.maketrans({":": " ", "·": " "}))
@@ -168,7 +168,7 @@ def main() -> int:
 
     collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 
-    # /tmp keeps the trainer's intermediate files off the GCS fuse mount —
+    # /tmp keeps the trainer's intermediate files off the GCS fuse mount;
     # GCS doesn't support fast random writes and the trainer would thrash.
     # disable_tqdm + logging_first_step force the trainer to emit
     # newline-delimited metrics that Cloud Logging actually flushes;

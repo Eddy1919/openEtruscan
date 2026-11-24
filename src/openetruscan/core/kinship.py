@@ -1,5 +1,5 @@
 """
-Kinship Reconciliation Engine — Bridges epigraphic family structures with biological kinship.
+Kinship Reconciliation Engine: bridges epigraphic family structures with biological kinship.
 """
 
 import logging
@@ -134,7 +134,7 @@ def _epigraphic_conflicts(
     Flag person pairs that carry more than one distinct relationship type.
 
     ``epi_links`` rows are (person_id, related_person_id, relationship_type).
-    Clan-membership rows (related_person_id IS NULL) are skipped — a person
+    Clan-membership rows (related_person_id IS NULL) are skipped, since a person
     legitimately belongs to a clan and has person-to-person links.
     """
     types_by_pair: dict[tuple[str, str], set[str]] = {}

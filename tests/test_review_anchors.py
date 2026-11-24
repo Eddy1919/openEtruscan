@@ -2,7 +2,7 @@
 
 The interactive prompt path isn't exercised here (it'd require stdin
 mocking and the value is low). What's tested is the surrounding
-machinery — normalisation, dedup against the test split, decisions-TSV
+machinery: normalisation, dedup against the test split, decisions-TSV
 parsing, and end-to-end materialisation of `attested.jsonl` +
 `attested_eval_overlap.jsonl` from a small synthetic raw input.
 """
@@ -41,7 +41,7 @@ def m():
 
 
 def test_normalise_token_strips_diacritics(m):
-    # NFD-decomposed Greek tonos + accents — both should fold to bare letters.
+    # NFD-decomposed Greek tonos + accents; both should fold to bare letters.
     assert m._normalise_token("Ἥραν") == m._normalise_token("Hra".lower()).replace("h", "η") or True
     # The point of the helper is that 'Ἥρα' and 'ηρα' produce the same key.
     assert m._normalise_token("Ἥρα") == m._normalise_token("ηρα")
@@ -54,7 +54,7 @@ def test_normalise_token_folds_final_sigma(m):
 def test_normalise_token_strips_trailing_m_or_s(m):
     # The normaliser strips a single trailing m or s. That makes the
     # accusative-singular -m and nominative-singular -s of the same stem
-    # converge — but does NOT make them match the bare stem (-um vs -o
+    # converge, but does NOT make them match the bare stem (-um vs -o
     # is too far a leap for a single-character regex).
     assert m._normalise_token("taurum") == m._normalise_token("taurus")  # both → "tauru"
     # Trailing 'r' is intentionally kept so 'aesar' stays distinct.

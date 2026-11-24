@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""WP1 — subword tokenizer implemented from scratch (no external tokenizer
+"""WP1: subword tokenizer implemented from scratch (no external tokenizer
 library). Byte/char-level BPE with an end-of-word marker.
 
 Trained on the deduplicated training split only, so repeated formulae do not
 bias the merges. The end-of-word marker (▁ appended to the final char of
-each word) lets suffix pieces like ``al</w>`` ``us</w>`` ``isa</w>`` — the
-Etruscan genitive chain — become single tokens, which is the morphology we
+each word) lets suffix pieces like ``al</w>`` ``us</w>`` ``isa</w>`` (the
+Etruscan genitive chain) become single tokens, which is the morphology we
 want the encoder to see.
 
 API:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Push the etr-lora-v4 adapter + model card to HuggingFace Hub.
 
-Skeleton script — the user owns the HuggingFace account and runs this
+Skeleton script; the user owns the HuggingFace account and runs this
 manually after the v4 adapter has been pulled down from GCS.
 
 PREREQUISITES
@@ -38,10 +38,10 @@ USAGE
 -----
 
 ```bash
-# Dry-run (default) — shows what would be pushed, doesn't touch the Hub.
+# Dry-run (default): shows what would be pushed, doesn't touch the Hub.
 python scripts/hub/push_etr_lora_v4.py
 
-# Actual push (idempotent — create_repo + upload_folder with exist_ok).
+# Actual push (idempotent; create_repo + upload_folder with exist_ok).
 python scripts/hub/push_etr_lora_v4.py --push
 
 # Override the local adapter dir or the target repo id:
@@ -54,7 +54,7 @@ WHAT THIS SCRIPT DELIBERATELY DOES NOT DO
 ------------------------------------------
 
 - It does not pull from GCS. That is a user-driven `gsutil` step
-  (this repo's workflow style — surgical building blocks, not
+  (this repo's workflow style of surgical building blocks, not
   orchestration scripts).
 - It does not auto-create the `openetruscan` org. The user must have
   org-write access on the configured HF account.
@@ -72,7 +72,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # Pushed under the maintainer's user namespace because the `openetruscan`
 # HF organisation isn't created yet (would need a manual sign-up step on
-# huggingface.co). When the org exists, change this and re-push — HF will
+# huggingface.co). When the org exists, change this and re-push; HF will
 # create a redirect from the old path automatically.
 DEFAULT_REPO_ID = "Eddy1919/etr-lora-v4"
 DEFAULT_ADAPTER_DIR = REPO_ROOT / "adapters" / "etr-lora-v4"
@@ -80,7 +80,7 @@ MODEL_CARD_PATH = REPO_ROOT / "models" / "etr-lora-v4" / "README.md"
 
 # Files we expect in the adapter dir. Used for the pre-flight check;
 # the upload itself is folder-based (anything not listed here is also
-# uploaded, intentionally — we don't want a typo here to silently
+# uploaded, intentionally; we don't want a typo here to silently
 # drop a file from the Hub deposit).
 EXPECTED_ADAPTER_FILES = (
     "adapter_config.json",
@@ -95,7 +95,7 @@ EXPECTED_ADAPTER_FILES = (
 def _load_env() -> None:
     """Load .env at repo root if python-dotenv is available.
 
-    Matches the convention in scripts/ops/hf_sync.py — keep both
+    Matches the convention in scripts/ops/hf_sync.py; keep both
     in lockstep if you change it here.
     """
     try:
