@@ -1,4 +1,4 @@
-# Hybrid Etruscan embedding — from-scratch stack
+# Hybrid Etruscan embedding: a from-scratch stack
 
 This experiment measures how much retrieval and restoration signal a fully
 custom stack can extract from 5,569 cleaned Etruscan inscriptions, with no
@@ -26,11 +26,14 @@ evaluate.py           v1 eval (charLM blocks)
 evaluate_v2.py        v2 eval (custom stack + late interaction + router)
 train_contrastive.py  dual-encoder alignment on translation pairs   (WP9)
 eval_contrastive.py   WP9 eval: retrieval, rosetta glosses, router leg
+build_gloss_pairs.py  gold-gloss queue -> train pairs + silver eval (WP10)
+eval_gloss_silver.py  WP10 eval: silver word-level + rosetta glosses
+power_gloss.py        sample size needed to certify the WP10 effect   (WP11)
 ```
 
 Data comes from `scripts/ops/fetch_data.py` (Zenodo, SHA256-pinned). Cleaning
 drops non-`clean` rows and the 525 majority-uppercase rows (Latin epigraphy +
-OCR junk); training dedups on `dup_group_id` (row-level splits leak — see
+OCR junk); training dedups on `dup_group_id` (row-level splits leak; see
 `research/data/README.md`).
 
 ## Results (2026-08-30, all seeds fixed)
@@ -59,7 +62,7 @@ VSA stays the structure champion; fusion trades 3 points of structure for
 | **RRF(BM25 + dense + late interaction)** | **0.427** |
 
 Macro means are dominated by place/chronology categories that need metadata
-the published CSV does not carry (findspot, Pleiades ids, dates) — those sit
+the published CSV does not carry (findspot, Pleiades ids, dates); those sit
 at ≈0 for every text-only system and are not comparable to the prod API
 numbers in `eval/harness/run_search_eval.py`.
 
@@ -83,19 +86,19 @@ inscriptions (the router), not predicting tokens.
 | sparse block K=64×M=64 (1.6% activity) | 71.1% | 92.1% | 100.0% |
 
 Cleaning alone lifted dense GENTILICIUM from the published 64.1% to 70.7%;
-sparsity adds exact unbinding, not a large margin — the residual errors are
+sparsity adds exact unbinding, not a large margin. The residual errors are
 role-parser ambiguity.
 
 ### Hyperbolic genealogy (clan-membership MAP, 193 clans)
 
-Poincaré d=16: 0.737 vs node2vec d=128: 0.985 — but node2vec trained on
+Poincaré d=16: 0.737 vs node2vec d=128: 0.985, but node2vec trained on
 exactly these membership edges (ceiling by construction). Viable low-dim
 block; not a replacement. Kept out of search fusion.
 
 ### Rosetta diagnostic (22 frozen Etruscan↔Latin pairs, 58 candidates)
 
 charLM p@10 0.455, custom s2s p@10 0.273, chance 0.172. Both are surface-form
-artifacts, not semantics — the drop under subword tokenization confirms it.
+artifacts, not semantics: the drop under subword tokenization confirms it.
 No monolingual from-scratch model gets cross-lingual meaning from 5.5k texts.
 
 ### Contrastive alignment (1,773 Etruscan↔English pairs, dual encoder)
@@ -110,7 +113,7 @@ duplicate-gloss negatives masked; `train_contrastive.py` / `eval_contrastive.py`
 | full-index Eng→Etr R@10 (5,569 cand.) | 0.018 | 0.0018 |
 | rosetta gloss p@10 (n=22, 60 cand.) | 0.318 | 0.167 |
 
-The rosetta-gloss run is the first *semantic* number in this stack — the two
+The rosetta-gloss run is the first *semantic* number in this stack: the two
 towers share no surface features, so 7/22 hits cannot be a char artifact.
 It is also underpowered (binomial p≈0.08 vs chance): suggestive, not
 certified. Adding the cross-lingual leg to the search router hurt (lexical
@@ -134,12 +137,12 @@ excluded from every source).
 | frozen + aug + mined | 0.101 | 0.181 | 0.193 | 0.029 | 0.409 |
 
 Readings that survive the noise: freezing the Etruscan tower costs ~2 points
-of in-pool retrieval and nothing else at 3× fewer trainable params — right
+of in-pool retrieval and nothing else at 3× fewer trainable params; it is the right
 default. Everything else is inside the error bars: the gloss column swings
 0.227–0.409 (5–9 hits of 22) across variants, and no single ingredient
 moves it consistently. The mining infrastructure works (lautni→freedman,
 θui→here, mulu→given surfaced unsupervised); what is missing is an
-evaluation large enough to steer by — n=22 gloss pairs and 171 test
+evaluation large enough to steer by: n=22 gloss pairs and 171 test
 sentences cannot rank five systems. Grow the frozen gold set before growing
 the silver set.
 
@@ -150,7 +153,7 @@ records, llm_checked tier) into 221 training pairs and an independent
 71-item silver word-level eval (`eval_gloss_silver.py`; ~276-gloss candidate
 pool, chance p@10 0.036). Rosetta-TEST words are excluded from training;
 all rosetta words are excluded from the silver eval. The silver eval is
-llm_checked data, not the frozen benchmark — labeled accordingly.
+llm_checked data, not the frozen benchmark, and is labeled accordingly.
 
 | variant | val MRR | En→Et R@10 | Et→En R@10 | full-idx R@10 | rosetta 22 | silver 71 p@10 |
 |---|---|---|---|---|---|---|
@@ -163,8 +166,8 @@ The gold-gloss pairs are the first ingredient that helps without a
 trade-off: frozen+gold-gloss matches v1 on sentence retrieval while
 doubling full-index R@10 and holding rosetta at 0.409. The combined variant
 posts the best silver score and the best Et→En retrieval. Absolute
-word-level numbers remain small — 221 word pairs is a lexicon seed, not a
-dictionary — and every silver label still awaits human verification.
+word-level numbers remain small (221 word pairs is a lexicon seed, not a
+dictionary), and every silver label still awaits human verification.
 
 #### Seed variance + bootstrap CIs (statistical hygiene pass)
 
@@ -182,7 +185,7 @@ only; the split stays fixed), 95% percentile-bootstrap CIs over items:
 
 Two readings. The direction is seed-stable: every gold-gloss run beats the
 baseline's 0.028 on the silver eval (seed mean 0.056 ± 0.012, chance
-0.036). And no single run clears chance at the 95% level — every CI still
+0.036). And no single run clears chance at the 95% level: every CI still
 contains 0.036, and the rosetta CIs span half the unit interval, which is
 the n=22 problem stated as an interval. Conclusion unchanged, now with
 error bars: the effect is real-looking but small, and certifying it needs
@@ -197,10 +200,35 @@ an English-side encoder cannot help on this benchmark by construction.
 English-query search needs its own labeled query set before it can be
 evaluated at all.
 
+### How many verified items would certify WP10? (WP11)
+
+`power_gloss.py` recomputes per-item ranks on the 71 silver items for v1 and
+the four frozen+gold-gloss seeds, then simulates power (one-sided α = 0.05,
+items resampled from the observed joint distribution, candidate pool held at
+281).
+
+| Test | Power at n = 71 | at n = 319 | n for 80% power |
+|---|---|---|---|
+| gg p@10 vs chance (exact binomial) | 0.21 | 0.52 | ~800 |
+| gg vs v1, paired p@10 (exact McNemar) | 0.10 | 0.47 | ~800 |
+| gg vs v1, paired reciprocal rank (sign-flip) | 0.13 | 0.39 | ~1,200 |
+
+Today's evidence: gg seed-mean p@10 0.056 against chance 0.036, binomial
+p = 0.25. The v1 and gold-gloss hits fall on disjoint items, and MRR barely
+moves (v1 0.019, gg seed mean 0.026).
+
+Verification cannot certify this effect by itself. The whole queue is 319
+records, and only the 71 silver items are clean for a model trained on the
+rest. The eval needs either a larger pool or a larger effect. At a true p@10
+of 0.10, 150 items give 80% power; at 0.15, 71 items do. Verifying the queue
+still pays, by measuring how noisy the llm_checked training pairs are (see
+[`verification_queue.py`](../../anchors/gold_glosses/verification_queue.py)),
+but it does not settle WP10.
+
 ## Limits
 
 - Semantics is capped by data: 27.4% of rows have translations. WP9 uses
-  them and measures how far they go — 4× chance in-pool, 10× chance against
+  them and measures how far they go: 4× chance in-pool, 10× chance against
   the full index, one underpowered semantic rosetta signal. More
   architecture will not move this; more pairs will.
 - The search eval reuses `eval/harness/search_eval_queries.jsonl` offline on
@@ -225,6 +253,15 @@ python gloss_augment.py && python mine_pairs.py
 python train_contrastive.py --freeze_etr --augment_csv out/gloss_augmented.csv \
     --mined_csv out/mined_pairs.csv --tag frozen_aug_mined
 python eval_contrastive.py --tag frozen_aug_mined --skip_search
+# gold-gloss retraining (WP10) and its power analysis (WP11)
+python build_gloss_pairs.py
+python train_contrastive.py --freeze_etr --mined_csv out/gg_train_pairs.csv --tag frozen_gg
+for s in 101 202 303; do
+  python train_contrastive.py --freeze_etr --mined_csv out/gg_train_pairs.csv \
+      --model_seed $s --tag frozen_gg_s$s
+done
+python eval_gloss_silver.py --tags v1 frozen_gg frozen_gg_s101 frozen_gg_s202 frozen_gg_s303
+python power_gloss.py
 ```
 
 All outputs land in `out/` (gitignored). Results JSONs: `out/results.json`
