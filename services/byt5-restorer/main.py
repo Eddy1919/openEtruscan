@@ -151,7 +151,7 @@ async def lifespan(app: FastAPI):
     # timeout" — loading byt5-small to memory takes ~25-45s on 1 CPU
     # and the lifespan startup blocks uvicorn from binding $PORT.
     # Cold-start tolerance is now handled at the *API* layer via the
-    # 90s httpx timeout (see openetruscan/api/server.py).
+    # 90s httpx timeout (see openetruscan/api/routes/neural.py).
     yield
     if _cache_conn:
         _cache_conn.close()

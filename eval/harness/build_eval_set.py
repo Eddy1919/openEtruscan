@@ -241,7 +241,7 @@ def queries_place_findspot(rows: list[dict], min_n: int = 10) -> list[dict]:
 
 
 # Period boundaries — keep in sync with `_PERIOD_RANGES` in
-# `src/openetruscan/api/server.py`. The structured-query parser uses those
+# `src/openetruscan/api/routes/search.py`. The structured-query parser uses those
 # bounds to translate period tokens into date_min/date_max filters; the
 # eval generator uses these same bounds to build the matching gold set.
 # A row is "relevant" to a period query iff its date_approx falls in

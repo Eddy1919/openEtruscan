@@ -420,7 +420,7 @@ class TestParseStructuredQuery:
     """
 
     def test_archaic_maps_to_pre_500_bce(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         residual, filters = _parse_structured_query("archaic")
         assert residual == ""
@@ -428,7 +428,7 @@ class TestParseStructuredQuery:
         assert filters["date_max"] == -500
 
     def test_classical_maps_to_classical_window(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("classical")
         assert filters["date_min"] == -499
@@ -436,7 +436,7 @@ class TestParseStructuredQuery:
 
     def test_orientalising_window(self):
         """Etruscan orientalising = 720-580 BCE; overlaps archaic deliberately."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("orientalising")
         assert filters["date_min"] == -720
@@ -444,7 +444,7 @@ class TestParseStructuredQuery:
 
     def test_hellenistic_aliases_late(self):
         """Hellenistic and late share bounds in Etruscan studies."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, late_f = _parse_structured_query("late")
         _, hell_f = _parse_structured_query("hellenistic")
@@ -453,33 +453,33 @@ class TestParseStructuredQuery:
 
     def test_two_periods_widen_the_range(self):
         """Multiple period tokens should produce the widest spanning window."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("archaic late")
         assert filters["date_min"] == -700
         assert filters["date_max"] == -50
 
     def test_corpus_marker_sets_has_flag(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("trismegistos")
         assert filters["has_trismegistos"] is True
 
     def test_tm_alias_for_trismegistos(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("tm")
         assert filters["has_trismegistos"] is True
 
     def test_pleiades_marker(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("pleiades")
         assert filters["has_pleiades"] is True
 
     def test_mixed_query_keeps_residual(self):
         """Non-recognised tokens stay in the residual for FTS to handle."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         residual, filters = _parse_structured_query("archaic larthal")
         assert residual == "larthal"
@@ -487,21 +487,21 @@ class TestParseStructuredQuery:
 
     def test_punctuation_does_not_block_match(self):
         """Trailing punctuation a user might type shouldn't block tokenisation."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         _, filters = _parse_structured_query("(archaic),")
         assert "date_min" in filters
 
     def test_substring_does_not_match(self):
         """`archaicus` should NOT trigger the archaic filter (whole-word match)."""
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         residual, filters = _parse_structured_query("archaicus")
         assert "date_min" not in filters
         assert residual == "archaicus"
 
     def test_empty_query_yields_empty_filters(self):
-        from openetruscan.api.server import _parse_structured_query
+        from openetruscan.api.routes.search import _parse_structured_query
 
         residual, filters = _parse_structured_query("")
         assert residual == ""

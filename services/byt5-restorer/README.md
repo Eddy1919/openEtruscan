@@ -4,7 +4,7 @@ Cloud Run microservice that restores lacunae in damaged Etruscan
 inscriptions. `POST /restore` accepts Leiden-notation text
 (`lar[---]al velinas`) and returns ranked character-level restorations.
 The API proxies to it when `byt5_service_url` is configured (see
-`src/openetruscan/api/server.py`); otherwise the API falls back to
+`src/openetruscan/api/routes/neural.py`); otherwise the API falls back to
 in-process inference.
 
 ## Configuration

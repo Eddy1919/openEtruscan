@@ -445,7 +445,7 @@ async def find_cross_language_neighbours(
     source_embedder, source_embedder_revision : str | None
         Per-side override. When set, filters the source-language lookup
         independently from the target. Used by the alias system in
-        server.py so a single client-facing alias (e.g. "xlmr-lora-v4")
+        api/routes/neural.py so a single client-facing alias (e.g. "xlmr-lora-v4")
         can map to different DB partitions for ett vs lat — Etruscan
         went through a LoRA adapter (labelled ``xlmr-lora``), Latin did
         not (labelled ``xlm-roberta-base``). Falls back to the symmetric
