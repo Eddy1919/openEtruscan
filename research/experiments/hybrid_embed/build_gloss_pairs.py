@@ -2,8 +2,9 @@
 """WP10 prep — turn research/anchors/gold_glosses/gold_glosses.jsonl into
 training pairs and a silver word-level eval.
 
-Tiers and guards:
-  * only status=llm_checked records are used (seeded stays out)
+Tiers and guards (implemented in research/anchors/gold_glosses/gloss_splits.py,
+shared with the human verification worksheet):
+  * status llm_checked or verified records are used (seeded and rejected stay out)
   * training additions exclude every Etruscan word in the frozen rosetta
     TEST split (leak guard, as everywhere in this experiment)
   * the silver eval excludes every rosetta word from BOTH splits, so it
@@ -17,7 +18,6 @@ Outputs: out/gg_train_pairs.csv   (surface, translation)  — training tier
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -28,11 +28,16 @@ HERE = Path(__file__).parent
 REPO = HERE.parent.parent.parent
 OUT = HERE / "out"
 sys.path.insert(0, str(REPO / "eval/harness"))
+sys.path.insert(0, str(REPO / "research/anchors/gold_glosses"))
+from gloss_splits import (  # noqa: E402
+    GG_SILVER,
+    GG_TRAIN,
+    USABLE_STATUSES,
+    assign_splits,
+    clean_surface,
+    gloss_head,
+)
 from rosetta_eval_pairs import eval_pairs  # noqa: E402
-
-
-def clean_surface(etr: str) -> str:
-    return etr.rstrip("-").strip()
 
 
 def main() -> None:
@@ -43,37 +48,28 @@ def main() -> None:
         .splitlines()
         if ln.strip()
     ]
-    checked = [r for r in records if r["adjudication"]["status"] == "llm_checked"]
+    checked = [r for r in records if r["adjudication"]["status"] in USABLE_STATUSES]
 
     test_etr = {p.etr for p in eval_pairs(min_confidence="low", split="test")}
     train_etr = {p.etr for p in eval_pairs(min_confidence="low", split="train")}
+    splits = assign_splits(records, test_etr, train_etr)
 
     train_rows, silver_rows = [], []
-    seen = set()
     for r in checked:
-        etr = clean_surface(r["etr"])
-        if not etr or etr in seen:
-            continue
-        seen.add(etr)
-        gloss = r["gloss_en"].split("(")[0].strip().rstrip(",;")
-        if not gloss:
-            continue
-        h = int(hashlib.sha1(etr.encode()).hexdigest(), 16) % 10
-        if h < 8:  # train candidate
-            if etr not in test_etr:
-                train_rows.append(
-                    {"surface": etr, "translation": gloss, "confidence": r["confidence"]}
-                )
-        else:  # silver-eval candidate
-            if etr not in test_etr and etr not in train_etr:
-                silver_rows.append(
-                    {"surface": etr, "translation": gloss, "confidence": r["confidence"]}
-                )
+        row = {
+            "surface": clean_surface(r["etr"]),
+            "translation": gloss_head(r["gloss_en"]),
+            "confidence": r["confidence"],
+        }
+        if splits[r["etr"]] == GG_TRAIN:
+            train_rows.append(row)
+        elif splits[r["etr"]] == GG_SILVER:
+            silver_rows.append(row)
 
     pd.DataFrame(train_rows).to_csv(OUT / "gg_train_pairs.csv", index=False)
     pd.DataFrame(silver_rows).to_csv(OUT / "gg_silver_eval.csv", index=False)
     print(
-        f"llm_checked {len(checked)} | train pairs {len(train_rows)} | "
+        f"usable {len(checked)} | train pairs {len(train_rows)} | "
         f"silver eval {len(silver_rows)} | rosetta-test excluded {len(test_etr)}"
     )
 

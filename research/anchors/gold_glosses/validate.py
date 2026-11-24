@@ -69,9 +69,11 @@ def main() -> int:
             errors.append(f"line {lineno}: etr not NFC-lowercase-stripped: {etr!r}")
         records.append(r)
 
-    dupes = [k for k, c in Counter((r["etr"], r["gloss_en"]) for r in records).items() if c > 1]
+    # one record per form: the split rules and the verification worksheet key
+    # on etr, so record homonyms as senses in one gloss_en ("year; age")
+    dupes = [k for k, c in Counter(r["etr"] for r in records).items() if c > 1]
     for d in dupes:
-        errors.append(f"duplicate (etr, gloss_en): {d}")
+        errors.append(f"duplicate etr (merge the senses into one record): {d!r}")
 
     test_etr = {p.etr for p in eval_pairs(min_confidence="low", split="test")}
     train_etr = {p.etr for p in eval_pairs(min_confidence="low", split="train")}
