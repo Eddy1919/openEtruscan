@@ -45,27 +45,10 @@ class SearchResponse(BaseModel):
     results: list[InscriptionModel]
 
 
-class HealthResponse(BaseModel):
-    """Response model for the system health and diagnostics endpoint."""
-
-    status: str
-    version: str
-    uptime_seconds: float
-    corpus_loaded: bool
-    graph_ready: bool
-    timestamp: str
-
-
 class StatsResponse(BaseModel):
     """Response model for corpus-wide statistical aggregations."""
 
     total_inscriptions: int
-
-
-class ErrorResponse(BaseModel):
-    """Standardized error response model."""
-
-    detail: str
 
 
 def _build_model(i) -> InscriptionModel:
