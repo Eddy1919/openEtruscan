@@ -1,5 +1,5 @@
 """
-Adapter loader — reads YAML language definitions.
+Adapter loader: reads YAML language definitions.
 
 Each adapter YAML file defines an ancient language's alphabet, equivalence
 classes, phonotactics, and onomastic patterns. The engine is language-agnostic;
@@ -169,7 +169,7 @@ def load_adapter(language_id: str) -> LanguageAdapter:
     Parsed adapters are memoized per language_id (see ``_load_adapter_cached``)
     because ``normalize()`` calls this on every invocation and the YAML
     read + directory scan dominated its runtime. ``LanguageAdapter`` is a
-    mutable dataclass, so a deep copy of the cached instance is returned —
+    mutable dataclass, so a deep copy of the cached instance is returned and
     callers may mutate their copy without corrupting subsequent loads.
 
     Raises:

@@ -1,8 +1,8 @@
 """Measure train/test text-level contamination in a frozen classification split.
 
 An id-disjoint split is not a clean split. Where one inscription text carries
-several ids — `mi`, `suθina`, `aplu` and other short formulaic items recur
-across genuinely distinct artifacts — the model can meet the exact test string,
+several ids (`mi`, `suθina`, `aplu` and other short formulaic items recur
+across genuinely distinct artifacts), the model can meet the exact test string,
 under its own label, during training.
 
 This tool reports that overlap so the number is measured rather than assumed.

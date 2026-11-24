@@ -16,7 +16,7 @@ Run against prod (read-only):
         --bilinguals research/data/bilingual_annotations.csv \
         --output research/data/openetruscan_clean_v12.csv
 
-Join contract: LEFT JOIN on `id` against the frozen v1.1 grouped CSV — row
+Join contract: LEFT JOIN on `id` against the frozen v1.1 grouped CSV. Row
 count and row order of v1.1 are preserved byte-for-byte on the existing
 columns, so v1.2 is a strict column superset and every published split or
 dup_group stays valid.

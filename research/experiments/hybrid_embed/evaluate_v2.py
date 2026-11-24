@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""WP3/WP6/WP8 — end-to-end evaluation of the from-scratch stack.
+"""WP3/WP6/WP8 end-to-end evaluation of the from-scratch stack.
 
 Systems on eval B (offline NDCG@10, 74 frozen queries):
-  * bm25                — sparse leg (ours)
-  * dense_fused_v2      — pooled [s2s | node2vec | VSA-S], per-block L2
-  * late_interaction    — MaxSim over per-token encoder states (WP3; nothing
-                          pooled away)
-  * rrf_all             — RRF(bm25, dense, late-interaction): the WP8 router;
-                          every ranked id is a corpus row, answers resolve to
-                          lossless stores by construction
+  * bm25:               sparse leg (ours)
+  * dense_fused_v2:     pooled [s2s | node2vec | VSA-S], per-block L2
+  * late_interaction:   MaxSim over per-token encoder states (WP3; nothing
+                        pooled away)
+  * rrf_all:            RRF(bm25, dense, late-interaction), the WP8 router;
+                        every ranked id is a corpus row, answers resolve to
+                        lossless stores by construction
 
 Eval A (structural protocol) reruns with the s2s pooled block and fusion v2.
 Eval C (rosetta n=22) reruns with the s2s encoder.

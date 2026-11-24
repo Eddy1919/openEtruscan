@@ -1,5 +1,5 @@
 """
-Artifact storage — images and media attached to inscriptions.
+Artifact storage: images and media attached to inscriptions.
 
 Stores metadata in the corpus database, files on the local filesystem.
 """

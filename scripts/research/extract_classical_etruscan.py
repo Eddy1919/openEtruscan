@@ -36,10 +36,10 @@ ETRUSCAN_RE = re.compile(
     re.UNICODE | re.IGNORECASE,
 )
 
-# Bilingual gloss patterns — these are the GOLD: ancient grammarians or
+# Bilingual gloss patterns. These are the GOLD: ancient grammarians or
 # historians explicitly mapping a foreign word to its Latin/Greek equivalent.
 LATIN_GLOSS_PATTERNS = [
-    # "X — quod Etrusci Y vocant/dicunt/appellant"
+    # "X, quod Etrusci Y vocant/dicunt/appellant"
     re.compile(
         r"\b(?P<lat>[a-z]{3,20})\b[^.]{0,80}?\b(?:quod|quem|quam)\b[^.]{0,40}?"
         r"(?:Etrusc[ioa]|Tusc[ioa])[^.]{0,80}?\b(?P<etr>[a-zθχσφ]{2,30})\b",

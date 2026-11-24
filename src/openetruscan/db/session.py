@@ -1,5 +1,5 @@
 """
-Async database session factory — provides AsyncSession instances via dependency injection.
+Async database session factory: provides AsyncSession instances via dependency injection.
 
 Uses SQLAlchemy 2.0 async engine with asyncpg driver and connection pooling.
 """

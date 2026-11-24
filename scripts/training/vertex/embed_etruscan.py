@@ -5,7 +5,7 @@ inscriptions corpus, embed each token through XLM-R-base + the
 Mirrors ``embed_vocab.py`` (Latin/Greek) but:
   * Source vocab is the prod inscriptions JSONL (not Wikipedia)
   * Word-divider normalisation matches train_etruscan_lora.py (`:` and `·`
-    convert to space; `.` and `-` kept) — must match or the embeddings
+    convert to space; `.` and `-` kept); must match or the embeddings
     won't align with what the LoRA learned.
   * Loads the PEFT adapter via ``peft.PeftModel.from_pretrained``.
 """
@@ -44,7 +44,7 @@ def _ensure_hf_stack() -> None:
 
 
 def _normalise_dividers(text: str) -> str:
-    """Same divider normalisation as train_etruscan_lora.py — must match."""
+    """Same divider normalisation as train_etruscan_lora.py; must match."""
     text = text.translate(str.maketrans({":": " ", "·": " "}))
     return " ".join(text.split())
 
@@ -55,7 +55,7 @@ def _read_etruscan_vocab(corpus_path: Path, log: logging.Logger) -> list[str]:
     For each canonical:
       1. Apply Etruscan word-divider normalisation (must match LoRA training)
       2. Lowercase + split on whitespace
-      3. Strip edge punctuation (NOT `.` or `-` — those are intra-word)
+      3. Strip edge punctuation (NOT `.` or `-`; those are intra-word)
       4. Take unique tokens, frequency-sorted
     """
     counts: collections.Counter[str] = collections.Counter()
@@ -88,7 +88,7 @@ def _embed_with_adapter(
 ) -> list[list[float]]:
     """Load XLM-R-base + LoRA adapter, mean-pool + L2-normalise each word.
 
-    The adapter weights compose with the base — same encoder forward as
+    The adapter weights compose with the base, giving the same encoder forward as
     embeddings.py's XLMREmbedder.
     """
     import torch

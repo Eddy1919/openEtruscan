@@ -19,14 +19,14 @@ candidate test row whose structure is:
 
 Filtering rules:
 - Brackets containing only `.` characters (`[.]`, `[..]`, `[...]`) are gaps of
-  known width with NO editor restoration — these are EXCLUDED from gold.
-- Brackets containing `---` are unknown-width gaps — EXCLUDED.
-- Brackets containing `?` mark conjectural restorations — EXCLUDED (philologist
-  rates as uncertain).
+  known width with NO editor restoration; these are EXCLUDED from gold.
+- Brackets containing `---` are unknown-width gaps and are EXCLUDED.
+- Brackets containing `?` mark conjectural restorations and are EXCLUDED
+  (philologist rates as uncertain).
 - Only rows with `data_quality == "clean"` are kept.
 - Rows where the lacuna lies at the very start or end (no context on one side)
-  are EXCLUDED — we need context on both sides to score hallucination.
-- Multi-lacuna rows are EXCLUDED — defer to v3.
+  are EXCLUDED; we need context on both sides to score hallucination.
+- Multi-lacuna rows are EXCLUDED; defer to v3.
 
 This script does NOT call LLMs. It produces the raw candidate pool that
 `pipelines/lacuna_jury.py` then processes.
@@ -95,7 +95,7 @@ def _normalize_lacuna_row(row: dict) -> dict:
             row["canonical_transliterated"] = row["canonical_clean"]
         elif "text" in row:
             row["canonical_transliterated"] = row["text"]
-    # prod-v2 lean schema has no data_quality column. Treat as clean — the
+    # prod-v2 lean schema has no data_quality column. Treat as clean; the
     # bucket's prod-v2 export is already a curated dataset.
     if "data_quality" not in row:
         row["data_quality"] = "clean"

@@ -1,11 +1,11 @@
-"""v2 classifier training — apples-to-apples replacement of the v1 0.28-F1 baseline.
+"""v2 classifier training: apples-to-apples replacement of the v1 0.28-F1 baseline.
 
 What this does
 --------------
 1. Train a TF-IDF + Multinomial Naive Bayes classifier on the v2 frozen
    train pool (silver-labeled rows that are NOT in the held-out test split).
 2. Predict on the v2 candidate-gold set (the 2-rater unanimous-agreement
-   subset of the held-out test pool — our cleanest consensus-silver eval).
+   subset of the held-out test pool, our cleanest consensus-silver eval).
 3. Score macro-F1, per-class P/R/F1, and accuracy with bootstrap 95% CIs.
 4. Drop both the trained model artifact and the eval JSON to GCS.
 

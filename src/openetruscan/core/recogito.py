@@ -4,7 +4,7 @@ Recogito (https://recogito.pelagios.org) round-trip.
 Recogito is Pelagios's collaborative annotation tool. This module lets the v2
 LLM-jury adjudication queue go *out* to Recogito so human philologists can
 adjudicate in the community's own tool, and lets Recogito's annotation export
-come *back* in — harvesting two things:
+come *back* in, harvesting two things:
 
   * **PLACE annotations** resolved to a Pleiades URI → findspot → Pleiades-ID
     links, which feed the same ``data/pleiades_mapping.yaml`` the place-axis
@@ -15,7 +15,7 @@ come *back* in — harvesting two things:
 
 Recogito's annotation CSV export has shifted column names across versions, so
 parsing is deliberately tolerant: headers are matched case-insensitively against
-a set of aliases. Pure standard library — always importable and unit-tested.
+a set of aliases. Pure standard library: always importable and unit-tested.
 """
 
 from __future__ import annotations

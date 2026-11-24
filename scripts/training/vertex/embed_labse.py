@@ -4,10 +4,10 @@
 Why this replaces XLM-R-base for the Rosetta path:
   * XLM-R was pretrained on monolingual masked-LM, no parallel-data
     objective. Cross-language token equivalence (clan_ett ≡ filius_lat)
-    is *not* a thing it learns directly — explains the 0% precision@k
+    is *not* a thing it learns directly, which explains the 0% precision@k
     we measured.
   * LaBSE is trained with a translation-ranking objective on parallel
-    sentences across 109 languages — semantically equivalent words/
+    sentences across 109 languages; semantically equivalent words/
     sentences across languages get cosine-close *by construction*.
   * Output dim is 768 (matches our pgvector schema; no migration).
 
@@ -17,8 +17,8 @@ What we DON'T have here:
     sub-word fallback to the Latin / Greek script tokens it does know.
     Hopefully the morphology + character-level signal is enough to
     place known cognates near their Latin equivalents. Empirically TBD.
-  * The etr-lora-v3 adapter — built for XLM-R, not architecturally
-    compatible with LaBSE. We start with base LaBSE; if numbers are
+  * The etr-lora-v3 adapter (built for XLM-R, not architecturally
+    compatible with LaBSE). We start with base LaBSE; if numbers are
     promising, the next step is a LaBSE-shaped LoRA fine-tune on the
     same Etruscan corpus.
 

@@ -11,13 +11,13 @@ job.
 - Vertex prebuilt images don't have the HuggingFace stack, and the
   `pytorch-gpu.2-2.py310` image's preinstalled `torch_xla` interferes
   with HF Trainer's `nested_gather` (slows training to one step every
-  several minutes — see commit history). Every script here applies the
+  several minutes; see commit history). Every script here applies the
   same bootstrap: `pip uninstall torch_xla` + `pip install
   transformers<4.47, datasets<3, peft<0.13, accelerate<1.0`.
 - Output goes to GCS via the auto-mounted `/gcs/` fuse, which the
   scripts use directly (`/gcs/openetruscan-rosetta/...` paths).
 - All `submit_*.sh` scripts target project `your-gcp-project-id`
-  region `us-central1` — change via env vars if needed.
+  region `us-central1`; change via env vars if needed.
 
 ## Files
 
@@ -62,7 +62,7 @@ python ingest_embeddings.py \
   --gcs-uri gs://openetruscan-rosetta/embeddings/labse-v1.jsonl
 ```
 
-**Run the eval** (no compute — hits a `neural/rosetta` API). Note: the old
+**Run the eval** (no compute; hits a `neural/rosetta` API). Note: the old
 `api.openetruscan.com` host is **retired** and Rosetta retrieval is **not** on
 the current public API, so run this against a local instance of the research
 API (`src/openetruscan/api`):

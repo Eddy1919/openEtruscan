@@ -1,5 +1,5 @@
 """
-Normalizer engine — the core of OpenEtruscan.
+Normalizer engine, the core of OpenEtruscan.
 
 Takes text in ANY transcription system and produces a standardized NormResult
 with canonical, phonetic, and Unicode Old Italic representations.
@@ -99,7 +99,7 @@ def _preprocess_latex(text: str) -> tuple[str, list[tuple[int, int]]]:
     """Convert LaTeX commands to their philological equivalents.
 
     Scans left-to-right instead of chaining str.replace so that every output
-    character can be traced to the input range that produced it — ``\\theta``
+    character can be traced to the input range that produced it. ``\\theta``
     is six characters, ``θ`` is one, and editorial span offsets must survive
     that shrinkage. The command set is prefix-disjoint, so the scan produces
     exactly the same text the old sequential replacement did.
@@ -170,7 +170,7 @@ def _fold_to_canonical(
 
     Tries longest match first (e.g., "th" before "t" + "h").
     Returns (canonical_text, warnings, chunks) where chunks[j] is the
-    (start, end) input range consumed for output character j — a digraph like
+    (start, end) input range consumed for output character j. A digraph like
     "TH" collapses two input characters into one θ, and editorial span
     offsets have to be remapped through exactly that collapse.
     """
@@ -210,13 +210,13 @@ def _fold_to_canonical(
                     result.append(lowered)
                     chunks.extend([(i, i + 1)] * len(lowered))
             elif char in (" ", ".", ",", ";", ":", "-", "'", "\n", "\t"):
-                # Standard whitespace and punctuation — pass through silently.
+                # Standard whitespace and punctuation: pass through silently.
                 # Leiden editorial markup ([], (), underdots, half brackets)
                 # never reaches this point: parse_leiden strips it up front.
                 result.append(char)
                 chunks.append((i, i + 1))
             else:
-                # Non-standard character — flag it
+                # Non-standard character: flag it
                 warnings.append(f"Unknown character '{char}' at position {i}")
                 result.append(char)
                 chunks.append((i, i + 1))
@@ -236,7 +236,7 @@ def _remap_spans(
     ranges are contiguous and non-decreasing because every transform consumes
     its input left-to-right. A span [s, e) over the input therefore maps to
     the output characters whose chunks overlap it. When a boundary lands in
-    the middle of a chunk — a span edge inside a digraph like "TH" — the span
+    the middle of a chunk (a span edge inside a digraph like "TH"), the span
     is snapped outward (start floored, end ceiled): claiming slightly too
     much for the editor is safer than silently splitting a letter, and the
     widening is reported as a warning.
@@ -359,7 +359,7 @@ def normalize(
 
     # 2b. Strip Leiden editorial markup before anything else looks at the
     # text. Brackets, underdots, and gap notation are the editor's claims
-    # about the inscription, not letters — detection must not mistake them
+    # about the inscription, not letters; detection must not mistake them
     # for transcription-system markers, and folding must never emit them.
     # The spans survive as the apparatus, remapped through every subsequent
     # length-changing transform so their offsets track the canonical string.
@@ -399,7 +399,7 @@ def normalize(
     old_italic = _to_old_italic(canonical, adapter)
     tokens = _tokenize(canonical)
 
-    # 8. Score the conversion — higher warnings lower the confidence
+    # 8. Score the conversion: higher warnings lower the confidence
     all_warnings = leiden_warnings + fold_warnings + remap_warnings + phono_warnings
     confidence = max(0.0, 1.0 - (len(all_warnings) * 0.15))
 

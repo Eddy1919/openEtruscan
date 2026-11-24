@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""WP9d — mine word-level Etruscan↔English gloss pairs. Three sources:
+"""WP9d: mine word-level Etruscan↔English gloss pairs. Three sources:
 
-1. ibm1        — IBM Model 1 EM word alignment (our implementation), run in
+1. ibm1:         IBM Model 1 EM word alignment (our implementation), run in
                  BOTH directions over the TRAIN sentence pairs; a pair is
                  kept only when the two directions agree on the argmax
                  (intersection heuristic), t(e|f) ≥ threshold, and the
                  Etruscan word occurs ≥ MIN_COUNT times. Corpus-derived,
                  no human label injected.
-2. rosetta_train — the 39-pair TRAIN split of the frozen rosetta benchmark
+2. rosetta_train: the 39-pair TRAIN split of the frozen rosetta benchmark
                  (split exists exactly for this), using the English gloss.
-3. lexicon     — a small curated table of uncontested glosses (Bonfante 2002
+3. lexicon:      a small curated table of uncontested glosses (Bonfante 2002
                  / Wallace 2008 commonplaces: mi, śuθi, turce, clan, puia,
                  major theonym equations).
 
 Leak guard: any Etruscan word that appears in the rosetta TEST split is
-excluded from EVERY source — including ibm1 — so the one semantic benchmark
+excluded from EVERY source, including ibm1, so the one semantic benchmark
 can never be fed its own answers. (For ibm1 this is stricter than necessary;
 strictness is cheaper than a footnote.)
 

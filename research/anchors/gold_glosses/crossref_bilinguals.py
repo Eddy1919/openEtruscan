@@ -2,7 +2,7 @@
 """Cross-reference the published corpus against the known Latin–Etruscan
 bilingual inscriptions.
 
-Input:  bilinguals.jsonl — one record per known bilingual:
+Input:  bilinguals.jsonl, one record per known bilingual:
           {"ids": ["CIE 1288", "TLE 472", ...],   # any identifiers in use
            "findspot": "...",
            "etr_text": "...",                      # Etruscan half if known
@@ -12,8 +12,8 @@ Input:  bilinguals.jsonl — one record per known bilingual:
         research/data/openetruscan_clean_grouped.csv (fetch_data.py)
 
 Matching, two passes:
-  1. id match — corpus `id` equals any identifier (normalized: case, spacing)
-  2. text match — token-overlap between the bilingual's Etruscan half and a
+  1. id match: corpus `id` equals any identifier (normalized: case, spacing)
+  2. text match: token-overlap between the bilingual's Etruscan half and a
      corpus row (Jaccard over the shared tokenizer), reported above a
      threshold so near-duplicates and variant editions surface too
 

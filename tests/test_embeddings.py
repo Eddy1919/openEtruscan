@@ -1,6 +1,6 @@
 """Tests for the multilingual embedding layer.
 
-These run in CI with no model downloads — MockEmbedder is the test
+These run in CI with no model downloads; MockEmbedder is the test
 double. Tests for the real XLMREmbedder are in a separate class that
 skips unless the [transformers] extra is installed.
 """
@@ -114,7 +114,7 @@ class TestXLMREmbedderImport:
 # These tests instantiate the actual XLM-R-base encoder (≈1.1 GB download
 # on first run, ≈3 GB peak RAM, ~30 s warmup) and verify the wiring
 # end-to-end. They're skipped by default in CI because the cost is
-# disproportionate to the assurance — the mock tests already cover
+# disproportionate to the assurance; the mock tests already cover
 # correctness of the populate / lookup pipeline. Enable in CI by setting
 # the `ENABLE_REAL_MODEL_TESTS` repo variable to `true`; locally run with
 # `pytest -m real_model` after `pip install -e '.[transformers]'`.
@@ -124,7 +124,7 @@ class TestXLMREmbedderImport:
 class TestXLMREmbedderRealModel:
     """End-to-end smoke tests against a real multilingual encoder.
 
-    Each test re-loads the model — gensim/transformers session-scoped
+    Each test re-loads the model; gensim/transformers session-scoped
     fixtures could amortise the cost, but the test set is intentionally
     tiny (3 tests) so the simple path is fine. If this grows, fold the
     embedder into a session-scoped fixture.
@@ -141,7 +141,7 @@ class TestXLMREmbedderRealModel:
 
     def test_real_dim_matches_xlmr_base(self, embedder):
         """xlm-roberta-base hidden_size is 768. If this drifts we want to
-        know — the pgvector schema is keyed on it."""
+        know; the pgvector schema is keyed on it."""
         assert embedder.info.dim == 768
         assert embedder.info.model_id == "xlm-roberta-base"
 
@@ -151,7 +151,7 @@ class TestXLMREmbedderRealModel:
         out = embedder.embed_words(["clan", "avil", "θuθθa"])
         assert out.shape == (3, 768)
         norms = np.linalg.norm(out, axis=1)
-        # L2-normalised within atol — minor float drift from the
+        # L2-normalised within atol; minor float drift from the
         # pooling+normalize chain is expected.
         assert np.allclose(norms, 1.0, atol=1e-3), norms
 

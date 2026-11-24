@@ -38,13 +38,13 @@ repos:
         files: ^src/openetruscan/
         additional_dependencies: [types-PyYAML, types-requests]
 
-  # Lockfile freshness — the gate that was missing on 2026-08-08
+  # Lockfile freshness, the gate that was missing on 2026-08-08
   - repo: local
     hooks:
       - id: uv-lock-check
         # The 1.3.0 release bumped `version` and the ruff pin in pyproject.toml
         # without relocking. Every documented gate passed locally, and CI still
-        # went red — `uv sync --locked` in the `openapi-drift` job refused a
+        # went red. `uv sync --locked` in the `openapi-drift` job refused a
         # lockfile recording both old values. AGENTS.md rule 4 now requires
         # `uv lock --check` when pyproject.toml is touched, but a rule nothing
         # runs is a rule that gets skipped, which is how it was skipped once.

@@ -3,7 +3,7 @@
 The helper is the pipeline-side mirror of the a1f2c3d4e5f6_provenance_integrity
 migration: same four-tier vocabulary, same findspot-based backfill rule. These
 tests pin the mapping semantics and load the migration module itself so the two
-files cannot drift apart silently. Pure Python — no database, no docker.
+files cannot drift apart silently. Pure Python, no database, no docker.
 """
 
 import importlib.util

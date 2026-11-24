@@ -1,7 +1,7 @@
 """Tests for Leiden apparatus markup in the EpiDoc exporter.
 
-The exporter must turn editorial spans into real TEI elements — <supplied>,
-<ex>, <gap/>, <unclear> — instead of dumping bracket characters into <ab>,
+The exporter must turn editorial spans into real TEI elements (<supplied>,
+<ex>, <gap/>, <unclear>) instead of dumping bracket characters into <ab>,
 and must produce byte-for-byte the old output when an inscription carries no
 markup at all.
 """
@@ -96,7 +96,7 @@ class TestResultsToEpidoc:
     def test_legacy_bracketed_canonical_falls_back_to_plain_dump(self):
         """Rows ingested before the Leiden fix may store literal brackets in
         canonical; their raw_text no longer re-normalizes to that string, so
-        the exporter must not attach mismatched span offsets — it keeps the
+        the exporter must not attach mismatched span offsets; it keeps the
         old verbatim dump instead."""
         insc = Inscription(id="L1", raw_text="[mi] lar", canonical="[mi] lar")
         xml = results_to_epidoc([insc])

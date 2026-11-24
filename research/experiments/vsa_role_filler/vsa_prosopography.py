@@ -1,5 +1,5 @@
 """
-NS1.4 — prosopography by VSA unbinding + cross-stone family linking.
+NS1.4: prosopography by VSA unbinding + cross-stone family linking.
 
 Two things fall out of the role-filler encoding:
   (a) unbind GENTILICIUM -> gens membership (group stones into families);

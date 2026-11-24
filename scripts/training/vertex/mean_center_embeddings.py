@@ -1,12 +1,12 @@
 """Mean-center + renormalize embeddings to fight transformer anisotropy.
 
 The XLM-R-base mean-pooled vectors all live in a tight cone around a shared
-direction (Ethayarajh 2019, Mu et al 2018) — hence cosine ≥ 0.9998 between
+direction (Ethayarajh 2019, Mu et al 2018), hence cosine ≥ 0.9998 between
 unrelated words observed in the eval. Subtracting the per-language centroid
 and re-L2-normalising recovers the meaningful angular structure that was
 hiding underneath the shared offset.
 
-Two-pass over the input JSONL (memory-bounded — vectors stream, only the
+Two-pass over the input JSONL (memory-bounded; vectors stream, only the
 running mean accumulator stays resident):
 
   Pass 1: ∑v per language, count per language → centroids
@@ -151,7 +151,7 @@ def main() -> int:
             n = math.sqrt(float(v @ v))
             if n < 1e-12:
                 # Degenerate case (vector exactly on the centroid). Keep the
-                # zero vector — the API will return cosine 0 for it, which is
+                # zero vector; the API will return cosine 0 for it, which is
                 # correct given there's no signal left.
                 v_norm = v
             else:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lacuna restoration eval — Approach A (char-MLM) vs Approach B (XLM-R + char head).
+"""Lacuna restoration eval: Approach A (char-MLM) vs Approach B (XLM-R + char head).
 
 Runs both architectures over a fixed 500-row held-out sample drawn
 deterministically from the prod DB (seed=42). See README.md for the
@@ -121,7 +121,7 @@ def _print_metrics(name: str, metrics: dict) -> tuple[float, float]:
 
 
 def eval_char_mlm(samples: list[dict], model_dir: str | Path) -> tuple[float, float]:
-    """Approach A — character transformer MLM trained from scratch.
+    """Approach A: character transformer MLM trained from scratch.
 
     Adapted to the current ``CharMLM``/``CharVocab`` API: ``CharVocab.encode``
     prepends no BOS token, so the mask index is the raw character position
@@ -181,7 +181,7 @@ def eval_char_mlm(samples: list[dict], model_dir: str | Path) -> tuple[float, fl
 
 
 def eval_xlmr_head(samples: list[dict], model_dir: str | Path) -> tuple[float, float]:
-    """Approach B — XLM-R + etr-lora-v4 + char prediction head."""
+    """Approach B: XLM-R + etr-lora-v4 + char prediction head."""
     import torch.nn as nn
     from peft import PeftModel
     from transformers import AutoModel, AutoTokenizer

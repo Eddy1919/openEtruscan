@@ -1,5 +1,5 @@
 """
-Converter — convenience functions for direct format conversion.
+Converter: convenience functions for direct format conversion.
 """
 
 from __future__ import annotations

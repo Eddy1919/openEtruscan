@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Step 1 — build the cleaned training/index tables for the hybrid embedding
+"""Step 1: build the cleaned training/index tables for the hybrid embedding
 experiment.
 
 Input : research/data/openetruscan_clean_grouped.csv (Zenodo v1.1.0)
@@ -10,7 +10,7 @@ Output: research/experiments/hybrid_embed/out/index.csv   (every retrievable row
 
 Cleaning rules (see research/data/README.md, "What the tiers do not filter"):
   * keep data_quality == "clean"
-  * drop rows whose transliteration is majority-uppercase — this removes both
+  * drop rows whose transliteration is majority-uppercase; this removes both
     the ~525 Latin-orthography CIE rows and the retrograde-OCR junk, neither
     of which is Etruscan text the model should learn
   * training set is deduplicated on dup_group_id (one representative per

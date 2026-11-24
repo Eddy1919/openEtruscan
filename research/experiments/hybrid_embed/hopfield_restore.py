@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""WP5/WP8 — associative-memory restoration: decoder-only vs decoder+episodic
+"""WP5/WP8 associative-memory restoration: decoder-only vs decoder+episodic
 memory (kNN-LM, which is one modern-Hopfield update over a stored key–value
 memory: softmax(β·sim)·values).
 
 Datastore (the "hippocampus"): every teacher-forced decoder hidden state on
 the *training* split, keyed to the next gold token. ~30K (state, token)
-entries — episodic, lossless, never trained.
+entries, episodic, lossless, never trained.
 
 Restoration protocol: corrupt each held-out val sequence exactly like
 training (span→[MASK] + point masks), then predict the tokens at the damaged

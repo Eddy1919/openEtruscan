@@ -1,5 +1,5 @@
 """
-Alembic migration environment — handles schema synchronization for PostgreSQL.
+Alembic migration environment: handles schema synchronization for PostgreSQL.
 """
 
 import asyncio
@@ -59,8 +59,8 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
-    # `not url` (rather than `is None`) also rejects DATABASE_URL="" —
-    # an empty env var otherwise slips past and fails later, less clearly.
+    # `not url` (rather than `is None`) also rejects DATABASE_URL="".
+    # An empty env var otherwise slips past and fails later, less clearly.
     if not url:
         raise RuntimeError(
             "No database URL configured: set DATABASE_URL or sqlalchemy.url in alembic.ini"

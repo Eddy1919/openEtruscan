@@ -2,12 +2,12 @@
 """
 Import a Recogito annotation export and harvest two things.
 
-1. **Place links** — PLACE annotations resolved to a Pleiades URI become
+1. **Place links**: PLACE annotations resolved to a Pleiades URI become
    findspot → Pleiades-ID proposals, written in the same queue format
    propose_pleiades_links.py emits, so they flow through the existing
    review_pleiades_links.py HITL step into data/pleiades_mapping.yaml. Recogito
    thus becomes a second, human-curated source of place links.
-2. **Classification decisions** — per-document TAGS become the philologist's
+2. **Classification decisions**: per-document TAGS become the philologist's
    adjudication decision, written as a CSV (id, decision_tags).
 
     python scripts/research/import_recogito.py \

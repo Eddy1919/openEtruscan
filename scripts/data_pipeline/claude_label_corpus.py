@@ -125,7 +125,7 @@ DEDICATORY_ETR = {
 }
 
 VOTIVE_ETR = {
-    # Strong votive markers — "thank offering" semantics
+    # Strong votive markers, "thank offering" semantics
     "mlaχ",  # also dedicatory; treat as votive when paired with deity
 }
 
@@ -358,7 +358,7 @@ def main() -> None:
 
     rows_in = list(csv.DictReader(CLEAN_CSV.open()))
 
-    # Per-quality split — only label clean rows
+    # Per-quality split: only label clean rows
     out_rows = []
     for r in rows_in:
         if r["data_quality"] != "clean":

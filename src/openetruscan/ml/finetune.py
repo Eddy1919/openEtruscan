@@ -27,7 +27,7 @@ Why LoRA, not full fine-tuning
   nothing to keep around.
 
 This module ships:
-  * ``train_etruscan_adapter`` — runs the MLM training loop, writes a
+  * ``train_etruscan_adapter``: runs the MLM training loop, writes a
     PEFT-compatible adapter directory.
   * CLI: ``python -m openetruscan.ml.finetune train --output models/etr-lora-v1``.
 
@@ -69,7 +69,7 @@ def _load_etruscan_inscriptions() -> Iterator[str]:
     """Pull canonical Etruscan strings from the corpus DB.
 
     Mirrors ``rosetta_v1.extract_training_corpus`` but yields raw strings
-    rather than tokenised lists — the transformer tokeniser handles
+    rather than tokenised lists; the transformer tokeniser handles
     sub-word splitting itself, so we feed it whole sentences.
     """
     import asyncio
@@ -191,7 +191,7 @@ def train_etruscan_adapter(
     logger.info("Starting LoRA fine-tune (%d epochs)", epochs)
     trainer.train()
 
-    # Save just the adapter — the base weights are not modified.
+    # Save just the adapter; the base weights are not modified.
     model.save_pretrained(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))
 

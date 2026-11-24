@@ -5,10 +5,10 @@ Merge Larth (Vico & Spanakis 2023) metadata into the normalized CSV.
 Joins three columns from Larth onto the openetruscan_normalized CSV
 by inscription ID:
   - translation  (English gloss)
-  - year_from    (date range start, BCE/CE — Larth uses negative for BCE)
+  - year_from    (date range start, BCE/CE; Larth uses negative for BCE)
   - year_to      (date range end)
 
-Larth has duplicate IDs (7,139 rows / 4,712 unique IDs) — we take the
+Larth has duplicate IDs (7,139 rows / 4,712 unique IDs); we take the
 first non-empty value per field. Rows with no Larth match get empty
 strings (the openetruscan corpus has 1,855 CIE-only rows that Larth
 never had).

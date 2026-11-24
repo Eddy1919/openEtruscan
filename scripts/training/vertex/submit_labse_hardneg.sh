@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Submit the LaBSE hard-negative contrastive fine-tune to Vertex AI
-# (WBS T4.3 Option B — overfitting-guarded last-resort experiment).
+# (WBS T4.3 Option B, an overfitting-guarded last-resort experiment).
 #
 # Estimated wall time: ≤ 15 min on T4 (17 LOO folds × 3 epochs × ≤8 negatives/anchor).
 # Estimated cost: < $0.50.
@@ -47,7 +47,7 @@ workerPoolSpecs:
         # Vertex's pytorch-gpu.2-2 image ships torch_xla preinstalled and
         # auto-imports it; without a PJRT device set, it segfaults the
         # process the moment training starts (SIGSEGV at runtime.cc:25).
-        # We are pure-CUDA — point torch_xla at CPU so its init succeeds
+        # We are pure-CUDA; point torch_xla at CPU so its init succeeds
         # and stays out of the way.
         - name: PJRT_DEVICE
           value: "CPU"

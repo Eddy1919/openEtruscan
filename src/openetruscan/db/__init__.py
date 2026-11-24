@@ -1,4 +1,4 @@
-"""OpenEtruscan database subpackage — async ORM models, repository, and session management."""
+"""OpenEtruscan database subpackage: async ORM models, repository, and session management."""
 
 from .models import Base, Clan, Entity, GeneticSample, Inscription, Relationship
 from .repository import InscriptionRepository

@@ -3,7 +3,7 @@ Findspot → Pleiades gazetteer matching.
 
 Pelagios's mandate is "linking the past through places": every inscription whose
 findspot we can tie to a Pleiades place URI becomes a unit of linked-data value.
-This module is the *matching* core behind that — it takes the messy Latin/modern
+This module is the *matching* core behind that. It takes the messy Latin/modern
 findspot strings the corpus actually carries ("Clusii in agro", "Perusiae",
 "Volaterris") and proposes the Pleiades place(s) they most likely denote.
 
@@ -60,7 +60,7 @@ _STOPWORD_TOKENS = frozenset(
         "of",
         "territorio",
         "territory",
-        # Conjunction in "Clusium cum agro" — without this the phrase scores
+        # Conjunction in "Clusium cum agro"; without this the phrase scores
         # below threshold and a 70-inscription findspot is missed.
         "cum",
         "et",
@@ -79,11 +79,11 @@ _STOPWORD_TOKENS = frozenset(
 )
 
 # Common Latin case endings, longest first so we strip the most specific match.
-# These are heuristics, not a morphological analyser — they only need to make
+# These are heuristics, not a morphological analyser; they only need to make
 # inflected surface forms of the same toponym collapse onto a shared stem.
 # Single-step suffixes only: stripping one of these collapses inflected forms
 # onto a shared stem (Clusium/Clusii → "clusi", Perusia/Perusiae → "perusi").
-# Multi-vowel endings like "-ii"/"-iae" are deliberately absent — stripping
+# Multi-vowel endings like "-ii"/"-iae" are deliberately absent; stripping
 # them whole over-shortens one inflection but not its sibling, splitting the
 # stem (the bug this list was rewritten to avoid).
 _LATIN_ENDINGS = (
@@ -121,8 +121,8 @@ def normalize_place_name(name: str) -> str:
     Normalise a place / findspot string for comparison.
 
     Lowercases, folds diacritics, drops punctuation, and removes locative
-    scaffolding tokens. Does *not* strip Latin endings — see ``stem_place_name``
-    for that. Returns a single space-joined string (possibly empty).
+    scaffolding tokens. Does *not* strip Latin endings (see ``stem_place_name``
+    for that). Returns a single space-joined string (possibly empty).
     """
     if not name:
         return ""
@@ -260,7 +260,7 @@ def propose_links(
     from "not yet attempted".
 
     Scoring is restricted to names sharing the findspot's first ``prefix_len``
-    stemmed characters — a real gazetteer holds ~10k+ places and a full O(n·m)
+    stemmed characters. A real gazetteer holds ~10k+ places and a full O(n·m)
     comparison is infeasible (it does not finish on the live corpus; the indexed
     path runs in ~2s). True toponym matches share their leading stem, so recall
     loss is negligible. Set ``prefix_len=0`` to force a full comparison.

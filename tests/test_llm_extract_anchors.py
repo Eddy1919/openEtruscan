@@ -1,6 +1,6 @@
 """Tests for the pure-Python pieces of scripts/research/llm_extract_anchors.py.
 
-The actual Gemini call is not exercised here — that's a paid Vertex call
+The actual Gemini call is not exercised here; that's a paid Vertex call
 and lives behind manual invocation. What's tested is the surrounding
 machinery that decides what to send to the model and what to keep from
 its response, which is where most of the precision-vs-recall trade-off
@@ -75,7 +75,7 @@ def test_smart_truncate_long_passage_with_multiple_keywords_merges_windows(m):
     tail = "z" * 3000
     sep = "g" * 4000  # > 2 × 1500, so windows around adjacent keywords don't overlap
     # Pad each keyword with whitespace so the `\b` word boundary in the
-    # keyword regex actually matches (yyTusci would not — both `y` and `T`
+    # keyword regex actually matches (yyTusci would not; both `y` and `T`
     # are word characters).
     text = (
         head + " " + sep + " Tusci " + sep + " Etrusci " + sep + " Tyrrhenians " + sep + " " + tail
@@ -86,7 +86,7 @@ def test_smart_truncate_long_passage_with_multiple_keywords_merges_windows(m):
     assert "Tusci" in out
     assert "Etrusci" in out
     assert "Tyrrhenians" in out
-    # Far head/tail filler should not survive — the first ~1500 chars of
+    # Far head/tail filler should not survive; the first ~1500 chars of
     # `head` and the last ~1500 chars of `tail` are outside any window.
     assert "y" * 1500 not in out
     assert "z" * 1500 not in out

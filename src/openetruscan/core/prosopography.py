@@ -1,5 +1,5 @@
 """
-Prosopography module — name intelligence engine for ancient onomastics.
+Prosopography module: name intelligence engine for ancient onomastics.
 
 Parses naming formulas, builds kinship networks, enables prosopographical queries.
 """
@@ -127,7 +127,7 @@ def parse_name(
 
 
 # ---------------------------------------------------------------------------
-# Fuzzy matching — Phonological Edit Distance
+# Fuzzy matching: Phonological Edit Distance
 # ---------------------------------------------------------------------------
 
 # Phonological categories derived from IPA in etruscan.yaml.
@@ -448,7 +448,7 @@ class ClanInfo:
 def _cypher_escape(value: str) -> str:
     """Escape a value for interpolation inside a single-quoted Cypher string.
 
-    Backslash first — it is Cypher's escape character, so escaping the quote
+    Backslash first. It is Cypher's escape character, so escaping the quote
     alone still lets a trailing ``\\`` neutralize the closing quote.
     """
     return value.replace("\\", "\\\\").replace("'", "\\'")
@@ -599,7 +599,7 @@ class FamilyGraph:
         Export the graph as a Neo4j Cypher script (.cypher).
         Uses MERGE statements heavily so the script is idempotent and safe.
 
-        Every interpolated value goes through ``_cypher_escape`` — backslash
+        Every interpolated value goes through ``_cypher_escape``. Backslash
         is Cypher's escape character, so it must be escaped along with the
         quote or a name containing ``\\`` breaks (or worse, re-opens) the
         string literal.
@@ -731,7 +731,7 @@ class FamilyGraph:
 
         Names come from raw inscriptions, so every interpolated value is
         XML-escaped: quoteattr for attribute positions (node/edge ids),
-        escape for text content — a clan called "A & B" must not produce
+        escape for text content. A clan called "A & B" must not produce
         invalid markup.
         """
         from xml.sax.saxutils import escape, quoteattr

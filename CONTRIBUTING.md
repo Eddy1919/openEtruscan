@@ -1,6 +1,6 @@
 # Contributing to OpenEtruscan
 
-Thank you for your interest in contributing! Whether you're an epigrapher adding data, a linguist correcting a mapping, or a developer improving the engine — every contribution matters.
+Thank you for your interest in contributing! Whether you're an epigrapher adding data, a linguist correcting a mapping, or a developer improving the engine, every contribution matters.
 
 ## Getting Started
 
@@ -24,7 +24,7 @@ ruff check src/ tests/
 
 > **Note:** You do not need a database to contribute. With no `DATABASE_URL` set
 > and no Docker daemon running, `pytest` falls back to in-memory SQLite and the
-> Postgres-backed tests report as **skips**, not failures — the suite is green
+> Postgres-backed tests report as **skips**, not failures; the suite is green
 > offline. To exercise those tests, either start Docker (the suite then boots a
 > one-shot `pgvector/pgvector:pg16` container for you) or point `DATABASE_URL`
 > at your own Postgres. CI always takes the second path.
@@ -76,7 +76,7 @@ OpenEtruscan's engine is language-agnostic at the adapter layer. Adapter
 **templates** exist for a few non-Etruscan scripts
 ([Oscan](src/openetruscan/core/adapters/oscan.yaml),
 [Faliscan](src/openetruscan/core/adapters/faliscan.yaml), Rhaetic, Lemnian),
-but **no non-Etruscan corpus is currently ingested** — Etruscan is the
+but **no non-Etruscan corpus is currently ingested**. Etruscan is the
 only populated, searchable language. Adding an adapter defines the
 transliteration/equivalence mappings for a script; it does **not** by
 itself produce a populated, searchable language. To add an adapter:
@@ -89,7 +89,7 @@ itself produce a populated, searchable language. To add an adapter:
 
 Refer to the existing Oscan / Faliscan / Rhaetic / Lemnian adapter
 templates for the file structure. Note these are mapping definitions
-only — none has an ingested corpus behind it.
+only; none has an ingested corpus behind it.
 
 ### 🐛 Report Bugs
 
@@ -122,8 +122,8 @@ only — none has an ingested corpus behind it.
 
 ### Code Standards
 
-- **Linter:** [Ruff](https://docs.astral.sh/ruff/) — run `ruff check src/ tests/` before submitting
-- **Tests:** [pytest](https://docs.pytest.org/) — all PRs must pass the existing test suite
+- **Linter:** [Ruff](https://docs.astral.sh/ruff/); run `ruff check src/ tests/` before submitting
+- **Tests:** [pytest](https://docs.pytest.org/); all PRs must pass the existing test suite
 - **Line length:** 100 characters max
 - **Python:** 3.10+ compatible
 
@@ -160,7 +160,7 @@ Before submitting a PR, confirm:
 - [ ] Linter and formatter are clean: `ruff check . && ruff format --check .`
 - [ ] Types check: `mypy src/openetruscan/`
 - [ ] Lockfile matches `pyproject.toml`: `uv lock --check`. **Run this whenever
-      you touch `pyproject.toml` at all** — a version or pin change updates
+      you touch `pyproject.toml` at all**. A version or pin change updates
       `uv.lock`, and CI installs with `--locked`, so a stale lockfile fails
       the build with an error that names neither the file you edited nor the
       job you expected.
@@ -170,16 +170,16 @@ Before submitting a PR, confirm:
 - [ ] Documentation is updated if applicable
 
 Optional local security scans (`bandit -r src/openetruscan/`,
-`semgrep scan --config auto`) are welcome but are **not** CI gates — they
+`semgrep scan --config auto`) are welcome but are **not** CI gates; they
 were removed from CI for chronic false-positive rates.
 
 ### CI Pipeline
 
 What actually gates a PR (see `.github/workflows/`):
-1. **Lint** — ruff check + ruff format, pinned to the pre-commit version
-2. **Types** — mypy on `src/openetruscan/` (dependency-light, same pin as pre-commit)
-3. **Test** — pytest on 3.12 against Postgres + pgvector (full 3.10–3.13 matrix on push to main), including the Alembic migration-chain tests
-4. **Coverage** — enforced floor (`--cov-fail-under`) on the 3.12 lane
+1. **Lint**: ruff check + ruff format, pinned to the pre-commit version
+2. **Types**: mypy on `src/openetruscan/` (dependency-light, same pin as pre-commit)
+3. **Test**: pytest on 3.12 against Postgres + pgvector (full 3.10–3.13 matrix on push to main), including the Alembic migration-chain tests
+4. **Coverage**: enforced floor (`--cov-fail-under`) on the 3.12 lane
 
 Separately, **Gitleaks** secret scanning runs on every push to main and
 weekly, and **Dependabot** watches dependencies.
@@ -187,7 +187,7 @@ weekly, and **Dependabot** watches dependencies.
 ## Data Licensing
 
 - **Code contributions** are MIT-licensed (matching the project)
-- **Data contributions** are CC0 (public domain) — inscriptions are facts, not copyrightable content
+- **Data contributions** are CC0 (public domain); inscriptions are facts, not copyrightable content
 
 ## Security
 

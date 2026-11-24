@@ -1,5 +1,5 @@
 """
-NS3.1 — structure-aware retrieval for lacuna restoration, A/B vs the shipped RAG.
+NS3.1: structure-aware retrieval for lacuna restoration, A/B vs the shipped RAG.
 
 Same 66-task v2.0.3 gold, same model + prompt; ONLY the retrieved parallels
 differ: char-3-gram (lexical, the shipped restorer) vs VSA structural (same

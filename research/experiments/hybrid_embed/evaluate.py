@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Step 5 — fuse the three blocks and evaluate against the frozen harnesses.
+"""Step 5: fuse the three blocks and evaluate against the frozen harnesses.
 
 Fusion v1: concat [charLM | node2vec | VSA-S], each block L2-normalized, so
 cosine over the fused vector weights the three signals equally.
@@ -14,11 +14,11 @@ Three evaluations:
      dropped from the gain set; queries with no surviving relevant id are
      skipped). Systems: BM25 (sparse), dense (fused), RRF(BM25+dense), and
      optionally cross-encoder rerank of the RRF top-30.
-     NOT comparable to the prod-API numbers in run_search_eval.py — the prod
+     NOT comparable to the prod-API numbers in run_search_eval.py; the prod
      endpoint has findspot/pleiades/date metadata this index does not carry.
   C. Rosetta diagnostic (n=22 test pairs): charLM word vectors, Etruscan word
-     vs a Latin candidate vocabulary, precision@10. Expected ~0 — a
-     from-scratch monolingual model has no cross-lingual signal; reported so
+     vs a Latin candidate vocabulary, precision@10. Expected ~0 (a
+     from-scratch monolingual model has no cross-lingual signal); reported so
      nobody has to rediscover that.
 
 Output: out/results.json + console report.

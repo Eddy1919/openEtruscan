@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# OpenEtruscan — Local Security Audit (fast)
+# OpenEtruscan: Local Security Audit (fast)
 # Combines Bandit SAST, pip-audit, and grep-based secret scanning.
 # Usage:  bash scripts/security_check.sh
 # ──────────────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@ Usage shapes:
       --adapter models/etr-lora-v1 \\
       --vocab-from-corpus
 
-  # Latin, just the base XLM-R (no adapter — Latin is in the encoder's
+  # Latin, just the base XLM-R (no adapter; Latin is in the encoder's
   # pretraining).
   python scripts/ops/populate_language.py \\
       --language lat \\
@@ -83,7 +83,7 @@ async def _vocab_from_corpus(language_db_code: str) -> list[str]:
         canonicals = [c for (c,) in result.all() if c]
 
     # Etruscan inscriptions use `:` and `·` as word dividers (Bonfante
-    # 2002 §10) — many lines have NO spaces, only colons. Convert to
+    # 2002 §10); many lines have NO spaces, only colons. Convert to
     # whitespace BEFORE tokenising so the vocab is real word forms.
     # `.` and `-` stay attached: `ve.i.tule` is one phonological unit;
     # `velxiti-leθes` is one onomastic compound.

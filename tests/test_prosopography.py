@@ -70,7 +70,7 @@ class TestFuzzyMatching:
         assert levenshtein_distance("larθ", "larθ") == 0
 
     def test_levenshtein_one_deletion(self):
-        # "lrθ" vs "larθ" — missing 'a'
+        # "lrθ" vs "larθ" (missing 'a')
         assert levenshtein_distance("lrθ", "larθ") == 1
 
     def test_levenshtein_one_substitution(self):
@@ -148,7 +148,7 @@ class TestPhonologicalDistance:
         assert cost_l_theta == 1.0
 
     def test_phonological_vs_levenshtein(self):
-        # "larθ" vs "lart" — phonological should be cheaper than Levenshtein
+        # "larθ" vs "lart": phonological should be cheaper than Levenshtein
         phono = phonological_distance("larθ", "lart")
         lev = levenshtein_distance("larθ", "lart")
         assert phono < lev  # 0.5 < 1
@@ -166,7 +166,7 @@ class TestPhonologicalDistance:
 @pytest.mark.slow
 @pytest.mark.requires_postgres
 class TestFamilyGraph:
-    """Test family graph construction and queries (slow — parses all DB inscriptions).
+    """Test family graph construction and queries (slow; parses all DB inscriptions).
 
     `Corpus.load()` hands its DSN straight to psycopg2, so on the SQLite
     fallback these raise `ProgrammingError: invalid dsn` rather than skipping.

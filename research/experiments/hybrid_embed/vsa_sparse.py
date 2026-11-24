@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""WP4 — sparse block-code VSA vs dense bipolar VSA, unbind protocol.
+"""WP4: sparse block-code VSA vs dense bipolar VSA, unbind protocol.
 
 Dense MAP binding superposes with crosstalk that grows with the number of
-bound pairs — that is why GENTILICIUM unbind sat at 64.1%. Sparse block codes
+bound pairs; that is why GENTILICIUM unbind sat at 64.1%. Sparse block codes
 (Frady/Kleyko style) fix it at the representation level:
 
   * D units split into K blocks of m units; an atom is one active unit per
     block (sparsity 1/m ≈ cortical activity levels)
   * binding  = per-block modular index addition (blockwise circular shift)
-  * unbind   = per-block index subtraction — exact inverse
+  * unbind   = per-block index subtraction (exact inverse)
   * superposition = per-block count vectors; two summed role–filler pairs
     only collide when both blocks agree, so crosstalk decays like 1/m per
     block instead of 1/sqrt(D) overall
 
 Both codes get the same memory budget: 4096 units.
-Protocol: identical to vsa_role_filler round-trip — encode I = Σ role⊗filler,
+Protocol: identical to vsa_role_filler round-trip: encode I = Σ role⊗filler,
 unbind each role, cleanup against the filler codebook, accuracy per role.
 
 Output: out/vsa_sparse_results.json

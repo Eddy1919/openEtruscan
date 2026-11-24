@@ -13,7 +13,7 @@ def norm(s):
 
 
 def answer_window(row):
-    """last2(left) + gold + first2(right), normalized — the local copy signal."""
+    """last2(left) + gold + first2(right), normalized (the local copy signal)."""
     m = row["masked"]
     w = row["width"]
     g = R.GOLD[row["key"]]

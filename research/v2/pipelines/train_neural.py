@@ -1,4 +1,4 @@
-"""v2 neural classifier retrain — head-to-head against TF-IDF+NB baseline.
+"""v2 neural classifier retrain: head-to-head against TF-IDF+NB baseline.
 
 Trains and evaluates each neural architecture the project ships against the
 SAME v2 frozen splits used by `train_classifier.py` (the TF-IDF+NB baseline):
@@ -18,9 +18,9 @@ Honest framing
 - Train labels remain SILVER (v1 reasoning cascade). Eval labels are
   CONSENSUS-SILVER (2-rater LLM-jury, unanimous, conf ≥ medium).
 - The point of this retrain is to confirm or refute the audit hypothesis
-  that "the bottleneck is data, not architecture" — i.e., that none of the
+  that "the bottleneck is data, not architecture" (i.e., that none of the
   3 neural architectures dramatically beat the TF-IDF+NB baseline on this
-  amount of data.
+  amount of data).
 - Per-class metrics for the rare tail (votive, commercial) will be NaN
   because the candidate-gold eval has no examples of those classes. Same
   caveat as in `train_classifier.py`.
@@ -364,7 +364,7 @@ def main(argv: list[str] | None = None) -> int:
     write_result(args.out_metrics, payload)
 
     with args.out_predictions.open("w") as f:
-        # eval_pairs tuples are (text, label, id) — destructuring them as
+        # eval_pairs tuples are (text, label, id); destructuring them as
         # (gold, _, id) shipped the inscription TEXT in the gold_label field
         # of every v2.0.4 predictions row until 2026-08-08.
         for (_, gold, insc_id), pred in zip(eval_pairs, preds, strict=False):

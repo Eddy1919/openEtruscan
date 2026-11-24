@@ -26,7 +26,7 @@ though Latin is NOT run through any LoRA adapter (LoRA training is
 Etruscan-only). The label keeps the partition key consistent so the
 route layer doesn't need a language-aware alias map. The v4 column in
 ``rosetta-eval-v1`` is therefore measuring "etr-side LoRA applied,
-Latin-side vanilla XLM-R-base" — both compared against LaBSE's
+Latin-side vanilla XLM-R-base", both compared against LaBSE's
 parallel-data-trained shared space. That's a fair comparison of two
 embedding strategies, just with a slightly misleading partition
 label. See the maintainer-held research-grade roadmap for the larger context.

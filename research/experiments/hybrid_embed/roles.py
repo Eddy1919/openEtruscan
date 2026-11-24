@@ -1,4 +1,4 @@
-"""Shared heuristic role parser — lifted verbatim from
+"""Shared heuristic role parser, lifted verbatim from
 ``research/experiments/vsa_role_filler/vsa_etruscan.py`` (NS1.1) so the graph
 and VSA steps of the hybrid experiment segment identically."""
 

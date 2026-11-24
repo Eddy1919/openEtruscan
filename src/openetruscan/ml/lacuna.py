@@ -19,7 +19,7 @@ warnings.warn(
 )
 
 # ---------------------------------------------------------------------------
-# Lazy torch import — same pattern as neural.py/embeddings.py, so importing
+# Lazy torch import (same pattern as neural.py/embeddings.py), so importing
 # this module (e.g. via the CLI) does not hard-fail without the ML extras.
 # transformers/peft are imported inside LacunaRestorer.__init__.
 # ---------------------------------------------------------------------------

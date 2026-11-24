@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Batch 2 seeder — lexicon-tier gloss pairs collected from page-verifiable
+"""Batch 2 seeder: lexicon-tier gloss pairs collected from page-verifiable
 online sources (2026-08-30 research pass). Appends to gold_glosses.jsonl,
 skipping any etr form already present.
 

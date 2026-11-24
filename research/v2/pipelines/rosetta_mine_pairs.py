@@ -5,7 +5,7 @@ grammarians (Varro, Festus, Pliny, Servius) as well, and runs every raw
 candidate through a multi-LLM-jury substring + assertion check before it
 joins the candidate gold set.
 
-This script is **stateless** — it reads passage text from a JSONL bundle and
+This script is **stateless**; it reads passage text from a JSONL bundle and
 writes raw / validated / rejected outputs. The expensive work (LLM
 extraction) is the same as `scripts/research/llm_extract_anchors.py` but
 reorganized so it can be re-run incrementally as new passages are added.

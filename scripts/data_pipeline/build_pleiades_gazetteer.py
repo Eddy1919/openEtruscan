@@ -5,8 +5,8 @@ Build a local Pleiades gazetteer for findspot matching.
 Downloads the public Pleiades **places** and **names** CSV dumps, filters to the
 Etruria / central-Italy bounding box, and writes a compact JSON file that
 ``propose_pleiades_links.py`` consumes. Pulling the *names* dump (not just place
-titles) is what lets us match ancient surface forms — "Tarchna", "Velch",
-"Clevsin" — that never appear as the modern title.
+titles) is what lets us match ancient surface forms ("Tarchna", "Velch",
+"Clevsin") that never appear as the modern title.
 
 Output schema (``data/pleiades_gazetteer.json``):
 

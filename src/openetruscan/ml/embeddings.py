@@ -6,7 +6,7 @@ by default) optionally augmented with a LoRA adapter fine-tuned on
 Etruscan inscriptions. The encoder's hidden states already share a
 vector space across the 100+ languages it was pretrained on, so
 cross-language retrieval works **without** an explicit Procrustes
-rotation — we just embed each language and ask pgvector for cosine
+rotation. We just embed each language and ask pgvector for cosine
 neighbours.
 
 Why this beats the FastText+Procrustes path
@@ -22,12 +22,12 @@ Why this beats the FastText+Procrustes path
 
 Public surface
 --------------
-* ``Embedder`` — abstract base. Subclasses implement ``embed_words``
+* ``Embedder``: abstract base. Subclasses implement ``embed_words``
   and expose ``dim``, ``model_id``, ``revision``.
-* ``XLMREmbedder`` — production path. Wraps a HuggingFace transformer
+* ``XLMREmbedder``: production path. Wraps a HuggingFace transformer
   + an optional LoRA adapter. ~768 dims by default, ~80 ms per word
   on CPU, sub-10 ms on a small GPU.
-* ``MockEmbedder`` — deterministic vectors derived from string hashes,
+* ``MockEmbedder``: deterministic vectors derived from string hashes,
   for tests that need to exercise the populate / lookup paths without
   downloading a 1 GB model.
 

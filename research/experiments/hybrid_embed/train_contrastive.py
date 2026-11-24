@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""WP9 — contrastive alignment on the 1,800 Etruscan↔English translation
+"""WP9: contrastive alignment on the 1,800 Etruscan↔English translation
 pairs (the Larth-derived `translation` column): the only semantic signal in
 the published data, untouched by WP0–WP8.
 
@@ -11,7 +11,7 @@ Dual encoder, both sides ours:
   * symmetric InfoNCE, learnable temperature, in-batch negatives
 
 False-negative control: pairs whose gloss OR Etruscan text repeats another
-row in the batch are masked out of the negative set (many glosses repeat —
+row in the batch are masked out of the negative set (many glosses repeat;
 "mi" rows all translate the same).
 
 Split: by dup_group_id, 80/10/10 (train/val/test), pairs deduplicated on

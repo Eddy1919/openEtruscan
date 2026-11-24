@@ -2,17 +2,17 @@
 embed each token with XLM-R-base (mean-pool + L2-normalise), and write a
 JSONL per-row of ``{language, word, vector}`` to GCS.
 
-Self-contained — no openetruscan package import. Runs inside the prebuilt
+Self-contained (no openetruscan package import). Runs inside the prebuilt
 ``us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.2-2.py310`` image, with
 the same bootstrap fixes the LoRA training script needs:
 
-  * pip uninstall torch_xla       — Trainer routes nested_gather through
+  * pip uninstall torch_xla:        Trainer routes nested_gather through
                                     XLA's CPU rendezvous and steps slow to
                                     minutes/each. Inference doesn't hit
                                     that path BUT we keep parity with the
                                     training image.
-  * transformers>=4.40,<4.47      — 4.47+ requires torch>=2.4; image has 2.2.
-  * datasets>=2.18,<3             — for streaming Wikipedia.
+  * transformers>=4.40,<4.47:       4.47+ requires torch>=2.4; image has 2.2.
+  * datasets>=2.18,<3:              for streaming Wikipedia.
 
 Inputs:
     --output_path     /gcs/openetruscan-rosetta/embeddings/lat-grc-xlmr-v2.jsonl
@@ -58,8 +58,8 @@ def _ensure_hf_stack() -> None:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *pkgs])
 
 
-# Keep tokens that are "real-looking words" — at least 2 unicode-letter chars,
-# no digits anywhere, alphabetics + apostrophe + interior hyphen only.
+# Keep tokens that are "real-looking words" (at least 2 unicode-letter chars,
+# no digits anywhere, alphabetics + apostrophe + interior hyphen only).
 WORD_RE = re.compile(r"\b[^\W\d_][^\W\d_'\-]{1,30}(?:['\-][^\W\d_]+){0,3}\b", re.UNICODE)
 MIN_LEN = 2
 MAX_LEN = 32
@@ -74,7 +74,7 @@ SCRIPT_REQUIRED = {
     # Latin-script English; we filter those out here.
     "el": re.compile(r"[Ͱ-Ͽἀ-῿]"),
     # Latin pages can embed Cyrillic / Greek place names; require at least one
-    # Latin letter as a sanity gate (still permissive — any Latin char passes).
+    # Latin letter as a sanity gate (still permissive; any Latin char passes).
     "la": re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]"),
 }
 
@@ -86,7 +86,7 @@ def _build_vocab(
     top-``top_n`` tokens by raw frequency.
 
     Tokens that don't contain at least one character from the language's
-    expected script block are dropped — they're cross-language contamination
+    expected script block are dropped; they're cross-language contamination
     (English loanwords, brand names, transliterated proper nouns) that would
     otherwise occupy slots that should hold real native vocabulary.
     """
@@ -94,8 +94,8 @@ def _build_vocab(
 
     script_gate = SCRIPT_REQUIRED.get(language_code)
 
-    # wikimedia/wikipedia hosts pre-extracted parquet snapshots — no
-    # apache_beam dependency, supports streaming. The 20231101 snapshot is
+    # wikimedia/wikipedia hosts pre-extracted parquet snapshots (no
+    # apache_beam dependency, supports streaming). The 20231101 snapshot is
     # the most recent stable one with parquet output.
     log.info("Loading Wikipedia[%s] in streaming mode...", language_code)
     ds = load_dataset(
@@ -169,7 +169,7 @@ def _embed_and_write(
             t0 = time.time()
             for i in range(0, len(words), BATCH):
                 batch = words[i : i + BATCH]
-                # max_length=16 is plenty — these are single words, XLM-R
+                # max_length=16 is plenty; these are single words, XLM-R
                 # SentencePiece will rarely split a word into >10 pieces.
                 enc = tok(
                     batch,

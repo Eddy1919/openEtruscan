@@ -4,8 +4,8 @@ Human-in-the-loop review of proposed findspot → Pleiades links.
 
 Walks the queue produced by ``propose_pleiades_links.py``. For each findspot it
 shows the ranked Pleiades candidates; the reviewer accepts one, rejects all, or
-skips. Accepted links are appended to ``data/pleiades_mapping.yaml`` — the same
-file ``openetruscan.api.lod.get_pleiades_uri`` reads — so every approval
+skips. Accepted links are appended to ``data/pleiades_mapping.yaml`` (the same
+file ``openetruscan.api.lod.get_pleiades_uri`` reads), so every approval
 immediately becomes Pelagios-emittable linked data.
 
 The queue is rewritten on quit with the unreviewed rows, so the loop is

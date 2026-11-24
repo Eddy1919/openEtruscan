@@ -1,5 +1,5 @@
 """
-Lineage Engine — Bridges epigraphic clan data (Gentes) with archaeogenetic lineages.
+Lineage Engine: bridges epigraphic clan data (Gentes) with archaeogenetic lineages.
 """
 
 import logging

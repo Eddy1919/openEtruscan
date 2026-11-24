@@ -1,4 +1,4 @@
-# ByT5 v4 vs v5 — Lacuna Restoration
+# ByT5 v4 vs v5: Lacuna Restoration
 
 ## Question
 

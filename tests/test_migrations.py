@@ -2,7 +2,7 @@
 
 conftest.py builds the test schema with ``Base.metadata.create_all`` for
 speed, which means the 17 hand-written migration scripts under
-``db/versions/`` were never executed by any test — ORM-vs-migration drift
+``db/versions/`` were never executed by any test; ORM-vs-migration drift
 could ship silently. This module runs the full ``upgrade head`` chain on a
 scratch database and cross-checks the resulting tables against the ORM
 metadata.
@@ -11,7 +11,7 @@ The chain tests are Postgres-only: several migrations use pgvector/PostGIS
 column types that SQLite cannot represent. The scratch database is created
 and dropped per test run so the chain always starts from an empty schema,
 independent of whatever state the shared test database is in. The
-misconfiguration test needs no database at all — env.py fails before
+misconfiguration test needs no database at all; env.py fails before
 connecting.
 """
 
@@ -109,7 +109,7 @@ def test_migrations_cover_orm_tables(scratch_db_url):
 
     A table present in models.py but absent from the migration chain means a
     fresh production deploy (which runs alembic, not create_all) would be
-    missing it — the classic drift this test exists to catch.
+    missing it, the classic drift this test exists to catch.
     """
     from openetruscan.db.models import Base
 

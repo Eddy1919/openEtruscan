@@ -31,7 +31,7 @@ Behavior
 Text-level disjointness
 -----------------------
 An id-only guard is not sufficient. The corpus holds 6,567 rows over 6,097
-distinct `canonical_transliterated` values — 470 rows repeat a text that also
+distinct `canonical_transliterated` values; 470 rows repeat a text that also
 appears under a *different* id (`mi`, `suθina`, `aplu`, `alpan` and other short
 formulaic items recur across genuinely distinct artifacts). An id-disjoint
 split therefore still leaks: the model can see the exact test string, with the
@@ -39,7 +39,7 @@ same label, during training.
 
 Measured on the frozen v2 split, which was generated before this guard existed:
 25/400 test rows (6.2%) had a bracket-stripped twin in the train pool and 23 of
-those twins carried the same label. The leak is not uniform — it concentrates in
+those twins carried the same label. The leak is not uniform; it concentrates in
 short, high-frequency forms, which are also the rows an LLM jury most reliably
 agrees on, so it is *enriched* in the unanimous candidate-gold set that carries
 the published metric rather than diluted across the full test pool.
@@ -51,7 +51,7 @@ only slightly, but the test pool may finish a few rows above `--n-test`. The
 run fails outright if any normalized text still appears on both sides.
 
 This script is a SPLIT generator. It does NOT label data. The test rows are
-still silver-labeled — the LLM-jury + adjudication pipeline replaces those
+still silver-labeled. The LLM-jury + adjudication pipeline replaces those
 labels with gold afterwards.
 """
 
@@ -287,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     # Stratum-proportional allocation with class-2 floor on each (label) bucket.
     test_ids: set[str] = set()
 
-    # First pass: enforce floor of 2 test rows per (label) — sample from the
+    # First pass: enforce floor of 2 test rows per (label); sample from the
     # most-confident, most-common stratum for each label.
     labels_seen: dict[str, list[str]] = defaultdict(list)
     for stratum, ids in strata.items():
@@ -371,7 +371,7 @@ def main(argv: list[str] | None = None) -> int:
         for insc_id in sorted(train_ids):
             f.write(json.dumps(_row(insc_id), ensure_ascii=False) + "\n")
 
-    # Contamination guard. An `assert` is the wrong tool here — `python -O`
+    # Contamination guard. An `assert` is the wrong tool here; `python -O`
     # strips it, and this is the check the frozen v2 split silently failed.
     if test_ids & train_ids:
         print(

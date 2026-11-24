@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Standalone training script — trains CharCNN and MicroTransformer on the corpus,
+Standalone training script that trains CharCNN and MicroTransformer on the corpus,
 prints a comparison table, and exports models.
 
 Usage:

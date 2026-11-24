@@ -2,17 +2,17 @@
 
 The v2.0 handoff bundle (`research/v2/handoff/v2.0-etr/`) was generated ad
 hoc from jury outputs that lived only in a since-retired GCP project's
-cloudbuild bucket — when that project went away, so did the ability to
+cloudbuild bucket. When that project went away, so did the ability to
 regenerate the bundle. This script makes the bundle a deterministic function
 of the in-repo adjudication artifacts, so it can never be orphaned again.
 
 Inputs are exactly what `classify_adjudicate.py` writes (queue JSONL, gold
 JSONL, summary JSON). Outputs mirror the v2.0 bundle's shape:
 
-- `adjudication_queue.csv` — every disagreement row, one column set per
+- `adjudication_queue.csv`: every disagreement row, one column set per
   rater (label / confidence / rationale), plus empty `adjudicator_decision`
   and `adjudicator_notes` columns for the human to fill in.
-- `spot_check_30_adjudicator_A.csv` / `_B.csv` — identical stratified
+- `spot_check_30_adjudicator_A.csv` / `_B.csv`: identical stratified
   30-row sub-samples drawn seeded from queue ∪ gold, for the blind
   inter-rater α ≥ 0.80 gate (`compute_alpha.py` in the bundle dir).
 

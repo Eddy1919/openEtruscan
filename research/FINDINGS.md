@@ -1,4 +1,4 @@
-# Rosetta Vector Space — findings, what works, what doesn't, what's next
+# Rosetta Vector Space: findings, what works, what doesn't, what's next
 
 *Honest writeup, dated 2026-05-06. Supersedes the optimistic framing in
 `ROADMAP.md` §"The Rosetta Vector Space".*
@@ -16,18 +16,18 @@ metric, here's the honest read:
 * **What works:** sub-word cognate retrieval (`fanu→fanum`,
   `hercle→hercules`, `menrva→minerva`), within-language semantic-field
   clustering (kinship terms cluster, theonyms cluster), and
-  proper-noun / theonym alignment — the parts of the cross-language
+  proper-noun / theonym alignment, the parts of the cross-language
   task where surface forms transfer.
 * **What doesn't:** mapping a semantically-equivalent lexical pair
   when surface forms are unrelated (`clan→filius`, `puia→uxor`,
   `lautn→familia`). Nothing in the encoder's training set told it
   these are equivalent, and no amount of pooling or normalisation
   recovers signal that was never there.
-* **Headline numbers (LaBSE, against the curated Bonfante anchors —
+* **Headline numbers (LaBSE, against the curated Bonfante anchors,
   61 pairs; prose long said 62, the module is the source of truth):**
   * Strict-lexical precision@10: **0.071** (3/42 evaluated pairs)
   * Semantic-field precision@10: **0.119** (5/42)
-  * For comparison, XLM-R baseline was 0.000 on both — LaBSE is a
+  * For comparison, XLM-R baseline was 0.000 on both; LaBSE is a
     real upgrade for this task, just not enough to clear the
     publication-grade ≥0.40 gate.
 
@@ -51,11 +51,11 @@ actual research utility.
    correspondences. The system recovers a number of these (in top-k,
    not always at rank 1): `menrva→minerva` (rank 7),
    `hercle→hercules` (rank 5), `fanu→fanum` (rank 1). Treat as
-   suggestive — overall semantic-field@10 is only ~0.12–0.19.
+   suggestive; overall semantic-field@10 is only ~0.12–0.19.
 3. **Within-language semantic-field exploration.** For an Etruscan
    query, the system returns Latin words with related meanings even
    when the exact target lemma is wrong. Example: `papa→avus`
-   (grandfather) returns `[papa, daddy, pater]` — `pater` (father)
+   (grandfather) returns `[papa, daddy, pater]`; `pater` (father)
    is at rank 3, semantically adjacent.
 4. **Multilingual nearest-neighbour browsing.** A platform other
    ancient-language work (Phoenician, Faliscan, Oscan) could plug
@@ -72,7 +72,7 @@ actual research utility.
 
 ---
 
-## How we got here — three iterations
+## How we got here: three iterations
 
 ### v1: XLM-RoBERTa-base + LoRA fine-tune
 
@@ -81,7 +81,7 @@ actual research utility.
   prod inscriptions over 5 epochs.
 * **Result on first eval:** strict-lexical precision@k = 0.000 across
   the board. Investigation showed all cosines were 0.9998+ (mean-pooled
-  XLM-R has severe anisotropy — Ethayarajh 2019; Mu et al 2018 "all-but-
+  XLM-R has severe anisotropy: Ethayarajh 2019; Mu et al 2018 "all-but-
   the-top"). Differences between hits and non-hits were sub-epsilon.
 
 ### v2: Per-language mean-centering on top of v1
@@ -90,7 +90,7 @@ actual research utility.
   re-L2-normalise.
 * **Result:** cosines decompressed nicely (single-language pairs now
   span 0.42–0.81 with real spread), but cross-language semantic
-  alignment remained weak — `cos(clan_ett, filius_lat)=0.73` was
+  alignment remained weak: `cos(clan_ett, filius_lat)=0.73` was
   beaten by `cos(clan_ett, rege_lat)=0.97` because the encoder still
   rewarded surface-form similarity over meaning.
 
@@ -104,7 +104,7 @@ actual research utility.
   handles pooling and normalisation correctly out-of-the-box.
 * **Result:** strict-lexical @10 went from 0.000 (XLM-R) to 0.071
   (LaBSE). Semantic-field @10 from 0.000 to 0.119. Cosines now span a
-  realistic range (`clan→filius=0.55`, `clan→tribe=0.88` —
+  realistic range (`clan→filius=0.55`, `clan→tribe=0.88`;
   `tribe` is a real semantic neighbour the system is correctly
   surfacing).
 
@@ -114,7 +114,7 @@ once that file lands; intermediate JSONL files are in
 
 ---
 
-## Headline — rosetta-eval-v1, 4-column head-to-head
+## Headline: rosetta-eval-v1, 4-column head-to-head
 
 The frozen `rosetta-eval-v1` benchmark (held-out 22-pair test split;
 `min_confidence=medium`; full methodology in
@@ -125,7 +125,7 @@ landed on 2026-05-11 with this table:
 |---|---:|---:|---:|---:|
 | `precision_at_k` (strict-lexical) | 0.0002 | 0.0000 | **0.0625** | 0.0000 |
 | `precision_at_k_semantic_field` | 0.0081 | 0.0000 | **0.1875** | 0.0625 |
-| `coverage_at_threshold` (cos ≥ 0.85) | — | — | 0.6875 | 1.0000 |
+| `coverage_at_threshold` (cos ≥ 0.85) | n/a | n/a | 0.6875 | 1.0000 |
 | `n_evaluated` / 22 | 22 | 22 | 16 | 16 |
 
 Source: [`eval/rosetta-eval-v1-20260511T080032Z.json`](../eval/rosetta-eval-v1-20260511T080032Z.json).
@@ -141,10 +141,10 @@ to four decimal places.
 
 2. **v4's high coverage@0.85 is misleading, not impressive.** v4
    returns Latin neighbours above cosine 0.85 for 100% of evaluated
-   source words — but those neighbours are morphological
+   source words, but those neighbours are morphological
    rhymes (`fanu → mateu, effectu, flatu, turnu, fluxu`, all
    `-u`-suffixed Latin nouns), not semantic matches. The high
-   cosines reflect XLM-R-base's known anisotropy — without contrastive
+   cosines reflect XLM-R-base's known anisotropy. Without contrastive
    training, all vectors crowd into a narrow cone of the embedding
    space, so "cosine 0.99" is essentially noise.
 
@@ -158,7 +158,7 @@ to four decimal places.
 4. **The v4 design hypothesis (LoRA on Etruscan + base XLM-R on Latin)
    failed.** The hope was that adapter fine-tuning on the Etruscan
    corpus would teach the encoder enough Etruscan-side structure that
-   the existing XLM-R Latin vectors would line up. They don't — XLM-R
+   the existing XLM-R Latin vectors would line up. They don't. XLM-R
    was never trained with cross-lingual alignment in mind, and a
    monolingual adapter doesn't bridge that gap.
 
@@ -178,7 +178,7 @@ dual-track loanword/semantic API). LaBSE stays the production default.
 
 ## P5 results so far
 
-### T5.1 — Cross-encoder rerank (negative result)
+### T5.1: Cross-encoder rerank (negative result)
 
 Per the WBS decision tree, gap-remains pushed us into P5. The first
 P5 lever is cross-encoder rerank: fetch top-N candidates from the
@@ -213,7 +213,7 @@ Sampling the rerank-promoted top-1s:
 
 The cross-encoder is treating the Etruscan source word as a sequence
 of Latin-script characters and matching against orthographic
-near-neighbours. It can't know `apa` is Etruscan for "father" — that
+near-neighbours. It can't know `apa` is Etruscan for "father"; that
 language pairing is absent from its training distribution. The
 fallback behaviour is surface-form similarity, which is the opposite
 of useful here: it actively promotes phonetic doppelgängers over the
@@ -230,7 +230,7 @@ examples of the specific language pair, which we don't have and the
 field doesn't have for Etruscan-Latin specifically.
 
 Implication for P5 sequencing: the *calibration* and *dual-track*
-levers (T5.2 / T5.3 / T5.4) are still on the table — they don't
+levers (T5.2 / T5.3 / T5.4) are still on the table; they don't
 require cross-encoder supervision. Pivot there. T5.1's negative
 result is itself publishable: "off-the-shelf MNL rerank does NOT
 transfer to ancient-language IR" is a useful contribution.
@@ -247,8 +247,8 @@ appear in the top-5 nearest Latin neighbours?*
 Three problems with this framing:
 
 1. **Circularity.** The eval set is the philological consensus. Any
-   training signal we'd add to push that metric up — short of
-   genuinely parallel data we don't have — is necessarily reflecting
+   training signal we'd add to push that metric up (short of
+   genuinely parallel data we don't have) is necessarily reflecting
    that same consensus back at us. A system that "passes" by training
    on consensus-extracted anchors hasn't *learned* anything; it's
    *recovered* what the textbook already says.
@@ -258,7 +258,7 @@ Three problems with this framing:
    eval ignored cases where the system correctly identified the
    semantic field but picked a different specific Latin word. Example
    under strict-lexical, `papa→avus` is a miss; the actual top-3 was
-   `[papa, daddy, pater]` — kinship terms clustering correctly. The
+   `[papa, daddy, pater]`, kinship terms clustering correctly. The
    system understood the question; the metric refused partial credit.
 
 3. **No held-out split.** All pairs (then counted as 62) were train-test ambiguous in
@@ -270,16 +270,16 @@ Three problems with this framing:
 [`eval/harness/run_rosetta_eval.py`](../eval/harness/run_rosetta_eval.py) now
 computes both:
 
-* **`precision_at_k` (strict-lexical)** — the original metric.
+* **`precision_at_k` (strict-lexical)**: the original metric.
   Retained for historical comparability and as a hard upper-bound on
   the system's lexical-equivalence capability.
-* **`precision_at_k_semantic_field`** — was *any* Latin word from the
+* **`precision_at_k_semantic_field`**: was *any* Latin word from the
   expected category's vocabulary in top-k? Categories: `kinship`,
   `civic`, `religious`, `time`, `numeral`, `verb`, `theonym`,
   `onomastic`. Per-category Latin reference vocabularies are
   curated in
-  [`eval/harness/latin_semantic_fields.py`](../eval/harness/latin_semantic_fields.py)
-  — derived from the eval set's expected lemmas plus standard
+  [`eval/harness/latin_semantic_fields.py`](../eval/harness/latin_semantic_fields.py),
+  derived from the eval set's expected lemmas plus standard
   morphological / synonym extensions an undergrad classics student
   would unambiguously assign to the same field.
 
@@ -288,7 +288,7 @@ for the use cases the system actually supports; the strict-lexical
 one stays so we can track when (if ever) we get to a point where the
 model genuinely encodes lexical equivalence.
 
-### Per-pair examples — where field-match adds signal
+### Per-pair examples: where field-match adds signal
 
 | Etruscan | Expected | top-3 returned | strict | field |
 |---|---|---|---|---|
@@ -305,7 +305,7 @@ that strict-lexical missed.
 
 ## P4 results so far
 
-### T4.1 + T4.2 — primary-source anchor mining yield
+### T4.1 + T4.2: primary-source anchor mining yield
 
 Per the WBS decision tree, the gap-still-remains verdict after P5
 pushed us into P4: mine the ~1,800 classical-author passages that
@@ -318,7 +318,7 @@ followed by [`scripts/research/review_anchors.py`](../scripts/research/review_an
 for keep/skip/edit triage + dedup against the rosetta-eval-v1 test
 split. Originally specified for Claude Sonnet via Anthropic-on-Vertex
 but the publisher hasn't been enabled in the project (manual
-Terms-of-Service click) — Gemini 2.5 Pro substituted cleanly.
+Terms-of-Service click); Gemini 2.5 Pro substituted cleanly.
 
 **Pipeline stats:**
 
@@ -366,11 +366,11 @@ Camars   → Clusium  (Livy ×2)                old Etruscan name for Clusium
 Materinam → plaga   (Livy)                   Etruscan name for a region
 ```
 
-### Gate check — T4.3 status
+### Gate check: T4.3 status
 
 The WBS T4.3 spec requires **≥ 30 train-eligible attested pairs**
 before the conditional contrastive LaBSE fine-tune runs. Current
-yield is **17** — well below the gate. Per the decision tree:
+yield is **17**, well below the gate. Per the decision tree:
 
 ```text
 P4 → conditional contrastive fine-tune
@@ -384,7 +384,7 @@ P4 → conditional contrastive fine-tune
 classical-literature treatment of the Etruscans yields **17 verbatim
 bilingual gloss attestations** (and that with a state-of-the-art LLM
 combing every passage exhaustively for the strict pattern). Etruscan
-isn't *under-attested* — it's *unattested* in the bilingual-gloss
+isn't *under-attested*; it's *unattested* in the bilingual-gloss
 register Latin and Greek authors used for Greek loanwords or
 technical terms. The Roman literary record knows Etruscan ritual
 practice deeply but barely names a dozen Etruscan *words*.
@@ -406,13 +406,13 @@ Of the 17 train-eligible pairs, three structural patterns dominate:
    famous for.
 
 3. **Topographic / institutional names (~5 pairs).** Asilos / Aesis,
-   Celeres bodyguard, Luceres tribe — Etruscan-origin proper nouns
-   that the Roman state inherited.
+   Celeres bodyguard, Luceres tribe (Etruscan-origin proper nouns
+   that the Roman state inherited).
 
 Group 2 (the 5 etymological pairs) is what the WBS fine-tune
 *wanted* to amplify. With LaBSE already returning *aesar* → *deus*
 in its top-5 (the canonical case), the leverage from contrastive
-fine-tuning on 5 examples — at most 5 — is unlikely to move the
+fine-tuning on 5 examples (at most 5) is unlikely to move the
 top-line `field@10` enough to clear the 0.20 publish gate.
 
 ### Implication for sequencing
@@ -428,7 +428,7 @@ T4.3 is **gated-off**. The path forward per the decision tree is:
   fail in low-resource settings for principled, characterisable
   reasons.
 * **(option B) Hard-negative-mining last-resort.** The WBS leaves the
-  door open for this — manufacture contrastive negatives from
+  door open for this. Manufacture contrastive negatives from
   near-orthographic mismatches in the existing corpus and fine-tune
   on those. Cheap, but high risk of overfitting to surface form.
 * **(option C) Active learning + qualitative-review track.** Document
@@ -443,12 +443,12 @@ escalate via option B or pivot via option C.
 
 ---
 
-## What's still missing — scientific rigour gaps
+## What's still missing: scientific rigour gaps
 
 Acknowledging where we still fall short of publishable rigour:
 
 1. ~~**No held-out anchor split.**~~ **Addressed in T1.3.** The 61
-   anchors (earlier prose said 62; the module is the source of truth —
+   anchors (earlier prose said 62; the module is the source of truth;
    see the 2026-07-17 verification note in
    [`notes/reproduce-rosetta-eval-v1.md`](notes/reproduce-rosetta-eval-v1.md))
    are stratified 39/22 by `(category, confidence)` with a reproducible
@@ -527,12 +527,12 @@ In rough priority order, all aimed at *scientific defensibility* over
 
 1. **Add Levenshtein + random baselines** to the eval harness.
    *Without these, "0.071 strict-lexical" has no context.*
-2. **Build the qualitative-review pipeline** — a tiny CLI or notebook
+2. **Build the qualitative-review pipeline**: a tiny CLI or notebook
    that pulls top-k for ~50-100 Etruscan words not in the anchor set,
    formats them as a review packet, lets a domain expert mark
    plausible / implausible / interesting. Output: a numerical
    "qualitative novelty score" alongside the strict + field metrics.
-3. **Mine the Perseus primary-source corpus we already extracted** —
+3. **Mine the Perseus primary-source corpus we already extracted**:
    1,795 Etruscan-mentioning passages from Livy / Dionysius / Cicero /
    Plutarch / Strabo / Pliny. Use an LLM **as a parser, not an oracle**
    to extract attested bilingual glosses from those passages
@@ -541,7 +541,7 @@ In rough priority order, all aimed at *scientific defensibility* over
    anchors. Use them with proper held-out split for a contrastive
    LaBSE fine-tune. Cost ~$2-4 in LLM API.
 4. **Phoenician + Oscan + Coptic populate.** Same pattern as Latin/
-   Greek — base LaBSE, no adapter, vocab from external source. The
+   Greek: base LaBSE, no adapter, vocab from external source. The
    Rosetta initiative was always supposed to span more than three
    languages.
 5. **Frozen reference benchmark + leaderboard.** Lock the current
@@ -561,7 +561,7 @@ languages"). The infrastructure works. The holy-grail problem still
 isn't solved, because it requires alignment supervision the encoders
 don't have and the corpus can't provide.
 
-What we *do* have is a **research-assistant browser** — fast, free,
+What we *do* have is a **research-assistant browser**, fast, free,
 and good at the parts of the problem where surface signal transfers
 (theonyms, loanwords, semantic-field exploration). That's a real
 useful product for a real audience (digital classics labs, museum

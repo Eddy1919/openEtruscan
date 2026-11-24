@@ -10,7 +10,7 @@ and push from that checked copy rather than editing on the Hub.
 
 This deliberately does NOT reuse `hf_sync.py --upload`. That helper calls
 `upload_folder` on the git-ignored `data/models/` tree, which would push
-whatever happens to be on the maintainer's disk — the opposite of a
+whatever happens to be on the maintainer's disk, the opposite of a
 reviewable, reproducible correction. This script uploads exactly one file.
 
 Requires `HF_TOKEN` in the environment or `.env`. Dry-run by default: the

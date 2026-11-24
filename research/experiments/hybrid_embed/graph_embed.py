@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Step 3 — relational graph vectors via node2vec (DeepWalk special case,
+"""Step 3: relational graph vectors via node2vec (DeepWalk special case,
 p=q=1) over the inscription–entity graph.
 
-Graph construction (no external metadata needed — the published CSV carries
+Graph construction (no external metadata needed; the published CSV carries
 no findspot/pleiades columns):
   * one node per inscription id
   * one node per (ROLE, filler) entity extracted by the shared heuristic
-    role parser (roles.py) — praenomina, gentilicia, patronymics, theonyms,
+    role parser (roles.py): praenomina, gentilicia, patronymics, theonyms,
     verbs, status words
   * undirected edge inscription ↔ entity for every extracted role
 
 Random walks over this bipartite graph put inscriptions that share clans,
-name formulas, or dedication verbs — or that are linked through multi-hop
-chains (same gentilicium via different praenomina) — near each other.
+name formulas, or dedication verbs, or that are linked through multi-hop
+chains (same gentilicium via different praenomina), near each other.
 
 Trained with a skip-gram + negative-sampling objective in plain torch
 (gensim is not a project dependency).

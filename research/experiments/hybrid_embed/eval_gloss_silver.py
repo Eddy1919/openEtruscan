@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""WP10 eval — word-level gloss retrieval on (a) the 71-item silver eval
+"""WP10 eval: word-level gloss retrieval on (a) the 71-item silver eval
 (held-out gold_glosses records, no rosetta overlap) and (b) the frozen
 rosetta gloss test (n=22), for one or more trained tags.
 
 Candidate pool for the silver eval: every distinct gloss string across
-gg_train + gg_silver (~250+) — a much harder pool than rosetta's 60.
+gg_train + gg_silver (~250+), a much harder pool than rosetta's 60.
 
 Usage: python eval_gloss_silver.py --tags v1 frozen_aug_mined frozen_gg ...
 Output: out/gloss_silver_results.json

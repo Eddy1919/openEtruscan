@@ -7,7 +7,7 @@ from openetruscan.core.leiden import EditorialSpan, gap_extent, parse_leiden
 # Each case: raw edition string, expected stripped text, expected spans
 # as (kind, start, end, source), expected warning fragments.
 CASES = [
-    # No markup at all — parser must be a strict no-op.
+    # No markup at all; parser must be a strict no-op.
     ("larθal", "larθal", [], []),
     ("", "", [], []),
     ("mi larθal śuθi", "mi larθal śuθi", [], []),

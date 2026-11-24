@@ -7,7 +7,7 @@ import json
 import pytest
 
 # ---------------------------------------------------------------------------
-# Check torch availability — skip tests if not installed
+# Check torch availability; skip tests if not installed
 # ---------------------------------------------------------------------------
 
 torch = pytest.importorskip("torch", reason="PyTorch not installed")
@@ -123,7 +123,7 @@ class TestNeuralClassifier:
     with `pytest -m slow tests/test_neural.py` to exercise the path.
 
     Marked `requires_postgres` because the training path loads its labelled
-    samples through `Corpus`, which drives psycopg2 directly — on the SQLite
+    samples through `Corpus`, which drives psycopg2 directly; on the SQLite
     fallback it raises `ProgrammingError: invalid dsn` instead of skipping.
     """
 

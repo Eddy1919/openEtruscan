@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""WP10 prep — turn research/anchors/gold_glosses/gold_glosses.jsonl into
+"""WP10 prep: turn research/anchors/gold_glosses/gold_glosses.jsonl into
 training pairs and a silver word-level eval.
 
 Tiers and guards (implemented in research/anchors/gold_glosses/gloss_splits.py,
@@ -12,8 +12,8 @@ shared with the human verification worksheet):
   * split is deterministic (sha1 of the etr form): ~80% train / 20% silver
     eval
 
-Outputs: out/gg_train_pairs.csv   (surface, translation)  — training tier
-         out/gg_silver_eval.csv   (surface, translation)  — silver eval
+Outputs: out/gg_train_pairs.csv   (surface, translation), training tier
+         out/gg_silver_eval.csv   (surface, translation), silver eval
 """
 
 from __future__ import annotations

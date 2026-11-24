@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# etr-lora-v4 — retrained on the polished V3 corpus (canonical_clean,
+# etr-lora-v4, retrained on the polished V3 corpus (canonical_clean,
 # after normalize_inscriptions.py removed Cyrillic/Latin-Ext-B mirror-glyph
 # corruption, unified sibilant variants σ/ś/š/ς → SAN, and regenerated
 # Old Italic glyphs consistently).
@@ -9,7 +9,7 @@
 #   2. adapter: etr-lora-v3 → etr-lora-v4
 #   3. epochs:  5 → 5 (unchanged; v3 converged in 5)
 #
-# The training script (train_etruscan_lora.py) is unchanged — gains come
+# The training script (train_etruscan_lora.py) is unchanged; gains come
 # entirely from cleaner data.
 #
 # Expected wall time: ~30-60 min on T4, ~$0.40.

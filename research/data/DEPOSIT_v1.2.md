@@ -1,4 +1,4 @@
-# Dataset deposit v1.2 — checklist
+# Dataset deposit v1.2: checklist
 
 Goal: publish `openetruscan_clean_v12.csv` = the frozen v1.1 grouped rows
 plus the metadata columns the export has never carried (findspot,
@@ -51,7 +51,7 @@ heuristic because `language` is dropped at export.
    upload v12 csv alongside the byte-identical v1.1 files, update the
    deposit description (new columns + bilingual annotation provenance:
    Benelli 1994 corpus, per van Heems' appendix). Publishing mints the new
-   version DOI — cite it in README.md and research/data/README.md.
+   version DOI, so cite it in README.md and research/data/README.md.
 
 6. **Docs**: extend the schema table in `research/data/README.md` with the
    new columns; delete the "Columns this export does not carry" caveats

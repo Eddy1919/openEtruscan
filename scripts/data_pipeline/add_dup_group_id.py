@@ -4,8 +4,8 @@
 Why these columns exist
 -----------------------
 The published corpus holds 6,567 rows over 6,097 distinct
-`canonical_transliterated` values. The repeats are usually *correct* — `mi`
-("I am") really is carved on eight different artifacts — so the deposit must
+`canonical_transliterated` values. The repeats are usually *correct*. `mi`
+("I am") really is carved on eight different artifacts, so the deposit must
 not be deduplicated (that would destroy the artifact record). But repeated
 texts mean row-level random train/test splits leak: the same string, with the
 same label, lands on both sides under different ids. That leak contaminated
@@ -16,7 +16,7 @@ just this repository's own pipeline: split on groups, not rows. Grouping is
 by the same normalization the split generator uses (`text_key`: Leiden
 markup stripped, whitespace collapsed, casefolded), so `la(u)tni`,
 `lautn(i)` and `laut(n)i` share a group. The id is the first 12 hex chars of
-the SHA-256 of the normalized text — stable across row order, corpus
+the SHA-256 of the normalized text and is stable across row order, corpus
 version, and file encoding. Rows whose text is entirely editorial markup
 (`[---]`, `[?]`) normalize to the empty string and get a per-row group of
 size 1 rather than being fused into one blob.

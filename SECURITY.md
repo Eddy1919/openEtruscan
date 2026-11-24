@@ -3,7 +3,7 @@
 ## Supported Versions
 
 Mirrors `supported_versions` in [`release-manifest.json`](release-manifest.json),
-which CI enforces — edit the manifest first.
+which CI enforces, so edit the manifest first.
 
 | Version | Supported          |
 |---------|-------------------|

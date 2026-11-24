@@ -253,7 +253,7 @@ async def test_populate_then_query_via_mock(db_session):
 
     # Populate Etruscan and Latin with overlapping word-strings so the
     # cosines are non-trivial. Mock vectors are deterministic per word,
-    # so ett['clan'] and lat['clan'] are the same vector — which means
+    # so ett['clan'] and lat['clan'] are the same vector, which means
     # ett 'clan' should rank lat 'clan' first.
     await populate_language(
         language="ett",
@@ -274,7 +274,7 @@ async def test_populate_then_query_via_mock(db_session):
     # partition (DEFAULT_EMBEDDER); populate_language wrote into the
     # MockEmbedder's own partition, so the filter must name it explicitly.
     # (This test predates the T2.3 partitioning and silently skipped in CI
-    # for months because the service image lacked pgvector — the mismatch
+    # for months because the service image lacked pgvector; the mismatch
     # surfaced the day the skip was removed.)
     hits = await find_cross_language_neighbours(
         word="clan",
@@ -294,13 +294,13 @@ async def test_populate_then_query_via_mock(db_session):
 
 
 # ---------------------------------------------------------------------------
-# T2.3 — partitioned embedder behaviour
+# T2.3: partitioned embedder behaviour
 # ---------------------------------------------------------------------------
 #
 # These tests guard the contract that a single (language, word) can carry
 # vectors from multiple (embedder, embedder_revision) partitions without
 # one's ingest overwriting the other. They run against a real Postgres
-# (skip cleanly if pgvector isn't available — same pattern as the
+# (skip cleanly if pgvector isn't available, same pattern as the
 # populate-then-query test above).
 
 
@@ -484,7 +484,7 @@ async def test_find_cross_language_empty_partition(db_session):
     )
     await db_session.commit()
 
-    # Query the v4 partition — source word doesn't exist there, expect [].
+    # Query the v4 partition. Source word doesn't exist there, expect [].
     hits = await find_cross_language_neighbours(
         word="only-in-default",
         source_lang="ett",

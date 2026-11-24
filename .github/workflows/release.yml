@@ -3,7 +3,7 @@ name: Release
 # Tag-triggered releases: push an annotated tag `vX.Y.Z` and this creates
 # the GitHub Release with notes extracted from that version's CHANGELOG
 # section. The Zenodo GitHub integration then archives the release and
-# mints the versioned DOI from .zenodo.json — publishing a release IS the
+# mints the versioned DOI from .zenodo.json. Publishing a release IS the
 # archival step, so tags only get pushed when CHANGELOG, pyproject,
 # CITATION.cff, and codemeta.json already agree on the version.
 #
@@ -77,8 +77,8 @@ jobs:
   publish:
     # Publish to PyPI only after `release` has passed the manifest check, so a
     # tag whose surfaces disagree never reaches the index. PyPI is the one
-    # surface here that is genuinely irreversible — a version number cannot be
-    # reused or replaced, only yanked — which is why it runs last and behind
+    # surface here that is genuinely irreversible (a version number cannot be
+    # reused or replaced, only yanked), which is why it runs last and behind
     # every gate.
     #
     # ONE-TIME SETUP (no secret is ever stored):
@@ -92,7 +92,7 @@ jobs:
     #      between the tag and the upload.
     # After that, `git tag v1.2.0 && git push --tags` publishes. If step 1 is
     # skipped this job fails with an OIDC error and the GitHub Release still
-    # succeeds — the release is not held hostage to the setup.
+    # succeeds; the release is not held hostage to the setup.
     needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -119,7 +119,7 @@ jobs:
 
       - name: Verify the built version matches the tag
         # `python -m build` reads pyproject, which `release` already checked
-        # against the manifest — but the artifact filename is what PyPI
+        # against the manifest, but the artifact filename is what PyPI
         # actually indexes, and an unexpected name here means something
         # rewrote the version during the build.
         run: |

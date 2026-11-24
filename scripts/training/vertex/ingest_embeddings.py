@@ -1,7 +1,7 @@
 """Stream embedding JSONL files from GCS into ``language_word_embeddings``.
 
 Run from a host that can reach the prod Postgres (e.g. inside the
-openetruscan-eu VM via IAP — same path you used for the inscriptions
+openetruscan-eu VM via IAP, the same path you used for the inscriptions
 dump). Reads ``{language, word, vector}`` JSONL, upserts in batches.
 
 Usage (v3 + v4-style coexist after T2.3 lands)::
@@ -52,7 +52,7 @@ async def _stream_gcs_jsonl(uri: str) -> AsyncIterator[dict]:
     never lands on disk. Local file paths (anything that doesn't
     match the ``gs://`` prefix) are read line-by-line via a worker
     thread, so the same script works in environments without
-    ``gcloud`` installed — notably the Container-Optimized-OS VM
+    ``gcloud`` installed, notably the Container-Optimized-OS VM
     that pre-stages JSONLs via a sidecar ``google/cloud-sdk`` docker
     container before the openetruscan-api image processes them.
     """
@@ -108,8 +108,8 @@ async def _assert_extended_pk(session_maker) -> None:
 
     Without the extended PK, ``ON CONFLICT (language, word, embedder,
     embedder_revision)`` would silently do nothing on existing
-    (language, word) hits and the ingest would *partially* succeed —
-    new rows go in, conflicting ones get clobbered through a fallback.
+    (language, word) hits and the ingest would *partially* succeed.
+    New rows go in, conflicting ones get clobbered through a fallback.
     Surface the missing migration loudly instead.
     """
     check = text(
