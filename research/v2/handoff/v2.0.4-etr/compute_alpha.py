@@ -4,7 +4,8 @@ Usage:
     python compute_alpha.py spot_check_30_adjudicator_A.csv spot_check_30_adjudicator_B.csv
 
 Reports:
-- α overall on the `adjudicator_decision` column
+- α overall on the `adjudicator_decision` column, with a 95% bootstrap
+  interval over rows (informational: the gate below reads the point estimate)
 - Per-row disagreements (so you can look at them)
 - Recommendation (proceed / revise codebook / abort)
 
@@ -14,6 +15,7 @@ No external dependencies — pure Python 3.10+.
 from __future__ import annotations
 
 import csv
+import random
 import sys
 from pathlib import Path
 
@@ -55,6 +57,20 @@ def krippendorff_alpha_nominal(ratings: list[list[str | None]]) -> float:
     return 1.0 - obs / exp
 
 
+def bootstrap_interval(
+    ratings: list[list[str | None]], n_boot: int = 5000, seed: int = 42
+) -> tuple[float, float]:
+    """95% percentile bootstrap interval for α, resampling rows."""
+    rng = random.Random(seed)
+    draws = []
+    for _ in range(n_boot):
+        a = krippendorff_alpha_nominal([rng.choice(ratings) for _ in ratings])
+        if a == a:  # skip NaN draws (every resampled row identical)
+            draws.append(a)
+    draws.sort()
+    return draws[int(0.025 * len(draws))], draws[int(0.975 * len(draws)) - 1]
+
+
 def load_decisions(path: Path) -> dict[str, str]:
     out: dict[str, str] = {}
     with path.open() as f:
@@ -85,7 +101,11 @@ def main() -> int:
     print(f"Adjudicator B: {b_path.name}  ({len(b)} decisions)")
     print(f"Rated by both: {len(rated)} rows")
     print(f"Agreement    : {agree}/{len(rated)} = {agree / max(len(rated), 1):.1%}")
-    print(f"Krippendorff α: {alpha:.3f}\n")
+    if len(rated) >= 2:
+        lo, hi = bootstrap_interval(rated)
+        print(f"Krippendorff α: {alpha:.3f}  (95% bootstrap interval {lo:.2f} to {hi:.2f})\n")
+    else:
+        print(f"Krippendorff α: {alpha:.3f}\n")
 
     if disagree:
         print(f"── disagreements ({len(disagree)}) ──")
@@ -94,7 +114,7 @@ def main() -> int:
         print()
 
     if alpha >= 0.80:
-        print("→ α ≥ 0.80: codebook is reliable. Proceed to full 79-row adjudication.")
+        print("→ α ≥ 0.80: codebook is reliable. Proceed to the full adjudication queue.")
         return 0
     elif alpha >= 0.60:
         print("→ 0.60 ≤ α < 0.80: codebook is partially reliable.")

@@ -53,6 +53,7 @@ research/v2/
 │   ├── lacuna_metrics.py        char-acc, hallucination-rate, span coverage
 │   ├── compute_lacuna_v2.py     lacuna jury output → per-model metrics
 │   ├── split_contamination.py   train/test text-overlap audit for a frozen split
+│   ├── spotcheck_power.py       how often an n-row spot-check decides α ≥ 0.80 correctly
 │   └── semantic_fields.json     frozen semantic-field vocabularies
 ├── data/
 │   ├── README.md                split provenance and repair history
@@ -126,7 +127,7 @@ Rows where the jury disagrees, or agrees with a low-confidence rating, go to the
 
 At v2.0.4 the jury produced candidate gold for 167 of 427 rows (39%), queued 59 (14%), and set 201 (47%) aside as all-unsure.
 
-Krippendorff α between two human adjudicators must reach ≥ 0.80 on the 30-row spot-check before the gold set ships. That check has not been done.
+Krippendorff α between two human adjudicators must reach ≥ 0.80 on the 30-row spot-check before the gold set ships. That check has not been done. Thirty rows decide that gate loosely: if the true α is 0.85 the point estimate falls below 0.80 a quarter of the time, and if it is 0.75 it passes 29% of the time (`eval/spotcheck_power.py`). The pre-registered gate is unchanged; `compute_alpha.py` now prints a bootstrap interval next to the estimate so a near-threshold result is read as such.
 
 ## Honest limitations
 
