@@ -1,5 +1,5 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.2
-sentence-transformers==5.6.0
+sentence-transformers==6.2.0
 torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
