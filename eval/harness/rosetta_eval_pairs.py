@@ -32,7 +32,6 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
-
 VALID_CATEGORIES = (
     "kinship",
     "civic",

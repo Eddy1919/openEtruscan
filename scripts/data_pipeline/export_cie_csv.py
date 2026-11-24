@@ -4,8 +4,8 @@ Export CIE VLM extractions to CSV for manual review.
 Detects potential Latin intrusions based on phonological heuristics.
 """
 
-import json
 import csv
+import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent

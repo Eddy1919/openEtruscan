@@ -1,6 +1,7 @@
 import sqlite3
-import psycopg2
 from pathlib import Path
+
+import psycopg2
 
 # Setup Path to include src for core imports
 repo_root = Path(__file__).resolve().parent.parent.parent
@@ -8,8 +9,9 @@ import sys
 
 sys.path.append(str(repo_root / "src"))
 
-from openetruscan.core.normalizer import normalize
 from provenance_values import provenance_status_for_findspot
+
+from openetruscan.core.normalizer import normalize
 
 sqlite_db_path = repo_root / "data" / "cie" / "databases" / "cie_rescued.db"
 

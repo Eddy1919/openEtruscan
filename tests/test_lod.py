@@ -1,12 +1,12 @@
 """Tests for the Linked Open Data module."""
 
-import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import urlparse
 
-from openetruscan.core.corpus import Corpus, Inscription
+import pytest
+
 from openetruscan.api.lod import (
     get_eagle_uri,
     get_pleiades_uri,
@@ -17,6 +17,7 @@ from openetruscan.api.lod import (
     reconcile_trismegistos,
     reconcile_wikidata,
 )
+from openetruscan.core.corpus import Corpus, Inscription
 
 
 class TestPleiadesURI:

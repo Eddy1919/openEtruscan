@@ -4,14 +4,14 @@ Cloud Run microservice that restores lacunae in damaged Etruscan
 inscriptions. `POST /restore` accepts Leiden-notation text
 (`lar[---]al velinas`) and returns ranked character-level restorations.
 The API proxies to it when `byt5_service_url` is configured (see
-`src/openetruscan/api/server.py`); otherwise the API falls back to
+`src/openetruscan/api/routes/neural.py`); otherwise the API falls back to
 in-process inference.
 
 ## Configuration
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
-| `MODEL_URI` | **yes** | HuggingFace repo id or local path of the checkpoint to serve. No default — see below. |
+| `MODEL_URI` | **yes** | HuggingFace repo id or local path of the checkpoint to serve. No default; see below. |
 | `MODEL_VERSION` | no | Adapter name stamped on every response (default `byt5-lacunae-v1`). |
 | `CACHE_PATH` | no | SQLite prediction-cache location (default `/tmp/byt5_cache.db`). |
 
@@ -32,7 +32,7 @@ what a deployed instance actually serves is observable from outside:
 ## Build and deploy
 
 The Dockerfile can pre-download a checkpoint into the image's HF cache
-(`PREBAKE_MODEL_URI` build arg) so cold starts skip the download — cache
+(`PREBAKE_MODEL_URI` build arg) so cold starts skip the download. This is cache
 warming only, and only when it matches the runtime `MODEL_URI`.
 `gcloud run deploy --source` (below, and `scripts/ops/deploy-byt5.sh`)
 has no build-arg passthrough: prebaking requires a manual image build

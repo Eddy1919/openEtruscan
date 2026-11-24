@@ -63,10 +63,9 @@ import csv
 import json
 import re
 import sys
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Iterable, Iterator
-
 
 # ---------------------------------------------------------------------------
 # Mapping tables

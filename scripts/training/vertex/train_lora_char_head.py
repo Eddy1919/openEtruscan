@@ -88,7 +88,7 @@ NUM_CHARS = len(ETRUSCAN_CHARS)
 # ── Dataset ───────────────────────────────────────────────────────────
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 class CharPredictionDataset(Dataset):
@@ -241,8 +241,9 @@ def main() -> int:
     _ensure_deps()
 
     from functools import partial
-    from transformers import AutoModel, AutoTokenizer
+
     from peft import PeftModel
+    from transformers import AutoModel, AutoTokenizer
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     log.info("torch=%s device=%s", torch.__version__, device)

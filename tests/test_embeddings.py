@@ -16,7 +16,6 @@ from openetruscan.ml.embeddings import (
     MockEmbedder,
 )
 
-
 # ---------------------------------------------------------------------------
 # MockEmbedder (the unconditional path)
 # ---------------------------------------------------------------------------

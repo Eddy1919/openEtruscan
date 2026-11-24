@@ -1,7 +1,8 @@
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from openetruscan.db.models import Base, Entity, Relationship, Clan
-from openetruscan.db.repository import InscriptionRepository, InscriptionData
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from openetruscan.db.models import Base, Clan, Entity, Relationship
+from openetruscan.db.repository import InscriptionData, InscriptionRepository
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 engine = create_async_engine(TEST_DATABASE_URL)

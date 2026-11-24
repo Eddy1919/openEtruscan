@@ -17,9 +17,8 @@ import contextlib
 import re
 import unicodedata
 import xml.etree.ElementTree as ET  # nosec B405
-from typing import TYPE_CHECKING
-
 from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 from openetruscan.core.leiden import EditorialSpan, gap_extent
 

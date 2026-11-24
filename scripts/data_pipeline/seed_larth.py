@@ -27,8 +27,9 @@ import yaml
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from openetruscan.core.corpus import Corpus, Inscription
 from provenance_values import provenance_status_for_findspot
+
+from openetruscan.core.corpus import Corpus, Inscription
 from openetruscan.core.normalizer import normalize
 
 LARTH_URL = (

@@ -1,8 +1,8 @@
 import csv
 import gzip
 import json
-import urllib.request
 import os
+import urllib.request
 from pathlib import Path
 
 URL = "http://atlantides.org/downloads/pleiades/dumps/pleiades-places-latest.csv.gz"

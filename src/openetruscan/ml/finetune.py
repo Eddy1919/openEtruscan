@@ -53,10 +53,10 @@ logger = logging.getLogger("openetruscan.finetune")
 def _require_transformers() -> None:
     """Hard-fail with a clear message when the [transformers] extra is missing."""
     try:
+        import datasets  # noqa: F401
+        import peft  # noqa: F401
         import torch  # noqa: F401
         import transformers  # noqa: F401
-        import peft  # noqa: F401
-        import datasets  # noqa: F401
     except ImportError as e:
         raise ImportError(
             "Fine-tuning requires the [transformers] extra: "

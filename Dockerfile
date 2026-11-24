@@ -43,8 +43,8 @@ COPY --from=builder /install /usr/local
 COPY src/ src/
 COPY alembic.ini ./
 
-# Ship ONLY the canonical attested-anchors JSONL — not the whole
-# research/anchors/ directory. server.py's _load_attested_jsonl() looks
+# Ship ONLY the canonical attested-anchors JSONL, not the whole
+# research/anchors/ directory. api/routes/anchors.py's _load_attested_jsonl() looks
 # at /app/research/anchors/attested.jsonl as a fallback path; without
 # this COPY the /anchors/attested endpoint returns {"items": [], "count": 0}
 # in prod and the frontend ProposeCard can't render its "attested" status

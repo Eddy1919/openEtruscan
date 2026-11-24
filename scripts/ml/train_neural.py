@@ -17,6 +17,7 @@ from pathlib import Path
 def main() -> None:
     import os
     import sys
+
     from dotenv import load_dotenv
 
     # Add src to path

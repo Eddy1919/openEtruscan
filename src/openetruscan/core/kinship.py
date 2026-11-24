@@ -3,8 +3,8 @@ Kinship Reconciliation Engine — Bridges epigraphic family structures with biol
 """
 
 import logging
-from typing import Any
 from dataclasses import dataclass
+from typing import Any
 
 from openetruscan.core.corpus import Corpus
 

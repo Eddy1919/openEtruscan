@@ -1,5 +1,5 @@
 """
-ByT5 Lacuna Restorer — Cloud Run microservice.
+ByT5 Lacuna Restorer, a Cloud Run microservice.
 
 Exposes a single POST /restore endpoint that accepts damaged epigraphic text
 and returns probabilistic character-level restorations.
@@ -68,7 +68,7 @@ def _resolve_model_uri() -> str:
     Every response from this service is labelled with MODEL_VERSION
     (`byt5-lacunae-v1`), so a fallback to a base checkpoint such as
     `google/byt5-small` would serve weights that were never fine-tuned on
-    lacunae while still claiming the adapter's name — a silent provenance
+    lacunae while still claiming the adapter's name: a silent provenance
     lie. There is deliberately no default: a deployment must state which
     weights it serves, and a missing value kills the container at startup
     instead of letting the wrong model answer requests.
@@ -148,10 +148,10 @@ async def lifespan(app: FastAPI):
     # _ensure_model). An earlier attempt at eager loading in lifespan
     # was rejected by Cloud Run with "The user-provided container failed
     # to start and listen on the port defined ... within the allocated
-    # timeout" — loading byt5-small to memory takes ~25-45s on 1 CPU
+    # timeout". Loading byt5-small to memory takes ~25-45s on 1 CPU
     # and the lifespan startup blocks uvicorn from binding $PORT.
     # Cold-start tolerance is now handled at the *API* layer via the
-    # 90s httpx timeout (see openetruscan/api/server.py).
+    # 90s httpx timeout (see openetruscan/api/routes/neural.py).
     yield
     if _cache_conn:
         _cache_conn.close()
@@ -297,7 +297,7 @@ async def restore(req: RestoreRequest):
     # Real per-beam confidences. `sequences_scores` holds the length-normalised
     # log-probability of each returned beam (populated because num_beams > 1
     # and return_dict_in_generate=True). exp() maps them to probabilities,
-    # then we normalise across the returned beams so the scores sum to 1 —
+    # then we normalise across the returned beams so the scores sum to 1,
     # matching the probabilistic contract in the module docstring instead of
     # the old fabricated 1/(i+1) ranking.
     beam_probs = torch.exp(outputs.sequences_scores)

@@ -78,9 +78,9 @@ import logging
 import re
 import sys
 import time
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterator
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_INPUT = REPO_ROOT / "data" / "extracted" / "etruscan_passages.jsonl"

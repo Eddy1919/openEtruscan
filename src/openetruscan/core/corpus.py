@@ -7,8 +7,8 @@ from __future__ import annotations
 import csv
 import json
 import os
-from collections.abc import Iterator
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -704,11 +704,11 @@ class Corpus:
 
     def _ensure_db(self) -> None:
         """Create tables if they don't exist (ignored for read-only users)."""
+        import contextlib
+
         import psycopg2
 
         from openetruscan.core.artifacts import IMAGES_PG_SCHEMA
-
-        import contextlib
 
         with self._conn.cursor() as cur:
             # 1. Base Schema (always required)

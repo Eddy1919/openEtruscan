@@ -2,12 +2,12 @@
 OpenEtruscan core subpackage — normalizer, corpus, statistics, prosopography, and adapters.
 """
 
-from .adapter import LanguageAdapter, load_adapter, list_available_adapters
-from .artifacts import InscriptionImage, store_image, list_images
+from .adapter import LanguageAdapter, list_available_adapters, load_adapter
+from .artifacts import InscriptionImage, list_images, store_image
 from .corpus import Corpus, Inscription, SearchResults
 from .epidoc import corpus_to_epidoc, inscription_to_epidoc
 from .geo import haversine
-from .normalizer import normalize, NormResult
+from .normalizer import NormResult, normalize
 
 try:
     from .statistics import (

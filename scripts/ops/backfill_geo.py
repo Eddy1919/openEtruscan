@@ -6,16 +6,18 @@ Also updates the PostGIS `geom` column using standard spatial functions.
 """
 
 import asyncio
-import httpx
 import sys
 from pathlib import Path
+
+import httpx
 from sqlalchemy import text
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from openetruscan.db.session import get_engine
+from sqlalchemy import and_, select
+
 from openetruscan.db.models import Inscription
-from sqlalchemy import select, and_
+from openetruscan.db.session import get_engine
 
 
 async def backfill_geo():

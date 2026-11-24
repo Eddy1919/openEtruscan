@@ -7,13 +7,15 @@ and prosopographical network analysis via AsyncSession.
 
 from collections.abc import Sequence
 from typing import Any
-from sqlalchemy import ColumnExpressionArgument, select, func, and_, or_, text
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import insert
 
-from openetruscan.db.models import Inscription, Entity, Clan, Relationship
-from openetruscan.core.corpus import Inscription as InscriptionData, SearchResults
+from sqlalchemy import ColumnExpressionArgument, and_, func, or_, select, text
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from openetruscan.core.corpus import Inscription as InscriptionData
+from openetruscan.core.corpus import SearchResults
 from openetruscan.core.periodo import enrich_timeline_buckets
+from openetruscan.db.models import Clan, Entity, Inscription, Relationship
 
 
 class InscriptionRepository:

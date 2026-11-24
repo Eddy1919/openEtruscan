@@ -2,15 +2,15 @@
 Alembic migration environment — handles schema synchronization for PostgreSQL.
 """
 
-from logging.config import fileConfig
 import asyncio
 import os
-
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import create_async_engine
-from openetruscan.db.models import Base
+from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from openetruscan.db.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

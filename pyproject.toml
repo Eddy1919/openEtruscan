@@ -142,7 +142,7 @@ target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["F", "E", "B", "UP"]
+select = ["F", "E", "B", "UP", "I"]
 ignore = ["B904", "E501", "F821", "B008"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -151,6 +151,10 @@ ignore = ["B904", "E501", "F821", "B008"]
 "scripts/**" = ["E402"]
 "eval/**" = ["E402"]
 "tests/conftest.py" = ["E402"]
+# Research scripts import sibling modules through sys.path, which isort cannot
+# tell apart from third-party packages; the attic is a frozen audit trail.
+"research/**" = ["I001"]
+"scripts/attic/**" = ["I001"]
 
 [tool.mypy]
 python_version = "3.10"
