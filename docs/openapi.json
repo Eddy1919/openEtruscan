@@ -1280,6 +1280,47 @@
         ]
       }
     },
+    "/inscription/{inscription_id}/references": {
+      "get": {
+        "description": "Standard references (CIE, ET, TLE, TM, ...) and edition metadata for a record.",
+        "operationId": "get_inscription_references_inscription__inscription_id__references_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inscription_id",
+            "required": true,
+            "schema": {
+              "title": "Inscription Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Inscription References",
+        "tags": [
+          "Corpus"
+        ]
+      }
+    },
     "/inscriptions": {
       "post": {
         "description": "Import an inscription from EpiDoc TEI XML.\n\nSupports the ``Idempotency-Key`` header (RFC draft `idempotency-header`).\nA client retrying after a network blip can safely re-POST the same body\nwith the same key; the second call returns the cached response without\nre-running the EpiDoc parse and the upsert.",
@@ -1972,6 +2013,51 @@
         "summary": "Readiness Check",
         "tags": [
           "Health"
+        ]
+      }
+    },
+    "/resolve": {
+      "get": {
+        "description": "Resolve a standard reference to corpus records.\n\nAccepts CIE, ET/ET² sigla (with or without the ``ET`` prefix), TLE, TM\n(Trismegistos), CII, CIL and CIEP references. An exact record ID is\nreturned first when the text is one. Each match carries the alias\n``basis`` and ``confidence`` so callers can tell a direct concordance\nlink from a CIEP-numbering inference.",
+        "operationId": "resolve_reference_resolve_get",
+        "parameters": [
+          {
+            "description": "e.g. CIE 4538, Ta 3.6, TLE 570, TM 146600",
+            "in": "query",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "description": "e.g. CIE 4538, Ta 3.6, TLE 570, TM 146600",
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Reference",
+        "tags": [
+          "Corpus"
         ]
       }
     },

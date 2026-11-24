@@ -139,7 +139,10 @@ def inscription_to_jsonld(inscription, language: str = "ett") -> dict:
         if pid:
             pleiades_uri = f"{PLEIADES_BASE}{pid}"
 
-    tm_uri = get_trismegistos_uri(inscription.id)
+    # Same for Trismegistos: the column (backfilled from Burman's concordance
+    # by build_edition_layer.py) first, the legacy YAML mapping second.
+    tm_id = getattr(inscription, "trismegistos_id", None)
+    tm_uri = f"{TRISMEGISTOS_BASE}{tm_id}" if tm_id else get_trismegistos_uri(inscription.id)
     eagle_uri = get_eagle_uri(inscription.id)
     period = period_for_year(getattr(inscription, "date_approx", None))
 
@@ -293,7 +296,7 @@ def lod_stats(search_results) -> dict:
     for inscription in inscriptions:
         if inscription.findspot and get_pleiades_uri(inscription.findspot):
             pleiades_count += 1
-        if get_trismegistos_uri(inscription.id):
+        if getattr(inscription, "trismegistos_id", None) or get_trismegistos_uri(inscription.id):
             tm_count += 1
         if get_eagle_uri(inscription.id):
             eagle_count += 1

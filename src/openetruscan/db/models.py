@@ -347,3 +347,221 @@ class ProposedAnchor(Base):
         Index("ix_proposed_anchors_status_created", "status", "created_at"),
         Index("ix_proposed_anchors_etr_word", "etruscan_word"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Edition layer (migration j5f6a7b8c9d0)
+# ---------------------------------------------------------------------------
+
+# BIGINT on Postgres; INTEGER on SQLite, where only "INTEGER PRIMARY KEY"
+# autoincrements (the test fallback and the local pipeline DB are SQLite).
+_BIGINT_PK = BigInteger().with_variant(Integer(), "sqlite")
+
+
+class InscriptionAlias(Base):
+    """A standard reference (CIE, ET, TLE, TM, …) that resolves to a record.
+
+    Record IDs never change: the sitemap publishes them. Aliases let a
+    scholar reach a record by the reference they cite. One reference may
+    resolve to several records (Burman's "Multiple references?" cases, or
+    a CIE number shared by the parts of one monument), so ``lookup_key``
+    is indexed, not unique. ``basis`` says how the alias was derived:
+    ``own_id`` (the record ID is this reference), ``concordance`` (Burman's
+    concordance, reached through the record ID) or ``ciep_cie_numbering``
+    (a bare CIEP number read as the CIE number; probable, not checked
+    record by record). See ``openetruscan.core.concordance``.
+    """
+
+    __tablename__ = "inscription_aliases"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    scheme: Mapped[str] = mapped_column(Text, nullable=False)
+    lookup_key: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    edition: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    basis: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+
+    __table_args__ = (
+        CheckConstraint(
+            "basis IN ('own_id', 'concordance', 'ciep_cie_numbering', 'manual')",
+            name="basis",
+        ),
+        CheckConstraint(
+            "confidence IN ('certain', 'high', 'probable', 'uncertain')",
+            name="confidence",
+        ),
+        Index("uq_inscription_aliases_record_key", "inscription_id", "lookup_key", unique=True),
+    )
+
+
+class InscriptionEdition(Base):
+    """Per-record edition metadata that does not belong on ``inscriptions``.
+
+    * ``rix_*`` — the record's ET siglum and the text class it encodes
+      (``1`` funerary, ``2`` ownership, …; see ``reference/rix_text_classes.csv``).
+      Kept apart from ``classification`` on purpose: the two schemes
+      disagree on some texts and the frozen evaluation splits depend on
+      ``classification``.
+    * ``findspot_*`` — the place the findspot string (or, failing that,
+      the ET region code) resolves to, with its precision.
+    * ``current_location`` — where the object is kept, split out of the
+      findspot string. ``findspot_source_text`` keeps the original string
+      when the backfill clears a custody-only findspot.
+    * ``pleiades_from_place`` — ``inscriptions.pleiades_id`` was filled by
+      the backfill from ``findspot_place``, so a re-run may change it. False
+      for an ID recorded at source or set by hand, which is never touched.
+    * ``editor`` / ``autopsy`` — who established the current reading and
+      whether they saw the object (NULL = not recorded).
+    """
+
+    __tablename__ = "inscription_edition"
+
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), primary_key=True
+    )
+    rix_siglum: Mapped[str | None] = mapped_column(Text)
+    rix_text_class: Mapped[str | None] = mapped_column(Text, index=True)
+    rix_class_basis: Mapped[str | None] = mapped_column(Text)
+    findspot_place: Mapped[str | None] = mapped_column(Text)
+    findspot_precision: Mapped[str | None] = mapped_column(Text)
+    findspot_basis: Mapped[str | None] = mapped_column(Text)
+    findspot_source_text: Mapped[str | None] = mapped_column(Text)
+    current_location: Mapped[str | None] = mapped_column(Text)
+    pleiades_from_place: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    editor: Mapped[str | None] = mapped_column(Text)
+    autopsy: Mapped[bool | None] = mapped_column(Boolean)
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "findspot_precision IS NULL OR findspot_precision IN "
+            "('site', 'city', 'territory', 'region')",
+            name="findspot_precision",
+        ),
+        CheckConstraint(
+            "rix_text_class IS NULL OR rix_text_class IN "
+            "('0','1','2','3','4','5','6','7','8','9','S','G','N')",
+            name="rix_text_class",
+        ),
+    )
+
+
+class InscriptionReading(Base):
+    """One reading of a text in one edition: the reading history.
+
+    The backfill seeds one row per record from the text we currently show
+    (``is_current``), attributed to the edition it came from. Earlier and
+    competing readings are added as curators enter them.
+    """
+
+    __tablename__ = "inscription_readings"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    reading: Mapped[str] = mapped_column(Text, nullable=False)
+    edition: Mapped[str] = mapped_column(Text, nullable=False)
+    editor: Mapped[str | None] = mapped_column(Text)
+    year: Mapped[int | None] = mapped_column(Integer)
+    autopsy: Mapped[bool | None] = mapped_column(Boolean)
+    is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class InscriptionImage(Base):
+    """A photograph, drawing or IIIF resource for a record.
+
+    ``license`` and ``source_citation`` are required: an image without
+    known rights is not published.
+    """
+
+    __tablename__ = "inscription_images"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    url: Mapped[str | None] = mapped_column(Text)
+    iiif_manifest: Mapped[str | None] = mapped_column(Text)
+    thumbnail_url: Mapped[str | None] = mapped_column(Text)
+    license: Mapped[str] = mapped_column(Text, nullable=False)
+    rights_holder: Mapped[str | None] = mapped_column(Text)
+    source_citation: Mapped[str] = mapped_column(Text, nullable=False)
+    caption: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('photo', 'drawing', 'squeeze', 'facsimile', 'iiif')", name="kind"
+        ),
+        CheckConstraint("url IS NOT NULL OR iiif_manifest IS NOT NULL", name="has_target"),
+    )
+
+
+class IndexedDocument(Base):
+    """A known inscription the corpus does not hold, indexed by reference.
+
+    Seeded from Burman's concordance rows that match no record; later
+    rows can come from REE (Studi Etruschi), ET², or newer CIE fascicles,
+    which are under copyright: only the siglum, findspot, date and
+    reference are stored, never the text.
+    """
+
+    __tablename__ = "indexed_documents"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    primary_ref: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    refs: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    trismegistos_id: Mapped[str | None] = mapped_column(Text, index=True)
+    rix_siglum: Mapped[str | None] = mapped_column(Text)
+    rix_text_class: Mapped[str | None] = mapped_column(Text)
+    region_code: Mapped[str | None] = mapped_column(Text, index=True)
+    findspot_place: Mapped[str | None] = mapped_column(Text)
+    pleiades_id: Mapped[str | None] = mapped_column(Text)
+    date_text: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    source_row: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class LexiconGloss(Base):
+    """A proposed meaning for an Etruscan form, with its confidence and source.
+
+    Loaded from ``research/anchors/gold_glosses/gold_glosses.jsonl``.
+    ``status`` is that file's adjudication status; nothing below
+    ``verified`` should be presented as settled.
+    """
+
+    __tablename__ = "lexicon_glosses"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    form: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    headword: Mapped[str] = mapped_column(Text, nullable=False)
+    gloss_en: Mapped[str] = mapped_column(Text, nullable=False)
+    latin: Mapped[str | None] = mapped_column(Text)
+    source_type: Mapped[str | None] = mapped_column(Text)
+    confidence: Mapped[str | None] = mapped_column(Text)
+    citation_primary: Mapped[str | None] = mapped_column(Text)
+    citation_modern: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(Text, nullable=False)

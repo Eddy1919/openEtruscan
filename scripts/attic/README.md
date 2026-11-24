@@ -59,6 +59,7 @@ exist.
 | `train_byt5_v2.py` | Fine-tuned the ByT5 lacuna-restoration model (v2) on corpus pairs from Postgres. | Superseded by v3 (`ml/lacuna.py` head + etr-lora-v4 encoder). | v2 model weights |
 | `train_embedding_classifier.py` | Trained a logistic-regression head on pgvector embeddings and exported it to ONNX. | One-time head training. | `embedding_head.onnx` + meta JSON |
 | `update_geotags.py` | Backfilled coordinates, Pleiades IDs, and PostGIS `geom` for all inscriptions in live Postgres. | One-time geotag enrichment. | `inscriptions` geo columns |
+| `integrate_burman.py` | Merged Burman's concordance into `data/corpus.db` and `trismegistos_mapping.yaml`, matching on ET sigla only (about 150 records). | Retired 2026-11: replaced by `data_pipeline/build_edition_layer.py`, which matches on every reference Burman gives and writes to the live tables. | `trismegistos_mapping.yaml` |
 
 ## Deleted from the attic
 
