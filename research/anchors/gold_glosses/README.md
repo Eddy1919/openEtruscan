@@ -1,9 +1,9 @@
-# Gold glosses — Etruscan↔meaning pairs with a paper trail
+# Gold glosses: Etruscan↔meaning pairs with a paper trail
 
 Candidate gold-standard gloss pairs for expanding the semantic evaluation
 beyond the 22-pair rosetta test set. Every record carries its citation,
-confidence, source type, and adjudication status. Nothing here enters an
-evaluation or a training set until a human with the sources in hand has
+confidence, source type, and adjudication status. Nothing here enters a
+frozen or gold-reported evaluation until a human with the sources in hand has
 moved it to `verified`.
 
 ## Provenance warning
@@ -11,7 +11,7 @@ moved it to `verified`.
 The seed batch (`adjudication.status = "seeded"`) was drafted by an LLM from
 the standard philological literature. The word–meaning pairs follow the
 published consensus, but **every primary-source locus must be checked
-against the edition before the record is trusted** — a seeded citation is a
+against the edition before the record is trusted**: a seeded citation is a
 claim, not a fact. Verification means: locate the passage (or the modern
 treatment), confirm the Etruscan form, the gloss, and the locus, then set
 `status: verified`, `by`, and `date`. A record that fails checking is set to
@@ -27,7 +27,7 @@ treatment), confirm the Etruscan form, the gloss, and the locus, then set
 | `source_type` | `ancient_gloss` (a Greek/Latin author states the meaning), `bilingual` (meaning fixed by a parallel text), `lexicon` (modern philological consensus), `combinatory` (contextual/formulaic inference), `loanword`, `numeral` |
 | `citation_primary` | ancient locus, as precise as the seeder could defend; may be author-level pending verification |
 | `citation_modern` | modern treatment (Bonfante & Bonfante 2002; Wallace 2008; Pallottino TLE 1968) |
-| `confidence` | `high` / `medium` / `low` — philological confidence in the PAIR, independent of adjudication |
+| `confidence` | `high` / `medium` / `low`: philological confidence in the PAIR, independent of adjudication |
 | `notes` | disputes, transmission problems, competing readings |
 | `adjudication` | `{status: seeded|llm_checked|verified|rejected, by, date}` |
 | `check_url` | required for `llm_checked`: the online edition/page the locus was corroborated against |
@@ -41,34 +41,38 @@ locus against the sources) or `rejected` (reason in notes).
 
 ## Rules
 
-1. **No use before verification.** Only `verified` records may feed an eval.
-   `llm_checked` shortens the human's work; it never substitutes for it.
+1. **No gold use before verification.** Only `verified` records may feed a
+   frozen eval or any number reported as gold. `llm_checked` shortens the
+   human's work; it never substitutes for it. One labeled exception: the
+   hybrid_embed WP10 experiment trains on `llm_checked` records and scores a
+   *silver* eval from them, and reports every such number as silver.
+   [`gloss_splits.py`](gloss_splits.py) fixes which records went where.
 2. **Eval before training.** Verified records extend the *evaluation* first
    (a new frozen split, generated the way
-   `eval/harness/_generate_eval_split.py` did it — deterministic seed,
+   `eval/harness/_generate_eval_split.py` did it: deterministic seed,
    stratified). Only pairs assigned to a train split may ever touch training.
 3. **The existing rosetta test set stays frozen.** `validate.py` marks every
    record that overlaps `eval/harness/rosetta_eval_pairs.py` (train or
    test). A record overlapping the rosetta TEST split can be verified for
-   the record's own sake but is excluded from any new eval or training use —
-   it is already spoken for.
+   the record's own sake but is excluded from any new eval or training use,
+   because it is already spoken for.
 4. **Rejected ≠ deleted.** Failed candidates stay, with reasons: negative
    adjudications are data.
 
 ## Source map and batch status (2026-08-30)
 
-- **Ancient authors' glosses** — SEEDED and web-checked: the classic items
+- **Ancient authors' glosses**: SEEDED and web-checked: the classic items
   (Suetonius aesar, Varro subulo, Livy ister, Hesychius entries, Servius
   capys/lucumo, Paul. ex Festo falado + arseverse, Liber glossarum months)
   plus the full Dioscorides "nomina Tusca" set (16 forms, Wellmann loci,
   TLE 808–853) with Briquel 2018's caveat recorded: those forms are Latin
   in morphology and their Etruscan-language status is contested.
-- **Bilinguals** — the Benelli corpus (27 items + 4 related) is in
+- **Bilinguals**: the Benelli corpus (27 items + 4 related) is in
   `bilinguals.jsonl` with ET/TLE/CIE numbers, texts, and the equation each
   fixes. `crossref_bilinguals.py` matches them against the published corpus
   (report: `crossref_report.csv`); the lautni = libertus urn (Pe 1.211) and
   the Pesaro haruspex stone (Um 1.7) are corpus rows.
-- **Modern lexica, pair-by-pair** — SEEDED via `seed_lexicon_batch.py`:
+- **Modern lexica, pair-by-pair**: SEEDED via `seed_lexicon_batch.py`:
   ~195 records, each carrying its sources (Bonfante 2002 glossary via the
   Wiktionary appendix; Steinbauer etruskisch.de; the Mc Callister glossary
   with Pallottino/Bonfante codes; Liber Linteus/Pyrgi/numerals pages) and
@@ -77,8 +81,43 @@ locus against the sources) or `rejected` (reason in notes).
   page-by-page from a physical/scanned copy.
 - **Combinatory candidates**: `research/anchors/attested.jsonl` (17 pairs,
   UNVERIFIED) and the IBM-1 miner output
-  (`research/experiments/hybrid_embed/mine_pairs.py`) — both feed the same
+  (`research/experiments/hybrid_embed/mine_pairs.py`); both feed the same
   adjudication queue with `source_type: combinatory`.
+
+## Verification worksheet
+
+[`verification_queue.py`](verification_queue.py) turns the queue into an
+ordered worksheet, [`verification_queue.csv`](verification_queue.csv), and is
+the only path by which a human verdict reaches `gold_glosses.jsonl`.
+
+```bash
+python research/anchors/gold_glosses/verification_queue.py build   # (re)write the worksheet
+# fill verdict, corrected_gloss, verified_by, verified_date, verifier_notes
+python research/anchors/gold_glosses/verification_queue.py apply   # copy verdicts into the JSONL
+python research/anchors/gold_glosses/verification_queue.py report  # audit error rate, exact CI
+```
+
+Work top to bottom. The tiers, in order:
+
+| Tier | Rows | Why |
+|---|---|---|
+| `audit` | 50 | A random sample of the web-checked records. Its rejection rate says how far `llm_checked` can be trusted; stopping anywhere inside it still leaves a uniform sample. |
+| `silver_eval` | 57 | The rest of the WP10 silver eval (14 of its 71 items are in the audit). |
+| `witness` | 29 | Remaining ancient glosses and bilinguals, the training source the roadmap prefers. |
+| `remaining` | 161 | Everything else that was web-checked, low confidence first. |
+| `seeded` | 12 | Never web-checked; needs a full check. |
+| `excluded` | 10 | Rosetta TEST overlaps (rule 3). |
+
+`apply` writes nothing if any filled row lacks a name, a `YYYY-MM-DD` date, or
+(for a rejection) a reason, and it skips rows applied on an earlier run. `build` refuses to overwrite a worksheet that
+still holds verdicts that were not applied. Tiers depend only on the form, its
+`check_url` and a fixed hash, never on status or gloss, so rebuilding after verdicts land moves no row.
+
+What verification buys, from the WP11 power analysis in
+[`hybrid_embed`](../../experiments/hybrid_embed/README.md): the audit tier
+measures training-pair noise, and the silver tier removes the "silver"
+caveat. Neither can certify the WP10 effect: at its current size that needs
+about 800 clean eval items, more than the whole queue holds.
 
 ## Validate
 
