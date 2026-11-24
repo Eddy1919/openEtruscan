@@ -129,7 +129,7 @@ survive into the higher tiers:
 ### Columns this export does not carry
 
 The internal `Inscription` model
-([`src/openetruscan/core/corpus.py`](../../src/openetruscan/core/corpus.py))
+([`src/openetruscan/core/inscription.py`](../../src/openetruscan/core/inscription.py))
 holds roughly 25 fields; this CSV publishes 10. Absent here: `findspot`,
 `findspot_lat` / `findspot_lon`, `object_type`, `medium`, `source`,
 `language`, `script_system`, `classification`, `completeness`, `pleiades_id`,

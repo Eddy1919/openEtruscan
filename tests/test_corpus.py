@@ -128,7 +128,7 @@ def _make_inscription(insc_id: str, canonical: str):
 
 def test_near_duplicate_flagged_for_identical_text():
     pytest.importorskip("sklearn")
-    from openetruscan.core.corpus import _check_near_duplicates
+    from openetruscan.core.quality import _check_near_duplicates
 
     existing = [_make_inscription("A", "mi larθa muranas śianś")]
     new = _make_inscription("B", "mi larθa muranas śianś")
@@ -139,7 +139,7 @@ def test_near_duplicate_flagged_for_identical_text():
 
 def test_near_duplicate_skipped_above_corpus_size_gate():
     pytest.importorskip("sklearn")
-    from openetruscan.core.corpus import _check_near_duplicates
+    from openetruscan.core.quality import _check_near_duplicates
 
     existing = [_make_inscription("A", "mi larθa muranas śianś")]
     new = _make_inscription("B", "mi larθa muranas śianś")
@@ -151,7 +151,7 @@ def test_near_duplicate_skipped_above_corpus_size_gate():
 
 def test_near_duplicate_gate_reads_env_var(monkeypatch):
     pytest.importorskip("sklearn")
-    from openetruscan.core.corpus import _check_near_duplicates
+    from openetruscan.core.quality import _check_near_duplicates
 
     monkeypatch.setenv("OPENETRUSCAN_NEAR_DUP_MAX_CORPUS", "0")
     existing = [_make_inscription("A", "mi larθa muranas śianś")]
@@ -162,7 +162,7 @@ def test_near_duplicate_gate_reads_env_var(monkeypatch):
 
 def test_near_duplicate_batch_scan_flags_only_duplicates():
     pytest.importorskip("sklearn")
-    from openetruscan.core.corpus import _check_near_duplicates_batch
+    from openetruscan.core.quality import _check_near_duplicates_batch
 
     existing = [_make_inscription("A", "mi larθa muranas śianś")]
     dup = _make_inscription("B", "mi larθa muranas śianś")

@@ -61,7 +61,7 @@ async def promote_provenance(
     (e.g. ``unprovenanced`` → ``acquired_documented`` → ``excavated``).
     Every call produces a ``provenance_audits`` row for the chain of evidence.
     """
-    from openetruscan.core.corpus import PROVENANCE_STATUSES
+    from openetruscan.core.inscription import PROVENANCE_STATUSES
 
     if payload.new_status not in PROVENANCE_STATUSES:
         raise HTTPException(

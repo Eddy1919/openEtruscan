@@ -4,9 +4,10 @@ OpenEtruscan core subpackage — normalizer, corpus, statistics, prosopography, 
 
 from .adapter import LanguageAdapter, list_available_adapters, load_adapter
 from .artifacts import InscriptionImage, list_images, store_image
-from .corpus import Corpus, Inscription, SearchResults
+from .corpus import Corpus
 from .epidoc import corpus_to_epidoc, inscription_to_epidoc
 from .geo import haversine
+from .inscription import Inscription, SearchResults
 from .normalizer import NormResult, normalize
 
 try:

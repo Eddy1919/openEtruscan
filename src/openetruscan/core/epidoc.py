@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 from openetruscan.core.leiden import EditorialSpan, gap_extent
 
 if TYPE_CHECKING:
-    from openetruscan.core.corpus import SearchResults
+    from openetruscan.core.inscription import SearchResults
 
 
 # Register the TEI namespace to avoid ns0: prefix in output
@@ -377,7 +377,7 @@ def parse_epidoc(xml_str: str):
     Returns:
         An Inscription object populated with parsed data.
     """
-    from openetruscan.core.corpus import Inscription
+    from openetruscan.core.inscription import Inscription
 
     try:
         from defusedxml.ElementTree import fromstring as safe_fromstring
