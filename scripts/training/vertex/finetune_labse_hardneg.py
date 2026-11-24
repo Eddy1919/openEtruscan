@@ -112,7 +112,6 @@ from __future__ import annotations
 #   the encoder is collapsing semantic-field structure. Functionally
 #   equivalent guard against the failure mode the spec targets.
 # ────────────────────────────────────────────────────────────────────
-
 import argparse
 import json
 import logging

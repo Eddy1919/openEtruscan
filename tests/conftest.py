@@ -46,9 +46,9 @@ os.environ.setdefault("ENABLE_DOCS", "1")
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
-from functools import cache  # noqa: E402
 from collections.abc import AsyncGenerator, Generator  # noqa: E402
 from contextlib import suppress  # noqa: E402
+from functools import cache  # noqa: E402
 from typing import Any  # noqa: E402
 
 import pytest  # noqa: E402
@@ -59,7 +59,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
 
 _USER_TABLES = (
     # Order matters for FK cascade — children first.
@@ -292,6 +291,7 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
 async def client(db_session):
     """Mounted FastAPI ASGI client backed by the per-test session."""
     from httpx import ASGITransport, AsyncClient
+
     from openetruscan.api.server import app
     from openetruscan.db.session import get_session
 

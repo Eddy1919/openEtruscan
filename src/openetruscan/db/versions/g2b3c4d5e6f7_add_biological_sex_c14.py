@@ -9,8 +9,9 @@ both migrations were authored in parallel off f1a2b3c4d5e6.
 """
 
 from collections.abc import Sequence
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "g2b3c4d5e6f7"
 down_revision: str | None = "e7c8d9e0f1a2"

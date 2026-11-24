@@ -1,9 +1,9 @@
-import sqlite3
-import os
-import time
 import json
-import urllib.request
+import os
+import sqlite3
+import time
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 # Setup paths

@@ -1,8 +1,8 @@
-import sqlite3
 import json
-import urllib.request
-import urllib.error
+import sqlite3
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 

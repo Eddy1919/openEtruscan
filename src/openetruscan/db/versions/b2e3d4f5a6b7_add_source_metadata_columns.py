@@ -28,9 +28,8 @@ rebuilt from `alembic upgrade head` ends up in the same state.
 
 from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b2e3d4f5a6b7"

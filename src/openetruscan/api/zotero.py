@@ -1,6 +1,7 @@
-import httpx
-from typing import Any
 import logging
+from typing import Any
+
+import httpx
 
 logger = logging.getLogger("openetruscan")
 

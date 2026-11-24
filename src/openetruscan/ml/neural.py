@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from openetruscan.ml.classifier import _KEYWORD_VOCAB, ClassificationResult
 from openetruscan.core.normalizer import normalize
+from openetruscan.ml.classifier import _KEYWORD_VOCAB, ClassificationResult
 
 # ---------------------------------------------------------------------------
 # Lazy torch import — gives a clear error when missing
@@ -939,8 +939,8 @@ class LacunaeRestorer:
             )
         head_dir, adapter_dir = _LACUNA_MODEL_PATHS[model_uri]
 
-        from transformers import AutoModel, AutoTokenizer
         from peft import PeftModel
+        from transformers import AutoModel, AutoTokenizer
 
         head_path = Path(head_dir)
         meta_path = head_path / "metadata.json"

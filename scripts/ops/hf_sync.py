@@ -5,8 +5,8 @@ Hugging Face Synchronization Pipeline.
 Downloads or Uploads Neural Models cleanly.
 """
 
-import os
 import argparse
+import os
 import shutil
 from pathlib import Path
 

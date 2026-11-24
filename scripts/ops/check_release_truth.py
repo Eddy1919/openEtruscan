@@ -31,10 +31,10 @@ import argparse
 import json
 import re
 import sys
-import tomllib
 from pathlib import Path
 from typing import Any
 
+import tomllib
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]

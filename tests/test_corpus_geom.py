@@ -32,10 +32,10 @@ import pytest
 
 from openetruscan.core.corpus import (
     _COLUMNS,
-    _batch_insert_sql,
-    _single_insert_sql,
     Corpus,
     Inscription,
+    _batch_insert_sql,
+    _single_insert_sql,
 )
 
 # ---------------------------------------------------------------------------

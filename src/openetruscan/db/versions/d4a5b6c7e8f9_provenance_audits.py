@@ -16,9 +16,8 @@ the FK ``ON DELETE CASCADE`` if the parent inscription itself is removed.
 
 from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision: str = "d4a5b6c7e8f9"
 down_revision: str | Sequence[str] | None = "c3f4d5e6a7b8"

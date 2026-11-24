@@ -1,9 +1,9 @@
-import sqlite3
 import json
-import urllib.request
-import urllib.parse
-import urllib.error
 import math
+import sqlite3
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 

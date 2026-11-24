@@ -6,7 +6,7 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from scipy.spatial.distance import cosine
 
-from openetruscan.core.prosopography import Person, FamilyGraph
+from openetruscan.core.prosopography import FamilyGraph, Person
 
 warnings.warn(
     "openetruscan.ml.entity_linker_v2 is deprecated and will be removed in 2.0",

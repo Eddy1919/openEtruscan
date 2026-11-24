@@ -15,12 +15,12 @@ import time
 import warnings
 from typing import Any
 
-from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import classification_report, f1_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import psycopg2
+from sklearn.metrics import classification_report, f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import LabelEncoder
 
 warnings.warn(
     "openetruscan.ml.embedding_classifier is deprecated and will be removed in 2.0",

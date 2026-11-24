@@ -8,14 +8,16 @@ queries Mapbox Places API, and backfills PostGIS coordinates.
 import asyncio
 import os
 import sys
-import httpx
 from pathlib import Path
-from sqlalchemy import text, select, and_
+
+import httpx
+from sqlalchemy import and_, select, text
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-from openetruscan.db.session import get_engine
-from openetruscan.db.models import Inscription
 from dotenv import load_dotenv
+
+from openetruscan.db.models import Inscription
+from openetruscan.db.session import get_engine
 
 load_dotenv()
 

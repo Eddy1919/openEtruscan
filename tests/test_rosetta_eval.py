@@ -16,10 +16,8 @@ import pytest
 # Make the eval helpers importable — same path the script uses.
 sys.path.insert(0, str(Path(__file__).parent.parent / "eval/harness"))
 
-from rosetta_eval_pairs import EvalPair  # noqa: E402
-
 import run_rosetta_eval  # noqa: E402
-
+from rosetta_eval_pairs import EvalPair  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Eval pair sanity
@@ -52,8 +50,9 @@ class TestEvalPairs:
 
     def test_split_balance(self):
         """Each category has ≥1 train AND ≥1 test example."""
-        from rosetta_eval_pairs import EVAL_PAIRS
         from collections import defaultdict
+
+        from rosetta_eval_pairs import EVAL_PAIRS
 
         cat_splits = defaultdict(lambda: defaultdict(int))
         for p in EVAL_PAIRS:

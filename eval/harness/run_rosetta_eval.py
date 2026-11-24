@@ -63,7 +63,6 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent))
 
 import httpx  # noqa: E402
-
 from latin_semantic_fields import LATIN_SEMANTIC_FIELDS  # noqa: E402
 from rosetta_eval_pairs import EVAL_PAIRS, EvalPair, eval_pairs  # noqa: E402
 

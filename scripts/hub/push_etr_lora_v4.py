@@ -69,7 +69,6 @@ import os
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # Pushed under the maintainer's user namespace because the `openetruscan`
 # HF organisation isn't created yet (would need a manual sign-up step on

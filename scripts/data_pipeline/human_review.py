@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 import json
-import sys
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
 # Add src to the sys path so we can invoke the core codebase
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-from openetruscan.core.corpus import Corpus, Inscription
 from provenance_values import provenance_status_for_findspot
+
+from openetruscan.core.corpus import Corpus, Inscription
 
 
 def human_review():

@@ -4,9 +4,10 @@ Modernized for async SQLAlchemy 2.0.
 """
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from openetruscan.db.models import Base
-from openetruscan.db.repository import InscriptionRepository, InscriptionData
+from openetruscan.db.repository import InscriptionData, InscriptionRepository
 
 # Test database setup
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
