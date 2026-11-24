@@ -286,8 +286,8 @@ def export_corpus(
 )
 def epidoc(text: str, language: str, inscription_id: str) -> None:
     """Convert text to EpiDoc XML."""
-    from openetruscan.core.corpus import Inscription
     from openetruscan.core.epidoc import inscription_to_epidoc
+    from openetruscan.core.inscription import Inscription
 
     result = normalize(text, language=language)
     insc = Inscription(
@@ -339,7 +339,7 @@ def register(
     db: str | None,
 ) -> None:
     """Register a new inscription finding in the corpus."""
-    from openetruscan.core.corpus import Inscription
+    from openetruscan.core.inscription import Inscription
 
     corpus = _get_corpus(db)
     inscription = Inscription(
@@ -427,7 +427,7 @@ def classify(
     db: str | None,
 ) -> None:
     """Update the classification of an inscription."""
-    from openetruscan.core.corpus import CLASSIFICATIONS
+    from openetruscan.core.inscription import CLASSIFICATIONS
 
     if classification not in CLASSIFICATIONS:
         click.echo(

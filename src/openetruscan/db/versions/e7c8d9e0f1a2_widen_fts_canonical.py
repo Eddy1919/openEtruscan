@@ -56,7 +56,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 # Single source of truth for the widened expression. Used by upgrade(), and
-# kept in sync with the schema-bootstrap DDL in ``core/corpus.py``.
+# kept in sync with the schema-bootstrap DDL in ``core/corpus_sql.py``.
 WIDENED_FTS_EXPR = """
 setweight(to_tsvector('simple', coalesce(canonical, '')), 'A') ||
 setweight(to_tsvector('simple',

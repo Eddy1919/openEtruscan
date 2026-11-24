@@ -322,7 +322,7 @@ async def validate_inscription_flags(
     request: Request, inscription_id: str, session: AsyncSession = Depends(get_session)
 ):
     """Auto-detect potential issues (OCR, out-of-range, etc) in an inscription."""
-    from openetruscan.core.corpus import auto_flag_inscription
+    from openetruscan.core.quality import auto_flag_inscription
 
     repo = InscriptionRepository(session)
 
