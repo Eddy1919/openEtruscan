@@ -176,10 +176,11 @@
       },
       {
         "surface": "frontend package.json / Footer / /cite",
-        "expected": "1.2.0",
-        "observed": "0.5.0 / v2.0.0 / 0.5.0",
-        "status": "fixed_in_podc/s1-version-surfaces",
-        "action": "Frontend reads version from its own package.json; podc/s1 aligns all three to this manifest."
+        "expected": "1.4.0",
+        "observed": "1.4.0 / v1.4.0 / 1.4.0",
+        "status": "resolved_2026-11-24",
+        "verified": "2026-11-24 on www.openetruscan.com after frontend #39 deployed: the footer reads v1.4.0, and /cite's BibTeX `version` and RIS `ET` read 1.4.0.",
+        "action": "The frontend states its version once, in PROJECT_VERSION (lib/constants.ts); the footer and /cite read it, and lib/release.test.ts pins package.json to it. Bump both in the frontend with every release here."
       },
       {
         "surface": "Hugging Face model cards",
