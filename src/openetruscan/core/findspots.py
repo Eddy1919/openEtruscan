@@ -30,7 +30,8 @@ from pathlib import Path
 PRECISIONS = ("site", "city", "territory", "region")
 ROLES = ("findspot", "current_location", "findspot_and_current", "description", "unknown")
 
-#: Radius (metres) written to ``findspot_uncertainty_m`` for each precision.
+#: Radius (metres) of a place attribution at each precision, around the
+#: place's representative point. Nothing writes it to a record.
 UNCERTAINTY_M = {"site": 1_000, "city": 3_000, "territory": 20_000, "region": 75_000}
 
 # Place-name stems as they appear in CIE Latin, Larth English and Italian.

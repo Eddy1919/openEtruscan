@@ -16,10 +16,15 @@ Neon before `--apply` and compare: the numbers move as curators edit.
 
 ## Headline numbers
 
-- Coordinates: 307 records today → 3,915 after the backfill
-  (419 city, 3,148 territory, 41 region precision). 1,199 come from the
-  findspot string, 2,409 from the ET region code; 1,774 of those rest on
-  the CIEP→CIE numbering and carry `findspot_basis = et_region_probable`.
+- Places: 307 records have coordinates recorded at source, and the
+  backfill writes no new ones. A further 3,608 records without coordinates
+  are attributed to a place in `inscription_edition` (419 city, 3,148
+  territory, 41 region precision). 1,199 of those come from the findspot
+  string, 2,409 from the ET region code; 1,774 of the latter rest on the
+  CIEP→CIE numbering and carry `findspot_basis = et_region_probable`. A
+  place's Pleiades point is a representative point, not a find position,
+  so a map should show these as a separate place layer, never as points
+  (`place_without_coords:*` in `summary.json`).
 - ET text class: 3,484 records, 3,130 of them labelled `unknown` today.
   Source: own ET siglum 142, Burman concordance 1,566, CIEP numbering 1,776.
 - Trismegistos IDs: 135 → 1,863, from direct concordance links only.

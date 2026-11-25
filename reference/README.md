@@ -60,13 +60,16 @@ python scripts/data_pipeline/export_reference_json.py \
 
 To correct a findspot reading, edit its row in `findspot_gazetteer.csv` and
 set `basis` to `manual`; regeneration will keep it. Re-running
-`build_edition_layer.py` then moves every point it placed from that
-string to the corrected place, and the same goes for an `et_regions.csv`
-fix. A point counts as placed by the script while it still equals the
-place's representative point at the precision's radius. Coordinates
-recorded at source, set by hand or re-ingested don't match, and are never
-touched. Moving a place's point in `places.csv` breaks that match, so
-records placed at the old point keep it until someone corrects them.
+`build_edition_layer.py` then attributes every record with that string to
+the corrected place, and the same goes for an `et_regions.csv` fix.
+
+The attribution lives in `inscription_edition` (`findspot_place`,
+`findspot_precision`, `findspot_basis`). The script never writes
+`inscriptions.findspot_lat`/`findspot_lon`, `findspot_uncertainty_m`,
+`pleiades_id` or `geom`: those keep what the source recorded. A place's
+point in `places.csv` is Pleiades' representative point for the whole
+place, so copying it onto a record would pass a city or territory off as a
+find position.
 
 ## Known limits
 
