@@ -100,7 +100,7 @@ CREATE INDEX IF NOT EXISTS idx_findspot ON inscriptions(findspot);
 CREATE INDEX IF NOT EXISTS idx_date ON inscriptions(date_approx);
 CREATE INDEX IF NOT EXISTS idx_language ON inscriptions(language);
 CREATE INDEX IF NOT EXISTS idx_classification ON inscriptions(classification);
-CREATE INDEX IF NOT EXISTS idx_provenance ON inscriptions(provenance_status);
+CREATE INDEX IF NOT EXISTS ix_inscriptions_provenance_status ON inscriptions(provenance_status);
 CREATE INDEX IF NOT EXISTS idx_fts_canonical ON inscriptions USING GIN (fts_canonical);
 
 CREATE TABLE IF NOT EXISTS genetic_samples (
