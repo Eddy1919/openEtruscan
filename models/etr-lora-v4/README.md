@@ -255,8 +255,8 @@ Honesty matters more here than marketing:
 
 ## Citation
 
-If you use this model, please cite both the software/dataset DOI and
-the model directly:
+If you use this model, please cite both the software and the model
+directly:
 
 ```bibtex
 @software{openetruscan_2026,
@@ -264,8 +264,8 @@ the model directly:
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
   version   = {1.5.0},
-  doi       = {10.5281/zenodo.20075836},
-  url       = {https://doi.org/10.5281/zenodo.20075836},
+  doi       = {10.5281/zenodo.24538451},
+  url       = {https://doi.org/10.5281/zenodo.24538451},
   publisher = {Zenodo}
 }
 

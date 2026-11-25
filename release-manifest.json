@@ -17,7 +17,8 @@
   "date_released": "2026-11-25",
 
   "identifiers": {
-    "concept_doi": "10.5281/zenodo.20075835",
+    "concept_doi": "10.5281/zenodo.24538451",
+    "dataset_concept_doi": "10.5281/zenodo.20075835",
     "dataset_version_doi": "10.5281/zenodo.21854263",
     "repository": "https://github.com/Eddy1919/openEtruscan",
     "frontend_repository": "https://github.com/Eddy1919/openEtruscan-frontend",
@@ -167,19 +168,19 @@
       {
         "surface": "PyPI",
         "expected": "1.5.0",
-        "observed": "1.4.0",
-        "status": "stale",
+        "observed": "1.5.0",
+        "status": "resolved_2026-11-25",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
-        "verified": "2026-11-24 via pypi.org/pypi/openetruscan/json after the v1.4.0 tag: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0, 1.3.1, 1.4.0; latest is 1.4.0, and the long description is the current README (zero em dashes, BibTeX at 1.4.0). 1.2.0 was never claimed and never will be (superseded before publish).",
-        "action": "1.5.0 publishes automatically when the v1.5.0 tag lands (the v1.4.0 tag published within minutes). Until then PyPI serves 1.4.0. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
+        "verified": "2026-11-25 via pypi.org/pypi/openetruscan/json after the v1.5.0 tag: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0, 1.3.1, 1.4.0, 1.5.0; latest is 1.5.0 (wheel and sdist), and the long description is the current README (zero em dashes, BibTeX at 1.5.0). 1.2.0 was never claimed and never will be (superseded before publish).",
+        "action": "Resolved by the v1.5.0 tag; release.yml's OIDC publish job delivered it from the tag. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",
-        "expected": "1.4.0",
-        "observed": "1.4.0 / v1.4.0 / 1.4.0",
-        "status": "resolved_2026-11-24",
-        "verified": "2026-11-24 on www.openetruscan.com after frontend #39 deployed: the footer reads v1.4.0, and /cite's BibTeX `version` and RIS `ET` read 1.4.0.",
+        "expected": "1.5.0",
+        "observed": "1.5.0 / v1.5.0 / 1.5.0",
+        "status": "resolved_2026-11-25",
+        "verified": "2026-11-25 on www.openetruscan.com after frontend #45 deployed: the footer reads v1.5.0, /cite's BibTeX `version` and RIS `ET` read 1.5.0, and /cite lists the software concept DOI 10.5281/zenodo.24538451 beside the dataset's 10.5281/zenodo.20075835.",
         "action": "The frontend states its version once, in PROJECT_VERSION (lib/constants.ts); the footer and /cite read it, and lib/release.test.ts pins package.json to it. Bump both in the frontend with every release here."
       },
       {
@@ -187,7 +188,7 @@
         "expected": "macro F1 0.293 (0.255-0.329) on v2.0.4 candidate-gold",
         "observed": "card pushed 2026-08-08 with v2.0.4 numbers and retraction notice",
         "status": "fixed_2026-08-08",
-        "verified": "2026-11-24: both cards (openetruscan-classifier, etr-lora-v4) re-pushed after the v1.4.0 tag with their BibTeX at 1.4.0; the Hub README.md of each is byte-identical to models/<id>/README.md.",
+        "verified": "2026-11-25: both cards (openetruscan-classifier, etr-lora-v4) re-pushed after the v1.5.0 tag, with their BibTeX at 1.5.0 and the software concept DOI 10.5281/zenodo.24538451; the Hub README.md of each is byte-identical to models/<id>/README.md.",
         "action": "Resolved. The card is now generated from models/openetruscan-classifier/README.md in git and pushed with scripts/ops/push_model_card.py. metrics.json and v2/metadata.json on the Hub still hold retracted-era numbers by design; they are provenance for the retracted run and the card explains both."
       }
     ]

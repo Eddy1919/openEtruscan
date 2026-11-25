@@ -4,7 +4,8 @@
 
 **Open-source digital corpus platform and NLP suite for Etruscan epigraphy**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21854263.svg)](https://doi.org/10.5281/zenodo.21854263)
+[![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24538451.svg)](https://doi.org/10.5281/zenodo.24538451)
+[![Dataset DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21854263.svg)](https://doi.org/10.5281/zenodo.21854263)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Data: CC BY 4.0](https://img.shields.io/badge/data-CC%20BY%204.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Models: Apache 2.0](https://img.shields.io/badge/models-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -233,17 +234,29 @@ If you use OpenEtruscan in your research, please cite both the software and the 
 ```bibtex
 @software{openetruscan_2026,
   author    = {Panichi, Edoardo},
-  title     = {{OpenEtruscan: Open-source digital corpus platform and NLP suite for Etruscan epigraphy}},
+  title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
   version   = {1.5.0},
+  doi       = {10.5281/zenodo.24538451},
+  url       = {https://doi.org/10.5281/zenodo.24538451},
+  publisher = {Zenodo}
+}
+
+@dataset{openetruscan_corpus_2026,
+  author    = {Panichi, Edoardo},
+  title     = {{Etruscan Machine Learning Corpus (v1.1.0)}},
+  year      = {2026},
   doi       = {10.5281/zenodo.21854263},
   url       = {https://doi.org/10.5281/zenodo.21854263},
   publisher = {Zenodo}
 }
 ```
 
-- **Concept DOI (latest version)**: [10.5281/zenodo.20075835](https://doi.org/10.5281/zenodo.20075835)
-- **Version DOI (v1.1.0 deposit)**: [10.5281/zenodo.21854263](https://doi.org/10.5281/zenodo.21854263)
+Zenodo keeps the software and the dataset as two records:
+
+- **Software concept DOI (every release from 1.5.0 on)**: [10.5281/zenodo.24538451](https://doi.org/10.5281/zenodo.24538451). Each release also has its own version DOI, listed on its Zenodo page.
+- **Dataset concept DOI (latest deposit)**: [10.5281/zenodo.20075835](https://doi.org/10.5281/zenodo.20075835)
+- **Dataset version DOI (v1.1.0 deposit)**: [10.5281/zenodo.21854263](https://doi.org/10.5281/zenodo.21854263)
 
 ---
 

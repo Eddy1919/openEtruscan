@@ -40,12 +40,12 @@ abstract: >-
   and model baselines, and instructions to reproduce it.
 version: "1.5.0"
 date-released: "2026-11-25"
-# The concept DOI of the Zenodo DATASET deposit (all versions; v1.1.0 is
-# preferred-citation below). The software has no Zenodo record yet. Once the
-# GitHub integration archives a release, the software gets its own concept
-# DOI. If this field moves to it, release-manifest.json `concept_doi` must
-# move with it, or check_release_truth.py fails.
-doi: "10.5281/zenodo.20075835"
+# The software's concept DOI: Zenodo's GitHub integration archives every
+# release from 1.5.0 on under it. The dataset is a separate record (concept
+# 10.5281/zenodo.20075835; v1.1.0 is preferred-citation below).
+# release-manifest.json `concept_doi` must match this field, or
+# check_release_truth.py fails.
+doi: "10.5281/zenodo.24538451"
 preferred-citation:
   type: data
   title: "Etruscan Machine Learning Corpus (v1.1.0)"
