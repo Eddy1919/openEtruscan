@@ -3,9 +3,10 @@
 # GitHub renders this automatically; the "Cite this repository" button
 # on the repo page reads from here.
 #
-# When tagging a release: mint a Zenodo deposit (Zenodo's GitHub
-# integration picks up `.zenodo.json` automatically), then paste the
-# DOI string into the `doi:` field below and bump `version:` + `date-released:`.
+# When tagging a release, bump `version:` + `date-released:`. Zenodo's
+# GitHub integration archives a published release from `.zenodo.json` and
+# ignores this file; it is off until the owner switches the repository on
+# in Zenodo's GitHub settings, so no release up to 1.4.0 has a software DOI.
 cff-version: 1.2.0
 title: "OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy"
 message: "If you use this software or the OpenEtruscan corpus, please cite both this software entry and the dataset deposit (see preferred-citation)."
@@ -39,13 +40,14 @@ abstract: >-
   and model baselines, and instructions to reproduce it.
 version: "1.4.0"
 date-released: "2026-11-24"
-# Zenodo concept-DOI (resolves to the latest version). Each tagged release
-# also mints its own version-specific DOI; this all-versions identifier is
-# the right one to cite when meaning "the project" rather than "this exact
-# snapshot".
+# The concept DOI of the Zenodo DATASET deposit (all versions; v1.1.0 is
+# preferred-citation below). The software has no Zenodo record yet. Once the
+# GitHub integration archives a release, the software gets its own concept
+# DOI. If this field moves to it, release-manifest.json `concept_doi` must
+# move with it, or check_release_truth.py fails.
 doi: "10.5281/zenodo.20075835"
 preferred-citation:
-  type: dataset
+  type: data
   title: "Etruscan Machine Learning Corpus (v1.1.0)"
   authors:
     - given-names: Edoardo

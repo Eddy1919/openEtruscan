@@ -14,6 +14,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Zenodo software metadata, before the GitHub integration is switched on.**
+  - `.zenodo.json` declared the software `isVersionOf` the dataset's v1.0.0 deposit (10.5281/zenodo.20075836). The first archived release would have published that false relation to DataCite. It now says the software `isSupplementedBy` the dataset's concept DOI (10.5281/zenodo.20075835). Which record a release joins is set by the repository, not by this field: the first archived release starts a new software record either way.
+  - The file's `_comment` key is gone: JSON has no comments, and the note now lives in `release.yml`.
+  - The licence id is `mit`, as in Zenodo's example.
+- **`CITATION.cff`** validates against CFF 1.2.0 (`preferred-citation.type: data`; `dataset` was never a CFF type). Its comments no longer present the dataset's concept DOI as the software's, or describe release DOIs that were never minted.
+
 ## [1.4.0] - 2026-11-24
 
 The package-level API (`openetruscan`, `openetruscan.core`, the

@@ -2,10 +2,16 @@ name: Release
 
 # Tag-triggered releases: push an annotated tag `vX.Y.Z` and this creates
 # the GitHub Release with notes extracted from that version's CHANGELOG
-# section. The Zenodo GitHub integration then archives the release and
-# mints the versioned DOI from .zenodo.json. Publishing a release IS the
-# archival step, so tags only get pushed when CHANGELOG, pyproject,
-# CITATION.cff, and codemeta.json already agree on the version.
+# section. When the repository is switched on in Zenodo's GitHub settings
+# (zenodo.org, profile menu > GitHub), Zenodo archives each published
+# release and mints a version DOI under the software's own concept DOI. The
+# dataset deposits (concept 10.5281/zenodo.20075835) are a separate record.
+# Zenodo reads .zenodo.json at the tagged commit and ignores CITATION.cff
+# when both exist, so edit the archive's metadata there, not in Zenodo's UI.
+# JSON has no comments, which is why that file carries no notes of its own.
+# Publishing a release IS the archival step, so tags only get pushed when
+# CHANGELOG, pyproject, CITATION.cff, and codemeta.json already agree on
+# the version.
 #
 # PyPI drifted to 0.3.0 while the repository shipped 1.2.0 because publishing
 # was a manual step somebody had to remember, run from a laptop holding a
