@@ -148,12 +148,17 @@ def make_engine(url: str):
     from a laptop to Neon. ``values_plus_batch`` sends 100 statements per round
     trip. That mode leaves ``rowcount`` empty after a batched UPDATE or DELETE;
     apply_plan reads no rowcount.
+
+    A bare ``postgres://`` or ``postgresql://`` URL is pinned to psycopg2, the
+    declared driver: SQLAlchemy 2.1 maps it to psycopg 3, which isn't installed.
     """
     from sqlalchemy import create_engine
     from sqlalchemy.engine import make_url
 
-    if url.startswith("postgres://"):
-        url = "postgresql://" + url[len("postgres://") :]
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            url = "postgresql+psycopg2://" + url[len(bare) :]
+            break
     kwargs: dict[str, Any] = {}
     if make_url(url).get_driver_name() == "psycopg2":
         kwargs["executemany_mode"] = "values_plus_batch"
