@@ -13,11 +13,9 @@ updates:
         patterns:
           - "*"
 
-  # The Cloud Run services pin their own plain requirements.txt files.
+  # The ByT5 restorer service pins its own plain requirements.txt.
   - package-ecosystem: "pip"
-    directories:
-      - "/services/byt5-restorer"
-      - "/services/minilm-reranker"
+    directory: "/services/byt5-restorer"
     schedule:
       interval: "weekly"
     groups:

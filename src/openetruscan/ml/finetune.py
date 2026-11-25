@@ -32,8 +32,8 @@ This module ships:
   * CLI: ``python -m openetruscan.ml.finetune train --output models/etr-lora-v1``.
 
 What this DOESN'T do:
-  * Run on the api VM. LoRA still wants a GPU; use Lambda Cloud / AWS /
-    Cloud Run GPU jobs / a personal workstation. Cost: ~$1-3 per run.
+  * Run on the API host. LoRA still wants a GPU; use a rented cloud GPU or
+    a workstation. Cost: ~$1-3 per run.
   * Auto-download the corpus. Pass an inscription file or hit the DB.
 """
 

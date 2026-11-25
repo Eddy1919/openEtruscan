@@ -4,9 +4,9 @@
 # on the repo page reads from here.
 #
 # When tagging a release, bump `version:` + `date-released:`. Zenodo's
-# GitHub integration archives a published release from `.zenodo.json` and
-# ignores this file; it is off until the owner switches the repository on
-# in Zenodo's GitHub settings, so no release up to 1.4.0 has a software DOI.
+# GitHub integration archives each published release from `.zenodo.json`
+# and ignores this file. It has been on since 2026-11-25, so no release up
+# to 1.4.0 has a software DOI.
 cff-version: 1.2.0
 title: "OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy"
 message: "If you use this software or the OpenEtruscan corpus, please cite both this software entry and the dataset deposit (see preferred-citation)."

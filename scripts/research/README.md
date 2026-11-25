@@ -2,8 +2,8 @@
 
 Tools that support the research strand documented in
 [`/research/`](../../research/). Distinct from
-[`scripts/training/vertex/`](../training/vertex/) (production
-training/embedding pipelines); these are exploratory tools that
+[`scripts/training/vertex/`](../training/vertex/) (the training and
+embedding jobs behind the published models); these are exploratory tools that
 produce *research-time* artefacts: extracted corpora, candidate
 anchor sets, sample selections for review, and so on.
 

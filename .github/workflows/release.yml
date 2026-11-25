@@ -2,8 +2,8 @@ name: Release
 
 # Tag-triggered releases: push an annotated tag `vX.Y.Z` and this creates
 # the GitHub Release with notes extracted from that version's CHANGELOG
-# section. When the repository is switched on in Zenodo's GitHub settings
-# (zenodo.org, profile menu > GitHub), Zenodo archives each published
+# section. The repository is switched on in Zenodo's GitHub settings
+# (zenodo.org, profile menu > GitHub), so Zenodo archives each published
 # release and mints a version DOI under the software's own concept DOI. The
 # dataset deposits (concept 10.5281/zenodo.20075835) are a separate record.
 # Zenodo reads .zenodo.json at the tagged commit and ignores CITATION.cff

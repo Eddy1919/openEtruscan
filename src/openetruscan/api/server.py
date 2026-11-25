@@ -70,9 +70,9 @@ def _maybe_install_otel(app: FastAPI) -> None:
     The instrumentation is opt-in via ``[telemetry]`` extra so the prod
     container only pays the import cost when intended (~30 MB on disk and a
     handful of milliseconds at startup). When ``OTEL_EXPORTER_OTLP_ENDPOINT``
-    is set we ship spans to a collector (Cloud Trace via the ops agent's OTLP
-    receiver, or any OpenTelemetry collector). Without it, tracing is enabled
-    in-memory only, which is useful for local debugging via ``otel-cli``.
+    is set we ship spans to that OpenTelemetry collector. Without it, tracing
+    is enabled in-memory only, which is useful for local debugging via
+    ``otel-cli``.
     """
     try:
         from opentelemetry import trace

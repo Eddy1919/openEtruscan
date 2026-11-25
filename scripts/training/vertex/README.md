@@ -1,5 +1,10 @@
 # Vertex AI training & embedding scripts
 
+> The Google Cloud project and the `gs://openetruscan-rosetta` bucket these
+> scripts used are retired. They record how the published models and
+> embeddings were made; to rerun one, point it at your own project and
+> bucket.
+
 All Vertex AI custom-job entrypoints + their submission shells live
 here. Each `*.py` is a self-contained job script that runs inside a
 Vertex AI prebuilt PyTorch container; each `submit_*.sh` is the

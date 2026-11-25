@@ -191,7 +191,7 @@ openEtruscan/
 ├── research/           # Research codebooks, frozen splits, evaluation benchmarks (v2)
 ├── eval/               # Evaluation harnesses and benchmark definitions
 ├── scripts/            # Data pipeline, database ingestion, and maintenance utilities
-├── services/           # Cloud Run inference services (ByT5 restorer, reranker)
+├── services/           # ByT5 lacuna-restorer service (optional; not deployed)
 ├── tests/              # Comprehensive pytest test suite
 └── docs/               # Architecture, reproduction, and technical guides
 ```

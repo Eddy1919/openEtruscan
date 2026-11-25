@@ -125,10 +125,7 @@ def _extract_names(canonical: str) -> list[str]:
 
 
 class Corpus:
-    """Queryable corpus natively backed by PostgreSQL."""
-
-    """
-    Queryable corpus backed by PostgreSQL (Cloud SQL).
+    """Queryable corpus backed by PostgreSQL.
 
     Abuse protection:
       - Read-only public user (corpus_reader) for queries
