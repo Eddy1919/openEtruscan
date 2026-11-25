@@ -108,12 +108,20 @@ def test_backfill_end_to_end(bel, engine) -> None:  # type: ignore[no-untyped-de
             == "probable"
         )
 
-        # Coordinates: Perusiae → Perusia (city); existing coordinates untouched.
-        lat, lon, unc, pl = one(
+        # Place: Perusiae → Perusia (city), on the edition row only. The
+        # record gets no point: a place's representative point is not a find
+        # position. Coordinates recorded at source are untouched.
+        place = one(
+            "SELECT findspot_place, findspot_precision, findspot_basis FROM inscription_edition WHERE inscription_id='CIE 4538'"
+        )
+        assert tuple(place) == ("perusia", "city", "findspot_string")
+        loc = one(
             "SELECT findspot_lat, findspot_lon, findspot_uncertainty_m, pleiades_id FROM inscriptions WHERE id='CIE 4538'"
         )
-        assert pl == "413248" and unc == 3000.0 and lat == pytest.approx(43.11, abs=0.01)
+        assert tuple(loc) == (None, None, None, None)
         assert one("SELECT findspot_lat FROM inscriptions WHERE id='Ta 3.6'")[0] == 42.2488
+        assert plan.stats["coords_at_source"] == 1
+        assert plan.stats["place_without_coords:city"] >= 1
 
         # Custody-only findspot moved out, with an audit row.
         fs, prov = one("SELECT findspot, provenance_status FROM inscriptions WHERE id='CIE 900'")
@@ -179,7 +187,6 @@ def test_dry_run_json(bel, tmp_path: Path) -> None:  # type: ignore[no-untyped-d
             findspot=r[1],
             findspot_lat=r[2],
             findspot_lon=r[3],
-            pleiades_id=None,
             trismegistos_id=None,
             raw_text=r[5],
             canonical=r[5],
@@ -203,7 +210,6 @@ def test_region_code_case_is_canonical(bel) -> None:  # type: ignore[no-untyped-
         findspot="",
         findspot_lat=None,
         findspot_lon=None,
-        pleiades_id=None,
         trismegistos_id=None,
         raw_text="x",
         canonical="x",
@@ -222,50 +228,37 @@ def _run_with(bel, engine, refs, clear: bool = True):  # type: ignore[no-untyped
     return plan
 
 
-def test_corrected_place_moves_a_placed_point(bel, engine) -> None:  # type: ignore[no-untyped-def]
-    """README workflow: fix a gazetteer row, re-run, the point follows."""
+def test_location_columns_are_never_written(bel, engine) -> None:  # type: ignore[no-untyped-def]
+    """A corrected gazetteer row moves the place attribution on a re-run, and
+    neither run writes a point, an uncertainty or a Pleiades ID to
+    ``inscriptions``. Values recorded at source stay as they were."""
     from openetruscan.core.findspots import FindspotClass
 
-    _run(bel, engine)
-    refs = bel.load_references()
-    refs.gazetteer["Perusiae"] = FindspotClass("findspot", "clusium", "territory", None, "manual")
-    plan = _run_with(bel, engine, refs)
-    assert plan.stats["placed_coords_moved"] == 1
-    clusium = refs.places["clusium"]
-    with engine.connect() as c:
-        lat, lon, unc, pl = c.execute(
-            text(
-                "SELECT findspot_lat, findspot_lon, findspot_uncertainty_m, pleiades_id "
-                "FROM inscriptions WHERE id='CIE 4538'"
-            )
-        ).one()
-        place = c.execute(
-            text("SELECT findspot_place FROM inscription_edition WHERE inscription_id='CIE 4538'")
-        ).scalar()
-    assert (lat, lon) == (clusium.lat, clusium.lon)
-    assert unc == float(bel.UNCERTAINTY_M["territory"])
-    assert pl == clusium.pleiades_id and place == "clusium"
-    # A third run with the same references changes nothing.
-    assert _run_with(bel, engine, refs).stats.get("placed_coords_moved", 0) == 0
-
-
-def test_hand_set_coordinates_are_kept(bel, engine) -> None:  # type: ignore[no-untyped-def]
-    from openetruscan.core.findspots import FindspotClass
-
-    _run(bel, engine)
     with engine.begin() as c:
-        c.execute(
-            text("UPDATE inscriptions SET findspot_lat=43.1, findspot_lon=12.4 WHERE id='CIE 4538'")
-        )
+        c.execute(text("UPDATE inscriptions SET pleiades_id='413179' WHERE id='Ta 3.6'"))
+    cols = "findspot_lat, findspot_lon, findspot_uncertainty_m, pleiades_id"
+
+    def snapshot():  # type: ignore[no-untyped-def]
+        with engine.connect() as c:
+            return {
+                r[0]: tuple(r[1:])
+                for r in c.execute(text(f"SELECT id, {cols} FROM inscriptions ORDER BY id"))
+            }
+
+    before = snapshot()
+    _run(bel, engine)
     refs = bel.load_references()
     refs.gazetteer["Perusiae"] = FindspotClass("findspot", "clusium", "territory", None, "manual")
     _run_with(bel, engine, refs)
+    assert snapshot() == before
     with engine.connect() as c:
-        assert tuple(
-            c.execute(
-                text("SELECT findspot_lat, findspot_lon FROM inscriptions WHERE id='CIE 4538'")
-            ).one()
-        ) == (43.1, 12.4)
+        place = c.execute(
+            text(
+                "SELECT findspot_place, findspot_precision FROM inscription_edition "
+                "WHERE inscription_id='CIE 4538'"
+            )
+        ).one()
+    assert tuple(place) == ("clusium", "territory")
 
 
 def test_refilled_findspot_keeps_the_custody_note(bel, engine) -> None:  # type: ignore[no-untyped-def]
@@ -294,7 +287,6 @@ def test_named_text_parts_are_not_indexed_as_missing(bel) -> None:  # type: igno
         findspot="",
         findspot_lat=None,
         findspot_lon=None,
-        pleiades_id=None,
         trismegistos_id=None,
         raw_text="et petruiś",
         canonical="et petruiś",
@@ -306,54 +298,6 @@ def test_named_text_parts_are_not_indexed_as_missing(bel) -> None:  # type: igno
     assert plan.stats["concordance_rows_held_via_other_reference"] >= 1
 
 
-def test_source_pleiades_id_survives_a_moved_point(bel, engine) -> None:  # type: ignore[no-untyped-def]
-    """A Pleiades link recorded at source is not the script's to rewrite."""
-    from openetruscan.core.findspots import FindspotClass
-
-    with engine.begin() as c:
-        c.execute(text("UPDATE inscriptions SET pleiades_id='413248' WHERE id='CIE 4538'"))
-    _run(bel, engine)
-    refs = bel.load_references()
-    refs.gazetteer["Perusiae"] = FindspotClass("findspot", "clusium", "territory", None, "manual")
-    _run_with(bel, engine, refs)
-    with engine.connect() as c:
-        lat, pl = c.execute(
-            text("SELECT findspot_lat, pleiades_id FROM inscriptions WHERE id='CIE 4538'")
-        ).one()
-        flag = c.execute(
-            text(
-                "SELECT pleiades_from_place FROM inscription_edition "
-                "WHERE inscription_id='CIE 4538'"
-            )
-        ).scalar()
-    assert lat == refs.places["clusium"].lat  # the point moved
-    assert pl == "413248" and not flag  # the source link stayed
-
-
-def test_pleiades_id_stays_ours_after_the_point_is_cleared(bel, engine) -> None:  # type: ignore[no-untyped-def]
-    """An ID the script wrote is still the script's to move when someone
-    cleared the coordinates in between."""
-    from openetruscan.core.findspots import FindspotClass
-
-    _run(bel, engine)
-    with engine.begin() as c:
-        c.execute(
-            text("UPDATE inscriptions SET findspot_lat=NULL, findspot_lon=NULL WHERE id='CIE 4538'")
-        )
-    refs = bel.load_references()
-    refs.gazetteer["Perusiae"] = FindspotClass("findspot", "clusium", "territory", None, "manual")
-    _run_with(bel, engine, refs)
-    with engine.connect() as c:
-        pl = c.execute(text("SELECT pleiades_id FROM inscriptions WHERE id='CIE 4538'")).scalar()
-        flag = c.execute(
-            text(
-                "SELECT pleiades_from_place FROM inscription_edition "
-                "WHERE inscription_id='CIE 4538'"
-            )
-        ).scalar()
-    assert pl == refs.places["clusium"].pleiades_id and flag
-
-
 def test_shared_group_number_does_not_hide_a_missing_text(bel) -> None:  # type: ignore[no-untyped-def]
     """CIE 5256 and CIE 5257 (ET Vc 7.15) share CII 2162. Holding 5256 says
     nothing about 5257, which stays in the coverage index."""
@@ -363,14 +307,12 @@ def test_shared_group_number_does_not_hide_a_missing_text(bel) -> None:  # type:
         findspot="",
         findspot_lat=None,
         findspot_lon=None,
-        pleiades_id="",
         trismegistos_id=None,
         raw_text="x",
         canonical="x",
         classification="unknown",
         provenance_status="acquired_undocumented",
     )
-    assert rec.pleiades_id is None  # '' means no ID
     plan = bel.build_plan([rec], refs, bel.DEFAULT_GLOSSES)
     assert any("Vc 7.15" in (r["refs"] or "") for r in plan.indexed)
 
@@ -385,7 +327,6 @@ def test_shared_tm_number_does_not_hide_another_et_text(bel) -> None:  # type: i
         findspot="",
         findspot_lat=None,
         findspot_lon=None,
-        pleiades_id=None,
         trismegistos_id=None,
         raw_text="x",
         canonical="x",

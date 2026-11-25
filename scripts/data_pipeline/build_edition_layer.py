@@ -11,11 +11,12 @@ sigla only and so reached about 150 records. This script:
    findspot resolved to a Pleiades place with a precision (from the
    findspot string, else from the ET region code), the current location
    split out of the findspot string, and the editor of the current reading;
-3. places records on the map: fills ``findspot_lat``/``findspot_lon``/
-   ``findspot_uncertainty_m``/``pleiades_id`` (and PostGIS ``geom``) for
-   records that have no coordinates yet. Coordinates recorded at source or
-   set by hand are never overwritten; a point an earlier run placed is
-   recomputed, so correcting the gazetteer or an ET region moves it;
+3. never writes the location columns of ``inscriptions``
+   (``findspot_lat``/``findspot_lon``/``findspot_uncertainty_m``,
+   ``pleiades_id``, ``geom``): they hold what the source recorded. A place
+   attribution stays in ``inscription_edition``, because a Pleiades
+   representative point is not a find position and must not pass for one
+   on the map;
 4. seeds ``inscription_readings`` with the reading we show today,
    attributed to the edition it came from;
 5. fills ``trismegistos_id`` where it is empty and the concordance gives
@@ -75,7 +76,6 @@ from openetruscan.core.concordance import (  # noqa: E402
     rix_siglum,
 )
 from openetruscan.core.findspots import (  # noqa: E402
-    UNCERTAINTY_M,
     EtRegion,
     FindspotClass,
     Place,
@@ -164,7 +164,6 @@ class Record:
     findspot: str | None
     findspot_lat: float | None
     findspot_lon: float | None
-    pleiades_id: str | None
     trismegistos_id: str | None
     raw_text: str
     canonical: str
@@ -175,35 +174,17 @@ class Record:
     #: out of ``findspot``; classified in its place so a re-run keeps the
     #: current location it named.
     findspot_source_text: str | None = None
-    findspot_uncertainty_m: float | None = None
-    #: The place and precision a previous run attributed (see
-    #: :func:`_placed_by_script`).
-    prev_place: str | None = None
-    prev_precision: str | None = None
-    #: An earlier run wrote ``pleiades_id`` (``inscription_edition.pleiades_from_place``).
-    prev_pleiades_from_place: bool | None = None
-
-    def __post_init__(self) -> None:
-        # Two live rows store '' for "no Pleiades ID"; treat it as NULL.
-        if not (self.pleiades_id or "").strip():
-            self.pleiades_id = None
 
 
 @dataclass
 class RecordPlan:
     aliases: list[Alias]
     edition: dict[str, Any]
-    #: Coordinates to write. With ``replaces_coords`` they overwrite a point
-    #: an earlier run placed (all ``None`` when the place no longer applies).
-    coords: dict[str, Any] | None
     trismegistos_id: str | None
     reading: dict[str, Any]
     clear_findspot: bool
     findspot_class: FindspotClass | None
     et_region_place: str | None
-    replaces_coords: bool = False
-    #: The (lat, lon) being replaced, used to guard the UPDATE.
-    old_point: tuple[float, float] | None = None
 
 
 @dataclass
@@ -270,30 +251,6 @@ def _classify(raw: str | None, refs: References) -> FindspotClass | None:
     return classify_findspot(s, {k: p.kind for k, p in refs.places.items()})
 
 
-def _placed_by_script(rec: Record, refs: References) -> bool:
-    """Whether the record's coordinates are the point an earlier run placed.
-
-    They are when they still equal the Pleiades point of the place that run
-    attributed, at that precision's radius. Coordinates recorded at source,
-    set by hand or re-ingested differ, and are never touched. A re-run
-    recomputes the placed ones, so a corrected gazetteer or ET-region row
-    moves the point.
-    """
-    if rec.findspot_lat is None or rec.findspot_lon is None:
-        return False
-    if rec.prev_place is None or rec.prev_precision is None:
-        return False
-    place = refs.places.get(rec.prev_place)
-    radius = UNCERTAINTY_M.get(rec.prev_precision)
-    if place is None or radius is None or rec.findspot_uncertainty_m is None:
-        return False
-    return (
-        abs(rec.findspot_lat - place.lat) < 1e-9
-        and abs(rec.findspot_lon - place.lon) < 1e-9
-        and abs(rec.findspot_uncertainty_m - float(radius)) < 1e-6
-    )
-
-
 def plan_record(rec: Record, refs: References, used_rows: list[ConcordanceRow]) -> RecordPlan:
     aliases = aliases_for_id(rec.id, refs.index, rows_out=used_rows)
     siglum, siglum_basis = rix_siglum(aliases)
@@ -326,43 +283,8 @@ def plan_record(rec: Record, refs: References, used_rows: list[ConcordanceRow]) 
         if place_key is None or overrides:
             place_key, precision, basis = region.place_key, region.precision, et_basis
 
-    placed = _placed_by_script(rec, refs)
-    # The Pleiades ID is ours to change only if an earlier run wrote it and
-    # nobody has changed it since; one recorded at source is kept.
-    prev = refs.places.get(rec.prev_place or "")
-    # The point need not still be there: an ID written with a point that was
-    # later cleared is still ours to move.
-    ours = (
-        bool(rec.prev_pleiades_from_place)
-        and prev is not None
-        and rec.pleiades_id == prev.pleiades_id
-    )
-    own_pleiades = None if ours else rec.pleiades_id
-    pleiades_from_place = bool(rec.prev_pleiades_from_place) and rec.pleiades_id is not None
-    has_coords = rec.findspot_lat is not None and rec.findspot_lon is not None and not placed
-    coords = None
-    if has_coords:
-        basis = "existing" if basis is None else basis
-    elif placed and (place_key, precision) == (rec.prev_place, rec.prev_precision):
-        pass  # already at the right point
-    elif place_key is not None and precision is not None:
-        place = refs.places[place_key]
-        coords = {
-            "findspot_lat": place.lat,
-            "findspot_lon": place.lon,
-            "findspot_uncertainty_m": float(UNCERTAINTY_M[precision]),
-            "pleiades_id": own_pleiades or place.pleiades_id,
-        }
-        pleiades_from_place = own_pleiades is None
-    elif placed:
-        # The place an earlier run put the record at no longer applies.
-        coords = {
-            "findspot_lat": None,
-            "findspot_lon": None,
-            "findspot_uncertainty_m": None,
-            "pleiades_id": own_pleiades,
-        }
-        pleiades_from_place = False
+    if basis is None and rec.findspot_lat is not None and rec.findspot_lon is not None:
+        basis = "existing"
 
     # Only a string still sitting in `findspot` is pending; one an earlier run
     # moved out is already in findspot_source_text.
@@ -393,7 +315,6 @@ def plan_record(rec: Record, refs: References, used_rows: list[ConcordanceRow]) 
         "findspot_basis": basis,
         "findspot_source_text": None,
         "current_location": current,
-        "pleiades_from_place": pleiades_from_place,
         "editor": att.editor,
         "autopsy": att.autopsy,
     }
@@ -408,18 +329,7 @@ def plan_record(rec: Record, refs: References, used_rows: list[ConcordanceRow]) 
         "source": SCRIPT_TAG,
         "note": att.note,
     }
-    return RecordPlan(
-        aliases,
-        edition,
-        coords,
-        new_tm,
-        reading,
-        clear,
-        fc,
-        et_place,
-        replaces_coords=placed and coords is not None,
-        old_point=(rec.findspot_lat, rec.findspot_lon) if placed else None,  # type: ignore[arg-type]
-    )
+    return RecordPlan(aliases, edition, new_tm, reading, clear, fc, et_place)
 
 
 def _indexed_row(row: ConcordanceRow, refs: References) -> dict[str, Any]:
@@ -594,14 +504,13 @@ def build_plan(records: Iterable[Record], refs: References, glosses_path: Path) 
                         "canonical": rec.canonical[:80],
                     }
                 )
-        if rp.replaces_coords:
-            moved = rp.coords is not None and rp.coords["findspot_lat"] is not None
-            s["placed_coords_moved" if moved else "placed_coords_cleared"] += 1
-        elif rp.coords:
-            s[f"new_coords:{e['findspot_precision']}"] += 1
-            s[f"new_coords_via:{e['findspot_basis']}"] += 1
+        # Points recorded at source, and records with no point that are
+        # attributed to a place (a place layer, not points).
         if rec.findspot_lat is not None:
-            s["coords_already"] += 1
+            s["coords_at_source"] += 1
+        elif e["findspot_place"]:
+            s[f"place_without_coords:{e['findspot_precision']}"] += 1
+            s[f"place_without_coords_via:{e['findspot_basis']}"] += 1
         if rp.trismegistos_id:
             s["new_trismegistos_id"] += 1
         if rp.clear_findspot:
@@ -683,12 +592,9 @@ def read_records(conn) -> list[Record]:  # type: ignore[no-untyped-def]
 
     rows = conn.execute(
         text(
-            "SELECT i.id, i.findspot, i.findspot_lat, i.findspot_lon, i.pleiades_id, "
+            "SELECT i.id, i.findspot, i.findspot_lat, i.findspot_lon, "
             "i.trismegistos_id, i.raw_text, i.canonical, i.classification, "
-            "i.provenance_status, i.source, e.findspot_source_text, "
-            "i.findspot_uncertainty_m, e.findspot_place AS prev_place, "
-            "e.findspot_precision AS prev_precision, "
-            "e.pleiades_from_place AS prev_pleiades_from_place "
+            "i.provenance_status, i.source, e.findspot_source_text "
             "FROM inscriptions i LEFT JOIN inscription_edition e ON e.inscription_id = i.id"
         )
     ).mappings()
@@ -696,9 +602,8 @@ def read_records(conn) -> list[Record]:  # type: ignore[no-untyped-def]
 
 
 def apply_plan(conn, plan: Plan, clear_custody: bool) -> None:  # type: ignore[no-untyped-def]
-    from sqlalchemy import inspect, text
+    from sqlalchemy import text
 
-    dialect = conn.dialect.name
     ids = list(plan.records)
 
     # 1. aliases: replace computed rows, keep manual ones.
@@ -768,64 +673,15 @@ def apply_plan(conn, plan: Plan, clear_custody: bool) -> None:  # type: ignore[n
             text(
                 "INSERT INTO inscription_edition (inscription_id, rix_siglum, rix_text_class, "
                 "rix_class_basis, findspot_place, findspot_precision, findspot_basis, "
-                "findspot_source_text, current_location, pleiades_from_place, editor, autopsy) "
+                "findspot_source_text, current_location, editor, autopsy) "
                 "VALUES (:inscription_id, :rix_siglum, :rix_text_class, :rix_class_basis, "
                 ":findspot_place, :findspot_precision, :findspot_basis, :findspot_source_text, "
-                ":current_location, :pleiades_from_place, :editor, :autopsy)"
+                ":current_location, :editor, :autopsy)"
             ),
             ed_rows,
         )
 
-    # 3. coordinates for records that have none, and points an earlier run
-    #    placed whose place has since changed.
-    cols = {c["name"] for c in inspect(conn).get_columns("inscriptions")}
-    has_geom = dialect == "postgresql" and "geom" in cols
-    coord_rows = [
-        # The ID is overwritten only when it is ours (see plan_record).
-        {"id": rid, **rp.coords, "pleiades_ours": bool(rp.edition["pleiades_from_place"])}
-        for rid, rp in plan.records.items()
-        if rp.coords is not None and not rp.replaces_coords
-    ]
-    if coord_rows:
-        conn.execute(
-            text(
-                "UPDATE inscriptions SET findspot_lat = :findspot_lat, "
-                "findspot_lon = :findspot_lon, findspot_uncertainty_m = :findspot_uncertainty_m, "
-                "pleiades_id = CASE WHEN :pleiades_ours THEN :pleiades_id "
-                "ELSE COALESCE(NULLIF(pleiades_id, ''), :pleiades_id) END "
-                "WHERE id = :id AND findspot_lat IS NULL"
-            ),
-            coord_rows,
-        )
-    moved_rows = [
-        {"id": rid, **rp.coords, "old_lat": rp.old_point[0], "old_lon": rp.old_point[1]}
-        for rid, rp in plan.records.items()
-        if rp.replaces_coords and rp.coords is not None and rp.old_point is not None
-    ]
-    if moved_rows:
-        # Guarded on the old point: a row someone edited since the dry run
-        # is left alone.
-        conn.execute(
-            text(
-                "UPDATE inscriptions SET findspot_lat = :findspot_lat, "
-                "findspot_lon = :findspot_lon, findspot_uncertainty_m = :findspot_uncertainty_m, "
-                "pleiades_id = :pleiades_id" + (", geom = NULL" if has_geom else "") + " "
-                "WHERE id = :id AND findspot_lat = :old_lat AND findspot_lon = :old_lon"
-            ),
-            moved_rows,
-        )
-    # Outside the guard so a re-run also fills points for rows placed earlier
-    # (e.g. before PostGIS created the column). Radius search reads geom.
-    if has_geom:
-        conn.execute(
-            text(
-                "UPDATE inscriptions SET geom = ST_SetSRID(ST_MakePoint(findspot_lon, "
-                "findspot_lat), 4326) WHERE findspot_lat IS NOT NULL "
-                "AND findspot_lon IS NOT NULL AND geom IS NULL"
-            )
-        )
-
-    # 4. Trismegistos ids from direct concordance links.
+    # 3. Trismegistos ids from direct concordance links.
     tm_rows = [
         {"id": rid, "tm": rp.trismegistos_id}
         for rid, rp in plan.records.items()
@@ -840,7 +696,7 @@ def apply_plan(conn, plan: Plan, clear_custody: bool) -> None:  # type: ignore[n
             tm_rows,
         )
 
-    # 5. seed reading for records without any reading.
+    # 4. seed reading for records without any reading.
     have = {
         r[0] for r in conn.execute(text("SELECT DISTINCT inscription_id FROM inscription_readings"))
     }
@@ -855,7 +711,7 @@ def apply_plan(conn, plan: Plan, clear_custody: bool) -> None:  # type: ignore[n
             reading_rows,
         )
 
-    # 6. coverage index and glosses: replace this script's rows.
+    # 5. coverage index and glosses: replace this script's rows.
     conn.execute(text("DELETE FROM indexed_documents WHERE source = :s"), {"s": BURMAN_CITATION})
     if plan.indexed:
         conn.execute(
@@ -880,7 +736,7 @@ def apply_plan(conn, plan: Plan, clear_custody: bool) -> None:  # type: ignore[n
             plan.glosses,
         )
 
-    # 7. custody-only / description findspots out of `findspot`.
+    # 6. custody-only / description findspots out of `findspot`.
     if clear_custody:
         rows = conn.execute(
             text("SELECT id, findspot, provenance_status FROM inscriptions WHERE findspot <> ''")

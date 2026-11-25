@@ -86,7 +86,6 @@ def upgrade() -> None:
         sa.Column("findspot_basis", sa.Text(), nullable=True),
         sa.Column("findspot_source_text", sa.Text(), nullable=True),
         sa.Column("current_location", sa.Text(), nullable=True),
-        sa.Column("pleiades_from_place", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("editor", sa.Text(), nullable=True),
         sa.Column("autopsy", sa.Boolean(), nullable=True),
         sa.Column(

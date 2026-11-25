@@ -409,13 +409,12 @@ class InscriptionEdition(Base):
       disagree on some texts and the frozen evaluation splits depend on
       ``classification``.
     * ``findspot_*`` — the place the findspot string (or, failing that,
-      the ET region code) resolves to, with its precision.
+      the ET region code) resolves to, with its precision. The place is an
+      attribution, not a find position: the backfill never copies its
+      Pleiades point into ``inscriptions.findspot_lat``/``lon``.
     * ``current_location`` — where the object is kept, split out of the
       findspot string. ``findspot_source_text`` keeps the original string
       when the backfill clears a custody-only findspot.
-    * ``pleiades_from_place`` — ``inscriptions.pleiades_id`` was filled by
-      the backfill from ``findspot_place``, so a re-run may change it. False
-      for an ID recorded at source or set by hand, which is never touched.
     * ``editor`` / ``autopsy`` — who established the current reading and
       whether they saw the object (NULL = not recorded).
     """
@@ -433,7 +432,6 @@ class InscriptionEdition(Base):
     findspot_basis: Mapped[str | None] = mapped_column(Text)
     findspot_source_text: Mapped[str | None] = mapped_column(Text)
     current_location: Mapped[str | None] = mapped_column(Text)
-    pleiades_from_place: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     editor: Mapped[str | None] = mapped_column(Text)
     autopsy: Mapped[bool | None] = mapped_column(Boolean)
     updated_at: Mapped[datetime | None] = mapped_column(
