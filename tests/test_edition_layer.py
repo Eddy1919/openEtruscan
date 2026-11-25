@@ -339,3 +339,20 @@ def test_shared_tm_number_does_not_hide_another_et_text(bel) -> None:  # type: i
     for siglum in ("ET Ve 3.1;", "ET Ve 6.1;", "ET Ve 9.1;"):
         assert any(siglum in r for r in indexed), siglum
     assert not any("ET Ve 9.2;" in r for r in indexed)
+
+
+@pytest.mark.parametrize(
+    ("url", "batched"),
+    [
+        ("postgresql://u@localhost/db", True),
+        ("postgres://u@localhost/db", True),
+        ("postgresql+psycopg2://u@localhost/db", True),
+        ("sqlite://", False),
+    ],
+)
+def test_make_engine_batches_psycopg2_only(bel, url: str, batched: bool) -> None:  # type: ignore[no-untyped-def]
+    from sqlalchemy.dialects.postgresql.psycopg2 import EXECUTEMANY_VALUES_PLUS_BATCH
+
+    eng = bel.make_engine(url)
+    mode = getattr(eng.dialect, "executemany_mode", None)
+    assert (mode is EXECUTEMANY_VALUES_PLUS_BATCH) is batched

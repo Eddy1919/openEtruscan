@@ -141,6 +141,25 @@ def write_reports(plan: Plan, outdir: Path) -> None:
         w.writerows(plan.lemmas)
 
 
+def make_engine(url: str):
+    """Sync engine for the backfill, with batched executemany on psycopg2.
+
+    psycopg2 sends an executemany as one round trip per row, about 99 ms each
+    from a laptop to Neon. ``values_plus_batch`` sends 100 statements per round
+    trip. That mode leaves ``rowcount`` empty after a batched UPDATE or DELETE;
+    apply_plan reads no rowcount.
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine import make_url
+
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    kwargs: dict[str, Any] = {}
+    if make_url(url).get_driver_name() == "psycopg2":
+        kwargs["executemany_mode"] = "values_plus_batch"
+    return create_engine(url, **kwargs)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--apply", action="store_true", help="write to the database")
@@ -150,14 +169,10 @@ def main() -> None:
     args = ap.parse_args()
     lex = load_lexicon(args.praenomina, args.glosses)
 
-    from sqlalchemy import create_engine
-
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise SystemExit("DATABASE_URL is not set")
-    if url.startswith("postgres://"):
-        url = "postgresql://" + url[len("postgres://") :]
-    engine = create_engine(url)
+    engine = make_engine(url)
     with engine.begin() as conn:
         plan = build_plan(read_records(conn), lex)
         if args.apply:

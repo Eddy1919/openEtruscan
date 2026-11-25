@@ -75,3 +75,20 @@ def test_build_and_rerun(bni, engine, tmp_path: Path) -> None:  # type: ignore[n
         assert c.execute(text("SELECT count(*) FROM name_attestations")).scalar() == len(rows)
     bni.write_reports(plan, tmp_path)
     assert (tmp_path / "names.csv").read_text(encoding="utf-8").startswith("lemma,name_type")
+
+
+@pytest.mark.parametrize(
+    ("url", "batched"),
+    [
+        ("postgresql://u@localhost/db", True),
+        ("postgres://u@localhost/db", True),
+        ("postgresql+psycopg2://u@localhost/db", True),
+        ("sqlite://", False),
+    ],
+)
+def test_make_engine_batches_psycopg2_only(bni, url: str, batched: bool) -> None:  # type: ignore[no-untyped-def]
+    from sqlalchemy.dialects.postgresql.psycopg2 import EXECUTEMANY_VALUES_PLUS_BATCH
+
+    eng = bni.make_engine(url)
+    mode = getattr(eng.dialect, "executemany_mode", None)
+    assert (mode is EXECUTEMANY_VALUES_PLUS_BATCH) is batched
