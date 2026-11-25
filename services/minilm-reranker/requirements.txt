@@ -1,5 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 fastapi==0.165.0
 uvicorn==0.54.0
 pydantic==2.14.4
 sentence-transformers==6.3.0
-torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0+cpu
