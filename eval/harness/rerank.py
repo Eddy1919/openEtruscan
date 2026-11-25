@@ -19,10 +19,9 @@ Greek-via-XLM-R-base genealogy) gives it a fighting chance to recover
 signal that pure bi-encoder cosine can't.
 
 If the rerank pass moves the field@k metric meaningfully on
-``rosetta-eval-v1``, the next step is to deploy a small Cloud Run
-service so the API path can use it too. The service skeleton already
-lives at ``services/minilm-reranker/`` — it just needs a model swap
-and a deploy.
+``rosetta-eval-v1``, the API path can use the model too: ``/search/hybrid``
+already loads a cross-encoder in-process (the ``rerank`` extra), so it
+needs a model swap, not a new service.
 """
 
 from __future__ import annotations

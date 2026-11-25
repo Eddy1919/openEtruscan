@@ -7,12 +7,8 @@ per line to stdout. The output is consumed by ByT5 v3/v5 training
 (train_byt5_v3.py) which expects {"raw_text": ..., "has_brackets": bool}.
 
 Usage:
-    # Via SSH tunnel (localhost:5434 → Bastion → 10.50.0.3:5432):
-    export DATABASE_URL=postgresql://corpus_reader:...@127.0.0.1:5434/corpus
+    export DATABASE_URL=postgresql://...   # read-only access is enough
     python scripts/research/extract_training_corpus.py > /tmp/etruscan-prod-rawtext-v2.jsonl
-
-    # Or via Bastion psql pipe (no local dependencies):
-    gcloud compute ssh openetruscan-eu ... --command="docker run ..."
 """
 
 from __future__ import annotations

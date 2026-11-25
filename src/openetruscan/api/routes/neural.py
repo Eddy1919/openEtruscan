@@ -43,19 +43,18 @@ async def restore_lacunae(
 
     Two modes:
       * **Remote**: if ``settings.byt5_service_url`` is set we proxy the request
-        to a dedicated Cloud Run service (`services/byt5-restorer/`). This is
-        the production mode: the API container stays small and inference
-        autoscales to zero between calls.
+        to a separate deployment of `services/byt5-restorer/`. The API
+        container stays small and the service can scale to zero between calls.
       * **In-process**: fallback when no service URL is configured. Loads the
         torch model lazily and offloads inference to a worker thread.
     """
     if settings.byt5_service_url:
         client = request.app.state.http
         try:
-            # 90s, not 30s, because the byt5 service is on Cloud Run with
-            # min-instances=0 and a cold start that includes loading the
-            # transformer weights into memory (~25-45s on a 1 CPU /
-            # 2Gi instance). With a 30s timeout the first request after
+            # 90s, not 30s, because the byt5 service scales to zero (it
+            # ran on Cloud Run with min-instances=0) and a cold start
+            # includes loading the transformer weights into memory
+            # (~25-45s on a 1 CPU / 2Gi instance). With a 30s timeout the first request after
             # scale-to-zero was always failing with 502; 90s gives the
             # service enough headroom to warm up and respond on the same
             # connection. Once warm, inference is sub-second so the bigger

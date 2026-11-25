@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     byt5_service_url: str | None = Field(
         default=None,
         description=(
-            "If set, /neural/restore proxies to this URL (a Cloud Run instance "
+            "If set, /neural/restore proxies to this URL (a deployment "
             "of services/byt5-restorer/) instead of running torch in-process. "
             "Frees ~700 MB of RAM on the api container."
         ),

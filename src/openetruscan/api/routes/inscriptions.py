@@ -348,11 +348,10 @@ async def get_inscription_concordance(
     return [_build_model(i) for i in results]
 
 
-# In-memory idempotency store for /inscriptions POST. The endpoint runs at
-# 30/minute on a single VM instance and the import flow is admin-only, so a
-# process-local TTL cache is the right level of complexity. Once the API moves
-# to Cloud Run (multi-instance), this will need to migrate to Redis or a
-# `idempotency_keys` table (see ROADMAP.md).
+# In-memory idempotency store for /inscriptions POST. The endpoint is limited
+# to 30/minute and the import flow is admin-only, so a process-local TTL cache
+# is enough while the API runs as a single process. Running it on several
+# instances would need Redis or an `idempotency_keys` table instead.
 _IDEMPOTENCY_TTL_SECONDS = 24 * 3600
 _IDEMPOTENCY_CACHE: dict[str, tuple[float, dict]] = {}
 

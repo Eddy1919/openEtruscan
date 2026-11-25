@@ -22,8 +22,8 @@ router = APIRouter()
 # Submissions land in the `proposed_anchors` table (alembic
 # c8d9e0f1a2b3); admins approve via Bearer-token-gated /anchors/{id}/promote;
 # approved rows are surfaced read-only via /anchors/attested AND
-# appended to research/anchors/attested.jsonl on the next data-refresh PR
-# (out-of-band, via a separate Cloud Build job).
+# appended to research/anchors/attested.jsonl in a later data-refresh PR,
+# made out of band.
 # ────────────────────────────────────────────────────────────────────
 
 
@@ -267,10 +267,9 @@ async def promote_anchor(
 
     On ``approve``: status moves to ``approved``. The row does NOT get
     auto-appended to ``research/anchors/attested.jsonl`` from this
-    handler. That's done out-of-band by a Cloud Build job that polls
-    the table, rebuilds the JSONL, and opens a data-refresh PR. This
-    avoids granting the API server git-push permissions, which would
-    be a serious security boundary violation.
+    handler. The JSONL is rebuilt from the table out of band, in a
+    data-refresh PR. This avoids granting the API server git-push
+    permissions, which would be a serious security boundary violation.
     """
     from datetime import datetime, timezone
 

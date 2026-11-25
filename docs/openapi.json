@@ -818,7 +818,7 @@
     },
     "/anchors/{anchor_id}/promote": {
       "post": {
-        "description": "Admin: approve / reject / mark-duplicate a pending submission.\n\nOn ``approve``: status moves to ``approved``. The row does NOT get\nauto-appended to ``research/anchors/attested.jsonl`` from this\nhandler. That's done out-of-band by a Cloud Build job that polls\nthe table, rebuilds the JSONL, and opens a data-refresh PR. This\navoids granting the API server git-push permissions, which would\nbe a serious security boundary violation.",
+        "description": "Admin: approve / reject / mark-duplicate a pending submission.\n\nOn ``approve``: status moves to ``approved``. The row does NOT get\nauto-appended to ``research/anchors/attested.jsonl`` from this\nhandler. The JSONL is rebuilt from the table out of band, in a\ndata-refresh PR. This avoids granting the API server git-push\npermissions, which would be a serious security boundary violation.",
         "operationId": "promote_anchor_anchors__anchor_id__promote_post",
         "parameters": [
           {
@@ -1455,7 +1455,7 @@
     },
     "/neural/restore": {
       "post": {
-        "description": "Predict missing characters in text with Leiden conventions (e.g. lar[..]i).\n\n**Public** endpoint. This is the inference path the frontend `/lacunae`\npage calls directly from the browser, so the previous `verify_admin`\ngate was an outright UX bug (the page silently fell back to \"demo\npredictions\" because every real call returned 401). Rate-limiting at\n60 req/min/IP (via the slowapi decorator above) is what stops abuse.\nThe model is read-only and the input is rejected if it's longer than\nthe model's max sequence, so there's no privileged data path to guard.\n\nTwo modes:\n  * **Remote**: if ``settings.byt5_service_url`` is set we proxy the request\n    to a dedicated Cloud Run service (`services/byt5-restorer/`). This is\n    the production mode: the API container stays small and inference\n    autoscales to zero between calls.\n  * **In-process**: fallback when no service URL is configured. Loads the\n    torch model lazily and offloads inference to a worker thread.",
+        "description": "Predict missing characters in text with Leiden conventions (e.g. lar[..]i).\n\n**Public** endpoint. This is the inference path the frontend `/lacunae`\npage calls directly from the browser, so the previous `verify_admin`\ngate was an outright UX bug (the page silently fell back to \"demo\npredictions\" because every real call returned 401). Rate-limiting at\n60 req/min/IP (via the slowapi decorator above) is what stops abuse.\nThe model is read-only and the input is rejected if it's longer than\nthe model's max sequence, so there's no privileged data path to guard.\n\nTwo modes:\n  * **Remote**: if ``settings.byt5_service_url`` is set we proxy the request\n    to a separate deployment of `services/byt5-restorer/`. The API\n    container stays small and the service can scale to zero between calls.\n  * **In-process**: fallback when no service URL is configured. Loads the\n    torch model lazily and offloads inference to a worker thread.",
         "operationId": "restore_lacunae_neural_restore_post",
         "requestBody": {
           "content": {

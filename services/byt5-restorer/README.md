@@ -1,7 +1,9 @@
 # ByT5 Lacuna Restorer
 
-Cloud Run microservice that restores lacunae in damaged Etruscan
-inscriptions. `POST /restore` accepts Leiden-notation text
+Microservice that restores lacunae in damaged Etruscan inscriptions. It
+ran on Cloud Run until the project's Google Cloud setup was retired; no
+instance is deployed now, and the commands under "Build and deploy" are
+the record of that setup. `POST /restore` accepts Leiden-notation text
 (`lar[---]al velinas`) and returns ranked character-level restorations.
 The API proxies to it when `byt5_service_url` is configured (see
 `src/openetruscan/api/routes/neural.py`); otherwise the API falls back to

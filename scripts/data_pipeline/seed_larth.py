@@ -339,7 +339,7 @@ def main():
             seed_codex(db_path=args.db_url)
 
     # Show a sample query from the actual DB
-    print("\n🔍 Verifying Cloud SQL deployment...")
+    print("\n🔍 Verifying the database...")
     corpus = Corpus.load(args.db_url)
     results = corpus.search(limit=3)
     print(f"   Total records in DB: {results.total}")

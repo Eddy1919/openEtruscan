@@ -946,8 +946,9 @@ class LacunaeRestorer:
         meta_path = head_path / "metadata.json"
         if not meta_path.exists():
             raise FileNotFoundError(
-                f"Lacunae model not found at {head_path}. Sync from "
-                f"gs://openetruscan-rosetta/models/lora-char-head-v1 first."
+                f"Lacunae model not found at {head_path}. Train it with "
+                f"scripts/training/vertex/train_lora_char_head.py; the GCS "
+                f"bucket it used to be synced from is retired."
             )
         meta = json.loads(meta_path.read_text())
 
