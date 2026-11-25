@@ -563,3 +563,46 @@ class LexiconGloss(Base):
     status: Mapped[str] = mapped_column(Text, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class NameAttestation(Base):
+    """One personal name in one inscription, for the Name Index.
+
+    Built word by word by ``scripts/data_pipeline/build_name_index.py``
+    (see ``openetruscan.core.onomastics``): praenomina from
+    ``reference/praenomina.csv`` and the family name that follows each one.
+    ``lemma`` groups the spellings and case forms of a praenomen (``larθal``
+    under ``larθ``); for an abbreviation it is the abbreviation with a dot,
+    and for a family name it is the form. ``basis`` and ``confidence`` say
+    how the name was read: only ``praenomen_list`` rows are ``high``.
+    The site's Name Index reads it through the frontend's own
+    ``/api/names/network`` route (openEtruscan-frontend). This API's
+    ``/names/network`` endpoint still reads ``relationships``, and
+    ``entities`` still feeds the lineage tables.
+    """
+
+    __tablename__ = "name_attestations"
+
+    id: Mapped[int] = mapped_column(_BIGINT_PK, primary_key=True, autoincrement=True)
+    inscription_id: Mapped[str] = mapped_column(
+        ForeignKey("inscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    form: Mapped[str] = mapped_column(Text, nullable=False)
+    lemma: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    name_type: Mapped[str] = mapped_column(Text, nullable=False)
+    gender: Mapped[str | None] = mapped_column(Text)
+    basis: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("name_type IN ('praenomen', 'gentilicium')", name="name_type"),
+        CheckConstraint("gender IS NULL OR gender IN ('m', 'f')", name="gender"),
+        CheckConstraint(
+            "basis IN ('praenomen_list', 'praenomen_abbreviation', 'follows_praenomen')",
+            name="basis",
+        ),
+        CheckConstraint("confidence IN ('high', 'probable')", name="confidence"),
+        Index("uq_name_attestations_record_position", "inscription_id", "position", unique=True),
+    )
