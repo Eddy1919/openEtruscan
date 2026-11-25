@@ -235,7 +235,7 @@ If you use OpenEtruscan in your research, please cite both the software and the 
   author    = {Panichi, Edoardo},
   title     = {{OpenEtruscan: Open-source digital corpus platform and NLP suite for Etruscan epigraphy}},
   year      = {2026},
-  version   = {1.4.0},
+  version   = {1.5.0},
   doi       = {10.5281/zenodo.21854263},
   url       = {https://doi.org/10.5281/zenodo.21854263},
   publisher = {Zenodo}

@@ -14,12 +14,114 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-25
+
+Records can now be looked up by the references scholars cite (CIE, ET, TLE,
+TM and others), and the Name Index is rebuilt word by word. Both come with
+new database tables, so this is a minor release: an installed package that
+talks to a database needs `alembic upgrade head` (see Upgrading). The
+package-level API is unchanged. This is also the first release that Zenodo
+archives as software, with its own DOI.
+
+### Upgrading
+- Run `alembic upgrade head`. Three migrations apply in order:
+  `j5f6a7b8c9d0` (edition layer: alias, edition, reading, image,
+  indexed-document and lexicon tables; `inscriptions` keeps its shape),
+  `k6a7b8c9d0e1` (`name_attestations`) and `l7b8c9d0e1f2` (drops the
+  duplicate `idx_provenance` index if it exists).
+- The migrations create empty tables. The data comes from two scripts in the
+  repository, which are not part of the wheel:
+  `scripts/data_pipeline/build_edition_layer.py` and
+  `scripts/data_pipeline/build_name_index.py`.
+- Code that runs before the migrations degrades instead of failing: the
+  reference lookups below log a warning and answer as if no aliases exist.
+
+### Added
+- **Standard references** (#102). Records resolve by CIE, ET (ET1 and ET2),
+  TLE, TM, CII, CIL and Bakkum reference; the published record IDs stay. A
+  bare ID is a CIEP number, and inside the published CIE ranges CIEP n is
+  read as CIE n and marked `probable`. REE numbers are not covered: Burman's
+  concordance has no REE column. Parts of the named texts carry the text's
+  ET siglum (LL, TC, CP, Co 8.3, Pa 4.2, Cr 4.4 and 4.5).
+  - `GET /resolve?ref=…` returns the matching records, each with the alias
+    `basis` and `confidence`.
+  - `GET /inscription/{id}/references` returns a record's references and
+    edition metadata.
+  - `GET /inscription/{id}` with an ID that is not a record but is a
+    reference now answers 308 to the record, or 300 with the candidates when
+    the reference matches more than one. Record IDs always win; an alias
+    never shadows one.
+  - The LOD export takes the Trismegistos ID from the record's
+    `trismegistos_id` column first (now backfilled, see below) and the YAML
+    mapping second.
+- **Edition layer data** (#102, #106). `reference/` vendors Burman's
+  concordance v1.0.3 (CC0) with a place table (Pleiades IDs and points),
+  the ET region codes and a findspot gazetteer that splits each CIE findspot
+  string into find place, precision and current location.
+  `build_edition_layer.py` backfills reference aliases, the ET text class,
+  the findspot place, TM IDs (into `inscriptions.trismegistos_id`, only
+  where it is empty) and an index of 11,124 known inscriptions the
+  corpus does not hold. Place attributions stay on `inscription_edition`
+  and never overwrite a record's coordinates: a Pleiades point stands for a
+  whole city or territory. With `--clear-custody-findspots` it moves 620
+  findspot strings that only named where an object is kept, or described
+  the object, into `inscription_edition.findspot_source_text`, with an
+  audit row for each. Counts and curation findings are in
+  `research/results/edition_layer/` and `CURATION_FINDINGS.md` section 10.
+- **Word-by-word name index** (#107). `openetruscan.core.onomastics` reads
+  personal names one word at a time: praenomina from
+  `reference/praenomina.csv` (32 names, 131 spellings and case forms),
+  abbreviated praenomina only inside a naming formula, and the word after a
+  praenomen as a probable family name unless it is a praenomen, a glossed
+  word or a kinship term. `build_name_index.py` writes the result to
+  `name_attestations` with a basis and a confidence per row. On the
+  2026-11-24 snapshot: 2,247 names in 1,067 records, 162 headwords attested
+  twice or more. The old index, built from whole-text parses in `entities`,
+  had 26. Its default data paths point at
+  `reference/` in a repository checkout; with an installed package, pass
+  the paths. The API's `/names/network` and the `entities` table are
+  unchanged.
+
+### Changed
+- **Documented provenance on the live database is 1,583 of 5,932 records**,
+  down from 2,203, after the custody-note move above (#109). The archival
+  and published counts are unchanged.
+- The edition-layer and name-index backfills batch their writes on
+  psycopg2 (`executemany_mode="values_plus_batch"`), so the edition-layer
+  apply over the network to Neon takes about 6 minutes instead of about 78
+  (#110). Bare `postgresql://` URLs are pinned to psycopg2, which
+  SQLAlchemy 2.1 would otherwise map to psycopg 3, which is not a
+  dependency.
+- `scripts/data_pipeline/integrate_burman.py` moves to `scripts/attic/`;
+  `build_edition_layer.py` replaces it.
+- ByT5 restorer service dependencies: FastAPI 0.165, uvicorn 0.54, torch
+  2.15.0, transformers 5.24 (#98).
+- Security support: 1.5.x is supported, 1.4.x gets security fixes only,
+  anything older is unsupported.
+
 ### Fixed
-- **Zenodo software metadata, before the GitHub integration is switched on.**
-  - `.zenodo.json` declared the software `isVersionOf` the dataset's v1.0.0 deposit (10.5281/zenodo.20075836). The first archived release would have published that false relation to DataCite. It now says the software `isSupplementedBy` the dataset's concept DOI (10.5281/zenodo.20075835). Which record a release joins is set by the repository, not by this field: the first archived release starts a new software record either way.
-  - The file's `_comment` key is gone: JSON has no comments, and the note now lives in `release.yml`.
-  - The licence id is `mit`, as in Zenodo's example.
-- **`CITATION.cff`** validates against CFF 1.2.0 (`preferred-citation.type: data`; `dataset` was never a CFF type). Its comments no longer present the dataset's concept DOI as the software's, or describe release DOIs that were never minted.
+- The `provenance_status` index existed twice on databases built from
+  `_PG_SCHEMA`; `_PG_SCHEMA` now uses the Alembic name and migration
+  `l7b8c9d0e1f2` drops the duplicate (#108).
+- **Zenodo software metadata** (#111). `.zenodo.json` declared the software
+  `isVersionOf` the dataset's v1.0.0 deposit (10.5281/zenodo.20075836),
+  which the first archived release would have published to DataCite. It
+  now says the software `isSupplementedBy` the dataset's concept DOI
+  (10.5281/zenodo.20075835). The file's `_comment` key is gone (JSON has no
+  comments; the note lives in `release.yml`), and the licence id is `mit`.
+- **`CITATION.cff`** validates against CFF 1.2.0
+  (`preferred-citation.type: data`; `dataset` was never a CFF type). Its
+  comments no longer present the dataset's concept DOI as the software's.
+
+### Removed
+- `services/minilm-reranker`. Nothing called it: `/search/hybrid` loads its
+  cross-encoder in-process (the `rerank` extra). Its Dependabot entry goes
+  with it.
+- Comments and docstrings that described the retired Google Cloud setup
+  (Cloud SQL, an API VM, Cloud Build jobs, Cloud Trace, a production ByT5
+  service on Cloud Run). The lacuna model's missing-file error no longer
+  says to sync from the retired bucket. The Vertex training scripts and the
+  ByT5 service stay as the record of how the published models were made.
 
 ## [1.4.0] - 2026-11-24
 

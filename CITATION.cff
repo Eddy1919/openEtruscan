@@ -38,8 +38,8 @@ abstract: >-
   LoRA) that embeds Etruscan and Latin in a shared vector space. It also
   includes a frozen benchmark, rosetta-eval-v1, with random, Levenshtein,
   and model baselines, and instructions to reproduce it.
-version: "1.4.0"
-date-released: "2026-11-24"
+version: "1.5.0"
+date-released: "2026-11-25"
 # The concept DOI of the Zenodo DATASET deposit (all versions; v1.1.0 is
 # preferred-citation below). The software has no Zenodo record yet. Once the
 # GitHub integration archives a release, the software gets its own concept
