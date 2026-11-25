@@ -52,7 +52,7 @@ To maintain scientific integrity, OpenEtruscan explicitly distinguishes **editor
 | `excavated` | 0 | 0.0% | Stratigraphically excavated with full modern context (reserved for manual curatorial curation). |
 | `unknown` | 0 | 0.0% | Unassessed records. |
 
-*Note: In the live database (5,932 records), 2,203 are documented and 3,729 undocumented. The `/search` interface defaults to documented findspots via `?has_provenance=true`.*
+*Note: In the live database (5,932 records), 1,583 are documented and 4,349 undocumented. 620 findspot strings that only named where an object is kept, or described the object, moved to `inscription_edition.findspot_source_text` (see `research/results/edition_layer/`). The `/search` interface defaults to documented findspots via `?has_provenance=true`.*
 
 ---
 
