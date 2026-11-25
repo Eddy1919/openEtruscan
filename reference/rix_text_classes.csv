@@ -1,0 +1,14 @@
+class,label_en,label_it,site_label,source,confidence
+0,too fragmentary or otherwise unclassifiable,troppo frammentaria o non classificabile,,"Wallace, R. E. (2016), review of ET², Etruscan Studies 19(1): 161-167",scholarly
+1,funerary inscription,iscrizione funeraria,funerary,"Wallace 2016 (as above)",scholarly
+2,proprietary (ownership) inscription,iscrizione di possesso,ownership,"Wallace 2016 (as above)",scholarly
+3,donative or votive inscription,iscrizione di dono o votiva,,"Wallace 2016 (as above); no single site label: the site splits votive from dedicatory",scholarly
+4,other religious inscription,altra iscrizione religiosa,,"Wallace 2016 (as above)",scholarly
+5,building inscription,iscrizione edilizia,,"Wallace 2016 (as above)",scholarly
+6,artisan's signature,firma d'artigiano,,"Wallace 2016 (as above)",scholarly
+7,didaskalia (caption naming a depicted figure),didascalia,,"Wallace 2016 (as above)",scholarly
+8,inscription of a juridical nature,iscrizione di carattere giuridico,legal,"Wallace 2016 (as above)",scholarly
+9,abecedarium,abecedario,,"Wallace 2016 (as above)",scholarly
+S,inscription on a mirror,iscrizione su specchio,,"ET closing chapters are mirrors, gems, coins (Wallace 2016; Burman 1.0.3 Read Me); S=mirrors inferred from chapter order",inferred
+G,inscription on a gem,iscrizione su gemma,,"as for S; G=gems inferred from chapter order",inferred
+N,coin legend,leggenda monetale,,"as for S; N=coins inferred from chapter order",inferred

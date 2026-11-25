@@ -1,0 +1,39 @@
+code,label,place_key,precision,source,confidence,note
+Ad,Adria,adria,territory,"ru.wikipedia, Etruskische Texte",secondary,
+AH,Ager Hortanus,horta,territory,"ru.wikipedia; ETP region list",secondary,
+Ar,Arretium,arretium,territory,"Wallace, Etruscan News 5",scholarly,
+AS,Ager Saenensis,saena,territory,"Wallace, Etruscan News 5",scholarly,
+AT,Ager Tarquiniensis,tarquinii,territory,"ru.wikipedia; ETP region list",secondary,
+AV,Ager Vulcentanus,vulci,territory,"ru.wikipedia; ETP lists Marsiliana (AV 9.1) under Ager Volcentanus",secondary,
+Cl,Clusium,clusium,territory,"Wallace, Etruscan News 5",scholarly,
+Cm,Campania et Lucania,campania,region,"ru.wikipedia",secondary,
+Co,Cortona,cortona,territory,"Wallace, Etruscan News 5",scholarly,
+Cr,Caere,caere,territory,"ru.wikipedia",secondary,
+Fa,Falerii et Ager Faliscus,ager_faliscus,territory,"ru.wikipedia; Bakkum 2009 cites ET Fa 9.1 from Narce",secondary,
+Fe,Felsina,felsina,territory,"ru.wikipedia",secondary,
+Fs,Faesulae,faesulae,territory,"ru.wikipedia",secondary,
+La,Latium,latium,region,"ru.wikipedia",secondary,
+Pe,Perusia,perusia,territory,"Wallace, Etruscan News 5",scholarly,
+Po,Populonia,populonia,territory,"ru.wikipedia",secondary,
+Ru,Rusellae,rusellae,territory,"ru.wikipedia",secondary,
+Sp,Spina,spina,territory,"ru.wikipedia",secondary,
+Ta,Tarquinii,tarquinii,territory,"ru.wikipedia",secondary,
+Vc,Vulci,vulci,territory,"ru.wikipedia",secondary,
+Ve,Veii,veii,territory,"ru.wikipedia",secondary,
+Vn,Vetulonia,vetulonia,territory,"ru.wikipedia",secondary,
+Vs,Volsinii (Velzna/Orvieto),volsinii_veteres,territory,"ru.wikipedia",secondary,Etruscan Volsinii is Orvieto; Roman Volsinii (Bolsena) is a separate Pleiades place.
+Vt,Volaterrae,volaterrae,territory,"ru.wikipedia",secondary,
+Pa,Padana,,,"ru.wikipedia",secondary,No Pleiades region chosen for the Po valley; not mapped.
+Um,Umbria et Ager Gallicus,,,"ru.wikipedia",secondary,Not mapped.
+Li,Liguria et Pisae,,,"ru.wikipedia",secondary,Not mapped.
+Sa,Sabina,,,"ru.wikipedia",secondary,Not mapped.
+Na,Gallia Narbonensis,,,"ru.wikipedia",secondary,Not mapped.
+Cs,Corsica,,,"ru.wikipedia",secondary,Not mapped.
+Si,Sicilia,,,"ru.wikipedia",secondary,Not mapped.
+Af,Africa,,,"ru.wikipedia",secondary,Not mapped.
+Gr,Graecia,,,"ru.wikipedia",secondary,Not mapped.
+Cy,Cyprus,,,"ru.wikipedia",secondary,Not mapped.
+OA,origin unknown (southern Etruria),,,"ru.wikipedia: originis australis",secondary,Provenance unknown; never placed on the map.
+OB,origin unknown (northern Etruria),,,"ru.wikipedia: originis borealis",secondary,Provenance unknown; never placed on the map.
+OI,origin unknown,,,"ru.wikipedia: originis ignotae",secondary,Provenance unknown; never placed on the map.
+NU,"coins, mint unknown (ET¹)",,,"Burman 1.0.3: ET¹ NU N.n rows, re-sited in ET² (Vn, Po)",secondary,ET¹ code for coins without a known mint; never placed on the map.

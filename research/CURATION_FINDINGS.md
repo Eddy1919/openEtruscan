@@ -559,6 +559,90 @@ GCS as the prior negative baseline.
 
 ---
 
+## 10. Edition layer — references, findspots, and labels we already had
+
+Source: `scripts/data_pipeline/build_edition_layer.py` dry run on the
+2026-11-24 snapshot; reports in
+[`results/edition_layer/`](results/edition_layer/README.md).
+
+### Finding 10.1 — Bare record IDs are CIEP numbers, and often only one line of the entry
+
+3,658 of the snapshot's 5,932 records have bare numeric IDs. They come
+from Larth, which numbers texts by Hill's *Corpus Inscriptionum Etruscarum Plenissimum* (2018).
+Inside the published CIE ranges a CIEP number is the CIE number. What was
+checked against what:
+
+* **Larth's CIEP rows against Burman.** The CIEP entries 3, 4538, 5237
+  and 10001 in Larth's source file (`CIEP_pymupdf.csv`) carry the texts
+  of Fs 8.2 (*tularspu*), the Cippus Perusinus (ET CP / Pe 8.4, 19 rows
+  about the Velθina family), the Magliano disc (AV 4.1) and Ta 2.5
+  (*mi larθas arsinaia*), which is what Burman lists for CIE 3, 4538,
+  5237 and 10001.
+* **Our bare records against our `CIE n` records.** 504 CIE numbers
+  are held both as a bare record `n` and as a record `CIE n`. With the
+  similarity the backfill uses (letters only; a text of four or more
+  letters contained in the other counts as a match), 307 pairs score
+  ≥ 0.6 and 240 score ≥ 0.8. Of the 197 below 0.6, 167 have a `CIE n`
+  text in spaced capitals (garbled extraction,
+  `O N R I R I S A Z I H M M V S`) and cannot be compared. Read by eye,
+  the other 30 split as follows: 3 are the same text with the `CIE n`
+  side in Old Italic glyphs; 8 more are bare records holding another line
+  of a multi-row CIEP entry (below); 4 share a name with the `CIE n` text
+  (*camei*, *sapu*, *larθi*); 15 have no text in common. Those 15 are
+  where the numbering assumption is weakest. 262 bare records reach
+  `high` through the backfill's ≥ 0.8 check, which also accepts a match
+  against a record that carries CIE n through its ET siglum.
+
+Outside the CIE ranges (6724–8000, 8928–10000, 12114–20000, above 21071)
+a bare ID has no CIE counterpart and resolves only as `CIEP n`. Aliases
+resting on this numbering are stored as `basis = ciep_cie_numbering`,
+`confidence = probable`, and the site badges them.
+
+The catch is in ingestion. Larth stores 810 CIEP entries as several rows
+(one per line or part), and the corpus kept one row per ID: 687 bare
+records hold a single row of a longer entry, usually the last one. Record
+`4538` is the Cippus Perusinus by number but holds only *utuse*, its last
+line; `Pe 8.4` holds another fragment. The aliases are right and the
+record texts are partial. The 687 are listed in
+`results/edition_layer/ciep_fragments.csv`; re-ingesting those entries
+whole (or as numbered parts) is a corpus decision this change does not
+make.
+
+### Finding 10.2 — ET text classes are free typology labels
+
+Rix's ET siglum carries a text class in its first digit. Through the
+concordance, 3,484 records get one, 3,130 of them labelled `unknown` on
+the site. That is more than four times the 712-label cascade set behind
+Finding 4.3, from an edition, not a model. They are not wired into any
+classifier yet. Caveats before anyone does: the taxonomy is Rix's
+(class 5 is *building* inscriptions, class 0 is "too fragmentary"), so
+it needs mapping onto ours; 1,776 of the 3,484 rest on CIEP numbering;
+and 99 records already disagree with the site's label
+(`rix_vs_site_label.csv`).
+
+### Finding 10.3 — About 340 records are probably duplicates
+
+558 CIE numbers are held by more than one live record (through its own
+ID or an alias), 504 of them by a bare CIEP record `n` beside a record
+`CIE n`. 342 of the 558 have two records with text similarity ≥ 0.6.
+They inflate corpus counts and leak across any train/test split that
+does not group by CIE number. Not merged; listed in
+`shared_cie_numbers.csv` for a curator.
+
+### Finding 10.4 — Most findspot strings are custody notes, not find places
+
+Of the 838 distinct findspot strings (CIE Latin), 435 name only where the
+object is or was kept, or say it is lost (`in museo publico Clusino GA.`,
+`olim Cortonae in museo Venuti`), and 76 describe the object. 620 records
+carry one of these as their findspot, and all 620 count as documented
+provenance today. The backfill moves the string to
+`findspot_source_text` and re-derives provenance (documented records go
+from 2,203 to 1,583), with an audit row per record. A string naming only
+earlier keepers (`olim …`) yields a current location only where it says
+the object is still there (`tum in museo publico Panormitano …, ubi …
+adhuc (1886)`), and one saying the object is lost (`nunc latet`,
+`nunc ubi sit, non comperi`) yields none.
+
 ## What we will and won't claim in publication
 
 **Will claim:**

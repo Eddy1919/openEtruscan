@@ -1,0 +1,57 @@
+key,pleiades_id,label_en,label_it,kind,pleiades_title,lat,lon
+adria,393436,Adria (Atria),Adria,city,(H)Atria,45.05770,12.05620
+ager_faliscus,532728731,Ager Faliscus,Agro falisco,region,Ager Faliscus (region),42.34459,12.28085
+aemilia,393372,Aemilia,Emilia,region,Aemilia,44.69108,11.20074
+arretium,413032,Arretium (Arezzo),Arezzo,city,Arretium,43.47127,11.86305
+asciano,413035,Asciano,Asciano,city,Asciano,43.23338,11.56153
+blera,413054,Blera,Blera,city,Blera,42.27268,12.02754
+caere,422859,Caere (Cerveteri),Cerveteri,city,Caere,42.00249,12.10778
+campania,432742,Campania,Campania,region,Campania,41.39019,13.62243
+capena,413062,Capena,Capena,city,Capena,42.17359,12.53963
+capua,432754,Capua,Capua,city,Capua,41.08609,14.25021
+castiglione_del_lago,413071,Castiglione del Lago,Castiglione del Lago,site,Castiglione del Lago,43.12765,12.05664
+cetona,232079422,Cetona,Cetona,city,Cetona,42.96474,11.90041
+clusium,413096,Clusium (Chiusi),Chiusi,city,Clusium,43.01651,11.94774
+cortona,413106,Cortona,Cortona,city,Cortona,43.27408,11.98775
+cosa,413107,Cosa,Cosa,city,Cosa,42.41133,11.28853
+etruria,413122,Etruria,Etruria,region,Etruria/Tuscia (region),42.67344,11.53378
+faesulae,413124,Faesulae (Fiesole),Fiesole,city,Faesulae,43.80818,11.29377
+falerii,413125,Falerii,Falerii,city,Falerii,42.29984,12.35889
+falerii_veteres,413126,Falerii Veteres (Civita Castellana),Civita Castellana,city,Falerii Veteres,42.29701,12.41544
+felsina,393421,Felsina/Bononia (Bologna),Bologna,city,Felsina/Bononia,44.49457,11.34555
+ferentium,413132,Ferentium,Ferento,city,Ferentium,42.48868,12.13129
+florentia,413138,Florentia (Florence),Firenze,city,Florentia,43.76980,11.25564
+fratte,432845,Fratte,Fratte,site,Fratte,40.69798,14.77760
+graviscae,413157,Graviscae,Gravisca,site,Graviscae,42.21283,11.71043
+heba,413164,Heba,Heba,city,Heba,42.58563,11.30760
+horta,413172,Horta (Orte),Orte,city,Horta,42.46033,12.38642
+kainua,393448,Kainua (Marzabotto),Marzabotto,city,Kainua,44.33527,11.20284
+latium,432900,Latium,Lazio,region,Latium (region),41.59054,13.19227
+musarna,413217,Musarna,Musarna,city,Musarna,42.41222,11.97658
+narce,413133,Narce (Pleiades: Fescennium),Narce,city,Fescennium,42.21055,12.41685
+nepet,413224,Nepet (Nepi),Nepi,city,Nepet,42.24406,12.34656
+nola,432981,Nola,Nola,city,Nola,40.92682,14.52454
+orcla,413233,Orcla (Norchia),Norchia,site,[Orcla],42.33795,11.95098
+perusia,413248,Perusia (Perugia),Perugia,city,Perusia,43.11119,12.38991
+pisae,403253,Pisae (Pisa),Pisa,city,Pisae,43.71942,10.40011
+placentia,383741,Placentia (Piacenza),Piacenza,city,Placentia,45.05259,9.69766
+poggio_civitate,413216,Poggio Civitate (Murlo),Poggio Civitate (Murlo),site,Poggio Civitate (Murlo),43.16227,11.39533
+pontecagnano,442728,Pontecagnano,Pontecagnano,city,Pontecagnano,40.64650,14.87160
+populonia,403212,Populonia,Populonia,city,Fufluna/Populonium,42.98824,10.48965
+pyrgi,433061,Pyrgi,Pyrgi,site,Pyrgi,42.01553,11.96270
+rusellae,413288,Rusellae (Roselle),Roselle,city,Rusellae,42.82772,11.16000
+saena,413293,Saena (Siena),Siena,city,Saena,43.31862,11.33108
+sarteano,413307,Sarteano,Sarteano,city,Sarteano,42.98922,11.86692
+saturnia,413044,Saturnia,Saturnia,city,*Aurinia/Saturnia,42.66625,11.50483
+spina,393498,Spina,Spina,city,Spina,44.69344,12.09308
+suana,413323,Suana (Sovana),Sovana,city,Suana,42.65862,11.64704
+sutrium,413328,Sutrium (Sutri),Sutri,city,Sutrium,42.24279,12.22046
+tarquinii,413332,Tarquinii (Tarquinia),Tarquinia,city,Tarchna/Tarquinii,42.25725,11.79145
+tuscana,413356,Tuscana (Tuscania),Tuscania,city,Tuscana,42.41925,11.87028
+veii,423116,Veii,Veio,city,Veii,42.02134,12.39052
+vetulonia,403291,Vetulonia,Vetulonia,city,Vatl/Vetulonia,42.85945,10.97211
+visentium,413386,Visentium,Bisenzio,city,Visentium,42.57342,11.87400
+volaterrae,403292,Volaterrae (Volterra),Volterra,city,Velathri/Volaterrae,43.40160,10.86006
+volsinii,413389,Volsinii (Bolsena),Bolsena,city,Volsinii,42.64803,11.98511
+volsinii_veteres,413373,Velzna/Volsinii Veteres (Orvieto),Orvieto,city,Velzna/*Volsinii Veteres/Urbiventus,42.71645,12.11157
+vulci,413393,Vulci,Vulci,city,Vulci,42.41889,11.63167

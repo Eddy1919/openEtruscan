@@ -15,7 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from openetruscan.core.corpus import Inscription as InscriptionData
 from openetruscan.core.corpus import SearchResults
 from openetruscan.core.periodo import enrich_timeline_buckets
-from openetruscan.db.models import Clan, Entity, Inscription, Relationship
+from openetruscan.db.models import (
+    Clan,
+    Entity,
+    Inscription,
+    InscriptionAlias,
+    InscriptionEdition,
+    Relationship,
+)
 
 
 class InscriptionRepository:
@@ -33,6 +40,84 @@ class InscriptionRepository:
         stmt = select(Inscription).where(Inscription.id == inscription_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def resolve_reference(self, lookup_key: str) -> list[dict[str, Any]]:
+        """Records a standard reference (``cie:4538``, ``et:pe 8.4``) resolves to.
+
+        One entry per record, keeping the strongest alias when a record holds
+        the key through several routes. Ordered by basis strength, then ID.
+        """
+        stmt = select(
+            InscriptionAlias.inscription_id,
+            InscriptionAlias.value,
+            InscriptionAlias.basis,
+            InscriptionAlias.confidence,
+        ).where(InscriptionAlias.lookup_key == lookup_key)
+        rows = (await self.session.execute(stmt)).all()
+        rank = {"own_id": 0, "manual": 1, "concordance": 2, "ciep_cie_numbering": 3}
+        best: dict[str, dict[str, Any]] = {}
+        for rid, value, basis, confidence in rows:
+            cur = best.get(rid)
+            if cur is None or rank.get(basis, 9) < rank.get(cur["basis"], 9):
+                best[rid] = {
+                    "inscription_id": rid,
+                    "value": value,
+                    "basis": basis,
+                    "confidence": confidence,
+                }
+        return sorted(best.values(), key=lambda m: (rank.get(m["basis"], 9), m["inscription_id"]))
+
+    async def get_references(self, inscription_id: str) -> dict[str, Any]:
+        """Aliases and edition metadata for one record (empty when not backfilled)."""
+        aliases = (
+            (
+                await self.session.execute(
+                    select(InscriptionAlias)
+                    .where(InscriptionAlias.inscription_id == inscription_id)
+                    .order_by(InscriptionAlias.scheme, InscriptionAlias.lookup_key)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        edition = (
+            await self.session.execute(
+                select(InscriptionEdition).where(
+                    InscriptionEdition.inscription_id == inscription_id
+                )
+            )
+        ).scalar_one_or_none()
+        return {
+            "aliases": [
+                {
+                    "scheme": a.scheme,
+                    "lookup_key": a.lookup_key,
+                    "value": a.value,
+                    "edition": a.edition,
+                    "basis": a.basis,
+                    "confidence": a.confidence,
+                    "source": a.source,
+                    "note": a.note,
+                }
+                for a in aliases
+            ],
+            "edition": None
+            if edition is None
+            else {
+                "rix_siglum": edition.rix_siglum,
+                "rix_text_class": edition.rix_text_class,
+                "rix_class_basis": edition.rix_class_basis,
+                "findspot_place": edition.findspot_place,
+                "findspot_precision": edition.findspot_precision,
+                "findspot_basis": edition.findspot_basis,
+                # The findspot string as the source gave it, when the
+                # backfill moved it out of `findspot` as a custody note.
+                "findspot_source_text": edition.findspot_source_text,
+                "current_location": edition.current_location,
+                "editor": edition.editor,
+                "autopsy": edition.autopsy,
+            },
+        }
 
     async def get_by_ids(self, ids: Sequence[str]) -> Sequence[Inscription]:
         """Fetch multiple inscriptions matching a list of primary key IDs."""

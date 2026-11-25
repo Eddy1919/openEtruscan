@@ -62,6 +62,12 @@ from sqlalchemy.ext.asyncio import (
 
 _USER_TABLES = (
     # Order matters for FK cascade — children first.
+    "inscription_aliases",
+    "inscription_edition",
+    "inscription_readings",
+    "inscription_images",
+    "indexed_documents",
+    "lexicon_glosses",
     "relationships",
     "entities",
     "clans",
@@ -266,12 +272,14 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
 
     # Pre-test cleanup in its own session so the test's session starts clean.
     async with sessionmaker() as cleanup:
+        # Commit per table: a rollback after a missing table (SQLite has no
+        # language_word_embeddings) would otherwise undo every DELETE before it.
         for tbl in _USER_TABLES:
             try:
                 await cleanup.execute(text(f"DELETE FROM {tbl}"))
+                await cleanup.commit()
             except Exception:  # noqa: BLE001 -- table may not exist on this backend
                 await cleanup.rollback()
-        await cleanup.commit()
 
     async with sessionmaker() as session:
         yield session

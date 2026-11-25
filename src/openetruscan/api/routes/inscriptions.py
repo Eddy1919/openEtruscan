@@ -1,9 +1,9 @@
 """Single-inscription reads (JSON, JSON-LD, Turtle), imports and validation."""
 
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -149,7 +149,9 @@ async def get_inscription(
     repo = InscriptionRepository(session)
     model = await repo.get_by_id(inscription_id)
     if not model:
-        raise HTTPException(status_code=404, detail="Inscription not found")
+        # Not a record ID: maybe a standard reference ("CIE 4538", "Ta 3.6",
+        # "TM 146600"). Record IDs win; aliases never shadow them.
+        return await _resolve_or_404(request, repo, inscription_id)
 
     inscription = repo._to_dataclass(model)
     media = _negotiate(request)
@@ -210,6 +212,123 @@ async def get_inscription(
         data,
         headers=headers,
     )
+
+
+def _edition_tables_missing(exc: Exception) -> bool:
+    """True when ``exc`` says the edition-layer tables are not migrated yet.
+
+    Code can ship before ``alembic upgrade``; reference lookups then degrade
+    to "no aliases" instead of a 500. Any other database error propagates.
+    """
+    from sqlalchemy.exc import DBAPIError
+
+    if not isinstance(exc, DBAPIError):
+        return False
+    orig = getattr(exc, "orig", exc)
+    msg = str(orig).lower()
+    return (
+        type(orig).__name__ == "UndefinedTableError"
+        or getattr(orig, "sqlstate", None) == "42P01"
+        or "no such table" in msg
+        or ("relation" in msg and "does not exist" in msg)
+    )
+
+
+async def _resolve_or_404(request: Request, repo: InscriptionRepository, ref_text: str):
+    """Redirect a standard reference to its record, or list the candidates."""
+    from urllib.parse import quote
+
+    from fastapi.responses import JSONResponse, RedirectResponse
+
+    from openetruscan.core.concordance import parse_reference
+
+    ref = parse_reference(ref_text)
+    matches = []
+    if ref is not None:
+        try:
+            matches = await repo.resolve_reference(ref.key)
+        except Exception as exc:
+            if not _edition_tables_missing(exc):
+                raise
+            await repo.session.rollback()
+            logger.warning("inscription_aliases unavailable; reference lookup skipped")
+            matches = []
+    if len(matches) == 1:
+        target = f"/inscription/{quote(matches[0]['inscription_id'], safe='')}"
+        if request.url.query:
+            target = f"{target}?{request.url.query}"
+        return RedirectResponse(target, status_code=status.HTTP_308_PERMANENT_REDIRECT)
+    if len(matches) > 1:
+        return JSONResponse(
+            {"query": ref_text, "reference": ref.display if ref else None, "matches": matches},
+            status_code=status.HTTP_300_MULTIPLE_CHOICES,
+        )
+    raise HTTPException(status_code=404, detail="Inscription not found")
+
+
+@router.get("/resolve", tags=["Corpus"])
+@limiter.limit("120/minute")
+async def resolve_reference(
+    request: Request,
+    ref: Annotated[
+        str,
+        Query(min_length=1, max_length=64, description="e.g. CIE 4538, Ta 3.6, TLE 570, TM 146600"),
+    ],
+    session: AsyncSession = Depends(get_session),
+):
+    """Resolve a standard reference to corpus records.
+
+    Accepts CIE, ET/ET² sigla (with or without the ``ET`` prefix), TLE, TM
+    (Trismegistos), CII, CIL and CIEP references. An exact record ID is
+    returned first when the text is one. Each match carries the alias
+    ``basis`` and ``confidence`` so callers can tell a direct concordance
+    link from a CIEP-numbering inference.
+    """
+    from openetruscan.core.concordance import parse_reference
+
+    repo = InscriptionRepository(session)
+    matches: list[dict[str, Any]] = []
+    if await repo.get_by_id(ref) is not None:
+        matches.append(
+            {"inscription_id": ref, "value": ref, "basis": "record_id", "confidence": "certain"}
+        )
+    parsed = parse_reference(ref)
+    if parsed is not None:
+        try:
+            for m in await repo.resolve_reference(parsed.key):
+                if m["inscription_id"] not in {x["inscription_id"] for x in matches}:
+                    matches.append(m)
+        except Exception as exc:
+            if not _edition_tables_missing(exc):
+                raise
+            await repo.session.rollback()
+            logger.warning("inscription_aliases unavailable; reference lookup skipped")
+    return {
+        "query": ref,
+        "parsed": None
+        if parsed is None
+        else {"scheme": parsed.scheme, "key": parsed.key, "display": parsed.display},
+        "matches": matches,
+    }
+
+
+@router.get("/inscription/{inscription_id}/references", tags=["Corpus"])
+@limiter.limit("120/minute")
+async def get_inscription_references(
+    request: Request, inscription_id: str, session: AsyncSession = Depends(get_session)
+):
+    """Standard references (CIE, ET, TLE, TM, ...) and edition metadata for a record."""
+    repo = InscriptionRepository(session)
+    if await repo.get_by_id(inscription_id) is None:
+        raise HTTPException(status_code=404, detail="Inscription not found")
+    try:
+        return await repo.get_references(inscription_id)
+    except Exception as exc:
+        if not _edition_tables_missing(exc):
+            raise
+        await repo.session.rollback()
+        logger.warning("edition tables unavailable; returning no references")
+        return {"aliases": [], "edition": None}
 
 
 @router.get("/inscription/{inscription_id}/concordance", tags=["Research"])
