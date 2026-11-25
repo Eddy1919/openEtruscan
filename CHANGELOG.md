@@ -14,6 +14,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **The software cites its own DOI.** Zenodo archived v1.5.0 as the first
+  release of a new software record: concept DOI 10.5281/zenodo.24538451,
+  v1.5.0 version DOI 10.5281/zenodo.24538452. `CITATION.cff` `doi`,
+  `codemeta.json`, the manifest's `concept_doi`, the README badge and
+  BibTeX, and both model cards' BibTeX now name it. Before, the software
+  entries named dataset DOIs. The dataset keeps its concept DOI
+  (10.5281/zenodo.20075835, now `dataset_concept_doi` in the manifest) and
+  stays the preferred citation for the data; the README adds a `@dataset`
+  entry for it.
+
 ## [1.5.0] - 2026-11-25
 
 Records can now be looked up by the references scholars cite (CIE, ET, TLE,

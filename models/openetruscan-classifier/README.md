@@ -244,12 +244,13 @@ Apache-2.0, documentation CC BY 4.0. Declared in
   title     = {{OpenEtruscan: open-source digital corpus platform for Etruscan epigraphy}},
   year      = {2026},
   version   = {1.5.0},
-  doi       = {10.5281/zenodo.20075835},
-  url       = {https://doi.org/10.5281/zenodo.20075835},
+  doi       = {10.5281/zenodo.24538451},
+  url       = {https://doi.org/10.5281/zenodo.24538451},
   publisher = {Zenodo}
 }
 ```
 
-Cite the concept DOI above for the project. Cite
-[10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836) for the
-dataset specifically.
+Cite the DOI above for the software. Cite the dataset version the model
+was trained on,
+[10.5281/zenodo.20075836](https://doi.org/10.5281/zenodo.20075836), for the
+data.
