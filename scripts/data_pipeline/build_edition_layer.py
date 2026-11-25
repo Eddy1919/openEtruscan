@@ -797,6 +797,30 @@ def write_reports(plan: Plan, outdir: Path) -> None:
         fh.write("\n")
 
 
+def make_engine(url: str):
+    """Sync engine for the backfill, with batched executemany on psycopg2.
+
+    psycopg2 sends an executemany as one round trip per row, about 99 ms each
+    from a laptop to Neon. ``values_plus_batch`` sends 100 statements per round
+    trip. That mode leaves ``rowcount`` empty after a batched UPDATE or DELETE;
+    apply_plan reads no rowcount.
+
+    A bare ``postgres://`` or ``postgresql://`` URL is pinned to psycopg2, the
+    declared driver: SQLAlchemy 2.1 maps it to psycopg 3, which isn't installed.
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine import make_url
+
+    for bare in ("postgres://", "postgresql://"):
+        if url.startswith(bare):
+            url = "postgresql+psycopg2://" + url[len(bare) :]
+            break
+    kwargs: dict[str, Any] = {}
+    if make_url(url).get_driver_name() == "psycopg2":
+        kwargs["executemany_mode"] = "values_plus_batch"
+    return create_engine(url, **kwargs)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--apply", action="store_true", help="write to the database")
@@ -831,14 +855,10 @@ def main() -> None:
             r.canonical = r.canonical or ""
         plan = build_plan(records, refs, args.glosses)
     else:
-        from sqlalchemy import create_engine
-
         url = os.environ.get("DATABASE_URL")
         if not url:
             raise SystemExit("DATABASE_URL is not set")
-        if url.startswith("postgres://"):
-            url = "postgresql://" + url[len("postgres://") :]
-        engine = create_engine(url)
+        engine = make_engine(url)
         with engine.begin() as conn:
             plan = build_plan(read_records(conn), refs, args.glosses)
             if args.apply:
