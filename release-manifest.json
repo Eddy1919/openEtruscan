@@ -13,8 +13,8 @@
   ],
 
   "schema_version": 1,
-  "version": "1.4.0",
-  "date_released": "2026-11-24",
+  "version": "1.5.0",
+  "date_released": "2026-11-25",
 
   "identifiers": {
     "concept_doi": "10.5281/zenodo.20075835",
@@ -145,9 +145,9 @@
 
   "supported_versions": {
     "$comment": "Mirrored by SECURITY.md. Security support tracks shipped minors, not the long-abandoned 0.3.x series.",
-    "supported": ["1.4.x"],
-    "security_only": ["1.3.x"],
-    "unsupported": ["< 1.3"]
+    "supported": ["1.5.x"],
+    "security_only": ["1.4.x"],
+    "unsupported": ["< 1.4"]
   },
 
   "surfaces": {
@@ -166,13 +166,13 @@
     "manual": [
       {
         "surface": "PyPI",
-        "expected": "1.4.0",
+        "expected": "1.5.0",
         "observed": "1.4.0",
-        "status": "resolved_2026-11-24",
+        "status": "stale",
         "self_resolving": true,
         "$self_resolving_note": "The release pipeline publishes this surface, so it must not gate the release. Without this flag --strict-manual deadlocks: the tag cannot pass while PyPI is stale, and PyPI cannot stop being stale without the tag.",
         "verified": "2026-11-24 via pypi.org/pypi/openetruscan/json after the v1.4.0 tag: released versions are 0.1.0, 0.2.0, 0.3.0, 1.3.0, 1.3.1, 1.4.0; latest is 1.4.0, and the long description is the current README (zero em dashes, BibTeX at 1.4.0). 1.2.0 was never claimed and never will be (superseded before publish).",
-        "action": "Resolved by the v1.4.0 tag; release.yml's OIDC publish job delivered it from the tag. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
+        "action": "1.5.0 publishes automatically when the v1.5.0 tag lands (the v1.4.0 tag published within minutes). Until then PyPI serves 1.4.0. Remaining hardening: PyPI accepts *any* environment name; tightening that to `pypi` on pypi.org would restrict publishing to this workflow's environment specifically."
       },
       {
         "surface": "frontend package.json / Footer / /cite",

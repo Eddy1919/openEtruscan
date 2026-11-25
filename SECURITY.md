@@ -7,9 +7,9 @@ which CI enforces, so edit the manifest first.
 
 | Version | Supported          |
 |---------|-------------------|
-| 1.4.x   | ✅ Yes             |
-| 1.3.x   | ⚠️ Security only   |
-| < 1.3   | ❌ No              |
+| 1.5.x   | ✅ Yes             |
+| 1.4.x   | ⚠️ Security only   |
+| < 1.4   | ❌ No              |
 
 ## Reporting a Vulnerability
 
