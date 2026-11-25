@@ -1,0 +1,14 @@
+{
+ "distinct_lemmas": 748,
+ "distinct_lemmas:gentilicium": 698,
+ "distinct_lemmas:praenomen": 50,
+ "lemmas_attested_twice_or_more": 162,
+ "names": 2247,
+ "names:gentilicium": 941,
+ "names:praenomen": 1306,
+ "names_via:follows_praenomen": 941,
+ "names_via:praenomen_abbreviation": 242,
+ "names_via:praenomen_list": 1064,
+ "records": 5932,
+ "records_with_a_name": 1067
+}
